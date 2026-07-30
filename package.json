@@ -4,6 +4,7 @@
 	"description": "The admin kit for Gopherium projects: host layer for React admin applications on the WordPress Design System.",
 	"license": "Apache-2.0",
 	"type": "module",
+	"packageManager": "pnpm@11.10.0",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/gopherium/godmin.git"
