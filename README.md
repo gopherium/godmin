@@ -15,6 +15,17 @@ upstream gap, it satisfies a documented host requirement, or it owns a contract
 that two published packages each expect the application to hand-write. Nothing
 here duplicates something upstream ships.
 
+## What is in it
+
+| Entry point | Contents |
+| --- | --- |
+| `@gopherium/godmin` | `AdminRoot`, `useTokenDocument`, `SUPPORTED_WPDS` |
+| `@gopherium/godmin/base.css` | cascade layer order, design tokens, host rules |
+| `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR` |
+| `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy` |
+| `@gopherium/godmin/stylelint` | the design system stylelint rules |
+| `@gopherium/godmin/patches` | the React 19 patch for `@wordpress/element`, temporary |
+
 ## Status
 
 Version 0.1.0 is the host layer. The application frame is deliberately not here
@@ -99,6 +110,8 @@ Because the announcement regions are then invisible to queries, read them
 directly instead.
 
 ```ts
+import { getAnnouncement } from '@gopherium/godmin/testing'
+
 speak('Draft saved')
 expect(getAnnouncement()).toBe('Draft saved')
 ```
@@ -149,17 +162,24 @@ your test suite, which is what actually determines whether your application
 runs.
 
 ```ts
+import { assertElementPatched } from '@gopherium/godmin/testing'
+
 test('element works on React 19', async () => {
     await assertElementPatched()
 })
 ```
 
-**This is temporary.** The fix has been merged upstream and is expected in
-`@wordpress/element` 8.5.0, after which no patch is needed at all. The
+**This is temporary.** The fix is merged upstream and lands in a future
+`@wordpress/element` release, after which no patch is needed at all. The
 assertion is written for that: it checks that the removed APIs are absent and
 the live ones work, so it keeps passing once upstream ships and the patch goes
-away. The shipped patch file is removed from this package when 8.5.0 becomes
-the supported floor.
+away, whether that arrives as a minor or a major.
+
+GodMin does not constrain your `@wordpress/element` version. It never imports
+it at runtime, and the version is chosen by `@wordpress/ui` and
+`@wordpress/theme`, which depend on it directly. The shipped patch file is
+removed from this package once the fixed release is the one those packages
+resolve.
 
 ## Linting your stylesheets
 
