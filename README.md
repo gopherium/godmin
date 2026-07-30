@@ -128,6 +128,39 @@ export default defineConfig({
 The list cannot live in the package alone, because `resolve.dedupe` is read
 from your own config, so GodMin ships it as data for you to spread.
 
+## React 19 and @wordpress/element
+
+Up to and including 8.4.0, `@wordpress/element` imports APIs that React 19
+removed, so it fails to load. The fix is a patch, and pnpm applies patches at
+install time before `node_modules` exists, so no published package can supply
+one for you. GodMin ships the patch it was tested against for you to copy.
+
+```sh
+cp node_modules/@gopherium/godmin/patches/*.patch patches/
+```
+
+```yaml
+patchedDependencies:
+  '@wordpress/element@8.4.0': patches/@wordpress__element@8.4.0.patch
+```
+
+Rather than checking that your patch file matches ours, assert the outcome in
+your test suite, which is what actually determines whether your application
+runs.
+
+```ts
+test('element works on React 19', async () => {
+    await assertElementPatched()
+})
+```
+
+**This is temporary.** The fix has been merged upstream and is expected in
+`@wordpress/element` 8.5.0, after which no patch is needed at all. The
+assertion is written for that: it checks that the removed APIs are absent and
+the live ones work, so it keeps passing once upstream ships and the patch goes
+away. The shipped patch file is removed from this package when 8.5.0 becomes
+the supported floor.
+
 ## Linting your stylesheets
 
 `@wordpress/theme` ships three stylelint rules and turning them on requires

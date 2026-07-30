@@ -35,6 +35,9 @@ importers:
       '@wordpress/a11y':
         specifier: 4.52.0
         version: 4.52.0
+      '@wordpress/element':
+        specifier: 8.4.0
+        version: 8.4.0(patch_hash=fa6f690e1341d76b15175d9e5a779c7ad5f716dc33f18f481b1f557bd37f99d8)
       '@wordpress/style-runtime':
         specifier: 0.8.0
         version: 0.8.0

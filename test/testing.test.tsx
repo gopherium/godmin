@@ -6,6 +6,7 @@ import { beforeAll, expect, test } from 'vitest'
 
 import {
 	WPDS_IGNORE_SELECTOR,
+	assertElementPatched,
 	clearAnnouncements,
 	getAnnouncement,
 	installTestEnvironment,
@@ -88,4 +89,28 @@ test('reports an empty announcement when the region is absent', () => {
 	document.getElementById('a11y-speak-polite')?.remove()
 
 	expect(getAnnouncement()).toBe('')
+})
+
+test('accepts an element build with the React 19 compatibility patch applied', async () => {
+	await expect(assertElementPatched()).resolves.toBeUndefined()
+})
+
+test('rejects an element build still exposing an api React 19 removed', async () => {
+	const unpatched = { findDOMNode: () => null, createRoot: () => ({}), createPortal: () => null }
+
+	await expect(assertElementPatched(async () => unpatched)).rejects.toThrow(/findDOMNode/)
+})
+
+test('rejects an element build missing an api it must still provide', async () => {
+	const broken = { findDOMNode: undefined, createRoot: undefined, createPortal: () => null }
+
+	await expect(assertElementPatched(async () => broken)).rejects.toThrow(/createRoot/)
+})
+
+test('reports an element build that cannot be imported at all', async () => {
+	const failing = async () => {
+		throw new Error("Named export 'findDOMNode' not found")
+	}
+
+	await expect(assertElementPatched(failing)).rejects.toThrow(/could not be imported/)
 })

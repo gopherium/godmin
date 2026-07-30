@@ -17,7 +17,8 @@
 	],
 	"files": [
 		"dist",
-		"NOTICE"
+		"NOTICE",
+		"patches"
 	],
 	"exports": {
 		".": {
@@ -25,6 +26,7 @@
 			"default": "./dist/index.js"
 		},
 		"./base.css": "./dist/base.css",
+		"./patches/*": "./patches/*",
 		"./stylelint": {
 			"types": "./dist/stylelint.d.ts",
 			"default": "./dist/stylelint.js"
@@ -52,6 +54,7 @@
 	},
 	"peerDependencies": {
 		"@testing-library/react": "^16.3.2",
+		"@wordpress/element": ">=8.4.0 <9.0.0",
 		"@wordpress/style-runtime": ">=0.8.0 <0.9.0",
 		"@wordpress/theme": ">=1.1.0 <2.0.0",
 		"@wordpress/ui": ">=0.19.0 <0.20.0",
@@ -61,6 +64,9 @@
 	},
 	"peerDependenciesMeta": {
 		"@testing-library/react": {
+			"optional": true
+		},
+		"@wordpress/element": {
 			"optional": true
 		},
 		"stylelint": {
@@ -77,6 +83,7 @@
 		"@vitejs/plugin-react": "^6.0.3",
 		"@vitest/coverage-v8": "^4.1.10",
 		"@wordpress/a11y": "4.52.0",
+		"@wordpress/element": "8.4.0",
 		"@wordpress/style-runtime": "0.8.0",
 		"@wordpress/theme": "1.1.0",
 		"@wordpress/ui": "0.19.0",

@@ -37,3 +37,11 @@ Releases are tagged `vX.Y.Z` and publish to npm from CI.
 - `@gopherium/godmin/stylelint`, turning on the three design system rules
   `@wordpress/theme` ships, which catch unknown tokens, an application
   redefining a `--wpds-` property, and hand written fallback values.
+- `assertElementPatched` in the testing entry point, asserting that
+  `@wordpress/element` works on React 19. It checks the outcome rather than a
+  patch file, so it keeps passing once upstream ships the fix and the patch is
+  no longer needed.
+- `@gopherium/godmin/patches`, the React 19 patch for `@wordpress/element`
+  8.4.0, since pnpm reads `patchedDependencies` only from the workspace root
+  and no package can apply a patch on a consumer's behalf. Expected to be
+  removed once 8.5.0 carries the fix upstream and becomes the supported floor.

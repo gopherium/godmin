@@ -10,7 +10,7 @@ export default defineConfig({
 		env: { TZ: 'UTC' },
 		include: ['test/**/*.test.{ts,tsx}'],
 		coverage: {
-			include: ['src/**'],
+			include: ['src/**/*.{ts,tsx}'],
 			reporter: ['text', 'lcov'],
 			thresholds: {
 				statements: 100,

@@ -5,8 +5,8 @@ import type { RenderOptions, RenderResult } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach } from 'vitest'
 
-import { AdminRoot } from './admin-root'
-import type { AdminRootProps } from './admin-root'
+import { AdminRoot } from './admin-root.js'
+import type { AdminRootProps } from './admin-root.js'
 
 /**
  * The elements the design system announces through rather than displays.
@@ -33,6 +33,49 @@ export function getAnnouncement(politeness: Politeness = 'polite'): string {
 export function clearAnnouncements(): void {
 	for (const region of document.querySelectorAll('[id^="a11y-speak"]')) {
 		region.textContent = ''
+	}
+}
+
+/**
+ * The APIs React 19 removed, which `@wordpress/element` must no longer provide.
+ */
+const REMOVED_BY_REACT_19 = ['findDOMNode', 'render', 'hydrate', 'unmountComponentAtNode']
+
+/**
+ * The APIs `@wordpress/element` must still provide.
+ */
+const STILL_PROVIDED = ['createRoot', 'createPortal']
+
+/**
+ * Loads a module by specifier.
+ */
+export type LoadModule = () => Promise<Record<string, unknown>>
+
+/**
+ * Asserts `@wordpress/element` works on React 19.
+ * @param load - The loader for the element module, its own import by default.
+ */
+export async function assertElementPatched(
+	load: LoadModule = () => import('@wordpress/element') as Promise<Record<string, unknown>>,
+): Promise<void> {
+	let element: Record<string, unknown>
+	try {
+		element = await load()
+	} catch (cause) {
+		throw new Error(
+			'@wordpress/element could not be imported, which is what an unpatched build does on React 19',
+			{ cause },
+		)
+	}
+	for (const name of REMOVED_BY_REACT_19) {
+		if (element[name] !== undefined) {
+			throw new Error(`@wordpress/element still provides ${name}, which React 19 removed`)
+		}
+	}
+	for (const name of STILL_PROVIDED) {
+		if (typeof element[name] !== 'function') {
+			throw new Error(`@wordpress/element does not provide ${name}`)
+		}
 	}
 }
 
