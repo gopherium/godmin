@@ -1,0 +1,12 @@
+GodMin
+Copyright 2026 The GodMin Authors
+
+This product includes software developed at the Gopherium project
+(https://github.com/gopherium).
+
+Applications built with GodMin resolve the WordPress Design System packages
+(@wordpress/ui, @wordpress/theme and their dependencies) themselves. Those
+packages are licensed GPL-2.0-or-later with a dual MPL-2.0 grant on
+contributions made after 2021. GodMin's own source is Apache-2.0 and declares
+those packages as peer dependencies, so it never redistributes them. A bundle
+that combines them is conveyed under the terms of the WordPress packages.
