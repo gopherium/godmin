@@ -31,3 +31,9 @@ Releases are tagged `vX.Y.Z` and publish to npm from CI.
   `getAnnouncement` and `clearAnnouncements` to assert on what was announced,
   `renderAdmin` to render inside the host, and `WPDS_IGNORE_SELECTOR` for
   applications that call `configure` themselves.
+- `@gopherium/godmin/vite`, with `godminDedupe` listing the packages that break
+  when duplicated, and `godminSingleCopy` failing the build when one of them
+  resolves to more than one copy.
+- `@gopherium/godmin/stylelint`, turning on the three design system rules
+  `@wordpress/theme` ships, which catch unknown tokens, an application
+  redefining a `--wpds-` property, and hand written fallback values.

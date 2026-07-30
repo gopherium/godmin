@@ -23,4 +23,5 @@ jobs:
       - run: pnpm run cover
       - run: pnpm exec oxlint
       - run: pnpm exec eslint .
+      - run: pnpm run lint:css
       - run: pnpm run build

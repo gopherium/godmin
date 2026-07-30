@@ -25,9 +25,17 @@
 			"default": "./dist/index.js"
 		},
 		"./base.css": "./dist/base.css",
+		"./stylelint": {
+			"types": "./dist/stylelint.d.ts",
+			"default": "./dist/stylelint.js"
+		},
 		"./testing": {
 			"types": "./dist/testing.d.ts",
 			"default": "./dist/testing.js"
+		},
+		"./vite": {
+			"types": "./dist/vite.d.ts",
+			"default": "./dist/vite.js"
 		},
 		"./package.json": "./package.json"
 	},
@@ -35,7 +43,8 @@
 		"build": "tsc -p tsconfig.build.json && cp src/base.css dist/base.css",
 		"cover": "vitest run --coverage",
 		"lint": "oxlint",
-		"typecheck": "tsc -b",
+		"lint:css": "stylelint 'src/**/*.css'",
+		"typecheck": "tsc --noEmit",
 		"prepublishOnly": "pnpm run build"
 	},
 	"publishConfig": {
@@ -47,10 +56,14 @@
 		"@wordpress/theme": ">=1.1.0 <2.0.0",
 		"@wordpress/ui": ">=0.19.0 <0.20.0",
 		"react": "^19.2.0",
+		"stylelint": "^16 || ^17",
 		"vitest": "^4.1.10"
 	},
 	"peerDependenciesMeta": {
 		"@testing-library/react": {
+			"optional": true
+		},
+		"stylelint": {
 			"optional": true
 		},
 		"vitest": {
@@ -59,6 +72,7 @@
 	},
 	"devDependencies": {
 		"@testing-library/react": "^16.3.2",
+		"@types/node": "^26.1.2",
 		"@types/react": "^19.2.17",
 		"@vitejs/plugin-react": "^6.0.3",
 		"@vitest/coverage-v8": "^4.1.10",
@@ -73,6 +87,7 @@
 		"oxlint": "^1.71.0",
 		"react": "^19.2.8",
 		"react-dom": "^19.2.8",
+		"stylelint": "^17.0.0",
 		"typescript": "~6.0.2",
 		"typescript-eslint": "^8.65.0",
 		"vitest": "^4.1.10"

@@ -109,6 +109,40 @@ tokens behave as they will in the application.
 `@testing-library/react` and `vitest` are optional peers, needed only for this
 entry point.
 
+## Build configuration
+
+Several packages break when a bundle contains two copies of them. React is the
+loud case, where hooks throw, but a second `@wordpress/theme` silently gives you
+a second context and unthemed components. `@gopherium/godmin/vite` exports the
+list and a plugin that fails the build rather than shipping the bug.
+
+```ts
+import { godminDedupe, godminSingleCopy } from '@gopherium/godmin/vite'
+
+export default defineConfig({
+    resolve: { dedupe: godminDedupe },
+    plugins: [godminSingleCopy()],
+})
+```
+
+The list cannot live in the package alone, because `resolve.dedupe` is read
+from your own config, so GodMin ships it as data for you to spread.
+
+## Linting your stylesheets
+
+`@wordpress/theme` ships three stylelint rules and turning them on requires
+knowing they exist and what they are called. `@gopherium/godmin/stylelint` is
+that configuration.
+
+```js
+export default { extends: ['@gopherium/godmin/stylelint'] }
+```
+
+It catches design tokens that do not exist, an application redefining a
+`--wpds-` property, and hand written fallback values. The first of those is the
+one that bites quietly, since a mistyped token renders nothing at all.
+`stylelint` is an optional peer, needed only for this entry point.
+
 ## Design system version policy
 
 Peer ranges are longhand and single window, for example `>=0.19.0 <0.20.0`. The

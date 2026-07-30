@@ -1,31 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { readFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
 import { resolve } from 'node:path'
 
 import { expect, test } from 'vitest'
 
-const require = createRequire(resolve('package.json'))
 const base = readFileSync(resolve('src/base.css'), 'utf8')
-
-/**
- * Returns the design token names the given stylesheet reads.
- * @param css - The stylesheet source to scan.
- * @returns The distinct token names referenced through `var()`.
- */
-function tokensRead(css: string): string[] {
-	return [...new Set([...css.matchAll(/var\(\s*(--wpds-[a-z0-9-]+)/g)].map((m) => m[1]))]
-}
-
-/**
- * Returns the design token names the given stylesheet declares.
- * @param css - The stylesheet source to scan.
- * @returns The distinct token names assigned a value.
- */
-function tokensDeclared(css: string): Set<string> {
-	return new Set([...css.matchAll(/(--wpds-[a-z0-9-]+)\s*:/g)].map((m) => m[1]))
-}
 
 /**
  * Returns the stylesheet lines that are neither blank nor a comment.
@@ -45,16 +25,6 @@ test('declares the cascade layer order before anything else', () => {
 
 test('loads the design tokens so a consumer needs one import', () => {
 	expect(base).toContain("@import '@wordpress/theme/design-tokens.css';")
-})
-
-test('every design token it reads is declared by the installed theme', () => {
-	const theme = readFileSync(require.resolve('@wordpress/theme/design-tokens.css'), 'utf8')
-
-	const declared = tokensDeclared(theme)
-	const missing = tokensRead(base).filter((token) => !declared.has(token))
-
-	expect(tokensRead(base).length).toBeGreaterThan(0)
-	expect(missing).toEqual([])
 })
 
 test('keeps the overlay requirement unlayered so it outranks application styles', () => {
