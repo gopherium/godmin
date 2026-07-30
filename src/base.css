@@ -1,0 +1,22 @@
+/* SPDX-License-Identifier: Apache-2.0 */
+
+@layer wp-ui, godmin;
+
+@import '@wordpress/theme/design-tokens.css';
+
+/*
+ * Overlay elements position themselves against the nearest positioned ancestor,
+ * so this rule is unlayered and outranks application styles.
+ */
+body {
+	position: relative;
+}
+
+@layer godmin {
+	body {
+		margin: 0;
+		font-family: var(--wpds-typography-font-family-body);
+		color: var(--wpds-color-foreground-content-neutral);
+		background: var(--wpds-color-background-surface-neutral);
+	}
+}

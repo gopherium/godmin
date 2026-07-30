@@ -21,3 +21,8 @@ Releases are tagged `vX.Y.Z` and publish to npm from CI.
 - `useTokenDocument`, which keeps a secondary document such as an iframe or a
   popup supplied with the design system styles, including styles registered
   after it mounts.
+- `@gopherium/godmin/base.css`, the host stylesheet. It declares the cascade
+  layer order as `wp-ui, godmin`, loads the design tokens so a consumer needs
+  one import rather than two, keeps the overlay positioning requirement
+  unlayered, and confines the page appearance defaults to the `godmin` layer
+  where an application can override them without a specificity fight.

@@ -31,6 +31,53 @@ GodMin declares the design system as peer dependencies, so your application
 resolves and pins them. The window this build was tested against is exported as
 `SUPPORTED_WPDS` and enforced by the declared peer ranges.
 
+## Setup
+
+Import the stylesheet once, at your application entry point, then mount
+`AdminRoot` around your tree.
+
+```tsx
+import '@gopherium/godmin/base.css'
+import { AdminRoot } from '@gopherium/godmin'
+
+createRoot(document.getElementById('app')!).render(
+    <AdminRoot>
+        <YourApp />
+    </AdminRoot>,
+)
+```
+
+That is the whole host setup. `base.css` loads the design tokens for you, so
+you do not import `@wordpress/theme/design-tokens.css` separately, and it
+declares the cascade layer order as `wp-ui, godmin`. `AdminRoot` isolates the
+stacking context that portaled popovers need and enables the overlay slot that
+lets design system overlays stack above `@wordpress/components` ones.
+
+### Overriding the appearance defaults
+
+`base.css` sets the page font, colour and background from design tokens inside
+`@layer godmin`, so any unlayered rule of your own wins without a specificity
+fight. One rule it deliberately leaves unlayered is `body { position: relative }`,
+because overlays position against the nearest positioned ancestor and an
+application that overrode it would get broken backdrops.
+
+If you declare your own layers, name GodMin's in the order you want:
+
+```css
+@layer wp-ui, godmin, my-app;
+```
+
+### Rendering into an iframe
+
+Design system styles are injected per document, so a secondary document such as
+an iframe or a popup needs registering. `useTokenDocument` does that and keeps
+it supplied with styles registered later, which is what an embedded editor
+canvas needs.
+
+```tsx
+useTokenDocument(iframeRef.current?.contentDocument)
+```
+
 ## Design system version policy
 
 Peer ranges are longhand and single window, for example `>=0.19.0 <0.20.0`. The

@@ -24,10 +24,11 @@
 			"types": "./dist/index.d.ts",
 			"default": "./dist/index.js"
 		},
+		"./base.css": "./dist/base.css",
 		"./package.json": "./package.json"
 	},
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json",
+		"build": "tsc -p tsconfig.build.json && cp src/base.css dist/base.css",
 		"cover": "vitest run --coverage",
 		"lint": "oxlint",
 		"typecheck": "tsc -b",
