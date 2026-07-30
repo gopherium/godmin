@@ -78,6 +78,37 @@ canvas needs.
 useTokenDocument(iframeRef.current?.contentDocument)
 ```
 
+## Testing
+
+`@gopherium/godmin/testing` solves the problems the design system creates for a
+test runner. Call it once from your setup file.
+
+```ts
+import { installTestEnvironment } from '@gopherium/godmin/testing'
+
+installTestEnvironment()
+```
+
+The design system announces through `@wordpress/a11y`, which appends a live
+region and an intro paragraph to the body. Without this, every query for text
+that was also announced finds two nodes, and the last announcement of one test
+is still in the DOM for the next one. `installTestEnvironment` makes queries
+ignore those elements and empties them after each test.
+
+Because the announcement regions are then invisible to queries, read them
+directly instead.
+
+```ts
+speak('Draft saved')
+expect(getAnnouncement()).toBe('Draft saved')
+```
+
+`renderAdmin` renders a tree inside `AdminRoot`, so components that read design
+tokens behave as they will in the application.
+
+`@testing-library/react` and `vitest` are optional peers, needed only for this
+entry point.
+
 ## Design system version policy
 
 Peer ranges are longhand and single window, for example `>=0.19.0 <0.20.0`. The

@@ -26,3 +26,8 @@ Releases are tagged `vX.Y.Z` and publish to npm from CI.
   one import rather than two, keeps the overlay positioning requirement
   unlayered, and confines the page appearance defaults to the `godmin` layer
   where an application can override them without a specificity fight.
+- `@gopherium/godmin/testing`, with `installTestEnvironment` to stop
+  announcements breaking text queries and leaking between tests,
+  `getAnnouncement` and `clearAnnouncements` to assert on what was announced,
+  `renderAdmin` to render inside the host, and `WPDS_IGNORE_SELECTOR` for
+  applications that call `configure` themselves.
