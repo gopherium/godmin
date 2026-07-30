@@ -4,6 +4,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [0.1.1]
+
+### Fixed
+
+- `installTestEnvironment` now supplies `window.matchMedia`, which jsdom lacks
+  and `@wordpress/ui` calls. Without it any test rendering a design system
+  component that reads a media query throws.
+
 ## [0.1.0]
 
 First release. The host layer only, since `@wordpress/admin-ui` is building the

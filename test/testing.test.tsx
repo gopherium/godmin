@@ -114,3 +114,22 @@ test('reports an element build that cannot be imported at all', async () => {
 
 	await expect(assertElementPatched(failing)).rejects.toThrow(/could not be imported/)
 })
+
+test('provides the media query API jsdom lacks', () => {
+	expect(typeof window.matchMedia).toBe('function')
+
+	const query = window.matchMedia('(min-width: 600px)')
+
+	expect(query.matches).toBe(false)
+	expect(query.media).toBe('(min-width: 600px)')
+	query.addEventListener('change', () => {})
+	query.removeEventListener('change', () => {})
+})
+
+test('leaves an existing media query implementation alone', () => {
+	const existing = window.matchMedia
+
+	installTestEnvironment()
+
+	expect(window.matchMedia).toBe(existing)
+})

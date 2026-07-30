@@ -83,6 +83,14 @@ export async function assertElementPatched(
  * Prepares the test environment a design system application needs.
  */
 export function installTestEnvironment(): void {
+	if (typeof window.matchMedia !== 'function') {
+		window.matchMedia = (media: string) => ({
+			media,
+			matches: false,
+			addEventListener: () => {},
+			removeEventListener: () => {},
+		}) as unknown as MediaQueryList
+	}
 	configure({ defaultIgnore: WPDS_IGNORE_SELECTOR })
 	afterEach(clearAnnouncements)
 }
