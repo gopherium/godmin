@@ -15,3 +15,9 @@ Releases are tagged `vX.Y.Z` and publish to npm from CI.
   Apache-2.0 license.
 - `SUPPORTED_WPDS`, the design system version window this build was tested
   against.
+- `AdminRoot`, the host element for a design system application. It isolates its
+  own stacking context, enables the design system overlay slot, and applies the
+  theme. It contributes no layout, width or landmark of its own.
+- `useTokenDocument`, which keeps a secondary document such as an iframe or a
+  popup supplied with the design system styles, including styles registered
+  after it mounts.

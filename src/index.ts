@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
+export { AdminRoot } from './admin-root'
+export type { AdminRootProps } from './admin-root'
+export { useTokenDocument } from './use-token-document'
+
 /**
  * The design system version window this build was tested against.
  */
