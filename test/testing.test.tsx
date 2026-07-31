@@ -140,6 +140,13 @@ test('provides the media query listeners the animation library still calls', () 
 	query.removeListener(() => {})
 })
 
+test('provides the feature query jsdom leaves off its CSS object', () => {
+	expect(typeof CSS.supports).toBe('function')
+
+	expect(CSS.supports('scrollbar-gutter', 'stable')).toBe(false)
+	expect(CSS.supports('-webkit-backdrop-filter:none')).toBe(false)
+})
+
 test('provides the resize observer jsdom lacks', () => {
 	expect(typeof globalThis.ResizeObserver).toBe('function')
 
@@ -148,6 +155,14 @@ test('provides the resize observer jsdom lacks', () => {
 	observer.observe(document.body)
 	observer.unobserve(document.body)
 	observer.disconnect()
+})
+
+test('leaves an existing feature query alone', () => {
+	const existing = CSS.supports
+
+	installTestEnvironment()
+
+	expect(CSS.supports).toBe(existing)
 })
 
 test('leaves an existing resize observer alone', () => {

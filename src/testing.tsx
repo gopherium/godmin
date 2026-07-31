@@ -93,6 +93,12 @@ export function installTestEnvironment(): void {
 			removeListener: () => {},
 		}) as unknown as MediaQueryList
 	}
+	if (typeof globalThis.CSS !== 'object' || globalThis.CSS === null) {
+		globalThis.CSS = {} as typeof globalThis.CSS
+	}
+	if (typeof globalThis.CSS.supports !== 'function') {
+		globalThis.CSS.supports = () => false
+	}
 	if (typeof globalThis.ResizeObserver !== 'function') {
 		globalThis.ResizeObserver = class {
 			observe() {}

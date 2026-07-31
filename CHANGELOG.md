@@ -4,6 +4,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [0.1.3]
+
+### Fixed
+
+- `CSS.supports` is now supplied on the environment's `CSS` object, which jsdom
+  leaves without one. The library behind design system dialogs calls it while
+  locking body scroll, so opening a menu that leads to a dialog threw.
+
 ## [0.1.2]
 
 ### Fixed
