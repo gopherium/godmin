@@ -13,6 +13,11 @@ import {
 	renderAdmin,
 } from '../src/testing'
 
+interface LegacyMediaQueryList {
+	addListener: (listener: () => void) => void
+	removeListener: (listener: () => void) => void
+}
+
 installTestEnvironment()
 
 beforeAll(() => {
@@ -124,6 +129,33 @@ test('provides the media query API jsdom lacks', () => {
 	expect(query.media).toBe('(min-width: 600px)')
 	query.addEventListener('change', () => {})
 	query.removeEventListener('change', () => {})
+})
+
+test('provides the media query listeners the animation library still calls', () => {
+	const query = window.matchMedia('(prefers-reduced-motion: reduce)') as LegacyMediaQueryList
+
+	expect(typeof query.addListener).toBe('function')
+	expect(typeof query.removeListener).toBe('function')
+	query.addListener(() => {})
+	query.removeListener(() => {})
+})
+
+test('provides the resize observer jsdom lacks', () => {
+	expect(typeof globalThis.ResizeObserver).toBe('function')
+
+	const observer = new globalThis.ResizeObserver(() => {})
+
+	observer.observe(document.body)
+	observer.unobserve(document.body)
+	observer.disconnect()
+})
+
+test('leaves an existing resize observer alone', () => {
+	const existing = globalThis.ResizeObserver
+
+	installTestEnvironment()
+
+	expect(globalThis.ResizeObserver).toBe(existing)
 })
 
 test('leaves an existing media query implementation alone', () => {

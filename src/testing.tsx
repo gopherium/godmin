@@ -89,7 +89,16 @@ export function installTestEnvironment(): void {
 			matches: false,
 			addEventListener: () => {},
 			removeEventListener: () => {},
+			addListener: () => {},
+			removeListener: () => {},
 		}) as unknown as MediaQueryList
+	}
+	if (typeof globalThis.ResizeObserver !== 'function') {
+		globalThis.ResizeObserver = class {
+			observe() {}
+			unobserve() {}
+			disconnect() {}
+		}
 	}
 	configure({ defaultIgnore: WPDS_IGNORE_SELECTOR })
 	afterEach(clearAnnouncements)
