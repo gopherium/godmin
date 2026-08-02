@@ -64,3 +64,12 @@ test('gives the table region a containing block as well as its overflow', () => 
 	expect(region).toMatch(/position:\s*relative/)
 	expect(region).toMatch(/overflow-x:\s*auto/)
 })
+
+// Frame.Root themes the chrome through a provider, which only sets custom
+// properties, so the layout has to actually paint with them.
+test('paints the chrome the frame is themed with', () => {
+	const layout = base.slice(base.indexOf('.godmin-layout {'))
+
+	expect(layout).toMatch(/background:\s*var\(--wpds-color-background-surface-neutral-weak\)/)
+	expect(layout).toMatch(/color:\s*var\(--wpds-color-foreground-content-neutral\)/)
+})

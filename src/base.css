@@ -25,6 +25,8 @@ body {
 	.godmin-layout {
 		display: flex;
 		height: 100vh;
+		background: var(--wpds-color-background-surface-neutral-weak);
+		color: var(--wpds-color-foreground-content-neutral);
 	}
 
 	.godmin-layout--small {
