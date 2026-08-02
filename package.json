@@ -28,6 +28,10 @@
 		},
 		"./base.css": "./dist/base.css",
 		"./patches/*": "./patches/*",
+		"./router": {
+			"types": "./dist/router.d.ts",
+			"default": "./dist/router.js"
+		},
 		"./stylelint": {
 			"types": "./dist/stylelint.d.ts",
 			"default": "./dist/stylelint.js"
@@ -54,6 +58,7 @@
 		"access": "public"
 	},
 	"peerDependencies": {
+		"@tanstack/react-router": "^1.170.0",
 		"@testing-library/react": "^16.3.2",
 		"@wordpress/style-runtime": ">=0.8.0 <0.9.0",
 		"@wordpress/theme": ">=1.1.0 <2.0.0",
@@ -63,6 +68,9 @@
 		"vitest": "^4.1.10"
 	},
 	"peerDependenciesMeta": {
+		"@tanstack/react-router": {
+			"optional": true
+		},
 		"@testing-library/react": {
 			"optional": true
 		},
@@ -74,6 +82,7 @@
 		}
 	},
 	"devDependencies": {
+		"@tanstack/react-router": "^1.170.18",
 		"@testing-library/react": "^16.3.2",
 		"@types/node": "^26.1.2",
 		"@types/react": "^19.2.17",

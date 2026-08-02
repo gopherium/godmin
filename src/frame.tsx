@@ -107,9 +107,14 @@ function TopBar({ children, brand, menuLabel }: Required<Pick<FrameRailProps, 'c
 	)
 }
 
+/**
+ * How a screen fills its canvas region.
+ */
+export type CanvasMode = 'padded' | 'bleed'
+
 export interface FrameCanvasProps {
 	children: ReactNode
-	canvas?: 'padded' | 'bleed'
+	canvas?: CanvasMode
 }
 
 /**

@@ -4,7 +4,12 @@ export { AdminRoot } from './admin-root.js'
 export type { AdminRootProps } from './admin-root.js'
 export { DENSE_BREAKPOINT, RAIL_BREAKPOINT, SMALL_VIEWPORT } from './breakpoints.js'
 export { Frame } from './frame.js'
-export type { FrameCanvasProps, FrameRailProps, FrameRootProps } from './frame.js'
+export type {
+	CanvasMode,
+	FrameCanvasProps,
+	FrameRailProps,
+	FrameRootProps,
+} from './frame.js'
 export { NavScreen } from './nav-screen.js'
 export type { NavScreenProps } from './nav-screen.js'
 export { ErrorNotice, LoadMore, Page, PageTitle } from './page.js'
