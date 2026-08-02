@@ -4,6 +4,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [0.2.0]
+
+### Added
+
+- `Frame` frames an admin application from the regions you render:
+  `Frame.Root`, `Frame.Rail` and `Frame.Canvas`. Below 1024px the rail becomes
+  a top bar and a drawer, and below 640px the canvas meets the screen edges.
+  The core imports no router, so `Frame.Root` takes the location as a string
+  and closes the drawer whenever it changes.
+- `Page`, `PageTitle`, `ErrorNotice` and `LoadMore` give every screen the same
+  shape, and `NavScreen` gives a drill-down its way back to the parent layer.
+- `Toaster` and `useToaster` hold messages a screen raises, each with an
+  optional action.
+- `@gopherium/godmin/router` reads the canvas a route asks for through
+  `useCanvas`, and the current pathname through `useFrameLocation`.
+  `@tanstack/react-router` is an optional peer, needed only for this entry
+  point.
+- `setViewport` in the testing entry point controls what media queries report,
+  so a test can render either shell.
+- `useMediaQuery`, `RAIL_BREAKPOINT`, `DENSE_BREAKPOINT` and `SMALL_VIEWPORT`
+  are exported for an application placing its own rules at the same widths.
+
+### Fixed
+
+- The testing entry point now clears the rendered tree after each test. A
+  runner without globals never registers that itself, so trees accumulated and
+  a query could find an element another test had rendered.
+
 ## [0.1.3]
 
 ### Fixed

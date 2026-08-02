@@ -19,18 +19,26 @@ here duplicates something upstream ships.
 
 | Entry point | Contents |
 | --- | --- |
-| `@gopherium/godmin` | `AdminRoot`, `useTokenDocument`, `SUPPORTED_WPDS` |
-| `@gopherium/godmin/base.css` | cascade layer order, design tokens, host rules |
-| `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR` |
+| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `NavScreen`, `ErrorNotice`, `LoadMore`, `Toaster`, `useToaster`, `useMediaQuery`, `useTokenDocument`, the breakpoints, `SUPPORTED_WPDS` |
+| `@gopherium/godmin/base.css` | cascade layer order, design tokens, host rules, frame and screen styles |
+| `@gopherium/godmin/router` | `useCanvas`, `useFrameLocation`, the `canvas` route static data |
+| `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR` |
 | `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy` |
 | `@gopherium/godmin/stylelint` | the design system stylelint rules |
 | `@gopherium/godmin/patches` | the React 19 patch for `@wordpress/element`, temporary |
 
 ## Status
 
-Version 0.1.0 is the host layer. The application frame is deliberately not here
-yet, because `@wordpress/admin-ui` is actively building that layer and a kit
-should not race upstream. See the CHANGELOG for what each release adds.
+Version 0.1.x was the host layer alone. The frame was held back while
+`@wordpress/admin-ui` built its own page chrome, and shipped in 0.2.0 once two
+applications had run the same shell long enough to settle its shape. Waiting
+was worth it: the width, the empty state placement, the narrow viewport shell
+and the table region all changed during that time, and each would have been a
+breaking release had the frame gone out first.
+
+`@wordpress/admin-ui` remains the thing to watch. GodMin does not wrap it,
+because a kit that wraps an API still moving adds a release hop to every
+upstream fix. See the CHANGELOG for what each release adds.
 
 ## Install
 
@@ -78,6 +86,96 @@ If you declare your own layers, name GodMin's in the order you want:
 @layer wp-ui, godmin, my-app;
 ```
 
+## Framing the application
+
+`Frame` builds the shell out of the regions you render. A region exists because
+its element is there, not because a flag says so, so an application with no
+rail simply does not render one.
+
+```tsx
+<Frame.Root location={pathname}>
+    <Frame.Rail brand={<HomeLink />}>
+        <YourNavigation />
+    </Frame.Rail>
+    <Frame.Canvas canvas={mode}>
+        <YourScreen />
+    </Frame.Canvas>
+</Frame.Root>
+```
+
+Below 1024px the rail leaves and the same children appear in a drawer behind a
+menu button, so you write your navigation once. Below 640px the canvas meets
+the screen edges and pads tighter.
+
+The core imports no router. `Frame.Root` takes `location` as a plain string and
+closes the drawer whenever it changes, which means any link closes it, including
+links a plugin added. `chromeColor` and `canvasColor` theme the two regions.
+
+`brand` is rendered as given and should not be a heading. Each screen owns the
+one first level heading on the page, and `Page` renders it.
+
+### Screens
+
+`Page` puts the title top left, an optional subtitle under it and optional
+actions top right.
+
+```tsx
+<Page title="Reports" actions={<Button>New report</Button>}>
+    <ReportTable />
+</Page>
+```
+
+A screen that fills the canvas edge to edge builds its own chrome and uses
+`PageTitle` directly, so it still carries exactly one first level heading.
+`NavScreen` renders a drill-down layer, taking the way back as an element you
+supply so the kit stays router free.
+
+```tsx
+<NavScreen title="Conversations" back={<Link to="/" />}>
+    <ConversationList />
+</NavScreen>
+```
+
+`base.css` also ships `godmin-empty`, `godmin-form`, `godmin-table` and
+`godmin-table-scroll`. The last two go together: a table wider than a phone
+scrolls inside its own region rather than dragging the page sideways.
+
+```tsx
+<div className="godmin-table-scroll" role="region" aria-label="Reports" tabIndex={0}>
+    <table className="godmin-table">…</table>
+</div>
+```
+
+The region is focusable so a keyboard can reach the columns that scrolled out
+of view, and it establishes a containing block, without which absolutely
+positioned content inside it escapes the clip and widens the document.
+
+### Reading the canvas from routes
+
+With TanStack Router, `@gopherium/godmin/router` lets a route declare how it
+fills the canvas, and the deepest route that declares one wins, so a child can
+opt back to a padded canvas its section left behind.
+
+```tsx
+createRoute({ path: 'threads/$id', staticData: { canvas: 'bleed' } })
+
+const mode = useCanvas()
+const pathname = useFrameLocation()
+```
+
+### Raising messages
+
+`Toaster` holds messages a screen raises, each with an optional action.
+
+```tsx
+<Toaster>
+    <YourApp />
+</Toaster>
+
+const toaster = useToaster()
+toaster.show('Post moved to trash', { label: 'Undo', onAct: restore })
+```
+
 ### Rendering into an iframe
 
 Design system styles are injected per document, so a secondary document such as
@@ -119,6 +217,19 @@ expect(getAnnouncement()).toBe('Draft saved')
 `renderAdmin` renders a tree inside `AdminRoot`, so components that read design
 tokens behave as they will in the application.
 
+A test runner evaluates no media queries, so `setViewport` says what they
+should report and tells any listener the viewport changed. That is how a test
+renders the narrow shell.
+
+```ts
+import { setViewport } from '@gopherium/godmin/testing'
+
+setViewport({ matches: true })
+```
+
+It resets before the next test, along with the rendered tree, which a runner
+without globals never clears by itself.
+
 `@testing-library/react` and `vitest` are optional peers, needed only for this
 entry point.
 
@@ -140,6 +251,20 @@ export default defineConfig({
 
 The list cannot live in the package alone, because `resolve.dedupe` is read
 from your own config, so GodMin ships it as data for you to spread.
+
+Dedupe settles which copy your bundler picks, but it cannot stop a second one
+being installed. `@wordpress/element` up to 8.4.0 declares React 18 as a
+dependency rather than a peer, so a fresh install materialises React 18 beside
+your React 19 and the first hook throws `Cannot read properties of null`. Pin
+the version yourself.
+
+```json
+{
+    "pnpm": {
+        "overrides": { "react": "^19.2.0", "react-dom": "^19.2.0" }
+    }
+}
+```
 
 ## React 19 and @wordpress/element
 
