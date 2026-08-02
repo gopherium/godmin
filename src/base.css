@@ -78,6 +78,14 @@ body {
 		overflow: hidden;
 	}
 
+	.godmin-toasts {
+		position: fixed;
+		left: 16px;
+		bottom: 16px;
+		z-index: 1;
+		max-width: calc(100vw - 32px);
+	}
+
 	.godmin-nav-screen__title {
 		flex: 1;
 		min-width: 0;
