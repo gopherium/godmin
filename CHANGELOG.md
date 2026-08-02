@@ -4,6 +4,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [0.2.1]
+
+### Fixed
+
+- `Frame.Root` themes its chrome through a provider, which only sets custom
+  properties, so the layout declaring no background of its own left
+  `chromeColor` inert and the chrome rendered unthemed. It now paints the
+  surface and foreground it is given.
+
 ## [0.2.0]
 
 ### Added
