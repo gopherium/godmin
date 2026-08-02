@@ -2,6 +2,10 @@
 
 export { AdminRoot } from './admin-root.js'
 export type { AdminRootProps } from './admin-root.js'
+export { DENSE_BREAKPOINT, RAIL_BREAKPOINT, SMALL_VIEWPORT } from './breakpoints.js'
+export { Frame } from './frame.js'
+export type { FrameCanvasProps, FrameRailProps, FrameRootProps } from './frame.js'
+export { useMediaQuery } from './use-media-query.js'
 export { useTokenDocument } from './use-token-document.js'
 
 /**

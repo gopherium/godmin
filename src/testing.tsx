@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { configure, render } from '@testing-library/react'
+import { cleanup, configure, render } from '@testing-library/react'
 import type { RenderOptions, RenderResult } from '@testing-library/react'
 import type { ReactNode } from 'react'
 import { afterEach } from 'vitest'
@@ -80,25 +80,85 @@ export async function assertElementPatched(
 }
 
 /**
- * Prepares the test environment a design system application needs.
+ * Whether every media query currently reports a match.
  */
-export function installTestEnvironment(): void {
-	if (typeof window.matchMedia !== 'function') {
-		window.matchMedia = (media: string) => ({
-			media,
-			matches: false,
-			addEventListener: () => {},
-			removeEventListener: () => {},
-			addListener: () => {},
-			removeListener: () => {},
-		}) as unknown as MediaQueryList
+let viewportMatches = false
+
+/**
+ * The listeners registered on the media query lists handed out so far.
+ */
+const viewportListeners = new Set<() => void>()
+
+/**
+ * Sets what every media query reports, and tells its listeners.
+ * @param viewport - Whether queries should report a match.
+ */
+export function setViewport(viewport: { matches: boolean }): void {
+	viewportMatches = viewport.matches
+	for (const listener of [...viewportListeners]) {
+		listener()
 	}
+}
+
+/**
+ * Returns every media query to reporting no match, with no listeners left.
+ */
+function resetViewport(): void {
+	viewportMatches = false
+	viewportListeners.clear()
+}
+
+/**
+ * Returns a media query list reading the viewport this module controls.
+ * @param media - The media query text.
+ * @returns The media query list.
+ */
+function mediaQueryList(media: string): MediaQueryList {
+	return {
+		media,
+		get matches() {
+			return viewportMatches
+		},
+		addEventListener: (_type: string, listener: () => void) => {
+			viewportListeners.add(listener)
+		},
+		removeEventListener: (_type: string, listener: () => void) => {
+			viewportListeners.delete(listener)
+		},
+		addListener: (listener: () => void) => {
+			viewportListeners.add(listener)
+		},
+		removeListener: (listener: () => void) => {
+			viewportListeners.delete(listener)
+		},
+	} as unknown as MediaQueryList
+}
+
+/**
+ * Provides the media query API jsdom leaves out.
+ */
+function installMediaQueries(): void {
+	if (typeof window.matchMedia !== 'function') {
+		window.matchMedia = mediaQueryList
+	}
+}
+
+/**
+ * Provides the feature detection API jsdom leaves out.
+ */
+function installFeatureDetection(): void {
 	if (typeof globalThis.CSS !== 'object' || globalThis.CSS === null) {
 		globalThis.CSS = {} as typeof globalThis.CSS
 	}
 	if (typeof globalThis.CSS.supports !== 'function') {
 		globalThis.CSS.supports = () => false
 	}
+}
+
+/**
+ * Provides the element resize API jsdom leaves out.
+ */
+function installResizeObserver(): void {
 	if (typeof globalThis.ResizeObserver !== 'function') {
 		globalThis.ResizeObserver = class {
 			observe() {}
@@ -106,8 +166,19 @@ export function installTestEnvironment(): void {
 			disconnect() {}
 		}
 	}
+}
+
+/**
+ * Prepares the test environment a design system application needs.
+ */
+export function installTestEnvironment(): void {
+	installMediaQueries()
+	installFeatureDetection()
+	installResizeObserver()
 	configure({ defaultIgnore: WPDS_IGNORE_SELECTOR })
+	afterEach(cleanup)
 	afterEach(clearAnnouncements)
+	afterEach(resetViewport)
 }
 
 /**

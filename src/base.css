@@ -20,3 +20,76 @@ body {
 		background: var(--wpds-color-background-surface-neutral);
 	}
 }
+
+@layer godmin {
+	.godmin-layout {
+		display: flex;
+		height: 100vh;
+	}
+
+	.godmin-layout--small {
+		flex-direction: column;
+	}
+
+	.godmin-layout__rail {
+		display: flex;
+		flex-direction: column;
+		flex-shrink: 0;
+		width: 300px;
+		padding: 16px;
+		box-sizing: border-box;
+		overflow-y: auto;
+	}
+
+	.godmin-layout__topbar {
+		display: flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 8px;
+		padding: 8px 16px;
+	}
+
+	.godmin-layout__drawer {
+		display: flex;
+		flex-direction: column;
+		padding: 16px;
+		box-sizing: border-box;
+		overflow-y: auto;
+	}
+
+	.godmin-layout__canvas {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		min-width: 0;
+		margin: 16px;
+		padding: 24px;
+		box-sizing: border-box;
+		border-radius: var(--wpds-border-radius-xl);
+		background: var(--wpds-color-background-surface-neutral);
+		color: var(--wpds-color-foreground-content-neutral);
+		box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+		overflow-x: hidden;
+		overflow-y: auto;
+	}
+
+	.godmin-layout__canvas--bleed {
+		padding: 0;
+		overflow: hidden;
+	}
+
+	/* Small viewport overrides live together at the end of the sheet, so they
+	   always win over the rules above them without extra specificity. */
+	@media (max-width: 639px) {
+		.godmin-layout__canvas {
+			margin: 0;
+			padding: 16px;
+			border-radius: 0;
+			box-shadow: none;
+		}
+
+		.godmin-layout__canvas--bleed {
+			padding: 0;
+		}
+	}
+}
