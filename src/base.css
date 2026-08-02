@@ -78,6 +78,45 @@ body {
 		overflow: hidden;
 	}
 
+	.godmin-page__subtitle {
+		color: var(--wpds-color-foreground-content-neutral-weak);
+	}
+
+	.godmin-form {
+		display: flex;
+		flex-direction: column;
+		gap: var(--wpds-dimension-gap-md);
+		max-width: var(--wpds-dimension-surface-width-sm);
+	}
+
+	.godmin-empty {
+		margin-inline: auto;
+		padding-block: 48px;
+	}
+
+	.godmin-table {
+		width: 100%;
+		border-collapse: collapse;
+		text-align: left;
+	}
+
+	.godmin-table th,
+	.godmin-table td {
+		padding: 8px 12px;
+		border-bottom: 1px solid var(--wpds-color-stroke-surface-neutral);
+		vertical-align: middle;
+	}
+
+	.godmin-table th {
+		font-size: var(--wpds-typography-font-size-sm);
+		color: var(--wpds-color-foreground-content-neutral-weak);
+	}
+
+	.godmin-table__actions {
+		width: 1%;
+		white-space: nowrap;
+	}
+
 	/* Small viewport overrides live together at the end of the sheet, so they
 	   always win over the rules above them without extra specificity. */
 	@media (max-width: 639px) {
@@ -90,6 +129,18 @@ body {
 
 		.godmin-layout__canvas--bleed {
 			padding: 0;
+		}
+
+		/* The region needs a containing block, or absolutely positioned content
+		   inside it escapes the clip and widens the document. */
+		.godmin-table-scroll {
+			position: relative;
+			overflow-x: auto;
+		}
+
+		.godmin-table-scroll:focus-visible {
+			outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+			outline-offset: 2px;
 		}
 	}
 }

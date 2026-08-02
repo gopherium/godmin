@@ -53,3 +53,14 @@ test('styles no bare element selector beyond the document host ones', () => {
 test('leaves stacking context isolation to the host component', () => {
 	expect(base).not.toContain('isolation')
 })
+
+test('centers the empty state, which the design system does not place itself', () => {
+	expect(base).toMatch(/\.godmin-empty\s*\{[^}]*margin-inline:\s*auto/)
+})
+
+test('gives the table region a containing block as well as its overflow', () => {
+	const region = base.slice(base.indexOf('.godmin-table-scroll'))
+
+	expect(region).toMatch(/position:\s*relative/)
+	expect(region).toMatch(/overflow-x:\s*auto/)
+})
