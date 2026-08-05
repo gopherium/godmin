@@ -65,6 +65,24 @@ test('gives the table region a containing block as well as its overflow', () => 
 	expect(region).toMatch(/overflow-x:\s*auto/)
 })
 
+// The toast region is fixed and out of flow, so it sizes to fit its content.
+// The notice inside it stretches to whatever width it is given and offers no
+// width of its own, so without one the region collapses to a few pixels and the
+// message and its buttons break mid word. A max-width cannot prevent that.
+test('gives the toast region a width, which is what stops it collapsing', () => {
+	const region = base.slice(base.indexOf('.godmin-toasts {'))
+	const rule = region.slice(0, region.indexOf('}'))
+
+	expect(rule).toMatch(/(?:^|[^-])width:\s*\S/)
+})
+
+test('keeps the toast region inside a narrow screen', () => {
+	const region = base.slice(base.indexOf('.godmin-toasts {'))
+	const rule = region.slice(0, region.indexOf('}'))
+
+	expect(rule).toMatch(/max-width:\s*calc\(100vw - 32px\)/)
+})
+
 // Frame.Root themes the chrome through a provider, which only sets custom
 // properties, so the layout has to actually paint with them.
 test('paints the chrome the frame is themed with', () => {
