@@ -165,6 +165,10 @@ body {
 		}
 	}
 
+	.godmin-loading-screen {
+		padding: var(--wpds-dimension-padding-xl);
+	}
+
 	.godmin-loading-screen__ghost {
 		display: flex;
 		flex-direction: column;

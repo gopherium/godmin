@@ -101,6 +101,10 @@ test('lands the appear animation at full opacity', () => {
 	expect(base).toMatch(/@keyframes godmin-loading-appear\s*\{[^@]*opacity:\s*1/)
 })
 
+test('pads the screen ghost, which can render with no frame around it', () => {
+	expect(base).toMatch(/\.godmin-loading-screen\s*\{[^}]*padding/)
+})
+
 test('shapes every ghost bar with a height of its own', () => {
 	expect(base).toMatch(/\.godmin-loading-screen__title\s*\{[^}]*height/)
 	expect(base).toMatch(/\.godmin-loading-screen__stroke\s*\{[^}]*height/)
