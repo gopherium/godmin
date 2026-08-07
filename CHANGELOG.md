@@ -4,6 +4,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [0.4.0]
+
+### Added
+
+- `useLoadingGate` decides when a loading ghost shows: nothing before
+  200ms, and once shown it stays for 500ms. Gate the pending flag with it
+  before rendering `LoadingScreen` or `LoadingRows`.
+
+### Changed
+
+- The ghosts no longer delay their own appearance through the stylesheet.
+  A consumer rendering one without the gate shows it immediately, so wrap
+  the pending flag in `useLoadingGate` when adopting this release.
+
 ## [0.3.0]
 
 ### Added

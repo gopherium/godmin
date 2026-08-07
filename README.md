@@ -19,7 +19,7 @@ here duplicates something upstream ships.
 
 | Entry point | Contents |
 | --- | --- |
-| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `NavScreen`, `ErrorNotice`, `LoadMore`, `LoadingScreen`, `LoadingRows`, `Toaster`, `useToaster`, `useMediaQuery`, `useTokenDocument`, the breakpoints, `SUPPORTED_WPDS` |
+| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `NavScreen`, `ErrorNotice`, `LoadMore`, `LoadingScreen`, `LoadingRows`, `useLoadingGate`, `Toaster`, `useToaster`, `useMediaQuery`, `useTokenDocument`, the breakpoints, `SUPPORTED_WPDS` |
 | `@gopherium/godmin/base.css` | cascade layer order, design tokens, host rules, frame and screen styles |
 | `@gopherium/godmin/router` | `useCanvas`, `useFrameLocation`, the `canvas` route static data |
 | `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR` |
@@ -145,15 +145,17 @@ label through a visually hidden status region, so give `label` the same
 sentence you would have rendered as text.
 
 ```tsx
-if (report.data === undefined) {
-    return <LoadingScreen label="Loading the report." />
-}
+const ghost = useLoadingGate(reports.isPending)
 
-{reports.isPending ? <LoadingRows label="Loading reports." rows={8} /> : <ReportTable />}
+if (ghost) {
+    return <LoadingRows label="Loading reports." rows={8} />
+}
 ```
 
-A ghost appears only after a short delay, so a load that resolves quickly
-shows nothing at all rather than a flash.
+`useLoadingGate` owns the timing: a load that resolves quickly shows no
+ghost at all, and a ghost that does appear stays long enough to read as
+intentional. Gate the pending flag rather than using it directly, or a
+mid speed load flashes the ghost for a moment.
 
 `base.css` also ships `godmin-empty`, `godmin-form`, `godmin-table` and
 `godmin-table-scroll`. The last two go together: a table wider than a phone

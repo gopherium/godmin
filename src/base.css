@@ -152,19 +152,6 @@ body {
 		white-space: nowrap;
 	}
 
-	.godmin-loading-screen,
-	.godmin-loading-rows {
-		opacity: 0;
-		animation: godmin-loading-appear var(--wpds-motion-duration-md)
-			var(--wpds-motion-easing-balanced) 200ms forwards;
-	}
-
-	@keyframes godmin-loading-appear {
-		100% {
-			opacity: 1;
-		}
-	}
-
 	.godmin-loading-screen {
 		padding: var(--wpds-dimension-padding-xl);
 	}
