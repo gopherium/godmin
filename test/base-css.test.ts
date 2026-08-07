@@ -65,10 +65,6 @@ test('gives the table region a containing block as well as its overflow', () => 
 	expect(region).toMatch(/overflow-x:\s*auto/)
 })
 
-// The toast region is fixed and out of flow, so it sizes to fit its content.
-// The notice inside it stretches to whatever width it is given and offers no
-// width of its own, so without one the region collapses to a few pixels and the
-// message and its buttons break mid word. A max-width cannot prevent that.
 test('gives the toast region a width, which is what stops it collapsing', () => {
 	const region = base.slice(base.indexOf('.godmin-toasts {'))
 	const rule = region.slice(0, region.indexOf('}'))
@@ -83,11 +79,30 @@ test('keeps the toast region inside a narrow screen', () => {
 	expect(rule).toMatch(/max-width:\s*calc\(100vw - 32px\)/)
 })
 
-// Frame.Root themes the chrome through a provider, which only sets custom
-// properties, so the layout has to actually paint with them.
 test('paints the chrome the frame is themed with', () => {
 	const layout = base.slice(base.indexOf('.godmin-layout {'))
 
 	expect(layout).toMatch(/background:\s*var\(--wpds-color-background-surface-neutral-weak\)/)
 	expect(layout).toMatch(/color:\s*var\(--wpds-color-foreground-content-neutral\)/)
+})
+
+test('holds the loading ghosts back briefly, then keeps them shown', () => {
+	const region = base.slice(base.indexOf('.godmin-loading-screen'))
+	const rule = region.slice(0, region.indexOf('}'))
+
+	expect(rule).toContain('.godmin-loading-rows')
+	expect(rule).toMatch(/opacity:\s*0/)
+	expect(rule).toMatch(/animation:[^;]*godmin-loading-appear/)
+	expect(rule).toMatch(/animation:[^;]*200ms/)
+	expect(rule).toMatch(/animation:[^;]*forwards/)
+})
+
+test('lands the appear animation at full opacity', () => {
+	expect(base).toMatch(/@keyframes godmin-loading-appear\s*\{[^@]*opacity:\s*1/)
+})
+
+test('shapes every ghost bar with a height of its own', () => {
+	expect(base).toMatch(/\.godmin-loading-screen__title\s*\{[^}]*height/)
+	expect(base).toMatch(/\.godmin-loading-screen__stroke\s*\{[^}]*height/)
+	expect(base).toMatch(/\.godmin-loading-rows__row\s*\{[^}]*height/)
 })
