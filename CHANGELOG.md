@@ -4,6 +4,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `LoadingScreen` and `LoadingRows` stand in for a screen or a list while its
+  data loads. Loading status was a contract applications hand-wrote as bare
+  text, unstyled and sometimes unannounced. Each ghost is built from the
+  design system skeleton, announces its label through a visually hidden
+  status region, and appears only after a 200ms delay so a fast load never
+  shows one.
+
+## [0.2.2]
+
+### Fixed
+
+- The toast region is out of flow, so it sized itself to fit a notice that
+  offers no width of its own and collapsed to a few pixels, breaking the
+  message and its buttons mid word. It now has a width beside its max-width.
+
 ## [0.2.1]
 
 ### Fixed

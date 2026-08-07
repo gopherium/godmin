@@ -19,7 +19,7 @@ here duplicates something upstream ships.
 
 | Entry point | Contents |
 | --- | --- |
-| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `NavScreen`, `ErrorNotice`, `LoadMore`, `Toaster`, `useToaster`, `useMediaQuery`, `useTokenDocument`, the breakpoints, `SUPPORTED_WPDS` |
+| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `NavScreen`, `ErrorNotice`, `LoadMore`, `LoadingScreen`, `LoadingRows`, `Toaster`, `useToaster`, `useMediaQuery`, `useTokenDocument`, the breakpoints, `SUPPORTED_WPDS` |
 | `@gopherium/godmin/base.css` | cascade layer order, design tokens, host rules, frame and screen styles |
 | `@gopherium/godmin/router` | `useCanvas`, `useFrameLocation`, the `canvas` route static data |
 | `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR` |
@@ -135,6 +135,25 @@ supply so the kit stays router free.
     <ConversationList />
 </NavScreen>
 ```
+
+### While data loads
+
+`LoadingScreen` stands in for a screen whose data has not arrived, and
+`LoadingRows` stands in for a list body under chrome that is already there.
+Both render a ghost built from the design system skeleton and announce their
+label through a visually hidden status region, so give `label` the same
+sentence you would have rendered as text.
+
+```tsx
+if (report.data === undefined) {
+    return <LoadingScreen label="Loading the report." />
+}
+
+{reports.isPending ? <LoadingRows label="Loading reports." rows={8} /> : <ReportTable />}
+```
+
+A ghost appears only after a short delay, so a load that resolves quickly
+shows nothing at all rather than a flash.
 
 `base.css` also ships `godmin-empty`, `godmin-form`, `godmin-table` and
 `godmin-table-scroll`. The last two go together: a table wider than a phone
