@@ -4,7 +4,7 @@ import { screen } from '@testing-library/react'
 import { Skeleton } from '@wordpress/ui'
 import { expect, test } from 'vitest'
 
-import { LoadingScreen } from '../src/loading.js'
+import { LoadingRows, LoadingScreen } from '../src/loading.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -54,4 +54,33 @@ test('shapes the ghost as a title over content strokes', () => {
 	expect(
 		container.querySelectorAll('.godmin-loading-screen__stroke').length,
 	).toBeGreaterThanOrEqual(2)
+})
+
+test('announces the rows label the same hidden way', () => {
+	renderAdmin(<LoadingRows label="Loading reports." />)
+
+	const status = screen.getByRole('status')
+	expect(status.textContent).toBe('Loading reports.')
+	expect(status.hasAttribute('data-visually-hidden')).toBe(true)
+})
+
+test('ghosts five rows of design system skeletons by default', () => {
+	const skeleton = sampledClasses(<Skeleton id="sample" />)
+	expect(skeleton.length).toBeGreaterThan(0)
+	const { container } = renderAdmin(<LoadingRows label="Loading reports." />)
+
+	const ghost = container.querySelector('.godmin-loading-rows__ghost') as Element
+	expect(ghost.getAttribute('aria-hidden')).toBe('true')
+	expect(container.querySelectorAll('.godmin-loading-rows__row').length).toBe(5)
+	for (const child of ghost.children) {
+		for (const token of skeleton) {
+			expect([...child.classList]).toContain(token)
+		}
+	}
+})
+
+test('ghosts as many rows as a screen asks for', () => {
+	const { container } = renderAdmin(<LoadingRows label="Loading reports." rows={3} />)
+
+	expect(container.querySelectorAll('.godmin-loading-rows__row').length).toBe(3)
 })

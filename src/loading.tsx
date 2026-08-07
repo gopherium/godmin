@@ -22,3 +22,21 @@ export function LoadingScreen({ label }: { label: string }) {
 		</div>
 	)
 }
+
+/**
+ * Renders a stack of row-shaped ghosts while a list's data loads.
+ * @param props - The label a screen reader announces and the row count.
+ * @returns The loading rows element.
+ */
+export function LoadingRows({ label, rows = 5 }: { label: string, rows?: number }) {
+	return (
+		<div className="godmin-loading-rows">
+			<VisuallyHidden role="status">{label}</VisuallyHidden>
+			<div className="godmin-loading-rows__ghost" aria-hidden="true">
+				{Array.from({ length: rows }, (_, row) => (
+					<Skeleton key={row} className="godmin-loading-rows__row" />
+				))}
+			</div>
+		</div>
+	)
+}

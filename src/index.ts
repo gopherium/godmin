@@ -10,7 +10,7 @@ export type {
 	FrameRailProps,
 	FrameRootProps,
 } from './frame.js'
-export { LoadingScreen } from './loading.js'
+export { LoadingRows, LoadingScreen } from './loading.js'
 export { NavScreen } from './nav-screen.js'
 export type { NavScreenProps } from './nav-screen.js'
 export { ErrorNotice, LoadMore, Page, PageTitle } from './page.js'
