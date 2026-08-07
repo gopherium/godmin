@@ -86,9 +86,20 @@ test('paints the chrome the frame is themed with', () => {
 	expect(layout).toMatch(/color:\s*var\(--wpds-color-foreground-content-neutral\)/)
 })
 
-test('leaves the ghost timing to the gate hook, never to the stylesheet', () => {
-	expect(base).not.toMatch(/godmin-loading[^{]*\{[^}]*animation/)
-	expect(base).not.toMatch(/godmin-loading[^{]*\{[^}]*opacity:\s*0/)
+test('fades the ghosts in after a delay, so a fast load shows none', () => {
+	const region = base.slice(base.indexOf('.godmin-loading-screen,'))
+	const rule = region.slice(0, region.indexOf('}'))
+
+	expect(rule).toContain('.godmin-loading-rows')
+	expect(rule).toMatch(/opacity:\s*0/)
+	expect(rule).toMatch(/animation:[^;]*godmin-fade-in/)
+	expect(rule).toMatch(/animation:[^;]*150ms/)
+	expect(rule).toMatch(/animation:[^;]*forwards/)
+})
+
+test('fades arriving content in, so a ghost never snaps away', () => {
+	expect(base).toMatch(/\.godmin-arrival\s*\{[^}]*animation:[^;]*godmin-fade-in/)
+	expect(base).toMatch(/@keyframes godmin-fade-in\s*\{\s*0%\s*\{\s*opacity:\s*0/)
 })
 
 test('pads the screen ghost, which can render with no frame around it', () => {

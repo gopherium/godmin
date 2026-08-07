@@ -4,6 +4,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [0.5.0]
+
+### Added
+
+- `godmin-arrival` fades content in on mount. Give it to the element that
+  replaces a loading ghost and the swap reads as one motion.
+
+### Changed
+
+- The ghosts fade in on their own again, after a 150ms delay, so a fast
+  load shows none. Render them straight from the pending flag.
+
+### Removed
+
+- `useLoadingGate`. Holding a ghost on screen after its data arrived made
+  fast applications feel slow, and the fade out through `godmin-arrival`
+  removes the snap the hold existed to hide.
+
 ## [0.4.0]
 
 ### Added
