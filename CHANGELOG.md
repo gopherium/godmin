@@ -4,7 +4,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
-## [0.5.0]
+## [0.5.0] - 2026-08-08
 
 ### Added
 
@@ -22,7 +22,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   fast applications feel slow, and the fade out through `godmin-arrival`
   removes the snap the hold existed to hide.
 
-## [0.4.0]
+## [0.4.0] - 2026-08-07
 
 ### Added
 
@@ -36,7 +36,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   A consumer rendering one without the gate shows it immediately, so wrap
   the pending flag in `useLoadingGate` when adopting this release.
 
-## [0.3.0]
+## [0.3.0] - 2026-08-07
 
 ### Added
 
@@ -47,7 +47,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   status region, and appears only after a 200ms delay so a fast load never
   shows one.
 
-## [0.2.2]
+## [0.2.2] - 2026-08-05
 
 ### Fixed
 
@@ -55,7 +55,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   offers no width of its own and collapsed to a few pixels, breaking the
   message and its buttons mid word. It now has a width beside its max-width.
 
-## [0.2.1]
+## [0.2.1] - 2026-08-02
 
 ### Fixed
 
@@ -64,7 +64,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   `chromeColor` inert and the chrome rendered unthemed. It now paints the
   surface and foreground it is given.
 
-## [0.2.0]
+## [0.2.0] - 2026-08-02
 
 ### Added
 
@@ -92,7 +92,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   runner without globals never registers that itself, so trees accumulated and
   a query could find an element another test had rendered.
 
-## [0.1.3]
+## [0.1.3] - 2026-07-31
 
 ### Fixed
 
@@ -100,7 +100,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   leaves without one. The library behind design system dialogs calls it while
   locking body scroll, so opening a menu that leads to a dialog threw.
 
-## [0.1.2]
+## [0.1.2] - 2026-07-31
 
 ### Fixed
 
@@ -108,7 +108,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   `removeListener`, which the animation library behind design system popovers
   still calls. Without them opening a dropdown in a test throws.
 
-## [0.1.1]
+## [0.1.1] - 2026-07-30
 
 ### Fixed
 
@@ -116,7 +116,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
   and `@wordpress/ui` calls. Without it any test rendering a design system
   component that reads a media query throws.
 
-## [0.1.0]
+## [0.1.0] - 2026-07-30
 
 First release. The host layer only, since `@wordpress/admin-ui` is building the
 application frame upstream.
