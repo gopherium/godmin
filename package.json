@@ -1,6 +1,6 @@
 {
 	"name": "@gopherium/godmin",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"description": "The admin kit for Gopherium projects: host layer for React admin applications on the WordPress Design System.",
 	"license": "Apache-2.0",
 	"type": "module",

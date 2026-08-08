@@ -49,6 +49,40 @@ export function duplicateCopies(moduleIds: Iterable<string>, packages: string[])
 	return duplicates
 }
 
+const STYLESHEET = /[ \t]*<link[^>]+rel="stylesheet"[^>]*>\n?/g
+const MODULE_SCRIPT = /[ \t]*<script[^>]+type="module"[^>]*><\/script>/
+
+/**
+ * Returns the page with its stylesheets moved above the first module script.
+ * @param html - The built page source.
+ * @returns The page source, stylesheets first.
+ */
+export function hoistStylesheet(html: string): string {
+	const sheets = html.match(STYLESHEET)
+	const script = html.match(MODULE_SCRIPT)
+	if (sheets === null || script === null || script.index === undefined) {
+		return html
+	}
+	if (html.indexOf(sheets[0]) < script.index) {
+		return html
+	}
+	return html.replace(STYLESHEET, '').replace(MODULE_SCRIPT, sheets.join('') + script[0])
+}
+
+/**
+ * Returns a bundler plugin requesting the stylesheet before the module script.
+ * @returns The plugin to add to the bundler configuration.
+ */
+export function godminStylesheetFirst() {
+	return {
+		name: 'godmin-stylesheet-first',
+		transformIndexHtml: {
+			order: 'post' as const,
+			handler: hoistStylesheet,
+		},
+	}
+}
+
 /**
  * The subset of the bundler context this plugin reads.
  */
@@ -63,9 +97,6 @@ interface BuildContext {
 export function godminSingleCopy() {
 	return {
 		name: 'godmin-single-copy',
-		/**
-		 * Fails the build when a package that must be a singleton resolved twice.
-		 */
 		buildEnd(this: BuildContext) {
 			const duplicates = duplicateCopies(this.getModuleIds(), godminDedupe)
 			if (duplicates.size === 0) {

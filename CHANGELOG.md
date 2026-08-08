@@ -4,7 +4,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
-## [Unreleased]
+## [0.7.0] - 2026-08-08
+
+### Added
+
+- `godminStylesheetFirst`, a bundler plugin moving the stylesheet above the
+  module script so a render-blocking sheet stops queueing behind JavaScript.
+  `hoistStylesheet` is the transform, for a bundler the plugin shape does not
+  fit.
 
 ### Changed
 
