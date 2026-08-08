@@ -4,6 +4,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Changed
+
+- `godminDedupe` now lists `@gopherium/react-auth`. Its configured
+  transport is module state, so a second copy silently keeps its own.
+
 ## [0.6.0] - 2026-08-08
 
 ### Added

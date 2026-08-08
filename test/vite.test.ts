@@ -7,6 +7,8 @@ import { duplicateCopies, godminDedupe, godminSingleCopy } from '../src/vite'
 const REACT_A = '/app/node_modules/.pnpm/react@19.2.8/node_modules/react/index.js'
 const REACT_B = '/app/node_modules/.pnpm/react@18.3.1/node_modules/react/index.js'
 const THEME = '/app/node_modules/.pnpm/@wordpress+theme@1.1.0/node_modules/@wordpress/theme/index.mjs'
+const AUTH_A = '/app/node_modules/.pnpm/@gopherium+react-auth@0.3.0/node_modules/@gopherium/react-auth/index.js'
+const AUTH_B = '/app/node_modules/.pnpm/@gopherium+react-auth@0.2.0/node_modules/@gopherium/react-auth/index.js'
 const OWN = '/app/src/main.tsx'
 
 test('lists the packages that break when duplicated', () => {
@@ -14,6 +16,17 @@ test('lists the packages that break when duplicated', () => {
 	expect(godminDedupe).toContain('react-dom')
 	expect(godminDedupe).toContain('@wordpress/theme')
 	expect(godminDedupe).toContain('@wordpress/ui')
+})
+
+test('watches the auth client, whose transport is module state a second copy would not share', () => {
+	expect(godminDedupe).toContain('@gopherium/react-auth')
+})
+
+test('reports the auth client when it resolves twice', () => {
+	const found = duplicateCopies([AUTH_A, AUTH_B], godminDedupe)
+
+	expect([...found.keys()]).toEqual(['@gopherium/react-auth'])
+	expect(found.get('@gopherium/react-auth')).toHaveLength(2)
 })
 
 test('reports nothing when every watched package resolves once', () => {
