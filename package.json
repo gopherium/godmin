@@ -1,6 +1,6 @@
 {
 	"name": "@gopherium/godmin",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"description": "The admin kit for Gopherium projects: host layer for React admin applications on the WordPress Design System.",
 	"license": "Apache-2.0",
 	"type": "module",
@@ -47,7 +47,7 @@
 		"./package.json": "./package.json"
 	},
 	"scripts": {
-		"build": "tsc -p tsconfig.build.json && cp src/base.css dist/base.css",
+		"build": "rm -rf dist && tsc -p tsconfig.build.json && cp src/base.css dist/base.css",
 		"cover": "vitest run --coverage",
 		"lint": "oxlint",
 		"lint:css": "stylelint 'src/**/*.css'",

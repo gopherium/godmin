@@ -4,7 +4,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
-## [Unreleased]
+## [0.6.0] - 2026-08-08
 
 ### Added
 
@@ -16,6 +16,8 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - The ghosts and `godmin-arrival` no longer fade under
   `prefers-reduced-motion`. The delay still holds, so a fast load shows
   nothing.
+- The package no longer ships the compiled `useLoadingGate`, removed in
+  0.5.0. `build` now clears `dist` first.
 
 ## [0.5.0] - 2026-08-08
 
