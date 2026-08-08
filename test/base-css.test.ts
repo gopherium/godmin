@@ -19,6 +19,18 @@ function significantLines(css: string): string[] {
 		.filter((line) => line !== '' && !line.startsWith('/*') && !line.startsWith('*'))
 }
 
+/**
+ * Returns the stylesheet from the reduced motion guard onwards.
+ * @returns The guard source.
+ */
+function reducedMotionGuard(): string {
+	const start = base.indexOf('@media (prefers-reduced-motion: reduce)')
+
+	expect(start, 'the stylesheet declares no reduced motion guard').toBeGreaterThan(-1)
+
+	return base.slice(start)
+}
+
 test('declares the cascade layer order before anything else', () => {
 	expect(significantLines(base)[0]).toBe('@layer wp-ui, godmin;')
 })
@@ -100,6 +112,26 @@ test('fades the ghosts in after a delay, so a fast load shows none', () => {
 test('fades arriving content in, so a ghost never snaps away', () => {
 	expect(base).toMatch(/\.godmin-arrival\s*\{[^}]*animation:[^;]*godmin-fade-in/)
 	expect(base).toMatch(/@keyframes godmin-fade-in\s*\{\s*0%\s*\{\s*opacity:\s*0/)
+})
+
+test('stops fading for a reduced motion preference', () => {
+	const guard = reducedMotionGuard()
+
+	for (const faded of ['.godmin-loading-screen', '.godmin-loading-rows', '.godmin-arrival']) {
+		expect(guard, `${faded} still fades`).toContain(faded)
+	}
+	expect(guard).toMatch(/animation-duration:\s*1ms/)
+})
+
+test('keeps the reveal and the delay that a reduced motion preference must not undo', () => {
+	const guard = reducedMotionGuard()
+
+	expect(guard, 'the shorthand resets the delay and the fill').not.toMatch(/animation:\s/)
+	expect(guard, 'a named animation of none leaves the ghost at opacity zero').not.toMatch(
+		/animation-name:/,
+	)
+	expect(guard, 'the ghost must stay hidden for its first 150ms').not.toMatch(/animation-delay:/)
+	expect(guard, 'forwards is what holds the revealed state').not.toMatch(/animation-fill-mode:/)
 })
 
 test('pads the screen ghost, which can render with no frame around it', () => {

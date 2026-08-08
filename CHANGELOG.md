@@ -4,6 +4,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Fixed
+
+- The ghosts and `godmin-arrival` no longer fade for a reader who asks
+  their system for reduced motion. The fade is shortened rather than
+  removed, so the ghost still waits out its delay and a fast load still
+  shows nothing. Removing the animation outright would have left the
+  ghost at the `opacity: 0` the fade exists to lift.
+
 ## [0.5.0] - 2026-08-08
 
 ### Added
