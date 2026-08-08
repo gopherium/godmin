@@ -93,6 +93,32 @@ test('clears a toast the reader dismisses', () => {
 	expect(screen.queryByText('Saved')).toBeNull()
 })
 
+test('names the dismiss button as the application asks', () => {
+	renderAdmin(
+		<Toaster dismissLabel="Close">
+			<Raise message="Saved" />
+		</Toaster>,
+	)
+
+	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+
+	expect(screen.getByRole('button', { name: 'Close' })).not.toBeNull()
+	expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull()
+})
+
+test('clears a toast the reader dismisses under a name of its own', () => {
+	renderAdmin(
+		<Toaster dismissLabel="Close">
+			<Raise message="Saved" />
+		</Toaster>,
+	)
+	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+
+	fireEvent.click(screen.getByRole('button', { name: 'Close' }))
+
+	expect(screen.queryByText('Saved')).toBeNull()
+})
+
 test('clears a toast nobody touched once its time is up', () => {
 	vi.useFakeTimers()
 	renderAdmin(

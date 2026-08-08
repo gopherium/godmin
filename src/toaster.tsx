@@ -9,6 +9,11 @@ import type { ReactNode } from 'react'
  */
 const DISMISS_AFTER = 10000
 
+/**
+ * The name of the control clearing a toast.
+ */
+const DISMISS_LABEL = 'Dismiss'
+
 export interface ToastAction {
 	label: string
 	onAct: () => void
@@ -40,10 +45,18 @@ export function useToaster(): ToasterHandle {
 
 /**
  * Renders one raised message with its optional action.
- * @param props - The toast and the handler clearing it.
+ * @param props - The toast, the handler clearing it, and the dismiss control name.
  * @returns The toast element.
  */
-function Toast({ toast, onClear }: { toast: Toast; onClear: (id: number) => void }) {
+function Toast({
+	toast,
+	onClear,
+	dismissLabel,
+}: {
+	toast: Toast
+	onClear: (id: number) => void
+	dismissLabel: string
+}) {
 	return (
 		<Notice.Root intent="neutral" spokenMessage={toast.message}>
 			<Notice.Description>{toast.message}</Notice.Description>
@@ -58,7 +71,7 @@ function Toast({ toast, onClear }: { toast: Toast; onClear: (id: number) => void
 						{toast.action.label}
 					</Notice.ActionButton>
 				)}
-				<Notice.ActionButton onClick={() => onClear(toast.id)}>Dismiss</Notice.ActionButton>
+				<Notice.ActionButton onClick={() => onClear(toast.id)}>{dismissLabel}</Notice.ActionButton>
 			</Notice.Actions>
 		</Notice.Root>
 	)
@@ -67,14 +80,19 @@ function Toast({ toast, onClear }: { toast: Toast; onClear: (id: number) => void
 export interface ToasterProps {
 	children: ReactNode
 	dismissAfter?: number
+	dismissLabel?: string
 }
 
 /**
  * Renders the region holding raised messages around the given tree.
- * @param props - The tree the region wraps and how long a toast stays.
+ * @param props - The tree the region wraps, how long a toast stays, and the dismiss control name.
  * @returns The wrapped tree with its region.
  */
-export function Toaster({ children, dismissAfter = DISMISS_AFTER }: ToasterProps) {
+export function Toaster({
+	children,
+	dismissAfter = DISMISS_AFTER,
+	dismissLabel = DISMISS_LABEL,
+}: ToasterProps) {
 	const [toasts, setToasts] = useState<Toast[]>([])
 	const nextId = useRef(0)
 	const timers = useRef(new Set<ReturnType<typeof setTimeout>>())
@@ -105,7 +123,7 @@ export function Toaster({ children, dismissAfter = DISMISS_AFTER }: ToasterProps
 			{children}
 			<Stack direction="column" gap="xs" className="godmin-toasts">
 				{toasts.map((toast) => (
-					<Toast key={toast.id} toast={toast} onClear={clear} />
+					<Toast key={toast.id} toast={toast} onClear={clear} dismissLabel={dismissLabel} />
 				))}
 			</Stack>
 		</ToasterContext.Provider>
