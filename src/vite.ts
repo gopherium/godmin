@@ -7,6 +7,7 @@ export const godminDedupe = [
 	'react',
 	'react-dom',
 	'@wordpress/element',
+	'@wordpress/i18n',
 	'@wordpress/theme',
 	'@wordpress/ui',
 	'@gopherium/react-auth',

@@ -21,6 +21,7 @@ test('lists the packages that break when duplicated', () => {
 	expect(godminDedupe).toContain('react')
 	expect(godminDedupe).toContain('react-dom')
 	expect(godminDedupe).toContain('@wordpress/theme')
+	expect(godminDedupe).toContain('@wordpress/i18n')
 	expect(godminDedupe).toContain('@wordpress/ui')
 })
 
