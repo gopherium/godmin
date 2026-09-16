@@ -23,9 +23,10 @@ const menuIcon = (
 interface FrameState {
 	small: boolean
 	location: string | undefined
+	layout: HTMLElement | null
 }
 
-const FrameContext = createContext<FrameState>({ small: false, location: undefined })
+const FrameContext = createContext<FrameState>({ small: false, location: undefined, layout: null })
 
 export interface FrameRootProps {
 	children: ReactNode
@@ -41,11 +42,12 @@ export interface FrameRootProps {
  */
 function Root({ children, location, chromeColor, canvasColor }: FrameRootProps) {
 	const small = useMediaQuery(SMALL_VIEWPORT)
+	const [layout, setLayout] = useState<HTMLElement | null>(null)
 	const classes = small ? 'godmin-layout godmin-layout--small' : 'godmin-layout'
 	return (
 		<ThemeProvider color={chromeColor}>
-			<FrameContext.Provider value={{ small, location }}>
-				<div className={classes}>
+			<FrameContext.Provider value={{ small, location, layout }}>
+				<div ref={setLayout} className={classes}>
 					<CanvasColorContext.Provider value={canvasColor}>
 						{children}
 					</CanvasColorContext.Provider>
@@ -88,7 +90,7 @@ function Rail({ children, brand, menuLabel = 'Open navigation' }: FrameRailProps
  * @returns The top bar element.
  */
 function TopBar({ children, brand, menuLabel }: Required<Pick<FrameRailProps, 'children' | 'menuLabel'>> & { brand?: ReactNode }) {
-	const { location } = useContext(FrameContext)
+	const { location, layout } = useContext(FrameContext)
 	const [open, setOpen] = useState(false)
 	useEffect(() => {
 		setOpen(false)
@@ -97,7 +99,7 @@ function TopBar({ children, brand, menuLabel }: Required<Pick<FrameRailProps, 'c
 		<div className="godmin-layout__topbar">
 			<Drawer.Root open={open} onOpenChange={setOpen}>
 				<Drawer.Trigger render={<IconButton icon={menuIcon} label={menuLabel} />} />
-				<Drawer.Popup className="godmin-layout__drawer">
+				<Drawer.Popup className="godmin-layout__drawer" portal={<Drawer.Portal container={layout} />}>
 					<VisuallyHidden render={<Drawer.Title />}>{menuLabel}</VisuallyHidden>
 					{children}
 				</Drawer.Popup>
@@ -130,7 +132,9 @@ function Canvas({ children, canvas = 'padded' }: FrameCanvasProps) {
 			: 'godmin-layout__canvas'
 	return (
 		<ThemeProvider color={color}>
-			<main className={classes}>{children}</main>
+			<main className={classes} style={{ isolation: 'isolate' }}>
+				{children}
+			</main>
 		</ThemeProvider>
 	)
 }

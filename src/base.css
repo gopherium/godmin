@@ -27,6 +27,7 @@ body {
 		height: 100vh;
 		background: var(--wpds-color-background-surface-neutral-weak);
 		color: var(--wpds-color-foreground-content-neutral);
+		--wp-ui-drawer-z-index: 2;
 	}
 
 	.godmin-layout--small {

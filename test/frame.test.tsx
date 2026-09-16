@@ -53,6 +53,44 @@ test('opens the rail content in a drawer', async () => {
 	expect(within(drawer).getByRole('navigation', { name: 'Sections' })).not.toBeNull()
 })
 
+test('keeps the chrome theme on the drawer it portals out', async () => {
+	setViewport({ matches: true })
+	renderAdmin(
+		<Frame.Root chromeColor={{ primary: '#3858e9' }} canvasColor={{ primary: '#d63638' }}>
+			<Frame.Rail menuLabel="Open navigation">
+				<nav aria-label="Sections" />
+			</Frame.Rail>
+			<Frame.Canvas>
+				<p>Canvas content</p>
+			</Frame.Canvas>
+		</Frame.Root>,
+	)
+	const menu = screen.getByRole('button', { name: 'Open navigation' })
+	const chrome = menu.closest('[style*="--wpds-color"]')
+
+	fireEvent.click(menu)
+
+	const drawer = await screen.findByRole('dialog')
+	expect(chrome).not.toBeNull()
+	expect(drawer.closest('[style*="--wpds-color"]')).toBe(chrome)
+})
+
+test('portals the drawer inside the layout that raises it', async () => {
+	setViewport({ matches: true })
+	renderFrame()
+
+	fireEvent.click(screen.getByRole('button', { name: 'Open navigation' }))
+
+	const drawer = await screen.findByRole('dialog')
+	expect(drawer.closest('.godmin-layout')).not.toBeNull()
+})
+
+test('isolates the canvas so its stacking stays under the drawer', () => {
+	renderFrame()
+
+	expect(screen.getByRole('main').getAttribute('style')).toContain('isolation: isolate')
+})
+
 test('closes the drawer when the location changes', async () => {
 	setViewport({ matches: true })
 	const view = renderFrame({ location: '/tasks' })
