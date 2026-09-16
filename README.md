@@ -70,7 +70,7 @@ points at its cause. Both are covered in
 
 ## Design system versions
 
-Peer ranges are longhand and single window, for example `>=0.19.0 <0.20.0`.
+Peer ranges are longhand and single window, for example `>=0.22.0 <0.23.0`.
 The window moves with each design system release train and never widens, so no
 release accepts two breaking generations at once. `SUPPORTED_WPDS` exports the
 window this build was tested against.
