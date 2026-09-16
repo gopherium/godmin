@@ -112,13 +112,14 @@ test('rejects an element build missing an api it must still provide', async () =
 	await expect(assertElementPatched(async () => broken)).rejects.toThrow(/createRoot/)
 })
 
-test('reports an element build that cannot be imported at all', async () => {
+test('reports an element build that cannot be imported at all, keeping the import error', async () => {
+	const failure = new Error("Named export 'findDOMNode' not found")
 	const failing = async () => {
-		throw new Error("Named export 'findDOMNode' not found")
+		throw failure
 	}
 
 	await expect(assertElementPatched(failing))
-		.rejects.toThrow(/could not be imported, which is what 8\.4\.0 and older do/)
+		.rejects.toMatchObject({ message: '@wordpress/element could not be imported', cause: failure })
 })
 
 test('provides the media query API jsdom lacks', () => {
