@@ -96,7 +96,7 @@ test('reports an empty announcement when the region is absent', () => {
 	expect(getAnnouncement()).toBe('')
 })
 
-test('accepts an element build with the React 19 compatibility patch applied', async () => {
+test('accepts an element build that loads on React 19', async () => {
 	await expect(assertElementPatched()).resolves.toBeUndefined()
 })
 
@@ -117,7 +117,8 @@ test('reports an element build that cannot be imported at all', async () => {
 		throw new Error("Named export 'findDOMNode' not found")
 	}
 
-	await expect(assertElementPatched(failing)).rejects.toThrow(/could not be imported/)
+	await expect(assertElementPatched(failing))
+		.rejects.toThrow(/could not be imported, which is what 8\.4\.0 and older do/)
 })
 
 test('provides the media query API jsdom lacks', () => {

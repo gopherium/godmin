@@ -63,7 +63,7 @@ export async function assertElementPatched(
 		element = await load()
 	} catch (cause) {
 		throw new Error(
-			'@wordpress/element could not be imported, which is what an unpatched build does on React 19',
+			'@wordpress/element could not be imported, which is what 8.4.0 and older do on React 19',
 			{ cause },
 		)
 	}

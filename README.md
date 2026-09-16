@@ -53,20 +53,16 @@ two lines do for you.
 | `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR` |
 | `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `duplicateCopies` |
 | `@gopherium/godmin/stylelint` | The design system stylelint rules |
-| `@gopherium/godmin/patches/*` | The React 19 patch file for `@wordpress/element`, copied at install time, temporary |
 
 ## Before your first build
 
-Two install-time problems stop the application booting, and neither error
-points at its cause. Both are covered in
-[build configuration](https://docs.gopherium.org/admin-ui/build-and-versioning/).
+Duplicate packages break the application, and nothing points at the cause.
+[Build configuration](https://docs.gopherium.org/admin-ui/build-and-versioning/)
+covers it.
 
-- **Duplicate packages.** Two copies of React throw on the first hook, and two
-  copies of `@wordpress/theme` render unthemed components silently. Spread
-  `godminDedupe` into `resolve.dedupe` and add the `godminSingleCopy()` plugin.
-- **React 19.** `@wordpress/element` up to 8.4.0 fails to load on React 19.
-  Copy the patch this package ships into your own `patches/` directory, since
-  pnpm applies patches before `node_modules` exists.
+Two copies of React throw on the first hook. Two copies of `@wordpress/theme`
+render unthemed components with no error. Spread `godminDedupe` into
+`resolve.dedupe` and add the `godminSingleCopy()` plugin.
 
 ## Design system versions
 

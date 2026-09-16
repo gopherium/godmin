@@ -18,8 +18,7 @@
 	],
 	"files": [
 		"dist",
-		"NOTICE",
-		"patches"
+		"NOTICE"
 	],
 	"exports": {
 		".": {
@@ -27,7 +26,6 @@
 			"default": "./dist/index.js"
 		},
 		"./base.css": "./dist/base.css",
-		"./patches/*": "./patches/*",
 		"./router": {
 			"types": "./dist/router.d.ts",
 			"default": "./dist/router.js"
