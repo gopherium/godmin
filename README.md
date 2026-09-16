@@ -51,7 +51,7 @@ two lines do for you.
 | `@gopherium/godmin/base.css` | Cascade layer order, design tokens, host rules, frame and screen styles |
 | `@gopherium/godmin/router` | `useCanvas`, `useFrameLocation`, the `canvas` route static data |
 | `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR` |
-| `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `duplicateCopies` |
+| `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `godminStylesheetFirst`, `duplicateCopies`, `hoistStylesheet` |
 | `@gopherium/godmin/stylelint` | The design system stylelint rules |
 
 ## Before your first build
