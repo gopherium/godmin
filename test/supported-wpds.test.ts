@@ -5,8 +5,8 @@ import { expect, test } from 'vitest'
 import { SUPPORTED_WPDS } from '../src/index'
 
 test('names the design system window this build was tested against', () => {
-	expect(SUPPORTED_WPDS['@wordpress/ui']).toBe('>=0.19.0 <0.20.0')
-	expect(SUPPORTED_WPDS['@wordpress/theme']).toBe('>=1.1.0 <2.0.0')
+	expect(SUPPORTED_WPDS['@wordpress/ui']).toBe('>=0.22.0 <0.23.0')
+	expect(SUPPORTED_WPDS['@wordpress/theme']).toBe('>=2.1.0 <3.0.0')
 })
 
 test('every declared window is a longhand range rather than a caret', () => {

@@ -51,26 +51,22 @@ two lines do for you.
 | `@gopherium/godmin/base.css` | Cascade layer order, design tokens, host rules, frame and screen styles |
 | `@gopherium/godmin/router` | `useCanvas`, `useFrameLocation`, the `canvas` route static data |
 | `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR` |
-| `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `duplicateCopies` |
+| `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `godminStylesheetFirst`, `duplicateCopies`, `hoistStylesheet` |
 | `@gopherium/godmin/stylelint` | The design system stylelint rules |
-| `@gopherium/godmin/patches/*` | The React 19 patch file for `@wordpress/element`, copied at install time, temporary |
 
 ## Before your first build
 
-Two install-time problems stop the application booting, and neither error
-points at its cause. Both are covered in
-[build configuration](https://docs.gopherium.org/admin-ui/build-and-versioning/).
+Duplicate packages break the application, and nothing points at the cause.
+[Build configuration](https://docs.gopherium.org/admin-ui/build-and-versioning/)
+covers it.
 
-- **Duplicate packages.** Two copies of React throw on the first hook, and two
-  copies of `@wordpress/theme` render unthemed components silently. Spread
-  `godminDedupe` into `resolve.dedupe` and add the `godminSingleCopy()` plugin.
-- **React 19.** `@wordpress/element` up to 8.4.0 fails to load on React 19.
-  Copy the patch this package ships into your own `patches/` directory, since
-  pnpm applies patches before `node_modules` exists.
+Two copies of React throw on the first hook. Two copies of `@wordpress/theme`
+render unthemed components with no error. Spread `godminDedupe` into
+`resolve.dedupe` and add the `godminSingleCopy()` plugin.
 
 ## Design system versions
 
-Peer ranges are longhand and single window, for example `>=0.19.0 <0.20.0`.
+Peer ranges are longhand and single window, for example `>=0.22.0 <0.23.0`.
 The window moves with each design system release train and never widens, so no
 release accepts two breaking generations at once. `SUPPORTED_WPDS` exports the
 window this build was tested against.

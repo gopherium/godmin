@@ -91,6 +91,17 @@ test('keeps the toast region inside a narrow screen', () => {
 	expect(rule).toMatch(/max-width:\s*calc\(100vw - 32px\)/)
 })
 
+test('raises the drawer above the toast region', () => {
+	const css = base.replace(/\/\*[\s\S]*?\*\//g, '')
+	const drawer = css.match(/\.godmin-layout\s*\{[^}]*--wp-ui-drawer-z-index:\s*(\d+)/)
+	const toasts = [...css.matchAll(/\.godmin-toasts\s*\{[^}]*?(?:^|[^-])z-index:\s*(\d+)/gm)]
+		.map((found) => Number(found[1]))
+
+	expect(drawer, 'the layout sets no drawer z-index').not.toBeNull()
+	expect(toasts.length, 'the toast region sets no z-index').toBeGreaterThan(0)
+	expect(Number(drawer?.[1])).toBeGreaterThan(Math.max(...toasts))
+})
+
 test('paints the chrome the frame is themed with', () => {
 	const layout = base.slice(base.indexOf('.godmin-layout {'))
 
