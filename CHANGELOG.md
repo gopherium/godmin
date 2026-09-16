@@ -4,6 +4,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Changed
+
+- The design system window moves to `@wordpress/ui` 0.22, `@wordpress/theme`
+  2.1 and `@wordpress/style-runtime` 0.11.
+- Dialogs, menus, popovers and selects opened inside `Frame` take the
+  `AdminRoot` color. The navigation drawer keeps `chromeColor`.
+- `Frame.Canvas` content with a z-index paints under the toasts.
+- `godminDedupe` now lists `@wordpress/i18n`.
+
+### Removed
+
+- `./patches` and the React 19 patch for `@wordpress/element`. Delete your copy
+  and its `patchedDependencies` entry.
+
 ## [0.7.0] - 2026-08-08
 
 ### Added
