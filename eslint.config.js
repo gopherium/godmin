@@ -8,6 +8,7 @@ export default [
 		ignores: ['dist/**', 'coverage/**'],
 	},
 	{
+		files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}'],
 		languageOptions: {
 			parser: tseslint.parser,
 			parserOptions: { ecmaFeatures: { jsx: true } },
@@ -17,7 +18,7 @@ export default [
 		},
 	},
 	{
-		ignores: ['test/**'],
+		files: ['src/**/*.{ts,tsx}'],
 		languageOptions: {
 			parser: tseslint.parser,
 			parserOptions: { ecmaFeatures: { jsx: true } },
@@ -29,6 +30,7 @@ export default [
 		},
 	},
 	{
+		files: ['src/**/*.{ts,tsx}'],
 		languageOptions: {
 			parser: tseslint.parser,
 			parserOptions: { ecmaFeatures: { jsx: true } },
