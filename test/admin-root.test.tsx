@@ -43,6 +43,18 @@ test('contributes no layout, landmark or width of its own', () => {
 	expect(root.style.height).toBe('')
 })
 
+test('seeds the design system accent when the app passes no color', () => {
+	render(<AdminRoot><p>admin content</p></AdminRoot>)
+
+	expect(document.documentElement.style.getPropertyValue('--wp-admin-theme-color')).toBe('#3858e9')
+})
+
+test('keeps the accent the app passes', () => {
+	render(<AdminRoot color={{ primary: '#c9356e' }}><p>admin content</p></AdminRoot>)
+
+	expect(document.documentElement.style.getPropertyValue('--wp-admin-theme-color')).toBe('#c9356e')
+})
+
 test('passes theme configuration through to the design system provider', () => {
 	const { container } = render(
 		<AdminRoot color={{ primary: '#3858e9' }}><p>admin content</p></AdminRoot>,
