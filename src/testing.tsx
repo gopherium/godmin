@@ -158,8 +158,19 @@ function installFeatureDetection(): void {
 function installResizeObserver(): void {
 	if (typeof globalThis.ResizeObserver !== 'function') {
 		globalThis.ResizeObserver = class {
+			/**
+			 * Watches an element.
+			 */
 			observe() {}
+
+			/**
+			 * Stops watching an element.
+			 */
 			unobserve() {}
+
+			/**
+			 * Stops watching every element.
+			 */
 			disconnect() {}
 		}
 	}
