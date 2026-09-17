@@ -40,14 +40,34 @@ test.each(['src/probe.ts', 'src/probe.tsx'])('reports a function over the comple
 	expect(await reported(documented(branches.join('\n')), path)).toContain('complexity')
 })
 
+test.each(['src/probe.ts', 'src/probe.tsx'])('reports a function over the cognitive ceiling in %s', async (path) => {
+	const opening = Array.from({ length: 6 }, (_, index) => `if (value > ${index}) {`).join(' ')
+
+	expect(await reported(documented(`\t${opening} return value ${'}'.repeat(6)}`), path))
+		.toContain('sonarjs/cognitive-complexity')
+})
+
 test.each(['src/probe.ts', 'src/probe.tsx'])('reports a function without a docblock in %s', async (path) => {
 	const source = 'export function probe(value: number): number {\n\treturn value\n}\n'
 
 	expect(await reported(source, path)).toContain('jsdoc/require-jsdoc')
 })
 
-test.each(['test/probe.test.ts', 'test/probe.test.tsx'])('reports a line over the length limit in %s', async (path) => {
-	const source = `export const probe = '${'x'.repeat(120)}'\n`
+test.each(['src/probe.ts', 'src/probe.tsx'])('reports a malformed docblock tag in %s', async (path) => {
+	const source = documented('').replace('@param value - The value', '@param value The value')
 
-	expect(await reported(source, path)).toContain('max-len')
+	expect(await reported(source, path)).toContain('tsdoc/syntax')
 })
+
+test.each(['src/probe.ts', 'src/probe.tsx'])('accepts a well formed docblock in %s', async (path) => {
+	expect(await reported(documented(''), path)).not.toContain('tsdoc/syntax')
+})
+
+test.each(['src/probe.ts', 'src/probe.tsx', 'test/probe.test.ts', 'test/probe.test.tsx'])(
+	'reports a line over the length limit in %s',
+	async (path) => {
+		const source = `export const probe = '${'x'.repeat(120)}'\n`
+
+		expect(await reported(source, path)).toContain('max-len')
+	},
+)
