@@ -89,7 +89,11 @@ function Rail({ children, brand, menuLabel = 'Open navigation' }: FrameRailProps
  * @param props - The rail content, the brand, and the menu button label.
  * @returns The top bar element.
  */
-function TopBar({ children, brand, menuLabel }: Required<Pick<FrameRailProps, 'children' | 'menuLabel'>> & { brand?: ReactNode }) {
+function TopBar({
+	children,
+	brand,
+	menuLabel,
+}: Required<Pick<FrameRailProps, 'children' | 'menuLabel'>> & { brand?: ReactNode }) {
 	const { location, layout } = useContext(FrameContext)
 	const [open, setOpen] = useState(false)
 	useEffect(() => {
