@@ -4,6 +4,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Fixed
+
+- `AdminRoot` seeds the design system's own primary color when an application
+  passes no `color`, so a stylesheet setting `--wp-admin-theme-color` cannot
+  take the accent over.
+
 ## [0.8.0] - 2026-09-16
 
 ### Changed
