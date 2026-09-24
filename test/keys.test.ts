@@ -27,6 +27,62 @@ test.each([
 	expect(keyFromLabel(label, { style: 'kebab' })).toBe(key)
 })
 
+test.each([
+	["Customer's email", 'customersEmail', 'customers-email'],
+	['Customer’s email', 'customersEmail', 'customers-email'],
+	['Customer‘s email', 'customersEmail', 'customers-email'],
+	['Customerʼs email', 'customersEmail', 'customers-email'],
+	['Customer`s email', 'customersEmail', 'customers-email'],
+	['Customer´s email', 'customersEmail', 'customers-email'],
+	['Hawaiʻi trip', 'hawaiiTrip', 'hawaii-trip'],
+	['Temperature (ºC)', 'temperatureC', 'temperature-c'],
+	['Order Nº', 'orderNo', 'order-no'],
+	['Acme™ Plan', 'acmePlan', 'acme-plan'],
+	['ℹ️ Notes', 'notes', 'notes'],
+	['Revenue 2025¹', 'revenue2025', 'revenue-2025'],
+	['1½ hours', 'field1Hours', 'field-1-hours'],
+	['Area 10²³', 'area10', 'area-10'],
+	['m² area', 'm2Area', 'm2-area'],
+	['Encyclopædia entry', 'encyclopaediaEntry', 'encyclopaedia-entry'],
+	['Manœuvre notes', 'manoeuvreNotes', 'manoeuvre-notes'],
+	['Þe olde shop', 'theOldeShop', 'the-olde-shop'],
+	['Proﬁle', 'profile', 'profile'],
+])('keeps the words of the label %j whole', (label, camel, kebab) => {
+	expect(keyFromLabel(label, { style: 'camel' })).toBe(camel)
+	expect(keyFromLabel(label, { style: 'kebab' })).toBe(kebab)
+})
+
+test.each([
+	['ß', 'ss'],
+	['ẞ', 'ss'],
+	['æ', 'ae'],
+	['Æ', 'ae'],
+	['œ', 'oe'],
+	['ø', 'o'],
+	['Ø', 'o'],
+	['ł', 'l'],
+	['Ł', 'l'],
+	['ı', 'i'],
+	['İ', 'i'],
+	['đ', 'd'],
+	['ð', 'd'],
+	['þ', 'th'],
+	['ħ', 'h'],
+	['ŧ', 't'],
+	['ƒ', 'f'],
+	['ŀ', 'l'],
+	['ə', 'e'],
+	['Ə', 'e'],
+	['ŋ', 'n'],
+	['Ŋ', 'n'],
+	['·', ''],
+	['­', ''],
+	['​', ''],
+	['⁠', ''],
+])('folds the letter %j inside a word into %j', (letter, folded) => {
+	expect(keyFromLabel(`Pre${letter}post`, { style: 'kebab' })).toBe(`pre${folded}post`)
+})
+
 test('adds the first free number when the camel key is taken', () => {
 	expect(keyFromLabel('Birth Date', { style: 'camel', taken: ['birthDate'] })).toBe('birthDate2')
 	expect(keyFromLabel('Birth Date', { style: 'camel', taken: new Set(['birthDate', 'birthDate2']) })).toBe('birthDate3')

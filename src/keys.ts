@@ -14,13 +14,26 @@ export interface KeyOptions {
 /** The word a key starts with when the label gives none, or starts with a digit. */
 const LEAD = 'field'
 
+/** The plain letters a key spells each listed lowercase Latin letter with, since none of them decomposes. */
+const FOLDS: Readonly<Record<string, string>> = {
+	ß: 'ss', æ: 'ae', œ: 'oe', ø: 'o', ł: 'l', ı: 'i', đ: 'd', ð: 'd', þ: 'th', ħ: 'h', ŧ: 't', ƒ: 'f', ə: 'e', ŋ: 'n',
+}
+
 /**
- * Returns the lowercase words of a label, without accents or punctuation.
+ * Returns a label's lowercase words in a to z, apostrophes, middle dots and invisible characters joining a word.
  * @param label - The label to split.
  * @returns The words in order.
  */
 function wordsOf(label: string): string[] {
-	const plain = label.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+	const plain = label
+		.replace(/[´ʻ]/g, '')
+		.replace(/(?<!\p{L})[ºª]|[™℠ℹⓂ]/gu, ' ')
+		.replace(/(?<=\p{Nd})\p{No}+/gu, ' ')
+		.normalize('NFKD')
+		.replace(/[\p{M}\p{Default_Ignorable_Code_Point}]/gu, '')
+		.toLowerCase()
+		.replace(/['‘’ʼ`·]/g, '')
+		.replace(/[ßæœøłıđðþħŧƒəŋ]/g, (letter) => FOLDS[letter] as string)
 	return plain.split(/[^a-z0-9]+/).filter((word) => word !== '')
 }
 
