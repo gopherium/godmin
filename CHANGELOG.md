@@ -10,8 +10,10 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 - `useRowKeys` gives each row of a list a key that stays with it through moves
   and removals.
-- `RepeatRows` and `RowControls` edit a list of rows with add, move up, move
-  down and remove, optional `min` and `max`, and every label as a prop.
+- `RepeatRows` edits a list of rows with add, move up, move down and remove,
+  optional `min` and `max`, and every label as a prop.
+- `RowControls` shows the move up, move down and remove buttons of one row, for
+  lists that need their own add step.
 - `keyFromLabel` turns a label into a camel or kebab key and adds the first
   free number when the key is taken.
 
