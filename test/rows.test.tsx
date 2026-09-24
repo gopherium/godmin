@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, test, vi } from 'vitest'
 
@@ -37,6 +37,55 @@ function Notes(props: { initial: string[], min?: number, max?: number }) {
 			renderRow={(row, update) => (
 				<input aria-label="Note" defaultValue={row} onBlur={(event) => update(event.target.value)} />
 			)}
+		/>
+	)
+}
+
+/**
+ * Renders a rows editor over rows its owner hands in, each row an uncontrolled note input.
+ * @param props - The rows the owner holds.
+ * @returns The rendered editor.
+ */
+function Owned(props: { rows: string[] }) {
+	return (
+		<RepeatRows
+			rows={props.rows}
+			onChange={vi.fn()}
+			blank={() => ''}
+			rowLabel={(at) => `Entry ${at + 1}`}
+			labels={labels}
+			renderRow={(row) => <input aria-label="Note" defaultValue={row} />}
+		/>
+	)
+}
+
+/**
+ * Renders a rows editor over its own state that keeps the first edit callback each row is handed.
+ * @param props - The rows it starts with, where to keep each callback, and what to call with every change.
+ * @returns The rendered editor.
+ */
+function Kept(props: {
+	initial: string[],
+	kept: Map<string, (row: string) => void>,
+	changed: (rows: string[]) => void,
+}) {
+	const [rows, setRows] = useState(props.initial)
+	return (
+		<RepeatRows
+			rows={rows}
+			onChange={(next) => {
+				props.changed(next)
+				setRows(next)
+			}}
+			blank={() => ''}
+			rowLabel={(at) => `Entry ${at + 1}`}
+			labels={labels}
+			renderRow={(row, update) => {
+				if (!props.kept.has(row)) {
+					props.kept.set(row, update)
+				}
+				return <span>{row}</span>
+			}}
 		/>
 	)
 }
@@ -139,6 +188,47 @@ test('hands a row edit back as the whole list', () => {
 	fireEvent.click(screen.getByRole('button', { name: 'Add entry' }))
 
 	expect(notes().map((input) => input.value)).toEqual(['first', 'second, edited', ''])
+})
+
+test('shows the rows an owner hands in over the rows they replace', () => {
+	const { rerender } = renderAdmin(<Owned rows={['first', 'second']} />)
+
+	rerender(<Owned rows={['third', 'fourth']} />)
+
+	expect(notes().map((input) => input.value)).toEqual(['third', 'fourth'])
+})
+
+test('keeps typed text with its row when the owner puts a row in front', () => {
+	const { rerender } = renderAdmin(<Owned rows={['first', 'second']} />)
+	fireEvent.change(notes()[0] as HTMLInputElement, { target: { value: 'first, typed' } })
+
+	rerender(<Owned rows={['zero', 'first', 'second']} />)
+
+	expect(notes().map((input) => input.value)).toEqual(['zero', 'first, typed', 'second'])
+})
+
+test('sends an edit held from before a move to the row that moved', () => {
+	const kept = new Map<string, (row: string) => void>()
+	const changed = vi.fn()
+	renderAdmin(<Kept initial={['first', 'second']} kept={kept} changed={changed} />)
+	const edit = kept.get('first') as (row: string) => void
+
+	fireEvent.click(screen.getAllByRole('button', { name: 'Move entry down' })[0] as HTMLElement)
+	act(() => edit('first, edited'))
+
+	expect(changed).toHaveBeenLastCalledWith(['second', 'first, edited'])
+})
+
+test('drops an edit held from a row that was removed', () => {
+	const kept = new Map<string, (row: string) => void>()
+	const changed = vi.fn()
+	renderAdmin(<Kept initial={['first', 'second']} kept={kept} changed={changed} />)
+	const edit = kept.get('first') as (row: string) => void
+
+	fireEvent.click(screen.getAllByRole('button', { name: 'Remove entry' })[0] as HTMLElement)
+	act(() => edit('first, edited'))
+
+	expect(changed.mock.calls).toEqual([[['second']]])
 })
 
 test('stops adding at the most rows allowed', () => {

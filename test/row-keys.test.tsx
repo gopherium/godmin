@@ -26,9 +26,9 @@ test('gives every row its own key', () => {
 
 test('keeps a row and its key together when the row moves', () => {
 	const { result, rerender, last } = held(['a', 'b', 'c'])
-	const [first, second] = result.current.keys
+	const [first, second] = result.current.keys as [number, number]
 
-	act(() => result.current.move(0, 1))
+	act(() => result.current.move(first, 1))
 	rerender({ rows: last() })
 
 	expect(last()).toEqual(['b', 'a', 'c'])
@@ -37,9 +37,9 @@ test('keeps a row and its key together when the row moves', () => {
 
 test('drops only the removed row and its key', () => {
 	const { result, rerender, last } = held(['a', 'b', 'c'])
-	const [first, , third] = result.current.keys
+	const [first, second, third] = result.current.keys as [number, number, number]
 
-	act(() => result.current.remove(1))
+	act(() => result.current.remove(second))
 	rerender({ rows: last() })
 
 	expect(last()).toEqual(['a', 'c'])
@@ -48,8 +48,8 @@ test('drops only the removed row and its key', () => {
 
 test('gives an added row a fresh key and never reuses a removed one', () => {
 	const { result, rerender, last } = held(['a', 'b'])
-	const [, removed] = result.current.keys
-	act(() => result.current.remove(1))
+	const [, removed] = result.current.keys as [number, number]
+	act(() => result.current.remove(removed))
 	rerender({ rows: last() })
 
 	act(() => result.current.add('c'))
@@ -60,24 +60,112 @@ test('gives an added row a fresh key and never reuses a removed one', () => {
 	expect(new Set(result.current.keys).size).toBe(2)
 })
 
+test('replaces only the row holding the key', () => {
+	const { result, rerender, last } = held(['a', 'b'])
+	const keys = result.current.keys
+
+	act(() => result.current.update(keys[1] as number, 'B'))
+	rerender({ rows: last() })
+
+	expect(last()).toEqual(['a', 'B'])
+	expect(result.current.keys).toEqual(keys)
+})
+
 test('ignores a move past either end', () => {
 	const { result, changes } = held(['a', 'b'])
+	const [first, second] = result.current.keys as [number, number]
 
-	act(() => result.current.move(0, -1))
-	act(() => result.current.move(1, 1))
+	act(() => result.current.move(first, -1))
+	act(() => result.current.move(second, 1))
 
 	expect(changes).toEqual([])
 })
 
-test('keeps its keys in step with a list the owner replaces', () => {
+test('ignores a key no row holds', () => {
+	const { result, changes } = held(['a', 'b', 'c'])
+	const unheld = Math.max(...result.current.keys) + 1
+
+	act(() => result.current.move(unheld, -1))
+	act(() => result.current.remove(unheld))
+	act(() => result.current.update(unheld, 'x'))
+
+	expect(changes).toEqual([])
+})
+
+test('builds each change on the one before when the list has not come back yet', () => {
+	const { result, rerender, last } = held(['a', 'b', 'c'])
+	const [first, second, third] = result.current.keys as [number, number, number]
+
+	act(() => {
+		result.current.add('d')
+		result.current.add('e')
+	})
+	expect(last()).toEqual(['a', 'b', 'c', 'd', 'e'])
+
+	rerender({ rows: last() })
+	act(() => {
+		result.current.move(third, -1)
+		result.current.remove(first)
+	})
+	rerender({ rows: last() })
+
+	expect(last()).toEqual(['c', 'b', 'd', 'e'])
+	expect(result.current.keys.slice(0, 2)).toEqual([third, second])
+})
+
+test('sends an operation held from an earlier render to the row it named', () => {
+	const { result, rerender, last } = held(['a', 'b', 'c'])
+	const [first, second] = result.current.keys as [number, number]
+	const earlier = result.current
+
+	act(() => result.current.move(first, 1))
+	rerender({ rows: last() })
+	act(() => earlier.update(first, 'A'))
+	rerender({ rows: last() })
+	act(() => earlier.remove(second))
+	rerender({ rows: last() })
+
+	expect(last()).toEqual(['A', 'c'])
+})
+
+test('keeps every key when the owner hands back a copy of the list', () => {
 	const { result, rerender } = held(['a', 'b'])
-	const [first, second] = result.current.keys
+	const keys = result.current.keys
 
-	rerender({ rows: ['a', 'b', 'c'] })
+	rerender({ rows: ['a', 'b'] })
+
+	expect(result.current.keys).toEqual(keys)
+})
+
+test('keeps the keys of the rows a list from elsewhere still holds', () => {
+	const { result, rerender } = held(['a', 'b'])
+	const [first, second] = result.current.keys as [number, number]
+
+	rerender({ rows: ['c', 'a', 'b'] })
 	const grown = result.current.keys
-	rerender({ rows: ['a'] })
+	rerender({ rows: ['b'] })
 
-	expect(grown.slice(0, 2)).toEqual([first, second])
+	expect(grown.slice(1)).toEqual([first, second])
 	expect(new Set(grown).size).toBe(3)
-	expect(result.current.keys).toEqual([first])
+	expect(result.current.keys).toEqual([second])
+})
+
+test('gives rows holding the same value keys of their own', () => {
+	const { result, rerender } = held(['a', 'a'])
+	const keys = result.current.keys
+
+	rerender({ rows: ['a', 'a', 'a'] })
+
+	expect(result.current.keys.slice(0, 2)).toEqual(keys)
+	expect(new Set(result.current.keys).size).toBe(3)
+})
+
+test('gives fresh keys to the rows a list from elsewhere replaces', () => {
+	const { result, rerender } = held(['a', 'b'])
+	const before = result.current.keys
+
+	rerender({ rows: ['c', 'd'] })
+
+	expect(result.current.keys.filter((key) => before.includes(key))).toEqual([])
+	expect(new Set(result.current.keys).size).toBe(2)
 })

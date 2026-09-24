@@ -37,7 +37,7 @@ export interface RowControlsProps {
 
 /** What a rows editor needs. */
 export interface RepeatRowsProps<T> {
-	/** The rows the list holds. */
+	/** The rows the list holds, each known by its identity. */
 	rows: readonly T[]
 	/** What to call with the rows a change leaves. */
 	onChange: (rows: T[]) => void
@@ -108,21 +108,21 @@ export function RowControls({ at, count, removable = true, labels, onMove, onRem
 export function RepeatRows<T>({
 	rows, onChange, blank, renderRow, rowLabel, labels, min = 0, max,
 }: RepeatRowsProps<T>) {
-	const { keys, add, move, remove } = useRowKeys(rows, onChange)
+	const { keys, add, update, move, remove } = useRowKeys(rows, onChange)
 	return (
 		<Stack direction="column" gap="md" className="godmin-rows">
 			{rows.length === 0 ? <Text>{labels.empty}</Text> : null}
-			{rows.map((row, at) => (
-				<div key={keys[at]} role="group" aria-label={rowLabel(at)} className="godmin-rows__row">
+			{keys.map((key, at) => (
+				<div key={key} role="group" aria-label={rowLabel(at)} className="godmin-rows__row">
 					<Stack direction="column" gap="xs">
-						{renderRow(row, (changed) => onChange(rows.map((held, place) => (place === at ? changed : held))), at)}
+						{renderRow(rows[at], (changed) => update(key, changed), at)}
 						<RowControls
 							at={at}
 							count={rows.length}
 							removable={rows.length > min}
 							labels={labels}
-							onMove={(offset) => move(at, offset)}
-							onRemove={() => remove(at)}
+							onMove={(offset) => move(key, offset)}
+							onRemove={() => remove(key)}
 						/>
 					</Stack>
 				</div>
