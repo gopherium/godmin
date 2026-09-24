@@ -4,6 +4,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `useRowKeys` gives each row of a list a key that stays with it through moves
+  and removals.
+- `RepeatRows` and `RowControls` edit a list of rows with add, move up, move
+  down and remove, optional `min` and `max`, and every label as a prop.
+- `keyFromLabel` turns a label into a camel or kebab key and adds the first
+  free number when the key is taken.
+
 ## [0.8.1] - 2026-09-18
 
 ### Fixed
