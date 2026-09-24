@@ -220,6 +220,11 @@ body {
 		border-radius: var(--wpds-border-radius-sm);
 	}
 
+	.godmin-rows__row:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: 2px;
+	}
+
 	/* Small viewport overrides live together at the end of the sheet, so they
 	   always win over the rules above them without extra specificity. */
 	@media (max-width: 639px) {
