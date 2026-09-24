@@ -10,11 +10,17 @@ export type {
 	FrameRailProps,
 	FrameRootProps,
 } from './frame.js'
+export { keyFromLabel } from './keys.js'
+export type { KeyOptions, KeyStyle } from './keys.js'
 export { LoadingRows, LoadingScreen } from './loading.js'
 export { NavScreen } from './nav-screen.js'
 export type { NavScreenProps } from './nav-screen.js'
 export { ErrorNotice, LoadMore, Page, PageTitle } from './page.js'
 export type { LoadMoreQuery, PageProps } from './page.js'
+export { useRowKeys } from './row-keys.js'
+export type { RowBounds, RowKeys } from './row-keys.js'
+export { RepeatRows, RowControls } from './rows.js'
+export type { RepeatRowsProps, RowControlsProps, RowLabels } from './rows.js'
 export { Toaster, useToaster } from './toaster.js'
 export type { ToastAction, ToasterHandle, ToasterProps } from './toaster.js'
 export { useMediaQuery } from './use-media-query.js'
