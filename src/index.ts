@@ -10,6 +10,8 @@ export type {
 	FrameRailProps,
 	FrameRootProps,
 } from './frame.js'
+export { keyFromLabel } from './keys.js'
+export type { KeyOptions, KeyStyle } from './keys.js'
 export { LoadingRows, LoadingScreen } from './loading.js'
 export { NavScreen } from './nav-screen.js'
 export type { NavScreenProps } from './nav-screen.js'
