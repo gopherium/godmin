@@ -73,7 +73,7 @@ interface FocusChange {
 	keys: readonly number[]
 	/** The key of the row that held focus as it went, or null. */
 	lost: number | null
-	/** Whether the add button was pressed and no row it made has taken focus yet. */
+	/** Whether the add button was pressed since the last commit. */
 	adding: boolean
 	/** What holds focus now. */
 	holder: Holder
@@ -216,7 +216,7 @@ function keepInView(before: readonly number[], keys: readonly number[], entered:
  * @param groups - The group of each row shown, by key.
  * @param record - The row that last took focus and the element in it that did.
  * @param lost - The key of the row that held focus as it went.
- * @param adding - Whether the add button was pressed and no row it made has taken focus yet.
+ * @param adding - Whether the add button was pressed since the last commit.
  * @returns The handlers.
  */
 function focusHandlers(
@@ -264,7 +264,7 @@ function useRowFocus(keys: readonly number[]): RowFocus {
 		const target = focusTarget({ before, keys, lost: lost.current, adding: adding.current, holder })
 		placed.current = keys
 		lost.current = null
-		adding.current = holder === 'add' && target === undefined && adding.current
+		adding.current = false
 		if (target === undefined) {
 			keepInView(before, keys, record.current)
 		} else {

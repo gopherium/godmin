@@ -565,6 +565,16 @@ test('leaves focus on the add button when the owner ignores the add', () => {
 	expect(document.activeElement).toBe(add)
 })
 
+test('leaves focus on the add button when the owner ignores the add and later adds a row itself', () => {
+	const { rerender } = renderAdmin(<Owned rows={['first']} />)
+	const add = screen.getByRole('button', { name: 'Add entry' })
+	press(add)
+
+	rerender(<Owned rows={['first', 'second']} />)
+
+	expect(document.activeElement).toBe(add)
+})
+
 test('leaves focus on the add button while rows arrive without a press', () => {
 	const { rerender } = renderAdmin(<Owned rows={[]} />)
 	const add = screen.getByRole('button', { name: 'Add entry' })
