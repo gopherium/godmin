@@ -10,7 +10,8 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 - `Page` takes an optional `aside`, a column beside the content at the small
   surface width. It moves below the content on a narrow page, with no
-  breakpoint, and an aside that renders nothing takes no room.
+  breakpoint, and an aside that renders nothing takes no room. The content
+  keeps a readable width, so the aside stays beside it on a wide page.
 
 ## [0.9.0] - 2026-09-24
 
