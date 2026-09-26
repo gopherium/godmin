@@ -75,11 +75,17 @@ test('keeps the content at least half the page beside an aside', () => {
 	const main = ruleOf('.godmin-page__main')
 
 	expect(main).toMatch(/flex:\s*999 1 0/)
-	expect(main).toMatch(/min-inline-size:\s*50%/)
+	expect(main).toMatch(/min-inline-size:\s*min\(50%, var\(--wpds-dimension-surface-width-xl\)\)/)
 })
 
-test('sizes the aside from the small surface width', () => {
-	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*1 1 var\(--wpds-dimension-surface-width-sm\)/)
+test('sizes the aside from the small surface width, never wider', () => {
+	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*0 1 var\(--wpds-dimension-surface-width-sm\)/)
+})
+
+test('keeps the content to a readable width, so the aside stays beside it on a wide page', () => {
+	expect(ruleOf('.godmin-page__main')).toMatch(
+		/max-inline-size:\s*var\(--wpds-dimension-surface-width-xl\)/,
+	)
 })
 
 test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
