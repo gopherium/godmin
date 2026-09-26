@@ -81,6 +81,24 @@ test('keeps the aside after the content in reading order', () => {
 	expect(main?.compareDocumentPosition(aside as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
 })
 
+/**
+ * Renders nothing, as a panel with nothing to show does.
+ * @returns Nothing.
+ */
+function Nothing() {
+	return null
+}
+
+test('leaves an aside that renders nothing empty, so the stylesheet hides it', () => {
+	const { container } = renderAdmin(
+		<Page title="Reports" aside={<Nothing />}>
+			<p>body</p>
+		</Page>,
+	)
+
+	expect(container.querySelector('.godmin-page__aside:empty')).not.toBeNull()
+})
+
 test('renders one column when a screen gives no aside', () => {
 	const { container } = renderAdmin(<Page title="Reports">body</Page>)
 
