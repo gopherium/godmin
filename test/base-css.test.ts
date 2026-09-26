@@ -82,6 +82,13 @@ test('sizes the aside from the small surface width', () => {
 	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*1 1 var\(--wpds-dimension-surface-width-sm\)/)
 })
 
+test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
+	const aside = ruleOf('.godmin-page__aside')
+
+	expect(aside).toMatch(/min-inline-size:\s*0/)
+	expect(aside).toMatch(/overflow-wrap:\s*anywhere/)
+})
+
 test('hides an aside that renders nothing', () => {
 	expect(ruleOf('.godmin-page__aside:empty')).toMatch(/display:\s*none/)
 })

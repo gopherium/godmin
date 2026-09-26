@@ -132,6 +132,8 @@ body {
 
 	.godmin-page__aside {
 		flex: 1 1 var(--wpds-dimension-surface-width-sm);
+		min-inline-size: 0;
+		overflow-wrap: anywhere;
 	}
 
 	.godmin-page__aside:empty {
