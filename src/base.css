@@ -118,6 +118,26 @@ body {
 		color: var(--wpds-color-foreground-content-neutral-weak);
 	}
 
+	.godmin-page__split {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		gap: var(--wpds-dimension-gap-xl);
+	}
+
+	.godmin-page__main {
+		flex: 999 1 0;
+		min-inline-size: 50%;
+	}
+
+	.godmin-page__aside {
+		flex: 1 1 var(--wpds-dimension-surface-width-sm);
+	}
+
+	.godmin-page__aside:empty {
+		display: none;
+	}
+
 	.godmin-form {
 		display: flex;
 		flex-direction: column;
