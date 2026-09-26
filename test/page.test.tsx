@@ -53,6 +53,41 @@ test('carries the shared page class, with a screen class when given one', () => 
 	expect(classed.querySelector('.godmin-page.acme-reports')).not.toBeNull()
 })
 
+test('renders the aside beside the content, under a title spanning both', () => {
+	const { container } = renderAdmin(
+		<Page title="Reports" aside={<p>Details</p>}>
+			<p>body</p>
+		</Page>,
+	)
+
+	const split = container.querySelector('.godmin-page__split')
+	expect(split?.querySelector('.godmin-page__main')?.textContent).toBe('body')
+	expect(split?.querySelector('.godmin-page__aside')?.textContent).toBe('Details')
+	expect(split?.contains(screen.getByRole('heading', { level: 1, name: 'Reports' }))).toBe(false)
+})
+
+test('keeps the aside after the content in reading order', () => {
+	const { container } = renderAdmin(
+		<Page title="Reports" aside={<p>Details</p>}>
+			<p>body</p>
+		</Page>,
+	)
+
+	const main = container.querySelector('.godmin-page__main')
+	const aside = container.querySelector('.godmin-page__aside')
+
+	expect(main).not.toBeNull()
+	expect(aside).not.toBeNull()
+	expect(main?.compareDocumentPosition(aside as Node)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+})
+
+test('renders one column when a screen gives no aside', () => {
+	const { container } = renderAdmin(<Page title="Reports">body</Page>)
+
+	expect(container.querySelector('.godmin-page__split')).toBeNull()
+	expect(screen.getByText('body')).not.toBeNull()
+})
+
 test('renders a page title on its own for a screen building its own chrome', () => {
 	renderAdmin(<PageTitle variant="heading-md">Maria Perez</PageTitle>)
 
