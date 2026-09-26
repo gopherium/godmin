@@ -4,6 +4,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `LogList` and `LogItem` show a log, each item a header line with a label and
+  actions over a body that keeps its line breaks.
+- `LogTime` shows a small muted date or time inside a `time` element.
+
 ## [0.10.0] - 2026-09-26
 
 ### Added

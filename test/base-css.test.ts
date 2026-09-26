@@ -108,6 +108,114 @@ test('folds the aside with no breakpoint of its own', () => {
 	}
 })
 
+test('resets the log list margin, padding and markers', () => {
+	const list = ruleOf('.godmin-log-list')
+
+	expect(list).toMatch(/margin:\s*0/)
+	expect(list).toMatch(/padding:\s*0/)
+	expect(list).toMatch(/list-style:\s*none/)
+})
+
+test('draws the log list as one bordered surface from the tokens', () => {
+	const list = ruleOf('.godmin-log-list')
+
+	expect(list).toMatch(/background:\s*var\(--wpds-color-background-surface-neutral-strong\)/)
+	expect(list).toMatch(
+		/border:\s*var\(--wpds-border-width-xs\) solid var\(--wpds-color-stroke-surface-neutral\)/,
+	)
+	expect(list).toMatch(/border-radius:\s*var\(--wpds-border-radius-lg\)/)
+})
+
+test('lets a long unbroken word wrap inside a log list', () => {
+	expect(ruleOf('.godmin-log-list')).toMatch(/overflow-wrap:\s*anywhere/)
+})
+
+test('hides a log list with no items', () => {
+	expect(ruleOf('.godmin-log-list:empty')).toMatch(/display:\s*none/)
+})
+
+test('stacks the parts of a log item with the extra small gap', () => {
+	const item = ruleOf('.godmin-log-list__item')
+
+	expect(item).toMatch(/display:\s*flex/)
+	expect(item).toMatch(/flex-direction:\s*column/)
+	expect(item).toMatch(/gap:\s*var\(--wpds-dimension-gap-xs\)/)
+})
+
+test('pads each log item from the padding tokens and draws no border on it', () => {
+	const item = ruleOf('.godmin-log-list__item')
+
+	expect(item).toMatch(
+		/padding:\s*var\(--wpds-dimension-padding-sm\) var\(--wpds-dimension-padding-md\)/,
+	)
+	expect(item, 'the divider rule sits above the plain item rule').not.toMatch(/border/)
+})
+
+test('draws a weak divider between log items and none above the first', () => {
+	expect(ruleOf('.godmin-log-list__item + .godmin-log-list__item')).toMatch(
+		/border-block-start:\s*var\(--wpds-border-width-xs\) solid\s+var\(--wpds-color-stroke-surface-neutral-weak\)/,
+	)
+})
+
+test('wraps the log header line so the actions drop under the label in a narrow column', () => {
+	const header = ruleOf('.godmin-log-list__header')
+
+	expect(header).toMatch(/display:\s*flex/)
+	expect(header).toMatch(/flex-wrap:\s*wrap/)
+	expect(header).toMatch(/align-items:\s*center/)
+})
+
+test('spaces the log header line with the gap tokens', () => {
+	expect(ruleOf('.godmin-log-list__header')).toMatch(
+		/gap:\s*var\(--wpds-dimension-gap-xs\) var\(--wpds-dimension-gap-sm\)/,
+	)
+})
+
+test('lets the log label take the free room and shrink inside a narrow column', () => {
+	const label = ruleOf('.godmin-log-list__label')
+
+	expect(label).toMatch(/flex:\s*1 1 auto/)
+	expect(label).toMatch(/min-inline-size:\s*0/)
+})
+
+test('keeps the log actions at the end of their line, also after they wrap', () => {
+	const actions = ruleOf('.godmin-log-list__actions')
+
+	expect(actions).toMatch(/margin-inline-start:\s*auto/)
+	expect(actions, 'a wrapped row of actions starts at the start edge').toMatch(/justify-content:\s*flex-end/)
+	expect(actions, 'a group that cannot shrink spills past a narrow column').not.toMatch(
+		/flex:\s*none/,
+	)
+})
+
+test('lays the log actions out as a wrapping row with the extra small gap', () => {
+	const actions = ruleOf('.godmin-log-list__actions')
+
+	expect(actions).toMatch(/display:\s*flex/)
+	expect(actions).toMatch(/flex-wrap:\s*wrap/)
+	expect(actions).toMatch(/align-items:\s*center/)
+	expect(actions).toMatch(/gap:\s*var\(--wpds-dimension-gap-xs\)/)
+})
+
+test('keeps the line breaks of a log body', () => {
+	expect(ruleOf('.godmin-log-list__body')).toMatch(/white-space:\s*pre-line/)
+})
+
+test('mutes a log time with the weak content colour', () => {
+	expect(ruleOf('.godmin-log-list__time')).toMatch(
+		/color:\s*var\(--wpds-color-foreground-content-neutral-weak\)/,
+	)
+})
+
+test('folds the log list with no breakpoint of its own', () => {
+	const bodies = atRuleBodies(['media', 'container'])
+
+	expect(bodies.length, 'the collector found no at-rule to inspect').toBeGreaterThan(0)
+	for (const body of bodies) {
+		expect(body).not.toMatch(/godmin-log-list/)
+	}
+})
+
 test('declares the cascade layer order before anything else', () => {
 	expect(significantLines(base)[0]).toBe('@layer wp-ui, godmin;')
 })
