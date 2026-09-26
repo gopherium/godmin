@@ -31,6 +31,77 @@ function reducedMotionGuard(): string {
 	return base.slice(start)
 }
 
+/**
+ * Returns the declarations of the rule a selector opens.
+ * @param selector - The exact selector the rule starts with.
+ * @returns The text between the rule's braces.
+ */
+function ruleOf(selector: string): string {
+	const start = base.indexOf(`${selector} {`)
+
+	expect(start, `the stylesheet has no ${selector} rule`).toBeGreaterThan(-1)
+
+	return base.slice(start + selector.length + 2, base.indexOf('}', start))
+}
+
+/**
+ * Returns the body of every at-rule of the given kinds, matching its braces.
+ * @param kinds - The at-rule names to collect, such as media.
+ * @returns The bodies in source order.
+ */
+function atRuleBodies(kinds: string[]): string[] {
+	const bodies: string[] = []
+	for (const found of base.matchAll(new RegExp(`@(?:${kinds.join('|')})\\b[^{]*\\{`, 'g'))) {
+		let depth = 1
+		let at = found.index + found[0].length
+		while (depth > 0 && at < base.length) {
+			depth += base[at] === '{' ? 1 : base[at] === '}' ? -1 : 0
+			at++
+		}
+		bodies.push(base.slice(found.index + found[0].length, at - 1))
+	}
+	return bodies
+}
+
+test('lays the aside beside the content and wraps it under on a narrow page', () => {
+	const split = ruleOf('.godmin-page__split')
+
+	expect(split).toMatch(/display:\s*flex/)
+	expect(split).toMatch(/flex-wrap:\s*wrap/)
+	expect(split).toMatch(/align-items:\s*flex-start/)
+})
+
+test('keeps the content at least half the page beside an aside', () => {
+	const main = ruleOf('.godmin-page__main')
+
+	expect(main).toMatch(/flex:\s*999 1 0/)
+	expect(main).toMatch(/min-inline-size:\s*50%/)
+})
+
+test('sizes the aside from the small surface width', () => {
+	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*1 1 var\(--wpds-dimension-surface-width-sm\)/)
+})
+
+test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
+	const aside = ruleOf('.godmin-page__aside')
+
+	expect(aside).toMatch(/min-inline-size:\s*0/)
+	expect(aside).toMatch(/overflow-wrap:\s*anywhere/)
+})
+
+test('hides an aside that renders nothing', () => {
+	expect(ruleOf('.godmin-page__aside:empty')).toMatch(/display:\s*none/)
+})
+
+test('folds the aside with no breakpoint of its own', () => {
+	const bodies = atRuleBodies(['media', 'container'])
+
+	expect(bodies.length, 'the collector found no at-rule to inspect').toBeGreaterThan(0)
+	for (const body of bodies) {
+		expect(body).not.toMatch(/godmin-page__(?:split|main|aside)/)
+	}
+})
+
 test('declares the cascade layer order before anything else', () => {
 	expect(significantLines(base)[0]).toBe('@layer wp-ui, godmin;')
 })

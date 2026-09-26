@@ -28,17 +28,18 @@ export interface PageProps {
 	title: string
 	subtitle?: string
 	actions?: ReactNode
+	aside?: ReactNode
 	className?: string
 	children: ReactNode
 }
 
 /**
  * Renders a screen: its title top left, an optional subtitle under it,
- * optional actions top right, and the content below.
- * @param props - The title, subtitle, actions, extra class and content.
+ * optional actions top right, and the content below, beside an optional aside.
+ * @param props - The title, subtitle, actions, aside, extra class and content.
  * @returns The page element.
  */
-export function Page({ title, subtitle, actions, className, children }: PageProps) {
+export function Page({ title, subtitle, actions, aside, className, children }: PageProps) {
 	const classes = className === undefined ? 'godmin-page' : `godmin-page ${className}`
 	return (
 		<Stack direction="column" gap="lg" className={classes}>
@@ -57,8 +58,29 @@ export function Page({ title, subtitle, actions, className, children }: PageProp
 					</Stack>
 				)}
 			</Stack>
-			{children}
+			<PageBody aside={aside}>{children}</PageBody>
 		</Stack>
+	)
+}
+
+/**
+ * Renders a page's content, beside its aside when it has one.
+ * @param props - The content and the optional aside.
+ * @returns The content alone, or a main column followed by the aside.
+ */
+function PageBody({ aside, children }: { aside?: ReactNode; children: ReactNode }) {
+	if (aside === undefined) {
+		return children
+	}
+	return (
+		<div className="godmin-page__split">
+			<Stack direction="column" gap="lg" className="godmin-page__main">
+				{children}
+			</Stack>
+			<Stack direction="column" gap="lg" className="godmin-page__aside">
+				{aside}
+			</Stack>
+		</div>
 	)
 }
 

@@ -4,6 +4,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `Page` takes an optional `aside`, a column beside the content at the small
+  surface width. It moves below the content on a narrow page, with no
+  breakpoint, and an aside that renders nothing takes no room.
+
 ## [0.9.0] - 2026-09-24
 
 ### Added
