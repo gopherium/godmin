@@ -149,6 +149,28 @@ test('renders no header line for an item whose label and actions render nothing'
 	expect(container.querySelector('.godmin-log-list__header')).toBeNull()
 })
 
+test('renders no header line for an empty label and empty actions', () => {
+	const { container } = renderAdmin(
+		<LogList>
+			<LogItem label="" actions={[]}>
+				<form aria-label="Edit note" />
+			</LogItem>
+		</LogList>,
+	)
+
+	expect(container.querySelector('.godmin-log-list__header')).toBeNull()
+})
+
+test('renders a header line for actions holding one control among nothing', () => {
+	const { container } = renderAdmin(
+		<LogList>
+			<LogItem actions={[null, <button key="edit" type="button">Edit</button>]} />
+		</LogList>,
+	)
+
+	expect(container.querySelector('.godmin-log-list__actions')).not.toBeNull()
+})
+
 test('renders no label region for a label that renders nothing', () => {
 	const { container } = renderAdmin(
 		<LogList>

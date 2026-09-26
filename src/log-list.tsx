@@ -87,10 +87,13 @@ function LogHeader({ label, actions }: Pick<LogItemProps, 'label' | 'actions'>) 
 /**
  * Reports whether React renders anything for a node.
  * @param node - The node to check.
- * @returns False for undefined, null and booleans, true otherwise.
+ * @returns False for undefined, null, booleans, an empty string and a list of those, true otherwise.
  */
 function rendersSomething(node: ReactNode): boolean {
-	return node !== undefined && node !== null && typeof node !== 'boolean'
+	if (Array.isArray(node)) {
+		return node.some(rendersSomething)
+	}
+	return node !== undefined && node !== null && node !== '' && typeof node !== 'boolean'
 }
 
 /**
