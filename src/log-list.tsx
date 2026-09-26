@@ -71,15 +71,26 @@ export function LogItem({ label, actions, body, children, 'aria-label': name }: 
  * @returns The header line element, or null.
  */
 function LogHeader({ label, actions }: Pick<LogItemProps, 'label' | 'actions'>) {
-	if (label === undefined && actions === undefined) {
+	const labelled = rendersSomething(label)
+	const acting = rendersSomething(actions)
+	if (!labelled && !acting) {
 		return null
 	}
 	return (
 		<div className="godmin-log-list__header">
-			{label !== undefined && <div className="godmin-log-list__label">{label}</div>}
-			{actions !== undefined && <div className="godmin-log-list__actions">{actions}</div>}
+			{labelled && <div className="godmin-log-list__label">{label}</div>}
+			{acting && <div className="godmin-log-list__actions">{actions}</div>}
 		</div>
 	)
+}
+
+/**
+ * Reports whether React renders anything for a node.
+ * @param node - The node to check.
+ * @returns False for undefined, null and booleans, true otherwise.
+ */
+function rendersSomething(node: ReactNode): boolean {
+	return node !== undefined && node !== null && typeof node !== 'boolean'
 }
 
 /**

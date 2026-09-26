@@ -137,6 +137,40 @@ test('renders no header line for an item with neither label nor actions, so a fo
 	)
 })
 
+test('renders no header line for an item whose label and actions render nothing', () => {
+	const { container } = renderAdmin(
+		<LogList>
+			<LogItem label={null} actions={false}>
+				<form aria-label="Edit note" />
+			</LogItem>
+		</LogList>,
+	)
+
+	expect(container.querySelector('.godmin-log-list__header')).toBeNull()
+})
+
+test('renders no label region for a label that renders nothing', () => {
+	const { container } = renderAdmin(
+		<LogList>
+			<LogItem label={null} actions={<button type="button">Edit</button>} />
+		</LogList>,
+	)
+
+	expect(container.querySelector('.godmin-log-list__label')).toBeNull()
+	expect(container.querySelector('.godmin-log-list__actions')).not.toBeNull()
+})
+
+test('renders no actions region for actions that render nothing', () => {
+	const { container } = renderAdmin(
+		<LogList>
+			<LogItem label={<span>Jan 1</span>} actions={null} />
+		</LogList>,
+	)
+
+	expect(container.querySelector('.godmin-log-list__actions')).toBeNull()
+	expect(container.querySelector('.godmin-log-list__label')).not.toBeNull()
+})
+
 test('renders the body as a paragraph after the header line', () => {
 	const { container } = renderAdmin(
 		<LogList>
