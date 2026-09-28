@@ -4,6 +4,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `SectionTitle` shows a section heading one size step above the field labels.
+- `godmin-form__row` sets the short fields of a form side by side.
+
+### Changed
+
+- `Page` shares its width with the aside about three to two, the aside 320px to 560px.
+- `godmin-form` caps at 560px instead of 320px.
+
 ## [0.11.0] - 2026-09-26
 
 ### Added
