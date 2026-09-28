@@ -1,12 +1,62 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { screen } from '@testing-library/react'
+import { Text } from '@wordpress/ui'
 import { expect, test, vi } from 'vitest'
 
-import { ErrorNotice, LoadMore, Page, PageTitle } from '../src/page.js'
+import { ErrorNotice, LoadMore, Page, PageTitle, SectionTitle } from '../src/page.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
+
+/**
+ * Returns the class tokens the design system gives a sampled element.
+ * @param element - The element to sample, carrying id="sample".
+ * @returns The class tokens.
+ */
+function sampledClasses(element: React.ReactElement): string[] {
+	const { container } = renderAdmin(element)
+	return [...(container.querySelector('#sample') as Element).classList]
+}
+
+test('renders a section title as a level 2 heading at the large heading size', () => {
+	const large = sampledClasses(<Text id="sample" variant="heading-lg" />)
+
+	renderAdmin(<SectionTitle>Identities</SectionTitle>)
+
+	const heading = screen.getByRole('heading', { level: 2, name: 'Identities' })
+	expect([...heading.classList]).toEqual(expect.arrayContaining(large))
+})
+
+test('renders a level 3 section title at the medium heading size', () => {
+	const medium = sampledClasses(<Text id="sample" variant="heading-md" />)
+
+	renderAdmin(<SectionTitle level={3}>Sub fields</SectionTitle>)
+
+	const heading = screen.getByRole('heading', { level: 3, name: 'Sub fields' })
+	expect([...heading.classList]).toEqual(expect.arrayContaining(medium))
+})
+
+test('sets a section title apart from a field label', () => {
+	const label = sampledClasses(<Text id="sample" variant="heading-sm" />)
+
+	renderAdmin(<SectionTitle>Identities</SectionTitle>)
+
+	const heading = screen.getByRole('heading', { level: 2, name: 'Identities' })
+	expect([...heading.classList].sort()).not.toEqual([...label].sort())
+})
+
+test('passes an id and a tab index through, so a screen can move focus to a section', () => {
+	renderAdmin(
+		<SectionTitle id="fields" tabIndex={-1}>
+			Fields
+		</SectionTitle>,
+	)
+
+	const heading = screen.getByRole('heading', { level: 2, name: 'Fields' })
+	expect(heading.getAttribute('id')).toBe('fields')
+	expect(heading.getAttribute('tabindex')).toBe('-1')
+})
 
 test('renders the title as the page heading', () => {
 	renderAdmin(<Page title="Reports">body</Page>)
