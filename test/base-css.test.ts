@@ -101,6 +101,44 @@ test('hides an aside that renders nothing', () => {
 	expect(ruleOf('.godmin-page__aside:empty')).toMatch(/display:\s*none/)
 })
 
+test('caps a form at the large surface width', () => {
+	expect(ruleOf('.godmin-form')).toMatch(/max-width:\s*var\(--wpds-dimension-surface-width-lg\)/)
+})
+
+test('keeps a form a column with the medium gap', () => {
+	const form = ruleOf('.godmin-form')
+
+	expect(form).toMatch(/display:\s*flex/)
+	expect(form).toMatch(/flex-direction:\s*column/)
+	expect(form).toMatch(/gap:\s*var\(--wpds-dimension-gap-md\)/)
+})
+
+test('lays a form row out side by side and wraps it on a narrow form', () => {
+	const row = ruleOf('.godmin-form__row')
+
+	expect(row).toMatch(/display:\s*flex/)
+	expect(row).toMatch(/flex-wrap:\s*wrap/)
+	expect(row).toMatch(/align-items:\s*flex-end/)
+	expect(row).toMatch(/gap:\s*var\(--wpds-dimension-gap-md\)/)
+})
+
+test('gives every field of a row a share of the line from half the extra small surface width', () => {
+	const field = ruleOf('.godmin-form__row > *')
+
+	expect(field).toMatch(/flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-xs\) \/ 2\)/)
+	expect(field).toMatch(/min-inline-size:\s*0/)
+})
+
+test('keeps a row button at its own width', () => {
+	expect(ruleOf('.godmin-form__row > button')).toMatch(/flex:\s*none/)
+})
+
+test('folds a form row with no breakpoint of its own', () => {
+	for (const body of atRuleBodies(['media', 'container'])) {
+		expect(body).not.toMatch(/godmin-form/)
+	}
+})
+
 test('folds the aside with no breakpoint of its own', () => {
 	const bodies = atRuleBodies(['media', 'container'])
 

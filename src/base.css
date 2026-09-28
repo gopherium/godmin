@@ -145,7 +145,23 @@ body {
 		display: flex;
 		flex-direction: column;
 		gap: var(--wpds-dimension-gap-md);
-		max-width: var(--wpds-dimension-surface-width-sm);
+		max-width: var(--wpds-dimension-surface-width-lg);
+	}
+
+	.godmin-form__row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--wpds-dimension-gap-md);
+	}
+
+	.godmin-form__row > * {
+		flex: 1 1 calc(var(--wpds-dimension-surface-width-xs) / 2);
+		min-inline-size: 0;
+	}
+
+	.godmin-form__row > button {
+		flex: none;
 	}
 
 	.godmin-empty {
