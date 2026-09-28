@@ -133,6 +133,22 @@ test('keeps a row button at its own width', () => {
 	expect(ruleOf('.godmin-form__row > button')).toMatch(/flex:\s*none/)
 })
 
+test('sends a row button that wraps onto a line of its own to the end of that line', () => {
+	expect(ruleOf('.godmin-form__row > button')).toMatch(/margin-inline-start:\s*auto/)
+})
+
+test('lets an inline form fill its column instead of stopping at the large surface width', () => {
+	expect(ruleOf('.godmin-form--inline')).toMatch(/max-width:\s*none/)
+})
+
+test('gives a grown field three shares of the free room in its row', () => {
+	expect(ruleOf('.godmin-form__row > .godmin-form__grow')).toMatch(/flex-grow:\s*3/)
+})
+
+test('keeps a button of a stacked form at its own width at the start of the column', () => {
+	expect(ruleOf('.godmin-form > button')).toMatch(/align-self:\s*flex-start/)
+})
+
 test('folds a form row with no breakpoint of its own', () => {
 	for (const body of atRuleBodies(['media', 'container'])) {
 		expect(body).not.toMatch(/godmin-form/)

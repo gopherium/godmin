@@ -148,6 +148,14 @@ body {
 		max-width: var(--wpds-dimension-surface-width-lg);
 	}
 
+	.godmin-form--inline {
+		max-width: none;
+	}
+
+	.godmin-form > button {
+		align-self: flex-start;
+	}
+
 	.godmin-form__row {
 		display: flex;
 		flex-wrap: wrap;
@@ -160,8 +168,13 @@ body {
 		min-inline-size: 0;
 	}
 
+	.godmin-form__row > .godmin-form__grow {
+		flex-grow: 3;
+	}
+
 	.godmin-form__row > button {
 		flex: none;
+		margin-inline-start: auto;
 	}
 
 	.godmin-empty {
