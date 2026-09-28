@@ -149,6 +149,29 @@ test('keeps a button of a stacked form at its own width at the start of the colu
 	expect(ruleOf('.godmin-form > button')).toMatch(/align-self:\s*flex-start/)
 })
 
+test('sets the inputs and the controls of a repeated row on one line that wraps on a narrow list', () => {
+	const line = ruleOf('.godmin-rows__line')
+
+	expect(line).toMatch(/display:\s*flex/)
+	expect(line).toMatch(/flex-wrap:\s*wrap/)
+	expect(line).toMatch(/align-items:\s*flex-end/)
+	expect(line).toMatch(/gap:\s*var\(--wpds-dimension-gap-md\)/)
+})
+
+test('keeps the inputs of a repeated row a small surface wide before its controls share the line', () => {
+	const inputs = ruleOf('.godmin-rows__inputs')
+
+	expect(inputs).toMatch(/flex:\s*1 1 var\(--wpds-dimension-surface-width-sm\)/)
+	expect(inputs).toMatch(/min-inline-size:\s*0/)
+})
+
+test('keeps the controls of a repeated row at their own width at the end of their line', () => {
+	const controls = ruleOf('.godmin-rows__controls')
+
+	expect(controls).toMatch(/flex:\s*none/)
+	expect(controls).toMatch(/margin-inline-start:\s*auto/)
+})
+
 test('folds a form row with no breakpoint of its own', () => {
 	for (const body of atRuleBodies(['media', 'container'])) {
 		expect(body).not.toMatch(/godmin-form/)

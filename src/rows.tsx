@@ -133,6 +133,12 @@ const downIcon = (
 	</svg>
 )
 
+const removeIcon = (
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+		<path d="M16 9v10H8V9h8m-1.5-6h-5l-1 1H5v2h14V4h-3.5l-1-1zM18 7H6v12c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7z" />
+	</svg>
+)
+
 /**
  * Renders the buttons that move a row among its siblings and take it away.
  * @param props - The row's place, the list's length, the words and what to call on a change.
@@ -140,7 +146,7 @@ const downIcon = (
  */
 export function RowControls({ at, count, removable = true, labels, onMove, onRemove }: RowControlsProps) {
 	return (
-		<Stack direction="row" gap="xs" align="center">
+		<Stack direction="row" gap="xs" align="center" className="godmin-rows__controls">
 			<IconButton
 				icon={upIcon}
 				label={labels.moveUp}
@@ -159,9 +165,15 @@ export function RowControls({ at, count, removable = true, labels, onMove, onRem
 				disabled={at === count - 1}
 				onClick={() => onMove(1)}
 			/>
-			<Button variant="outline" size="compact" disabled={!removable} onClick={onRemove}>
-				{labels.remove}
-			</Button>
+			<IconButton
+				icon={removeIcon}
+				label={labels.remove}
+				size="compact"
+				variant="minimal"
+				tone="neutral"
+				disabled={!removable}
+				onClick={onRemove}
+			/>
 		</Stack>
 	)
 }
@@ -293,8 +305,8 @@ function RowGroup<T>({
 			className="godmin-rows__row"
 			onFocus={(event) => entered(rowKey, event.target)}
 		>
-			<Stack direction="column" gap="xs">
-				{renderRow(row, changed, at)}
+			<div className="godmin-rows__line">
+				<div className="godmin-rows__inputs">{renderRow(row, changed, at)}</div>
 				<RowControls
 					at={at}
 					count={count}
@@ -303,7 +315,7 @@ function RowGroup<T>({
 					onMove={(offset) => move(rowKey, offset)}
 					onRemove={() => remove(rowKey)}
 				/>
-			</Stack>
+			</div>
 		</div>
 	)
 }

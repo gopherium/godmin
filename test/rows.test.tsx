@@ -366,6 +366,27 @@ test('row controls hold the remove button back when the row may not go', () => {
 	expect(removed).not.toHaveBeenCalled()
 })
 
+test('row controls show remove as an icon that keeps its spoken name', () => {
+	renderAdmin(<RowControls at={0} count={1} labels={labels} onMove={vi.fn()} onRemove={vi.fn()} />)
+
+	const remove = screen.getByRole('button', { name: 'Remove entry' })
+	expect(remove.textContent).toBe('')
+	expect(remove.querySelector('svg')).not.toBeNull()
+})
+
+test('sets the inputs and the controls of a row on one line', () => {
+	renderAdmin(<Notes initial={['first']} />)
+
+	const line = screen.getByRole('group', { name: 'Entry 1' }).firstElementChild as HTMLElement
+	const [inputs, controls] = [...line.children]
+	expect([...line.classList]).toContain('godmin-rows__line')
+	expect(line.children).toHaveLength(2)
+	expect([...inputs.classList]).toContain('godmin-rows__inputs')
+	expect(inputs.contains(screen.getByLabelText('Note'))).toBe(true)
+	expect([...controls.classList]).toContain('godmin-rows__controls')
+	expect(controls.contains(screen.getByRole('button', { name: 'Remove entry' }))).toBe(true)
+})
+
 test('shows the empty message when there are no rows', () => {
 	renderAdmin(<Notes initial={[]} />)
 

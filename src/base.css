@@ -277,6 +277,23 @@ body {
 		outline-offset: 2px;
 	}
 
+	.godmin-rows__line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--wpds-dimension-gap-md);
+	}
+
+	.godmin-rows__inputs {
+		flex: 1 1 var(--wpds-dimension-surface-width-sm);
+		min-inline-size: 0;
+	}
+
+	.godmin-rows__controls {
+		flex: none;
+		margin-inline-start: auto;
+	}
+
 	.godmin-log-list {
 		margin: 0;
 		padding: 0;
