@@ -71,28 +71,30 @@ test('lays the aside beside the content and wraps it under on a narrow page', ()
 	expect(split).toMatch(/align-items:\s*flex-start/)
 })
 
+test('shares the page between the content and the aside three to two', () => {
+	expect(ruleOf('.godmin-page__main')).toMatch(/flex:\s*3 1 0/)
+	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*2 1 0/)
+})
+
 test('keeps the content at least half the page beside an aside', () => {
-	const main = ruleOf('.godmin-page__main')
-
-	expect(main).toMatch(/flex:\s*999 1 0/)
-	expect(main).toMatch(/min-inline-size:\s*min\(50%, var\(--wpds-dimension-surface-width-xl\)\)/)
-})
-
-test('sizes the aside from the small surface width, never wider', () => {
-	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*0 1 var\(--wpds-dimension-surface-width-sm\)/)
-})
-
-test('keeps the content to a readable width, so the aside stays beside it on a wide page', () => {
 	expect(ruleOf('.godmin-page__main')).toMatch(
-		/max-inline-size:\s*var\(--wpds-dimension-surface-width-xl\)/,
+		/min-inline-size:\s*min\(50%, var\(--wpds-dimension-surface-width-xl\)\)/,
 	)
 })
 
-test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
+test('keeps the aside between the small and the large surface widths', () => {
 	const aside = ruleOf('.godmin-page__aside')
 
-	expect(aside).toMatch(/min-inline-size:\s*0/)
-	expect(aside).toMatch(/overflow-wrap:\s*anywhere/)
+	expect(aside).toMatch(/min-inline-size:\s*min\(100%, var\(--wpds-dimension-surface-width-sm\)\)/)
+	expect(aside).toMatch(/max-inline-size:\s*var\(--wpds-dimension-surface-width-lg\)/)
+})
+
+test('lets the content grow past the readable width beside an aside', () => {
+	expect(ruleOf('.godmin-page__main')).not.toMatch(/max-inline-size/)
+})
+
+test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
+	expect(ruleOf('.godmin-page__aside')).toMatch(/overflow-wrap:\s*anywhere/)
 })
 
 test('hides an aside that renders nothing', () => {

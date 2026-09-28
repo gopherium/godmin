@@ -126,14 +126,14 @@ body {
 	}
 
 	.godmin-page__main {
-		flex: 999 1 0;
+		flex: 3 1 0;
 		min-inline-size: min(50%, var(--wpds-dimension-surface-width-xl));
-		max-inline-size: var(--wpds-dimension-surface-width-xl);
 	}
 
 	.godmin-page__aside {
-		flex: 0 1 var(--wpds-dimension-surface-width-sm);
-		min-inline-size: 0;
+		flex: 2 1 0;
+		min-inline-size: min(100%, var(--wpds-dimension-surface-width-sm));
+		max-inline-size: var(--wpds-dimension-surface-width-lg);
 		overflow-wrap: anywhere;
 	}
 
