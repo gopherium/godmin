@@ -4,6 +4,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- A `godmin-table` row tints its cells under the pointer and while keyboard focus is inside it.
+- `RowControls` in a `godmin-table__actions` cell sit at the end edge of the cell.
+- Below 640px the actions column of a `godmin-table-scroll` table stays pinned to the end edge.
+
+### Changed
+
+- `RowControls` draws its arrows and trash from `@wordpress/icons`, a new peer dependency.
+- `RowControls` sets the remove button a medium gap apart from the arrows.
+
+### Fixed
+
+- A focused `godmin-table-scroll` shows the design system focus ring at every width.
+- Text inside a `godmin-table__actions` cell stays on one line.
+- The remove tooltip of `RowControls` lines up with the end of its button.
+
 ## [0.12.0] - 2026-09-29
 
 ### Added
