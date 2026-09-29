@@ -424,6 +424,17 @@ test('draws the start edge of the pinned actions column with an inset shadow rat
 	expect(actions, 'a collapsed border paints badly on a sticky cell').not.toMatch(/^\s*border[\w-]*:/m)
 })
 
+test('draws the edge of the pinned actions column beside the scrolling cells in a right to left page', () => {
+	const actions = ruleOf(
+		'.godmin-table-scroll .godmin-table__actions:dir(rtl)',
+		blockOf('@media (max-width: 639px)'),
+	)
+
+	expect(actions).toMatch(
+		/box-shadow:\s*inset calc\(-1 \* var\(--wpds-border-width-xs\)\) 0 0 var\(--wpds-color-stroke-surface-neutral\)/,
+	)
+})
+
 test('keeps the actions column in the flow of a table at 640px and wider', () => {
 	const wide = base.replace(blockOf('@media (max-width: 639px)'), '')
 

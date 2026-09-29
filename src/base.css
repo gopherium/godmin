@@ -395,5 +395,9 @@ body {
 			background: var(--wpds-color-background-surface-neutral);
 			box-shadow: inset var(--wpds-border-width-xs) 0 0 var(--wpds-color-stroke-surface-neutral);
 		}
+
+		.godmin-table-scroll .godmin-table__actions:dir(rtl) {
+			box-shadow: inset calc(-1 * var(--wpds-border-width-xs)) 0 0 var(--wpds-color-stroke-surface-neutral);
+		}
 	}
 }
