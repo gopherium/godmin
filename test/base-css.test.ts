@@ -193,8 +193,10 @@ test('keeps every line inside a table actions cell unbroken', () => {
 	expect(ruleOf('.godmin-table__actions *')).toMatch(/white-space:\s*nowrap/)
 })
 
-test('sets the remove control of a repeated row a medium gap further from the arrows', () => {
-	expect(ruleOf('.godmin-rows__remove')).toMatch(/margin-inline-start:\s*var\(--wpds-dimension-gap-md\)/)
+test('sets the remove control of a repeated row a medium gap from the arrows, the controls gap included', () => {
+	expect(ruleOf('.godmin-rows__remove')).toMatch(
+		/margin-inline-start:\s*calc\(var\(--wpds-dimension-gap-md\) - var\(--wpds-dimension-gap-xs\)\)/,
+	)
 })
 
 test('folds a form row with no breakpoint of its own', () => {

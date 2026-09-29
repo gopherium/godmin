@@ -306,7 +306,7 @@ body {
 	}
 
 	.godmin-rows__remove {
-		margin-inline-start: var(--wpds-dimension-gap-md);
+		margin-inline-start: calc(var(--wpds-dimension-gap-md) - var(--wpds-dimension-gap-xs));
 	}
 
 	.godmin-table__actions .godmin-rows__controls {
