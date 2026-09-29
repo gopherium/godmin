@@ -71,26 +71,22 @@ test('lays the aside beside the content and wraps it under on a narrow page', ()
 	expect(split).toMatch(/align-items:\s*flex-start/)
 })
 
-test('shares the page between the content and the aside three to two', () => {
-	expect(ruleOf('.godmin-page__main')).toMatch(/flex:\s*3 1 0/)
-	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*2 1 0/)
+test('keeps the content column at the large surface width beside an aside', () => {
+	expect(ruleOf('.godmin-page__main')).toMatch(/flex:\s*1 1 var\(--wpds-dimension-surface-width-lg\)/)
 })
 
-test('keeps the content at least half the page beside an aside', () => {
-	expect(ruleOf('.godmin-page__main')).toMatch(
-		/min-inline-size:\s*min\(50%, var\(--wpds-dimension-surface-width-xl\)\)/,
+test('gives the aside all the room the content column leaves', () => {
+	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*999 1 0/)
+})
+
+test('folds the aside under the content before it gets narrower than the extra small surface width', () => {
+	expect(ruleOf('.godmin-page__aside')).toMatch(
+		/min-inline-size:\s*min\(100%, var\(--wpds-dimension-surface-width-xs\)\)/,
 	)
 })
 
-test('keeps the aside between the small and the large surface widths', () => {
-	const aside = ruleOf('.godmin-page__aside')
-
-	expect(aside).toMatch(/min-inline-size:\s*min\(100%, var\(--wpds-dimension-surface-width-sm\)\)/)
-	expect(aside).toMatch(/max-inline-size:\s*var\(--wpds-dimension-surface-width-lg\)/)
-})
-
-test('lets the content grow past the readable width beside an aside', () => {
-	expect(ruleOf('.godmin-page__main')).not.toMatch(/max-inline-size/)
+test('lets the aside grow past the large surface width', () => {
+	expect(ruleOf('.godmin-page__aside')).not.toMatch(/max-inline-size/)
 })
 
 test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
@@ -122,10 +118,10 @@ test('lays a form row out side by side and wraps it on a narrow form', () => {
 	expect(row).toMatch(/gap:\s*var\(--wpds-dimension-gap-md\)/)
 })
 
-test('gives every field of a row a share of the line from half the extra small surface width', () => {
+test('gives every field of a row a share of the line from two thirds of the extra small surface width', () => {
 	const field = ruleOf('.godmin-form__row > *')
 
-	expect(field).toMatch(/flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-xs\) \/ 2\)/)
+	expect(field).toMatch(/flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-xs\) \* 2 \/ 3\)/)
 	expect(field).toMatch(/min-inline-size:\s*0/)
 })
 

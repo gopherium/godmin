@@ -15,7 +15,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 ### Changed
 
-- `Page` shares its width with the aside about three to two, the aside 320px to 560px.
+- `Page` keeps its content column at 560px and gives the aside the rest of the width.
 - `godmin-form` caps at 560px instead of 320px.
 - A button in a `godmin-form` keeps its own width instead of stretching.
 - `RepeatRows` sets a row's inputs and its controls on one line, and removes a row with a trash icon.

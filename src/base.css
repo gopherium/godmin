@@ -126,14 +126,12 @@ body {
 	}
 
 	.godmin-page__main {
-		flex: 3 1 0;
-		min-inline-size: min(50%, var(--wpds-dimension-surface-width-xl));
+		flex: 1 1 var(--wpds-dimension-surface-width-lg);
 	}
 
 	.godmin-page__aside {
-		flex: 2 1 0;
-		min-inline-size: min(100%, var(--wpds-dimension-surface-width-sm));
-		max-inline-size: var(--wpds-dimension-surface-width-lg);
+		flex: 999 1 0;
+		min-inline-size: min(100%, var(--wpds-dimension-surface-width-xs));
 		overflow-wrap: anywhere;
 	}
 
@@ -164,7 +162,7 @@ body {
 	}
 
 	.godmin-form__row > * {
-		flex: 1 1 calc(var(--wpds-dimension-surface-width-xs) / 2);
+		flex: 1 1 calc(var(--wpds-dimension-surface-width-xs) * 2 / 3);
 		min-inline-size: 0;
 	}
 
