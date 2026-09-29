@@ -366,6 +366,22 @@ test('gives the table region a containing block as well as its overflow', () => 
 	expect(region).toMatch(/overflow-x:\s*auto/)
 })
 
+test('rings a focused table region with the design system focus ring', () => {
+	const ring = ruleOf('.godmin-table-scroll:focus-visible')
+
+	expect(ring).toMatch(/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\)/)
+	expect(ring).toMatch(/outline-offset:\s*2px/)
+})
+
+test('rings a focused table region at every width', () => {
+	const bodies = atRuleBodies(['media', 'container'])
+
+	expect(bodies.length, 'the collector found no at-rule to inspect').toBeGreaterThan(0)
+	for (const body of bodies) {
+		expect(body).not.toMatch(/godmin-table-scroll:focus-visible/)
+	}
+})
+
 test('tints the cells of a table row under the pointer or holding keyboard focus with the weak surface colour', () => {
 	expect(ruleOf('.godmin-table tbody tr:is(:hover, :has(:focus-visible)) > *')).toMatch(
 		/background:\s*var\(--wpds-color-background-surface-neutral-weak\)/,

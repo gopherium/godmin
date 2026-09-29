@@ -211,6 +211,11 @@ body {
 		background: var(--wpds-color-background-surface-neutral-weak);
 	}
 
+	.godmin-table-scroll:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: 2px;
+	}
+
 	.godmin-loading-screen,
 	.godmin-loading-rows {
 		opacity: 0;
@@ -382,11 +387,6 @@ body {
 		.godmin-table-scroll {
 			position: relative;
 			overflow-x: auto;
-		}
-
-		.godmin-table-scroll:focus-visible {
-			outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
-			outline-offset: 2px;
 		}
 
 		.godmin-table-scroll .godmin-table__actions {
