@@ -126,14 +126,14 @@ body {
 	}
 
 	.godmin-page__main {
-		flex: 999 1 0;
+		flex: 3 1 0;
 		min-inline-size: min(50%, var(--wpds-dimension-surface-width-xl));
-		max-inline-size: var(--wpds-dimension-surface-width-xl);
 	}
 
 	.godmin-page__aside {
-		flex: 0 1 var(--wpds-dimension-surface-width-sm);
-		min-inline-size: 0;
+		flex: 2 1 0;
+		min-inline-size: min(100%, var(--wpds-dimension-surface-width-sm));
+		max-inline-size: var(--wpds-dimension-surface-width-lg);
 		overflow-wrap: anywhere;
 	}
 
@@ -145,7 +145,36 @@ body {
 		display: flex;
 		flex-direction: column;
 		gap: var(--wpds-dimension-gap-md);
-		max-width: var(--wpds-dimension-surface-width-sm);
+		max-width: var(--wpds-dimension-surface-width-lg);
+	}
+
+	.godmin-form--inline {
+		max-width: none;
+	}
+
+	.godmin-form > button {
+		align-self: flex-start;
+	}
+
+	.godmin-form__row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--wpds-dimension-gap-md);
+	}
+
+	.godmin-form__row > * {
+		flex: 1 1 calc(var(--wpds-dimension-surface-width-xs) / 2);
+		min-inline-size: 0;
+	}
+
+	.godmin-form__row > .godmin-form__grow {
+		flex-grow: 3;
+	}
+
+	.godmin-form__row > button {
+		flex: none;
+		margin-inline-start: auto;
 	}
 
 	.godmin-empty {
@@ -246,6 +275,23 @@ body {
 	.godmin-rows__row:focus-visible {
 		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
 		outline-offset: 2px;
+	}
+
+	.godmin-rows__line {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		gap: var(--wpds-dimension-gap-md);
+	}
+
+	.godmin-rows__inputs {
+		flex: 1 1 var(--wpds-dimension-surface-width-sm);
+		min-inline-size: 0;
+	}
+
+	.godmin-rows__controls {
+		flex: none;
+		margin-inline-start: auto;
 	}
 
 	.godmin-log-list {

@@ -71,32 +71,111 @@ test('lays the aside beside the content and wraps it under on a narrow page', ()
 	expect(split).toMatch(/align-items:\s*flex-start/)
 })
 
+test('shares the page between the content and the aside three to two', () => {
+	expect(ruleOf('.godmin-page__main')).toMatch(/flex:\s*3 1 0/)
+	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*2 1 0/)
+})
+
 test('keeps the content at least half the page beside an aside', () => {
-	const main = ruleOf('.godmin-page__main')
-
-	expect(main).toMatch(/flex:\s*999 1 0/)
-	expect(main).toMatch(/min-inline-size:\s*min\(50%, var\(--wpds-dimension-surface-width-xl\)\)/)
-})
-
-test('sizes the aside from the small surface width, never wider', () => {
-	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*0 1 var\(--wpds-dimension-surface-width-sm\)/)
-})
-
-test('keeps the content to a readable width, so the aside stays beside it on a wide page', () => {
 	expect(ruleOf('.godmin-page__main')).toMatch(
-		/max-inline-size:\s*var\(--wpds-dimension-surface-width-xl\)/,
+		/min-inline-size:\s*min\(50%, var\(--wpds-dimension-surface-width-xl\)\)/,
 	)
 })
 
-test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
+test('keeps the aside between the small and the large surface widths', () => {
 	const aside = ruleOf('.godmin-page__aside')
 
-	expect(aside).toMatch(/min-inline-size:\s*0/)
-	expect(aside).toMatch(/overflow-wrap:\s*anywhere/)
+	expect(aside).toMatch(/min-inline-size:\s*min\(100%, var\(--wpds-dimension-surface-width-sm\)\)/)
+	expect(aside).toMatch(/max-inline-size:\s*var\(--wpds-dimension-surface-width-lg\)/)
+})
+
+test('lets the content grow past the readable width beside an aside', () => {
+	expect(ruleOf('.godmin-page__main')).not.toMatch(/max-inline-size/)
+})
+
+test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
+	expect(ruleOf('.godmin-page__aside')).toMatch(/overflow-wrap:\s*anywhere/)
 })
 
 test('hides an aside that renders nothing', () => {
 	expect(ruleOf('.godmin-page__aside:empty')).toMatch(/display:\s*none/)
+})
+
+test('caps a form at the large surface width', () => {
+	expect(ruleOf('.godmin-form')).toMatch(/max-width:\s*var\(--wpds-dimension-surface-width-lg\)/)
+})
+
+test('keeps a form a column with the medium gap', () => {
+	const form = ruleOf('.godmin-form')
+
+	expect(form).toMatch(/display:\s*flex/)
+	expect(form).toMatch(/flex-direction:\s*column/)
+	expect(form).toMatch(/gap:\s*var\(--wpds-dimension-gap-md\)/)
+})
+
+test('lays a form row out side by side and wraps it on a narrow form', () => {
+	const row = ruleOf('.godmin-form__row')
+
+	expect(row).toMatch(/display:\s*flex/)
+	expect(row).toMatch(/flex-wrap:\s*wrap/)
+	expect(row).toMatch(/align-items:\s*flex-end/)
+	expect(row).toMatch(/gap:\s*var\(--wpds-dimension-gap-md\)/)
+})
+
+test('gives every field of a row a share of the line from half the extra small surface width', () => {
+	const field = ruleOf('.godmin-form__row > *')
+
+	expect(field).toMatch(/flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-xs\) \/ 2\)/)
+	expect(field).toMatch(/min-inline-size:\s*0/)
+})
+
+test('keeps a row button at its own width', () => {
+	expect(ruleOf('.godmin-form__row > button')).toMatch(/flex:\s*none/)
+})
+
+test('sends a row button that wraps onto a line of its own to the end of that line', () => {
+	expect(ruleOf('.godmin-form__row > button')).toMatch(/margin-inline-start:\s*auto/)
+})
+
+test('lets an inline form fill its column instead of stopping at the large surface width', () => {
+	expect(ruleOf('.godmin-form--inline')).toMatch(/max-width:\s*none/)
+})
+
+test('gives a grown field three shares of the free room in its row', () => {
+	expect(ruleOf('.godmin-form__row > .godmin-form__grow')).toMatch(/flex-grow:\s*3/)
+})
+
+test('keeps a button of a stacked form at its own width at the start of the column', () => {
+	expect(ruleOf('.godmin-form > button')).toMatch(/align-self:\s*flex-start/)
+})
+
+test('sets the inputs and the controls of a repeated row on one line that wraps on a narrow list', () => {
+	const line = ruleOf('.godmin-rows__line')
+
+	expect(line).toMatch(/display:\s*flex/)
+	expect(line).toMatch(/flex-wrap:\s*wrap/)
+	expect(line).toMatch(/align-items:\s*flex-end/)
+	expect(line).toMatch(/gap:\s*var\(--wpds-dimension-gap-md\)/)
+})
+
+test('keeps the inputs of a repeated row a small surface wide before its controls share the line', () => {
+	const inputs = ruleOf('.godmin-rows__inputs')
+
+	expect(inputs).toMatch(/flex:\s*1 1 var\(--wpds-dimension-surface-width-sm\)/)
+	expect(inputs).toMatch(/min-inline-size:\s*0/)
+})
+
+test('keeps the controls of a repeated row at their own width at the end of their line', () => {
+	const controls = ruleOf('.godmin-rows__controls')
+
+	expect(controls).toMatch(/flex:\s*none/)
+	expect(controls).toMatch(/margin-inline-start:\s*auto/)
+})
+
+test('folds a form row with no breakpoint of its own', () => {
+	for (const body of atRuleBodies(['media', 'container'])) {
+		expect(body).not.toMatch(/godmin-form/)
+	}
 })
 
 test('folds the aside with no breakpoint of its own', () => {

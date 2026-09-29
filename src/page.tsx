@@ -24,6 +24,35 @@ export function PageTitle({
 	)
 }
 
+/**
+ * Renders a section heading one size step above the field labels.
+ * @param props - The heading text, its level, and the id and tab index a screen moves focus with.
+ * @returns The section heading element.
+ */
+export function SectionTitle({
+	children,
+	level = 2,
+	id,
+	tabIndex,
+}: {
+	children: ReactNode
+	level?: 2 | 3
+	id?: string
+	tabIndex?: number
+}) {
+	const second = level === 2
+	return (
+		<Text
+			variant={second ? 'heading-lg' : 'heading-md'}
+			render={second ? <h2 /> : <h3 />}
+			id={id}
+			tabIndex={tabIndex}
+		>
+			{children}
+		</Text>
+	)
+}
+
 export interface PageProps {
 	title: string
 	subtitle?: string

@@ -4,6 +4,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `SectionTitle` shows a section heading one size step above the field labels.
+- `godmin-form__row` sets the short fields of a form side by side.
+- `godmin-form--inline` lets a form that is one row fill its column.
+- `godmin-form__grow` gives one field of a row three shares of the free room.
+
+### Changed
+
+- `Page` shares its width with the aside about three to two, the aside 320px to 560px.
+- `godmin-form` caps at 560px instead of 320px.
+- A button in a `godmin-form` keeps its own width instead of stretching.
+- `RepeatRows` sets a row's inputs and its controls on one line, and removes a row with a trash icon.
+
 ## [0.11.0] - 2026-09-26
 
 ### Added
