@@ -292,6 +292,14 @@ body {
 		margin-inline-start: auto;
 	}
 
+	.godmin-rows__remove {
+		margin-inline-start: var(--wpds-dimension-gap-md);
+	}
+
+	.godmin-table__actions .godmin-rows__controls {
+		justify-content: flex-end;
+	}
+
 	.godmin-log-list {
 		margin: 0;
 		padding: 0;

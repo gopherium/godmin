@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
+import { chevronDown, chevronUp, trash } from '@wordpress/icons'
+import { Icon } from '@wordpress/ui'
 import { startTransition, useLayoutEffect, useState } from 'react'
+import type { ComponentProps } from 'react'
 import { expect, test, vi } from 'vitest'
 
 import { RepeatRows, RowControls } from '../src/rows.js'
@@ -324,6 +327,27 @@ function notes(): HTMLInputElement[] {
 	return screen.queryAllByLabelText('Note') as HTMLInputElement[]
 }
 
+/**
+ * Returns the outlines drawn inside an element.
+ * @param element - The element holding the drawing.
+ * @returns The path data of every path in it, in source order.
+ */
+function outlines(element: Element): string[] {
+	return [...element.querySelectorAll('path')].map((path) => path.getAttribute('d') ?? '')
+}
+
+/**
+ * Returns the outlines a design system icon draws.
+ * @param icon - The icon to draw.
+ * @returns The path data of every path it draws.
+ */
+function iconOutlines(icon: ComponentProps<typeof Icon>['icon']): string[] {
+	const { container, unmount } = render(<Icon icon={icon} />)
+	const drawn = outlines(container)
+	unmount()
+	return drawn
+}
+
 test('row controls stop moving up at the first row and down at the last', () => {
 	const moved = vi.fn()
 	renderAdmin(
@@ -372,6 +396,39 @@ test('row controls show remove as an icon that keeps its spoken name', () => {
 	const remove = screen.getByRole('button', { name: 'Remove entry' })
 	expect(remove.textContent).toBe('')
 	expect(remove.querySelector('svg')).not.toBeNull()
+})
+
+test('row controls mark only the remove button as the one set apart from the arrows', () => {
+	renderAdmin(<RowControls at={1} count={3} labels={labels} onMove={vi.fn()} onRemove={vi.fn()} />)
+
+	expect([...screen.getByRole('button', { name: 'Remove entry' }).classList]).toContain('godmin-rows__remove')
+	for (const name of ['Move entry up', 'Move entry down']) {
+		expect([...screen.getByRole('button', { name }).classList]).not.toContain('godmin-rows__remove')
+	}
+})
+
+test('row controls line the end of the remove tooltip up with the end of its button', async () => {
+	renderAdmin(<RowControls at={0} count={1} labels={labels} onMove={vi.fn()} onRemove={vi.fn()} />)
+
+	act(() => screen.getByRole('button', { name: 'Remove entry' }).focus())
+
+	expect((await screen.findByText('Remove entry')).getAttribute('data-align')).toBe('end')
+})
+
+test('row controls keep the arrow tooltips centred over their buttons', async () => {
+	renderAdmin(<RowControls at={1} count={3} labels={labels} onMove={vi.fn()} onRemove={vi.fn()} />)
+
+	act(() => screen.getByRole('button', { name: 'Move entry down' }).focus())
+
+	expect((await screen.findByText('Move entry down')).getAttribute('data-align')).toBe('center')
+})
+
+test('row controls draw the design system chevrons and trash', () => {
+	renderAdmin(<RowControls at={1} count={3} labels={labels} onMove={vi.fn()} onRemove={vi.fn()} />)
+
+	expect(outlines(screen.getByRole('button', { name: 'Move entry up' }))).toEqual(iconOutlines(chevronUp))
+	expect(outlines(screen.getByRole('button', { name: 'Move entry down' }))).toEqual(iconOutlines(chevronDown))
+	expect(outlines(screen.getByRole('button', { name: 'Remove entry' }))).toEqual(iconOutlines(trash))
 })
 
 test('sets the inputs and the controls of a row on one line', () => {

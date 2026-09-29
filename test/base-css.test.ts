@@ -168,6 +168,10 @@ test('keeps the controls of a repeated row at their own width at the end of thei
 	expect(controls).toMatch(/margin-inline-start:\s*auto/)
 })
 
+test('sets the remove control of a repeated row a medium gap further from the arrows', () => {
+	expect(ruleOf('.godmin-rows__remove')).toMatch(/margin-inline-start:\s*var\(--wpds-dimension-gap-md\)/)
+})
+
 test('folds a form row with no breakpoint of its own', () => {
 	for (const body of atRuleBodies(['media', 'container'])) {
 		expect(body).not.toMatch(/godmin-form/)
@@ -335,6 +339,10 @@ test('gives the table region a containing block as well as its overflow', () => 
 
 	expect(region).toMatch(/position:\s*relative/)
 	expect(region).toMatch(/overflow-x:\s*auto/)
+})
+
+test('keeps the row controls of a table at the end edge of their cell', () => {
+	expect(ruleOf('.godmin-table__actions .godmin-rows__controls')).toMatch(/justify-content:\s*flex-end/)
 })
 
 test('gives the toast region a width, which is what stops it collapsing', () => {
