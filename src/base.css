@@ -203,6 +203,19 @@ body {
 		white-space: nowrap;
 	}
 
+	.godmin-table__actions * {
+		white-space: nowrap;
+	}
+
+	.godmin-table tbody tr:is(:hover, :has(:focus-visible)) > * {
+		background: var(--wpds-color-background-surface-neutral-weak);
+	}
+
+	.godmin-table-scroll:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: 2px;
+	}
+
 	.godmin-loading-screen,
 	.godmin-loading-rows {
 		opacity: 0;
@@ -292,6 +305,14 @@ body {
 		margin-inline-start: auto;
 	}
 
+	.godmin-rows__remove {
+		margin-inline-start: calc(var(--wpds-dimension-gap-md) - var(--wpds-dimension-gap-xs));
+	}
+
+	.godmin-table__actions .godmin-rows__controls {
+		justify-content: flex-end;
+	}
+
 	.godmin-log-list {
 		margin: 0;
 		padding: 0;
@@ -368,9 +389,15 @@ body {
 			overflow-x: auto;
 		}
 
-		.godmin-table-scroll:focus-visible {
-			outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
-			outline-offset: 2px;
+		.godmin-table-scroll .godmin-table__actions {
+			position: sticky;
+			inset-inline-end: 0;
+			background: var(--wpds-color-background-surface-neutral);
+			box-shadow: inset var(--wpds-border-width-xs) 0 0 var(--wpds-color-stroke-surface-neutral);
+		}
+
+		.godmin-table-scroll .godmin-table__actions:dir(rtl) {
+			box-shadow: inset calc(-1 * var(--wpds-border-width-xs)) 0 0 var(--wpds-color-stroke-surface-neutral);
 		}
 	}
 }

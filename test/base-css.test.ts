@@ -34,14 +34,43 @@ function reducedMotionGuard(): string {
 /**
  * Returns the declarations of the rule a selector opens.
  * @param selector - The exact selector the rule starts with.
+ * @param css - The stylesheet source to search, the whole sheet by default.
  * @returns The text between the rule's braces.
  */
-function ruleOf(selector: string): string {
-	const start = base.indexOf(`${selector} {`)
+function ruleOf(selector: string, css = base): string {
+	const start = css.indexOf(`${selector} {`)
 
 	expect(start, `the stylesheet has no ${selector} rule`).toBeGreaterThan(-1)
 
-	return base.slice(start + selector.length + 2, base.indexOf('}', start))
+	return css.slice(start + selector.length + 2, css.indexOf('}', start))
+}
+
+/**
+ * Returns the text of a block up to the brace that closes it.
+ * @param open - The index just after the block's opening brace.
+ * @returns The text between the block's braces.
+ */
+function bodyFrom(open: number): string {
+	let depth = 1
+	let at = open
+	while (depth > 0 && at < base.length) {
+		depth += base[at] === '{' ? 1 : base[at] === '}' ? -1 : 0
+		at++
+	}
+	return base.slice(open, at - 1)
+}
+
+/**
+ * Returns the body of the block a prelude opens, matching its braces.
+ * @param prelude - The exact text before the block's opening brace.
+ * @returns The text between the block's braces.
+ */
+function blockOf(prelude: string): string {
+	const start = base.indexOf(`${prelude} {`)
+
+	expect(start, `the stylesheet has no ${prelude} block`).toBeGreaterThan(-1)
+
+	return bodyFrom(start + prelude.length + 2)
 }
 
 /**
@@ -50,17 +79,9 @@ function ruleOf(selector: string): string {
  * @returns The bodies in source order.
  */
 function atRuleBodies(kinds: string[]): string[] {
-	const bodies: string[] = []
-	for (const found of base.matchAll(new RegExp(`@(?:${kinds.join('|')})\\b[^{]*\\{`, 'g'))) {
-		let depth = 1
-		let at = found.index + found[0].length
-		while (depth > 0 && at < base.length) {
-			depth += base[at] === '{' ? 1 : base[at] === '}' ? -1 : 0
-			at++
-		}
-		bodies.push(base.slice(found.index + found[0].length, at - 1))
-	}
-	return bodies
+	return [...base.matchAll(new RegExp(`@(?:${kinds.join('|')})\\b[^{]*\\{`, 'g'))].map((found) =>
+		bodyFrom(found.index + found[0].length),
+	)
 }
 
 test('lays the aside beside the content and wraps it under on a narrow page', () => {
@@ -166,6 +187,16 @@ test('keeps the controls of a repeated row at their own width at the end of thei
 
 	expect(controls).toMatch(/flex:\s*none/)
 	expect(controls).toMatch(/margin-inline-start:\s*auto/)
+})
+
+test('keeps every line inside a table actions cell unbroken', () => {
+	expect(ruleOf('.godmin-table__actions *')).toMatch(/white-space:\s*nowrap/)
+})
+
+test('sets the remove control of a repeated row a medium gap from the arrows, the controls gap included', () => {
+	expect(ruleOf('.godmin-rows__remove')).toMatch(
+		/margin-inline-start:\s*calc\(var\(--wpds-dimension-gap-md\) - var\(--wpds-dimension-gap-xs\)\)/,
+	)
 })
 
 test('folds a form row with no breakpoint of its own', () => {
@@ -335,6 +366,79 @@ test('gives the table region a containing block as well as its overflow', () => 
 
 	expect(region).toMatch(/position:\s*relative/)
 	expect(region).toMatch(/overflow-x:\s*auto/)
+})
+
+test('rings a focused table region with the design system focus ring', () => {
+	const ring = ruleOf('.godmin-table-scroll:focus-visible')
+
+	expect(ring).toMatch(/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\)/)
+	expect(ring).toMatch(/outline-offset:\s*2px/)
+})
+
+test('rings a focused table region at every width', () => {
+	const bodies = atRuleBodies(['media', 'container'])
+
+	expect(bodies.length, 'the collector found no at-rule to inspect').toBeGreaterThan(0)
+	for (const body of bodies) {
+		expect(body).not.toMatch(/godmin-table-scroll:focus-visible/)
+	}
+})
+
+test('tints the cells of a table row under the pointer or holding keyboard focus with the weak surface colour', () => {
+	expect(ruleOf('.godmin-table tbody tr:is(:hover, :has(:focus-visible)) > *')).toMatch(
+		/background:\s*var\(--wpds-color-background-surface-neutral-weak\)/,
+	)
+})
+
+test('leaves a table row untinted when a pointer press alone holds focus in it', () => {
+	expect(base).not.toMatch(/tr:is\([^)]*:focus-within/)
+})
+
+test('tints a table row at every width', () => {
+	const bodies = atRuleBodies(['media', 'container'])
+
+	expect(bodies.length, 'the collector found no at-rule to inspect').toBeGreaterThan(0)
+	for (const body of bodies) {
+		expect(body).not.toMatch(/tr:is\(:hover, :has\(:focus-visible\)\)/)
+	}
+})
+
+test('keeps the row controls of a table at the end edge of their cell', () => {
+	expect(ruleOf('.godmin-table__actions .godmin-rows__controls')).toMatch(/justify-content:\s*flex-end/)
+})
+
+test('pins the actions column of a scrolling table to the end edge on a small screen', () => {
+	const actions = ruleOf('.godmin-table-scroll .godmin-table__actions', blockOf('@media (max-width: 639px)'))
+
+	expect(actions).toMatch(/position:\s*sticky/)
+	expect(actions).toMatch(/inset-inline-end:\s*0/)
+	expect(actions).toMatch(/background:\s*var\(--wpds-color-background-surface-neutral\)/)
+})
+
+test('draws the start edge of the pinned actions column with an inset shadow rather than a border', () => {
+	const actions = ruleOf('.godmin-table-scroll .godmin-table__actions', blockOf('@media (max-width: 639px)'))
+
+	expect(actions).toMatch(
+		/box-shadow:\s*inset var\(--wpds-border-width-xs\) 0 0 var\(--wpds-color-stroke-surface-neutral\)/,
+	)
+	expect(actions, 'a collapsed border paints badly on a sticky cell').not.toMatch(/^\s*border[\w-]*:/m)
+})
+
+test('draws the edge of the pinned actions column beside the scrolling cells in a right to left page', () => {
+	const actions = ruleOf(
+		'.godmin-table-scroll .godmin-table__actions:dir(rtl)',
+		blockOf('@media (max-width: 639px)'),
+	)
+
+	expect(actions).toMatch(
+		/box-shadow:\s*inset calc\(-1 \* var\(--wpds-border-width-xs\)\) 0 0 var\(--wpds-color-stroke-surface-neutral\)/,
+	)
+})
+
+test('keeps the actions column in the flow of a table at 640px and wider', () => {
+	const wide = base.replace(blockOf('@media (max-width: 639px)'), '')
+
+	expect(wide).not.toMatch(/position:\s*sticky/)
 })
 
 test('gives the toast region a width, which is what stops it collapsing', () => {
