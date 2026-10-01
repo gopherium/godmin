@@ -2,7 +2,9 @@
 
 export { AdminRoot } from './admin-root.js'
 export type { AdminRootProps } from './admin-root.js'
-export { DENSE_BREAKPOINT, RAIL_BREAKPOINT, SMALL_VIEWPORT } from './breakpoints.js'
+export { InitialsAvatar } from './avatar.js'
+export type { InitialsAvatarProps } from './avatar.js'
+export { DENSE_BREAKPOINT, EDGE_BREAKPOINT, RAIL_BREAKPOINT, SMALL_VIEWPORT } from './breakpoints.js'
 export { Frame } from './frame.js'
 export type {
 	CanvasMode,
@@ -12,6 +14,8 @@ export type {
 } from './frame.js'
 export { keyFromLabel } from './keys.js'
 export type { KeyOptions, KeyStyle } from './keys.js'
+export { LIST_CHROME_DOMAIN, listChromeCatalogFor } from './list-chrome.js'
+export type { ListChromeCatalog } from './list-chrome.js'
 export { LoadingRows, LoadingScreen } from './loading.js'
 export { LogItem, LogList, LogTime } from './log-list.js'
 export type { LogItemProps, LogListProps, LogTimeProps } from './log-list.js'
@@ -19,6 +23,8 @@ export { NavScreen } from './nav-screen.js'
 export type { NavScreenProps } from './nav-screen.js'
 export { ErrorNotice, LoadMore, Page, PageTitle, SectionTitle } from './page.js'
 export type { LoadMoreQuery, PageProps } from './page.js'
+export { PageTab, PageTabs } from './page-tabs.js'
+export type { PageTabProps, PageTabsProps } from './page-tabs.js'
 export { useRowKeys } from './row-keys.js'
 export type { RowBounds, RowKeys } from './row-keys.js'
 export { RepeatRows, RowControls } from './rows.js'

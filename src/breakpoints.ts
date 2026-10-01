@@ -4,7 +4,12 @@
 export const RAIL_BREAKPOINT = 1024
 
 /**
- * The viewport width below which the canvas meets the screen edges.
+ * The viewport width below which the canvas meets the screen edges, the WordPress medium breakpoint.
+ */
+export const EDGE_BREAKPOINT = 782
+
+/**
+ * The viewport width below which the canvas gutter narrows to 16px.
  */
 export const DENSE_BREAKPOINT = 640
 

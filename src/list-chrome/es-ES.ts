@@ -1,0 +1,151 @@
+// SPDX-License-Identifier: Apache-2.0
+
+import type { ListChromeCatalog } from '../list-chrome.js'
+
+/** The Spanish list chrome, compiled from the es-ES.po source beside it. */
+const catalog: ListChromeCatalog = {
+	'': { lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' },
+	'%1$d of %2$d Item': ['%1$d de %2$d elemento', '%1$d de %2$d elementos'],
+	'%1$s: %2$s': ['%1$s: %2$s'],
+	'%d Item': ['%d elemento', '%d elementos'],
+	'%d Item selected': ['%d elemento seleccionado', '%d elementos seleccionados'],
+	'%s: <groupName />': ['%s: <groupName />'],
+	'(no title)': ['(sin título)'],
+	'<Name>%1$s between (inc): </Name><Value>%2$s and %3$s</Value>': [
+		'<Name>%1$s entre (incl.): </Name><Value>%2$s y %3$s</Value>',
+	],
+	'<Name>%1$s contains: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s contiene: </Name><Value>%2$s</Value>',
+	],
+	"<Name>%1$s doesn't contain: </Name><Value>%2$s</Value>": [
+		'<Name>%1$s no contiene: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s includes all: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s incluye todos: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s includes: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s incluye: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is after: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es posterior a: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is before: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es anterior a: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is greater than or equal to: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es mayor o igual que: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is greater than: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es mayor que: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is in the past: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s en los últimos: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is less than or equal to: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es menor o igual que: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is less than: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es menor que: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is none of: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s no es ninguno de: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is not: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s no es: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is on or after: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es igual o posterior a: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is on or before: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es igual o anterior a: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is over: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s hace más de: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s is: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s es: </Name><Value>%2$s</Value>',
+	],
+	'<Name>%1$s starts with: </Name><Value>%2$s</Value>': [
+		'<Name>%1$s empieza por: </Name><Value>%2$s</Value>',
+	],
+	Actions: ['Acciones'],
+	Activity: ['Actividad'],
+	'Add filter': ['Añadir filtro'],
+	After: ['Después de'],
+	'After (inc)': ['Después de (incl.)'],
+	Appearance: ['Apariencia'],
+	'Automatically load more content as you scroll, instead of showing pagination links.': [
+		'Carga más contenido de forma automática al desplazarte, en lugar de mostrar enlaces de paginación.',
+	],
+	Before: ['Antes de'],
+	'Before (inc)': ['Antes de (incl.)'],
+	'Between (inc)': ['Entre (incl.)'],
+	Cancel: ['Cancelar'],
+	Close: ['Cerrar'],
+	Conditions: ['Condiciones'],
+	Contains: ['Contiene'],
+	'Current page': ['Página actual'],
+	Density: ['Densidad'],
+	'Density option for DataView layout\u0004Balanced': ['Equilibrada'],
+	'Density option for DataView layout\u0004Comfortable': ['Cómoda'],
+	'Density option for DataView layout\u0004Compact': ['Compacta'],
+	'Deselect all': ['Deseleccionar todo'],
+	"Doesn't contain": ['No contiene'],
+	'Enable infinite scroll': ['Activar el desplazamiento infinito'],
+	False: ['Falso'],
+	'Filter by: %1$s': ['Filtrar por: %1$s'],
+	'Greater than': ['Mayor que'],
+	'Greater than or equal': ['Mayor o igual que'],
+	Grid: ['Cuadrícula'],
+	'Hide column': ['Ocultar columna'],
+	'In the past': ['En los últimos'],
+	Includes: ['Incluye'],
+	'Includes all': ['Incluye todos'],
+	'Insert left': ['Insertar a la izquierda'],
+	'Insert right': ['Insertar a la derecha'],
+	Is: ['Es'],
+	'Is none of': ['No es ninguno de'],
+	'Is not': ['No es'],
+	'Items per page': ['Elementos por página'],
+	Layout: ['Diseño'],
+	'Less than': ['Menor que'],
+	'Less than or equal': ['Menor o igual que'],
+	List: ['Lista'],
+	'List of: %1$s': ['Lista de: %1$s'],
+	'Move left': ['Mover a la izquierda'],
+	'Move right': ['Mover a la derecha'],
+	'Navigate to item': ['Ir al elemento'],
+	'Next page': ['Página siguiente'],
+	'No elements found': ['No se han encontrado elementos'],
+	'No results': ['Sin resultados'],
+	'No results found': ['No se han encontrado resultados'],
+	'Not on': ['No en la fecha'],
+	On: ['En la fecha'],
+	Order: ['Orden'],
+	'Original aspect ratio': ['Proporción original'],
+	Over: ['Hace más de'],
+	'Page %1$d of %2$d': ['Página %1$d de %2$d'],
+	'Preview size': ['Tamaño de la vista previa'],
+	'Previous page': ['Página anterior'],
+	Properties: ['Propiedades'],
+	Remove: ['Quitar'],
+	Reset: ['Restablecer'],
+	'Reset search': ['Restablecer la búsqueda'],
+	'Reset view': ['Restablecer la vista'],
+	'Row %d': ['Fila %d'],
+	Search: ['Buscar'],
+	'Search items': ['Buscar elementos'],
+	'Select all': ['Seleccionar todo'],
+	'Sort ascending': ['Orden ascendente'],
+	'Sort by': ['Ordenar por'],
+	'Sort descending': ['Orden descendente'],
+	'Starts with': ['Empieza por'],
+	Table: ['Tabla'],
+	True: ['Verdadero'],
+	'Unknown status for %1$s': ['Estado desconocido de %1$s'],
+	'View is used as a noun\u0004View options': ['Opciones de vista'],
+	'paging\u0004<div>Page</div>%1$s<div>of %2$d</div>': ['<div>Página</div>%1$s<div>de %2$d</div>'],
+	'verb\u0004Filter': ['Filtrar'],
+}
+
+export default catalog

@@ -12,7 +12,7 @@ type TextVariant = ComponentProps<typeof Text>['variant']
  */
 export function PageTitle({
 	children,
-	variant = 'heading-xl',
+	variant = 'heading-lg',
 }: {
 	children: ReactNode
 	variant?: TextVariant
@@ -57,37 +57,46 @@ export interface PageProps {
 	title: string
 	subtitle?: string
 	actions?: ReactNode
+	tabs?: ReactNode
 	aside?: ReactNode
+	list?: boolean
 	className?: string
 	children: ReactNode
 }
 
 /**
- * Renders a screen: its title top left, an optional subtitle under it,
- * optional actions top right, and the content below, beside an optional aside.
- * @param props - The title, subtitle, actions, aside, extra class and content.
+ * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content.
+ * @param props - The title, subtitle, actions, tabs, aside, list flag, extra class and content.
  * @returns The page element.
  */
-export function Page({ title, subtitle, actions, aside, className, children }: PageProps) {
+export function Page({ title, subtitle, actions, tabs, aside, list = false, className, children }: PageProps) {
 	const classes = className === undefined ? 'godmin-page' : `godmin-page ${className}`
 	return (
 		<Stack direction="column" gap="lg" className={classes}>
-			<Stack direction="row" gap="md" align="center" justify="space-between">
-				<Stack direction="column" gap="xs">
+			<Stack direction="column" render={<header />} className="godmin-page__header">
+				<Stack
+					direction="row"
+					wrap="wrap"
+					gap="md"
+					align="center"
+					justify="space-between"
+					className="godmin-page__head"
+				>
 					<PageTitle>{title}</PageTitle>
-					{subtitle !== undefined && (
-						<Text variant="body-sm" className="godmin-page__subtitle">
-							{subtitle}
-						</Text>
+					{actions !== undefined && (
+						<Stack direction="row" gap="sm" align="center">
+							{actions}
+						</Stack>
 					)}
 				</Stack>
-				{actions !== undefined && (
-					<Stack direction="row" gap="sm" align="center">
-						{actions}
-					</Stack>
+				{subtitle !== undefined && (
+					<Text variant="body-md" render={<p />} className="godmin-page__subtitle">
+						{subtitle}
+					</Text>
 				)}
 			</Stack>
-			<PageBody aside={aside}>{children}</PageBody>
+			{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
+			<PageBody aside={aside}>{list ? <div className="godmin-page__list">{children}</div> : children}</PageBody>
 		</Stack>
 	)
 }

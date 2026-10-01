@@ -55,6 +55,15 @@ test('keeps the accent the app passes', () => {
 	expect(document.documentElement.style.getPropertyValue('--wp-admin-theme-color')).toBe('#c9356e')
 })
 
+test('hands the primary colour to the WordPress admin colours DataViews and components read', () => {
+	render(<AdminRoot color={{ primary: '#c9356e' }}><p>admin content</p></AdminRoot>)
+
+	const root = document.documentElement.style
+	expect(root.getPropertyValue('--wp-admin-theme-color')).toBe('#c9356e')
+	expect(root.getPropertyValue('--wp-admin-theme-color--rgb')).toBe('201, 53, 110')
+	expect(root.getPropertyValue('--wp-components-color-accent')).toBe('var(--wp-admin-theme-color)')
+})
+
 test('passes theme configuration through to the design system provider', () => {
 	const { container } = render(
 		<AdminRoot color={{ primary: '#3858e9' }}><p>admin content</p></AdminRoot>,

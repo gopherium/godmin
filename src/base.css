@@ -12,6 +12,75 @@ body {
 	position: relative;
 }
 
+/* Keeps the sticky DataViews toolbar and filters of a list page at the edge the list reaches. */
+.godmin-page > .godmin-page__list :is(.dataviews__view-actions, .dataviews-filters__container) {
+	inset-inline-start: calc(-1 * var(--godmin-canvas-gutter, 0px));
+}
+
+/* Keeps the sticky DataViews footer of a list page on the canvas bottom the list reaches. */
+.godmin-page > .godmin-page__list .dataviews-footer {
+	inset-block-end: calc(-1 * var(--godmin-canvas-gutter-block, 0px));
+}
+
+/* Draws a DataViews title link without an underline, as WordPress does. */
+.dataviews-title-field--clickable {
+	text-decoration: none;
+}
+
+/* Draws a DataViews media link without an underline or the browser link colour. */
+.dataviews-column-primary__media--clickable {
+	color: inherit;
+	text-decoration: none;
+}
+
+/* Sets the name 8px after an initials avatar in a DataViews table. */
+.dataviews-column-primary__media:has(> .godmin-avatar) {
+	margin-inline-end: calc(var(--wpds-dimension-gap-sm) - var(--wpds-dimension-gap-md));
+}
+
+/* Fills the larger media box of the DataViews list with an initials avatar. */
+.dataviews-view-list .dataviews-view-list__media-wrapper:has(> .godmin-avatar) {
+	container-type: size;
+}
+
+.dataviews-view-list .dataviews-view-list__media-wrapper > .godmin-avatar {
+	inline-size: 100%;
+	block-size: 100%;
+	font-size: 37.5cqi;
+}
+
+/* Rounds the DataViews media box around an initials avatar. */
+.dataviews-column-primary__media:has(> .godmin-avatar),
+.dataviews-view-list .dataviews-view-list__media-wrapper:has(> .godmin-avatar) {
+	border-radius: 50%;
+}
+
+/* Drops the dark DataViews media ring around an initials avatar. */
+.dataviews-column-primary__media:has(> .godmin-avatar)::after,
+.dataviews-view-list .dataviews-view-list__media-wrapper:has(> .godmin-avatar)::after {
+	box-shadow: none;
+}
+
+/* Centres the media of a list row on its title and description. */
+.godmin-page__list .dataviews-view-table tbody .dataviews-column-primary__media {
+	align-self: center;
+}
+
+/* Sets a list title and its description as the WordPress list does, a 64px row for both. */
+.godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content {
+	justify-content: center;
+	gap: var(--wpds-dimension-gap-xs);
+	min-block-size: var(--wpds-dimension-size-md);
+	font-size: var(--wpds-typography-font-size-sm);
+	line-height: var(--wpds-typography-line-height-xs);
+}
+
+.godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content > .dataviews-title-field {
+	min-block-size: 0;
+	font-weight: var(--wpds-typography-font-weight-default);
+	line-height: var(--wpds-typography-line-height-sm);
+}
+
 @layer godmin {
 	body {
 		margin: 0;
@@ -22,6 +91,11 @@ body {
 }
 
 @layer godmin {
+	:root {
+		--godmin-rail-width: 300px;
+		--godmin-canvas-margin: 16px;
+	}
+
 	.godmin-layout {
 		display: flex;
 		height: 100vh;
@@ -38,7 +112,7 @@ body {
 		display: flex;
 		flex-direction: column;
 		flex-shrink: 0;
-		width: 300px;
+		width: var(--godmin-rail-width);
 		padding: 16px;
 		box-sizing: border-box;
 		overflow-y: auto;
@@ -49,7 +123,28 @@ body {
 		flex-shrink: 0;
 		align-items: center;
 		gap: 8px;
-		padding: 8px 16px;
+		block-size: 46px;
+		padding-inline-end: 16px;
+	}
+
+	.godmin-layout__menu {
+		display: flex;
+		flex: none;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: color-mix(in srgb, var(--wpds-color-foreground-content-neutral) 60%, transparent);
+		cursor: var(--wpds-cursor-control);
+	}
+
+	.godmin-layout__menu:is(:hover, :focus-visible) {
+		background: var(--wpds-color-background-interactive-neutral-weak-active);
+		color: var(--wpds-color-foreground-interactive-brand);
+	}
+
+	.godmin-layout__menu:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: calc(-1 * var(--wpds-border-width-focus));
 	}
 
 	.godmin-layout__drawer {
@@ -61,15 +156,18 @@ body {
 	}
 
 	.godmin-layout__canvas {
+		--godmin-canvas-gutter: 24px;
+		--godmin-canvas-gutter-block: var(--wpds-dimension-padding-lg);
+		--wp-dataviews-color-background: var(--wpds-color-background-surface-neutral-strong);
 		display: flex;
 		flex-direction: column;
 		flex: 1;
 		min-width: 0;
-		margin: 16px;
-		padding: 24px;
+		margin: var(--godmin-canvas-margin);
+		padding: var(--godmin-canvas-gutter-block) var(--godmin-canvas-gutter);
 		box-sizing: border-box;
 		border-radius: var(--wpds-border-radius-xl);
-		background: var(--wpds-color-background-surface-neutral);
+		background: var(--wpds-color-background-surface-neutral-strong);
 		color: var(--wpds-color-foreground-content-neutral);
 		box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
 		overflow-x: hidden;
@@ -77,17 +175,116 @@ body {
 	}
 
 	.godmin-layout__canvas--bleed {
-		padding: 0;
+		--godmin-canvas-gutter: 0px;
+		--godmin-canvas-gutter-block: 0px;
 		overflow: hidden;
+	}
+
+	.godmin-layout:has(> .godmin-layout__rail) .godmin-layout__canvas {
+		margin-inline-start: 0;
 	}
 
 	.godmin-toasts {
 		position: fixed;
-		left: 16px;
-		bottom: 16px;
+		inset-inline: 0;
+		bottom: 32px;
 		z-index: 1;
-		width: 360px;
-		max-width: calc(100vw - 32px);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--wpds-dimension-gap-sm);
+		padding-inline: 16px;
+		box-sizing: border-box;
+		pointer-events: none;
+	}
+
+	:root:has(.godmin-layout__rail) .godmin-toasts {
+		inset-inline-start: var(--godmin-rail-width);
+		inset-inline-end: var(--godmin-canvas-margin);
+	}
+
+	.godmin-toasts:focus {
+		outline: none;
+	}
+
+	.godmin-toast {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		width: fit-content;
+		max-width: var(--wpds-dimension-surface-width-lg);
+		box-sizing: border-box;
+		padding: var(--wpds-dimension-padding-md) var(--wpds-dimension-padding-xl);
+		border-radius: var(--wpds-border-radius-md);
+		background: rgb(0 0 0 / 0.85);
+		backdrop-filter: blur(16px) saturate(180%);
+		box-shadow:
+			0 1px 2px rgb(0 0 0 / 0.05),
+			0 2px 3px rgb(0 0 0 / 0.04),
+			0 6px 6px rgb(0 0 0 / 0.03),
+			0 8px 8px rgb(0 0 0 / 0.02);
+		color: #fff;
+		font-family: var(--wpds-typography-font-family-body);
+		font-size: var(--wpds-typography-font-size-md);
+		line-height: 1.4;
+		overflow-wrap: anywhere;
+		cursor: default;
+		pointer-events: auto;
+		animation: godmin-fade-in var(--wpds-motion-duration-md) var(--wpds-motion-easing-balanced);
+	}
+
+	.godmin-toast--leaving {
+		animation: godmin-fade-out var(--wpds-motion-duration-sm) var(--wpds-motion-easing-balanced) forwards;
+	}
+
+	.godmin-toast--plain {
+		margin: 0;
+		border: 0;
+		text-align: start;
+		cursor: var(--wpds-cursor-control);
+	}
+
+	.godmin-toast__action {
+		flex: none;
+		margin-inline-start: var(--wpds-dimension-gap-2xl);
+		padding: 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		line-height: normal;
+		text-decoration: underline;
+		text-underline-offset: 0.2em;
+		text-decoration-thickness: from-font;
+		cursor: var(--wpds-cursor-control);
+	}
+
+	.godmin-toast__action:hover {
+		text-decoration: none;
+	}
+
+	.godmin-toast__dismiss {
+		flex: none;
+		margin-inline-start: var(--wpds-dimension-gap-xl);
+		padding: 0;
+		border: 0;
+		background: none;
+		color: inherit;
+		font: inherit;
+		cursor: var(--wpds-cursor-control);
+	}
+
+	.godmin-toast--plain:focus-visible {
+		box-shadow:
+			inset 0 0 0 var(--wpds-border-width-xs) #fff,
+			0 0 0 var(--wpds-border-width-focus) var(--wpds-color-stroke-focus);
+	}
+
+	.godmin-toast__action:focus-visible {
+		outline: var(--wpds-border-width-xs) dotted #fff;
+		outline-offset: 2px;
+		border-radius: var(--wpds-border-radius-sm);
+		text-decoration: none;
 	}
 
 	.godmin-nav-screen__title {
@@ -114,7 +311,12 @@ body {
 		color: var(--wpds-color-foreground-content-neutral-weak);
 	}
 
+	.godmin-page__head {
+		min-block-size: var(--wpds-dimension-size-lg);
+	}
+
 	.godmin-page__subtitle {
+		padding-block-end: var(--wpds-dimension-padding-xs);
 		color: var(--wpds-color-foreground-content-neutral-weak);
 	}
 
@@ -137,6 +339,111 @@ body {
 
 	.godmin-page__aside:empty {
 		display: none;
+	}
+
+	.godmin-page:has(> .godmin-page__list) {
+		flex: 1 0 auto;
+	}
+
+	.godmin-page:has(> .godmin-page__list > .dataviews-wrapper) {
+		flex-shrink: 1;
+		min-block-size: 0;
+	}
+
+	.godmin-page > .godmin-page__list,
+	.godmin-page__main > .godmin-page__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--wpds-dimension-gap-lg);
+	}
+
+	.godmin-page > .godmin-page__list {
+		flex: 1 0 auto;
+		margin-inline: calc(-1 * var(--godmin-canvas-gutter, 0px));
+		margin-block-end: calc(-1 * var(--godmin-canvas-gutter-block, 0px));
+	}
+
+	.godmin-page > .godmin-page__list:has(> .dataviews-wrapper) {
+		flex-shrink: 1;
+		min-block-size: 0;
+	}
+
+	.godmin-list {
+		margin-inline: calc(-1 * min(var(--wpds-dimension-padding-2xl), var(--godmin-canvas-gutter, 0px)));
+	}
+
+	.godmin-page > .godmin-page__list > :not(.dataviews-wrapper, .godmin-table-scroll, .godmin-table) {
+		margin-inline: var(--wpds-dimension-padding-2xl);
+	}
+
+	.godmin-page__tabs {
+		margin-inline: calc(-1 * var(--godmin-canvas-gutter, 0px));
+		padding-inline: var(--godmin-canvas-gutter, 0px);
+		border-block-end: var(--wpds-border-width-xs) solid var(--wpds-color-stroke-surface-neutral-weak);
+	}
+
+	.godmin-page:has(> .godmin-page__list) > .godmin-page__tabs {
+		padding-inline: var(--wpds-dimension-padding-2xl);
+	}
+
+	.godmin-page > .godmin-page__tabs + .godmin-page__list:has(> .dataviews-wrapper:first-child) {
+		margin-block-start: calc(-1 * var(--wpds-dimension-gap-lg));
+	}
+
+	.godmin-page-tabs {
+		display: flex;
+		gap: var(--wpds-dimension-gap-lg);
+		overflow-x: auto;
+	}
+
+	.godmin-page-tabs__tab {
+		display: flex;
+		align-items: center;
+		position: relative;
+		block-size: 48px;
+		padding: 0;
+		color: var(--wpds-color-foreground-interactive-neutral);
+		font-family: var(--wpds-typography-font-family-body);
+		font-size: var(--wpds-typography-font-size-md);
+		font-weight: var(--wpds-typography-font-weight-default);
+		line-height: 1.2;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.godmin-page-tabs__tab:is(:hover, :focus-visible) {
+		color: var(--wpds-color-foreground-interactive-neutral-active);
+	}
+
+	.godmin-page-tabs__tab:focus-visible {
+		outline: none;
+	}
+
+	.godmin-page-tabs__tab::before {
+		content: '';
+		position: absolute;
+		inset: var(--wpds-dimension-padding-md) var(--wpds-border-width-focus);
+		border-radius: var(--wpds-border-radius-sm);
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.godmin-page-tabs__tab:focus-visible::before {
+		opacity: 1;
+	}
+
+	.godmin-page-tabs__tab--current::after {
+		content: '';
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		block-size: var(--wpds-border-width-focus);
+		background: var(--wpds-color-stroke-interactive-neutral-strong);
+	}
+
+	.godmin-page:has(> .godmin-page__list) > .godmin-page__header {
+		padding-inline: calc(var(--wpds-dimension-padding-2xl) - var(--godmin-canvas-gutter, 0px));
 	}
 
 	.godmin-form {
@@ -183,24 +490,83 @@ body {
 	.godmin-table {
 		width: 100%;
 		border-collapse: collapse;
+		font-size: var(--wpds-typography-font-size-md);
+		line-height: var(--wpds-typography-line-height-sm);
 		text-align: left;
 	}
 
 	.godmin-table th,
 	.godmin-table td {
-		padding: 8px 12px;
-		border-bottom: 1px solid var(--wpds-color-stroke-surface-neutral);
+		padding: var(--wpds-dimension-padding-md);
 		vertical-align: middle;
 	}
 
-	.godmin-table th {
-		font-size: var(--wpds-typography-font-size-sm);
-		color: var(--wpds-color-foreground-content-neutral-weak);
+	.godmin-table thead th {
+		padding-block: var(--wpds-dimension-padding-sm);
+		font-size: var(--wpds-typography-font-size-xs);
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+		text-transform: uppercase;
+		color: var(--wpds-color-foreground-content-neutral);
+	}
+
+	.godmin-table tbody tr {
+		border-block-start: var(--wpds-border-width-xs) solid var(--wpds-color-stroke-surface-neutral-weak);
+	}
+
+	.godmin-table tbody td {
+		height: var(--wpds-dimension-size-md);
+	}
+
+	.godmin-page > .godmin-page__list .godmin-table tr > :first-child {
+		padding-inline-start: var(--wpds-dimension-padding-2xl);
+	}
+
+	.godmin-page > .godmin-page__list .godmin-table tr > :last-child {
+		padding-inline-end: var(--wpds-dimension-padding-2xl);
+	}
+
+	.godmin-table__title {
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+		color: var(--wpds-color-foreground-content-neutral);
+	}
+
+	.godmin-page__list .godmin-table__title {
+		font-weight: var(--wpds-typography-font-weight-default);
+	}
+
+	.godmin-table__title a {
+		color: var(--wpds-color-foreground-interactive-neutral);
+		text-decoration: none;
+	}
+
+	.godmin-table__title a:hover {
+		color: var(--wpds-color-foreground-interactive-brand);
+	}
+
+	.godmin-table__title a:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: 2px;
 	}
 
 	.godmin-table__actions {
 		width: 1%;
 		white-space: nowrap;
+	}
+
+	.godmin-avatar {
+		display: inline-block;
+		text-align: center;
+		align-content: center;
+		flex: none;
+		inline-size: var(--wpds-dimension-size-md);
+		block-size: var(--wpds-dimension-size-md);
+		border-radius: 50%;
+		font-family: var(--wpds-typography-font-family-body);
+		font-size: var(--wpds-typography-font-size-sm);
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+		line-height: 1;
+		text-box: trim-both cap alphabetic;
+		user-select: none;
 	}
 
 	.godmin-table__actions * {
@@ -238,10 +604,21 @@ body {
 		}
 	}
 
+	@keyframes godmin-fade-out {
+		0% {
+			opacity: 1;
+		}
+
+		100% {
+			opacity: 0;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.godmin-loading-screen,
 		.godmin-loading-rows,
-		.godmin-arrival {
+		.godmin-arrival,
+		.godmin-toast {
 			animation-duration: 1ms;
 		}
 	}
@@ -370,16 +747,21 @@ body {
 
 	/* Small viewport overrides live together at the end of the sheet, so they
 	   always win over the rules above them without extra specificity. */
-	@media (max-width: 639px) {
+	@media (max-width: 781px) {
 		.godmin-layout__canvas {
 			margin: 0;
-			padding: 16px;
 			border-radius: 0;
 			box-shadow: none;
 		}
+	}
+
+	@media (max-width: 639px) {
+		.godmin-layout__canvas {
+			--godmin-canvas-gutter: 16px;
+		}
 
 		.godmin-layout__canvas--bleed {
-			padding: 0;
+			--godmin-canvas-gutter: 0px;
 		}
 
 		/* The region needs a containing block, or absolutely positioned content
@@ -392,12 +774,18 @@ body {
 		.godmin-table-scroll .godmin-table__actions {
 			position: sticky;
 			inset-inline-end: 0;
-			background: var(--wpds-color-background-surface-neutral);
+			background: var(--wpds-color-background-surface-neutral-strong);
 			box-shadow: inset var(--wpds-border-width-xs) 0 0 var(--wpds-color-stroke-surface-neutral);
 		}
 
 		.godmin-table-scroll .godmin-table__actions:dir(rtl) {
 			box-shadow: inset calc(-1 * var(--wpds-border-width-xs)) 0 0 var(--wpds-color-stroke-surface-neutral);
+		}
+	}
+
+	@media (max-width: 599px) {
+		.godmin-toast {
+			width: 100%;
 		}
 	}
 }

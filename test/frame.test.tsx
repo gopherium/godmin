@@ -4,6 +4,7 @@ import { fireEvent, screen, within } from '@testing-library/react'
 import { expect, test } from 'vitest'
 
 import { Frame } from '../src/frame.js'
+import { EDGE_BREAKPOINT } from '../src/index'
 import { installTestEnvironment, renderAdmin, setViewport } from '../src/testing.js'
 
 installTestEnvironment()
@@ -35,12 +36,44 @@ test('shows the rail beside the canvas on a wide viewport', () => {
 	expect(screen.queryByRole('button', { name: 'Open navigation' })).toBeNull()
 })
 
+test('renders the rail as a child of the layout itself, where the canvas margin rule looks for it', () => {
+	renderFrame()
+
+	expect(document.querySelector('.godmin-layout > .godmin-layout__rail')).not.toBeNull()
+})
+
 test('replaces the rail with a menu button on a narrow viewport', () => {
 	setViewport({ matches: true })
 	renderFrame()
 
 	expect(screen.getByRole('button', { name: 'Open navigation' })).not.toBeNull()
 	expect(screen.queryByRole('navigation', { name: 'Sections' })).toBeNull()
+})
+
+test('draws the menu button as the admin bar toggle: three 28px bars, 4px thick, 6px apart, in a 52 by 46 box', () => {
+	setViewport({ matches: true })
+	renderFrame()
+
+	const menu = screen.getByRole('button', { name: 'Open navigation' })
+	const glyph = menu.querySelector('svg')
+	expect(menu.classList.contains('godmin-layout__menu')).toBe(true)
+	expect(glyph?.getAttribute('viewBox')).toBe('0 0 52 46')
+	expect(glyph?.getAttribute('width')).toBe('52')
+	expect(glyph?.getAttribute('height')).toBe('46')
+	expect(glyph?.querySelector('path')?.getAttribute('d')).toBe('M11 11h28v4H11zm0 10h28v4H11zm0 10h28v4H11z')
+})
+
+test('hides the menu glyph from assistive technology, since the button name says it', () => {
+	setViewport({ matches: true })
+	renderFrame()
+
+	const glyph = screen.getByRole('button', { name: 'Open navigation' }).querySelector('svg')
+	expect(glyph?.getAttribute('aria-hidden')).toBe('true')
+	expect(glyph?.getAttribute('focusable')).toBe('false')
+})
+
+test('offers the edge breakpoint from the package entry', () => {
+	expect(EDGE_BREAKPOINT).toBe(782)
 })
 
 test('opens the rail content in a drawer', async () => {

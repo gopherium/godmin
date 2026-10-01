@@ -1,7 +1,7 @@
 /* oxlint-disable react/only-export-components -- a compound component is an
    object export standing beside the parts it is built from. */
 import { ThemeProvider } from '@wordpress/theme'
-import { Drawer, IconButton, VisuallyHidden } from '@wordpress/ui'
+import { Drawer, VisuallyHidden } from '@wordpress/ui'
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ComponentProps, ReactNode } from 'react'
 
@@ -11,11 +11,19 @@ import { useMediaQuery } from './use-media-query.js'
 type ThemeColor = ComponentProps<typeof ThemeProvider>['color']
 
 /**
- * The glyph on the button that opens the rail drawer.
+ * The glyph on the button that opens the rail drawer, drawn where the admin bar menu toggle draws its bars.
  */
 const menuIcon = (
-	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-		<path d="M5 5v1.5h14V5H5zm0 7.8h14v-1.5H5v1.5zM5 19h14v-1.5H5V19z" />
+	<svg
+		xmlns="http://www.w3.org/2000/svg"
+		width="52"
+		height="46"
+		viewBox="0 0 52 46"
+		fill="currentColor"
+		aria-hidden="true"
+		focusable="false"
+	>
+		<path d="M11 11h28v4H11zm0 10h28v4H11zm0 10h28v4H11z" />
 	</svg>
 )
 
@@ -102,7 +110,9 @@ function TopBar({
 	return (
 		<div className="godmin-layout__topbar">
 			<Drawer.Root open={open} onOpenChange={setOpen}>
-				<Drawer.Trigger render={<IconButton icon={menuIcon} label={menuLabel} />} />
+				<Drawer.Trigger render={<button type="button" className="godmin-layout__menu" aria-label={menuLabel} />}>
+					{menuIcon}
+				</Drawer.Trigger>
 				<Drawer.Popup className="godmin-layout__drawer" portal={<Drawer.Portal container={layout} />}>
 					<VisuallyHidden render={<Drawer.Title />}>{menuLabel}</VisuallyHidden>
 					{children}
