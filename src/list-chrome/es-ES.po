@@ -1,0 +1,425 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: gopherium-godmin\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Domain: default\n"
+"Language: es-ES\n"
+
+#, fuzzy
+msgid "%1$d of %2$d Item"
+msgid_plural "%1$d of %2$d Items"
+msgstr[0] "%1$d de %2$d elemento"
+msgstr[1] "%1$d de %2$d elementos"
+
+#, fuzzy
+msgid "%1$s: %2$s"
+msgstr "%1$s: %2$s"
+
+#, fuzzy
+msgid "%d Item"
+msgid_plural "%d Items"
+msgstr[0] "%d elemento"
+msgstr[1] "%d elementos"
+
+#, fuzzy
+msgid "%d Item selected"
+msgid_plural "%d Items selected"
+msgstr[0] "%d elemento seleccionado"
+msgstr[1] "%d elementos seleccionados"
+
+#, fuzzy
+msgid "%s: <groupName />"
+msgstr "%s: <groupName />"
+
+#, fuzzy
+msgid "(no title)"
+msgstr "(sin título)"
+
+#, fuzzy
+msgid "<Name>%1$s between (inc): </Name><Value>%2$s and %3$s</Value>"
+msgstr "<Name>%1$s entre (incl.): </Name><Value>%2$s y %3$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s contains: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s contiene: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s doesn't contain: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s no contiene: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s includes all: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s incluye todos: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s includes: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s incluye: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is after: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es posterior a: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is before: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es anterior a: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is greater than or equal to: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es mayor o igual que: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is greater than: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es mayor que: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is in the past: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s en los últimos: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is less than or equal to: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es menor o igual que: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is less than: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es menor que: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is none of: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s no es ninguno de: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is not: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s no es: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is on or after: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es igual o posterior a: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is on or before: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es igual o anterior a: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is over: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s hace más de: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s is: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgid "<Name>%1$s starts with: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s empieza por: </Name><Value>%2$s</Value>"
+
+#, fuzzy
+msgctxt "paging"
+msgid "<div>Page</div>%1$s<div>of %2$d</div>"
+msgstr "<div>Página</div>%1$s<div>de %2$d</div>"
+
+#, fuzzy
+msgid "Actions"
+msgstr "Acciones"
+
+#, fuzzy
+msgid "Activity"
+msgstr "Actividad"
+
+#, fuzzy
+msgid "Add filter"
+msgstr "Añadir filtro"
+
+#, fuzzy
+msgid "After"
+msgstr "Después de"
+
+#, fuzzy
+msgid "After (inc)"
+msgstr "Después de (incl.)"
+
+#, fuzzy
+msgid "Appearance"
+msgstr "Apariencia"
+
+#, fuzzy
+msgid "Automatically load more content as you scroll, instead of showing pagination links."
+msgstr "Carga más contenido de forma automática al desplazarte, en lugar de mostrar enlaces de paginación."
+
+#, fuzzy
+msgctxt "Density option for DataView layout"
+msgid "Balanced"
+msgstr "Equilibrada"
+
+#, fuzzy
+msgid "Before"
+msgstr "Antes de"
+
+#, fuzzy
+msgid "Before (inc)"
+msgstr "Antes de (incl.)"
+
+#, fuzzy
+msgid "Between (inc)"
+msgstr "Entre (incl.)"
+
+#, fuzzy
+msgid "Cancel"
+msgstr "Cancelar"
+
+#, fuzzy
+msgid "Close"
+msgstr "Cerrar"
+
+#, fuzzy
+msgctxt "Density option for DataView layout"
+msgid "Comfortable"
+msgstr "Cómoda"
+
+#, fuzzy
+msgctxt "Density option for DataView layout"
+msgid "Compact"
+msgstr "Compacta"
+
+#, fuzzy
+msgid "Conditions"
+msgstr "Condiciones"
+
+#, fuzzy
+msgid "Contains"
+msgstr "Contiene"
+
+#, fuzzy
+msgid "Current page"
+msgstr "Página actual"
+
+#, fuzzy
+msgid "Density"
+msgstr "Densidad"
+
+#, fuzzy
+msgid "Deselect all"
+msgstr "Deseleccionar todo"
+
+#, fuzzy
+msgid "Doesn't contain"
+msgstr "No contiene"
+
+#, fuzzy
+msgid "Enable infinite scroll"
+msgstr "Activar el desplazamiento infinito"
+
+#, fuzzy
+msgid "False"
+msgstr "Falso"
+
+#, fuzzy
+msgctxt "verb"
+msgid "Filter"
+msgstr "Filtrar"
+
+#, fuzzy
+msgid "Filter by: %1$s"
+msgstr "Filtrar por: %1$s"
+
+#, fuzzy
+msgid "Greater than"
+msgstr "Mayor que"
+
+#, fuzzy
+msgid "Greater than or equal"
+msgstr "Mayor o igual que"
+
+#, fuzzy
+msgid "Grid"
+msgstr "Cuadrícula"
+
+#, fuzzy
+msgid "Hide column"
+msgstr "Ocultar columna"
+
+#, fuzzy
+msgid "In the past"
+msgstr "En los últimos"
+
+#, fuzzy
+msgid "Includes"
+msgstr "Incluye"
+
+#, fuzzy
+msgid "Includes all"
+msgstr "Incluye todos"
+
+#, fuzzy
+msgid "Insert left"
+msgstr "Insertar a la izquierda"
+
+#, fuzzy
+msgid "Insert right"
+msgstr "Insertar a la derecha"
+
+#, fuzzy
+msgid "Is"
+msgstr "Es"
+
+#, fuzzy
+msgid "Is none of"
+msgstr "No es ninguno de"
+
+#, fuzzy
+msgid "Is not"
+msgstr "No es"
+
+#, fuzzy
+msgid "Items per page"
+msgstr "Elementos por página"
+
+#, fuzzy
+msgid "Layout"
+msgstr "Diseño"
+
+#, fuzzy
+msgid "Less than"
+msgstr "Menor que"
+
+#, fuzzy
+msgid "Less than or equal"
+msgstr "Menor o igual que"
+
+#, fuzzy
+msgid "List"
+msgstr "Lista"
+
+#, fuzzy
+msgid "List of: %1$s"
+msgstr "Lista de: %1$s"
+
+#, fuzzy
+msgid "Move left"
+msgstr "Mover a la izquierda"
+
+#, fuzzy
+msgid "Move right"
+msgstr "Mover a la derecha"
+
+#, fuzzy
+msgid "Navigate to item"
+msgstr "Ir al elemento"
+
+#, fuzzy
+msgid "Next page"
+msgstr "Página siguiente"
+
+#, fuzzy
+msgid "No elements found"
+msgstr "No se han encontrado elementos"
+
+#, fuzzy
+msgid "No results"
+msgstr "Sin resultados"
+
+#, fuzzy
+msgid "No results found"
+msgstr "No se han encontrado resultados"
+
+#, fuzzy
+msgid "Not on"
+msgstr "No en la fecha"
+
+#, fuzzy
+msgid "On"
+msgstr "En la fecha"
+
+#, fuzzy
+msgid "Order"
+msgstr "Orden"
+
+#, fuzzy
+msgid "Original aspect ratio"
+msgstr "Proporción original"
+
+#, fuzzy
+msgid "Over"
+msgstr "Hace más de"
+
+#, fuzzy
+msgid "Page %1$d of %2$d"
+msgstr "Página %1$d de %2$d"
+
+#, fuzzy
+msgid "Preview size"
+msgstr "Tamaño de la vista previa"
+
+#, fuzzy
+msgid "Previous page"
+msgstr "Página anterior"
+
+#, fuzzy
+msgid "Properties"
+msgstr "Propiedades"
+
+#, fuzzy
+msgid "Remove"
+msgstr "Quitar"
+
+#, fuzzy
+msgid "Reset"
+msgstr "Restablecer"
+
+#, fuzzy
+msgid "Reset search"
+msgstr "Restablecer la búsqueda"
+
+#, fuzzy
+msgid "Reset view"
+msgstr "Restablecer la vista"
+
+#, fuzzy
+msgid "Row %d"
+msgstr "Fila %d"
+
+#, fuzzy
+msgid "Search"
+msgstr "Buscar"
+
+#, fuzzy
+msgid "Search items"
+msgstr "Buscar elementos"
+
+#, fuzzy
+msgid "Select all"
+msgstr "Seleccionar todo"
+
+#, fuzzy
+msgid "Sort ascending"
+msgstr "Orden ascendente"
+
+#, fuzzy
+msgid "Sort by"
+msgstr "Ordenar por"
+
+#, fuzzy
+msgid "Sort descending"
+msgstr "Orden descendente"
+
+#, fuzzy
+msgid "Starts with"
+msgstr "Empieza por"
+
+#, fuzzy
+msgid "Table"
+msgstr "Tabla"
+
+#, fuzzy
+msgid "True"
+msgstr "Verdadero"
+
+#, fuzzy
+msgid "Unknown status for %1$s"
+msgstr "Estado desconocido de %1$s"
+
+#, fuzzy
+msgctxt "View is used as a noun"
+msgid "View options"
+msgstr "Opciones de vista"

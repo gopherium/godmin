@@ -9,6 +9,26 @@ import { DENSE_BREAKPOINT, EDGE_BREAKPOINT } from '../src/breakpoints.js'
 
 const base = readFileSync(resolve('src/base.css'), 'utf8')
 
+/** The selector of the sticky DataViews toolbar and filters inside a list page body. */
+const listToolbars = '.godmin-page > .godmin-page__list :is(.dataviews__view-actions, .dataviews-filters__container)'
+
+/** The selector of the title and description column of a DataViews table inside a list region. */
+const primaryColumn = '.godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content'
+
+/**
+ * Tells whether the rule a selector opens sits outside every cascade layer.
+ * @param selector - The exact selector the rule starts with.
+ * @returns Whether the rule is unlayered.
+ */
+function unlayered(selector: string): boolean {
+	const at = base.indexOf(`${selector} {`)
+	const before = base.slice(0, at)
+
+	expect(at, `the stylesheet has no ${selector} rule`).toBeGreaterThan(-1)
+
+	return before.split('{').length === before.split('}').length
+}
+
 /**
  * Returns the stylesheet lines that are neither blank nor a comment.
  * @param css - The stylesheet source to scan.
@@ -229,6 +249,17 @@ test('lines a DataViews list nested in a page section up with the page text, nev
 	)
 })
 
+test('draws a DataViews title link without an underline, as WordPress does', () => {
+	expect(ruleOf('.dataviews-title-field--clickable')).toMatch(/text-decoration:\s*none/)
+})
+
+test('draws a DataViews media link without an underline or the browser link colour', () => {
+	const media = ruleOf('.dataviews-column-primary__media--clickable')
+
+	expect(media).toMatch(/text-decoration:\s*none/)
+	expect(media).toMatch(/color:\s*inherit/)
+})
+
 test('keeps the row of the title and the actions 40px tall, where the WordPress header puts the title', () => {
 	expect(ruleOf('.godmin-page__head')).toMatch(/min-block-size:\s*var\(--wpds-dimension-size-lg\)/)
 })
@@ -326,6 +357,50 @@ test('lets the DataViews toolbar padding alone part the tabs from a list under t
 
 test('keeps the page gap under the tabs when a list opens with a notice or a table rather than DataViews', () => {
 	expect(base).not.toMatch(/\.godmin-page__tabs \+ \.godmin-page__list\s*\{/)
+})
+
+test('keeps the sticky toolbar and filters of a list at the edge the list reaches', () => {
+	expect(ruleOf(listToolbars)).toMatch(/inset-inline-start:\s*calc\(-1 \* var\(--godmin-canvas-gutter, 0px\)\)/)
+})
+
+test('sets the list toolbar edge outside every layer, so it outranks the unlayered DataViews sheet', () => {
+	expect(unlayered(listToolbars)).toBe(true)
+})
+
+test('centres the media of a list row on its title and description, as the WordPress list does', () => {
+	const media = '.godmin-page__list .dataviews-view-table tbody .dataviews-column-primary__media'
+
+	expect(ruleOf(media)).toMatch(/align-self:\s*center/)
+	expect(unlayered(media)).toBe(true)
+})
+
+test('keeps the sticky DataViews footer of a list page on the canvas bottom the list reaches', () => {
+	const footer = '.godmin-page > .godmin-page__list .dataviews-footer'
+
+	expect(ruleOf(footer)).toMatch(/inset-block-end:\s*calc\(-1 \* var\(--godmin-canvas-gutter-block, 0px\)\)/)
+	expect(unlayered(footer)).toBe(true)
+})
+
+test('drops the 32px floor of a list title, so a title with a description makes a 64px row as in WordPress', () => {
+	const column = ruleOf(primaryColumn)
+	const title = ruleOf(`${primaryColumn} > .dataviews-title-field`)
+
+	expect(column).toMatch(/min-block-size:\s*var\(--wpds-dimension-size-md\)/)
+	expect(column).toMatch(/justify-content:\s*center/)
+	expect(title).toMatch(/min-block-size:\s*0/)
+	expect(unlayered(primaryColumn)).toBe(true)
+	expect(unlayered(`${primaryColumn} > .dataviews-title-field`)).toBe(true)
+})
+
+test('sets a list description in 12px lines 4px under a regular 13px title, as the WordPress list does', () => {
+	const column = ruleOf(primaryColumn)
+	const title = ruleOf(`${primaryColumn} > .dataviews-title-field`)
+
+	expect(column).toMatch(/gap:\s*var\(--wpds-dimension-gap-xs\)/)
+	expect(column).toMatch(/font-size:\s*var\(--wpds-typography-font-size-sm\)/)
+	expect(column).toMatch(/line-height:\s*var\(--wpds-typography-line-height-xs\)/)
+	expect(title).toMatch(/line-height:\s*var\(--wpds-typography-line-height-sm\)/)
+	expect(title).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-default\)/)
 })
 
 test('keeps a list beside an aside inside its column', () => {
@@ -656,6 +731,83 @@ test('tints a table row at every width', () => {
 	for (const body of bodies) {
 		expect(body).not.toMatch(/tr:is\(:hover, :has\(:focus-visible\)\)/)
 	}
+})
+
+test('pads every table cell with the medium padding and draws no cell border', () => {
+	const cells = ruleOf('.godmin-table th,\n\t.godmin-table td')
+
+	expect(cells).toMatch(/padding:\s*var\(--wpds-dimension-padding-md\)/)
+	expect(cells).toMatch(/vertical-align:\s*middle/)
+	expect(cells).not.toMatch(/border/)
+})
+
+test('draws the table header in small capitals at the emphasis weight in the content colour', () => {
+	const header = ruleOf('.godmin-table thead th')
+
+	expect(header).toMatch(/padding-block:\s*var\(--wpds-dimension-padding-sm\)/)
+	expect(header).toMatch(/font-size:\s*var\(--wpds-typography-font-size-xs\)/)
+	expect(header).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\)/)
+	expect(header).toMatch(/text-transform:\s*uppercase/)
+	expect(header).toMatch(/color:\s*var\(--wpds-color-foreground-content-neutral\)/)
+})
+
+test('styles only the column headers, so a row header keeps the body look', () => {
+	expect(base).not.toMatch(/\.godmin-table th\s*\{/)
+})
+
+test('divides the table body rows with a weak line above each', () => {
+	expect(ruleOf('.godmin-table tbody tr')).toMatch(
+		/border-block-start:\s*var\(--wpds-border-width-xs\) solid var\(--wpds-color-stroke-surface-neutral-weak\)/,
+	)
+})
+
+test('keeps a table body row at least a medium control tall inside its padding', () => {
+	expect(ruleOf('.godmin-table tbody td')).toMatch(/height:\s*var\(--wpds-dimension-size-md\)/)
+})
+
+test('draws the title cell of a table at the emphasis weight in the content colour', () => {
+	const title = ruleOf('.godmin-table__title')
+
+	expect(title).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\)/)
+	expect(title).toMatch(/color:\s*var\(--wpds-color-foreground-content-neutral\)/)
+})
+
+test('sets a table in 13px text on 20px lines, as the DataViews table is', () => {
+	const table = ruleOf('.godmin-table')
+
+	expect(table).toMatch(/font-size:\s*var\(--wpds-typography-font-size-md\)/)
+	expect(table).toMatch(/line-height:\s*var\(--wpds-typography-line-height-sm\)/)
+})
+
+test('draws the title cell of a table on a list page in the regular weight, as the list titles there are', () => {
+	const title = '.godmin-page__list .godmin-table__title'
+
+	expect(ruleOf(title)).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-default\)/)
+	expect(base.indexOf(`${title} {`)).toBeGreaterThan(base.indexOf('.godmin-table__title {'))
+})
+
+test('draws the title link with no underline, in the brand colour under the pointer', () => {
+	const link = ruleOf('.godmin-table__title a')
+
+	expect(link).toMatch(/text-decoration:\s*none/)
+	expect(link).toMatch(/color:\s*var\(--wpds-color-foreground-interactive-neutral\)/)
+	expect(ruleOf('.godmin-table__title a:hover')).toMatch(
+		/color:\s*var\(--wpds-color-foreground-interactive-brand\)/,
+	)
+})
+
+test('rings a focused title link with the design system focus ring', () => {
+	const ring = ruleOf('.godmin-table__title a:focus-visible')
+
+	expect(ring).toMatch(/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\)/)
+	expect(ring).toMatch(/outline-offset:\s*2px/)
+})
+
+test('pads the outer cells of a table on a list page by the 24px DataViews pads its own with', () => {
+	const list = '.godmin-page > .godmin-page__list .godmin-table'
+
+	expect(ruleOf(`${list} tr > :first-child`)).toMatch(/padding-inline-start:\s*var\(--wpds-dimension-padding-2xl\);/)
+	expect(ruleOf(`${list} tr > :last-child`)).toMatch(/padding-inline-end:\s*var\(--wpds-dimension-padding-2xl\);/)
 })
 
 test('keeps the row controls of a table at the end edge of their cell', () => {

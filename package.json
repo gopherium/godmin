@@ -89,6 +89,7 @@
 		"@vitejs/plugin-react": "^6.0.3",
 		"@vitest/coverage-v8": "^4.1.10",
 		"@wordpress/a11y": "4.55.0",
+		"@wordpress/dataviews": "19.0.0",
 		"@wordpress/element": "8.7.0",
 		"@wordpress/icons": "16.0.0",
 		"@wordpress/style-runtime": "0.11.0",

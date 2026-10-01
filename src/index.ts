@@ -12,6 +12,8 @@ export type {
 } from './frame.js'
 export { keyFromLabel } from './keys.js'
 export type { KeyOptions, KeyStyle } from './keys.js'
+export { LIST_CHROME_DOMAIN, listChromeCatalogFor } from './list-chrome.js'
+export type { ListChromeCatalog } from './list-chrome.js'
 export { LoadingRows, LoadingScreen } from './loading.js'
 export { LogItem, LogList, LogTime } from './log-list.js'
 export type { LogItemProps, LogListProps, LogTimeProps } from './log-list.js'
