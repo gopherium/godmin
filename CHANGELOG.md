@@ -4,6 +4,63 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `Toaster` takes `limit`, how many toasts stay on screen at once. Defaults to 3, and the oldest leaves first.
+- `Page` takes `list`, which takes the content out to the canvas edges so a DataViews list lines up with the title.
+- `godmin-table__title` marks the title cell of a table, drawn bold with a link that has no underline.
+- `listChromeCatalogFor` and `LIST_CHROME_DOMAIN` load Spanish strings for the WordPress list chrome.
+- The canvas names its side padding `--godmin-canvas-gutter`: 24px, 16px below 640px and none on a full bleed canvas.
+- The canvas names its top and bottom padding `--godmin-canvas-gutter-block`: 16px, none on a full bleed canvas.
+- The rail names its width `--godmin-rail-width`, 300px.
+- The canvas names its margin `--godmin-canvas-margin`, 16px.
+- `Page` takes `tabs`, set under the title block above a divider that runs to the canvas edges.
+- `PageTabs` and `PageTab` draw page tabs as links, the current one underlined and marked as the current page.
+- `InitialsAvatar` draws a round avatar with the first letter of a name, in the pale letter WordPress draws on its blue, raspberry and purple, or white on three more colours.
+- `EDGE_BREAKPOINT`, 782px, where the canvas meets the screen edges.
+- `godmin-list` lines a DataViews list nested in a page section up with the page text.
+- DataViews title and media links draw without an underline, as WordPress does.
+
+### Changed
+
+- A toast looks like the WordPress snackbar: a 42px dark box at the bottom center of the canvas, or of the window when no rail is on screen.
+- A toast is as wide as its message up to 560px, and spans the window below 600px.
+- A toast stays 6 seconds instead of 10.
+- A plain toast clears on a click anywhere on it. A toast with an action shows a close button instead.
+- `dismissLabel` names that close button, and a plain toast gives it to screen readers as its hint, with no tooltip.
+- The toast close button is the snackbar cross, and the action and the cross sit on the first line of a wrapped message.
+- The toast action and a focused toast look like the snackbar ones: underline, hover, focus rings and the arrow pointer.
+- Toasts fade in and out, with no fade under a reduced motion preference.
+- `Toaster` announces each toast once with `speak` from `@wordpress/a11y`, now a peer dependency.
+- `godminDedupe` now lists `@wordpress/a11y`.
+- The canvas paints the strong surface, white like a WordPress page, and a DataViews list on it paints the same.
+- A `godmin-table` matches the DataViews table: small capital headers, medium cell padding, taller rows and a weak line between rows.
+- The actions of a `Page` move under the title when they no longer fit beside it, instead of breaking their labels.
+- `PageTitle` defaults to the large heading, 15px.
+- The subtitle of a `Page` sits under the title and the actions, at 13px.
+- The canvas pads its screen 16px above and below instead of 24px.
+- The canvas meets the screen edges below 782px instead of 640px.
+- The top bar is 46px tall, and its menu button looks like the WordPress admin bar menu toggle, bars at 60% of the chrome text colour.
+- Beside the rail the canvas has no start margin, so the rail padding alone parts them, 16px like its other edges.
+- A list page fills the canvas: the DataViews footer rests on the canvas bottom and a long list scrolls inside.
+- A DataViews row with a description is 64px tall, with a regular title and a 12px description.
+- The outer cells of a `godmin-table` on a list page pad 24px, as DataViews does.
+- A `godmin-table` sets its text at 13px on 20px lines, and its title cell is regular on a list page.
+- A notice in a list region lines up with the title, 16px above the list.
+- A notice or a `godmin-table` under page tabs sits 16px below the tabs.
+- On a list page the media of a row sits in the middle of the row.
+- An initials avatar in DataViews has no dark ring.
+
+### Fixed
+
+- Focus moves to the toast region, not the page body, when a focused toast leaves.
+- `Toaster` forgets the timer of a toast once the toast is gone.
+- A toast raised after its `Toaster` is gone does nothing, so it leaves no timer behind.
+- A toast a screen raises as it mounts under strict mode leaves once its time is up.
+- Only the tab `current` marks is underlined, even where a router link marks another tab active.
+
 ## [0.13.0] - 2026-09-30
 
 ### Added
