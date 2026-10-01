@@ -137,6 +137,13 @@ test('sets the canvas against the rail, so the 16px rail padding alone parts the
 	expect(ruleOf('.godmin-layout__rail')).toMatch(/padding:\s*16px/)
 })
 
+test('centres the toasts on the canvas beside a rail rather than on the whole window', () => {
+	const region = ruleOf(':root:has(.godmin-layout__rail) .godmin-toasts')
+
+	expect(region).toMatch(/inset-inline-start:\s*var\(--godmin-rail-width\)/)
+	expect(region, 'the region ends where the canvas ends').toMatch(/inset-inline-end:\s*var\(--godmin-canvas-margin\)/)
+})
+
 test('names the canvas gutter once and pads the canvas sides with it', () => {
 	const canvas = ruleOf('.godmin-layout__canvas')
 
@@ -542,18 +549,232 @@ test('keeps the actions column in the flow of a table at 640px and wider', () =>
 	expect(wide).not.toMatch(/position:\s*sticky/)
 })
 
-test('gives the toast region a width, which is what stops it collapsing', () => {
-	const region = base.slice(base.indexOf('.godmin-toasts {'))
-	const rule = region.slice(0, region.indexOf('}'))
+test('spans the toast region across the window, so each toast sizes to its own message', () => {
+	const region = ruleOf('.godmin-toasts')
 
-	expect(rule).toMatch(/(?:^|[^-])width:\s*\S/)
+	expect(region).toMatch(/position:\s*fixed/)
+	expect(region).toMatch(/inset-inline:\s*0/)
+	expect(region, 'a fixed width stops a toast growing with its message').not.toMatch(/(?:^|[^-])width:/m)
 })
 
-test('keeps the toast region inside a narrow screen', () => {
-	const region = base.slice(base.indexOf('.godmin-toasts {'))
-	const rule = region.slice(0, region.indexOf('}'))
+test('stacks the toasts in a column at the bottom center, 32px up', () => {
+	const region = ruleOf('.godmin-toasts')
 
-	expect(rule).toMatch(/max-width:\s*calc\(100vw - 32px\)/)
+	expect(region).toMatch(/bottom:\s*32px/)
+	expect(region).toMatch(/display:\s*flex/)
+	expect(region).toMatch(/flex-direction:\s*column/)
+	expect(region).toMatch(/align-items:\s*center/)
+	expect(region).toMatch(/gap:\s*var\(--wpds-dimension-gap-sm\)/)
+})
+
+test('keeps a 16px gutter between a toast and the window edge', () => {
+	const region = ruleOf('.godmin-toasts')
+
+	expect(region).toMatch(/padding-inline:\s*16px/)
+	expect(region).toMatch(/box-sizing:\s*border-box/)
+})
+
+test('lets clicks through the toast region but not through a toast', () => {
+	expect(ruleOf('.godmin-toasts')).toMatch(/pointer-events:\s*none/)
+	expect(ruleOf('.godmin-toast')).toMatch(/pointer-events:\s*auto/)
+})
+
+test('draws a toast as a dark see-through box with white text', () => {
+	const toast = ruleOf('.godmin-toast')
+
+	expect(toast).toMatch(/background:\s*rgb\(0 0 0 \/ 0\.85\)/)
+	expect(toast).toMatch(/backdrop-filter:\s*blur\(16px\) saturate\(180%\)/)
+	expect(toast).toMatch(/color:\s*#fff/)
+})
+
+test('shapes a toast from the design tokens', () => {
+	const toast = ruleOf('.godmin-toast')
+
+	expect(toast).toMatch(/padding:\s*var\(--wpds-dimension-padding-md\) var\(--wpds-dimension-padding-xl\)/)
+	expect(toast).toMatch(/border-radius:\s*var\(--wpds-border-radius-md\)/)
+	expect(toast).toMatch(/font-family:\s*var\(--wpds-typography-font-family-body\)/)
+	expect(toast).toMatch(/font-size:\s*var\(--wpds-typography-font-size-md\)/)
+})
+
+test('sets a toast line at 1.4 times its text, so one line makes a 42px toast like the WordPress snackbar', () => {
+	expect(ruleOf('.godmin-toast')).toMatch(/line-height:\s*1\.4;/)
+})
+
+test('lifts a toast off the page with the small elevation the WordPress snackbar uses', () => {
+	const layers = [
+		'0 1px 2px rgb(0 0 0 / 0.05)',
+		'0 2px 3px rgb(0 0 0 / 0.04)',
+		'0 6px 6px rgb(0 0 0 / 0.03)',
+		'0 8px 8px rgb(0 0 0 / 0.02)',
+	]
+	const shadow = ruleOf('.godmin-toast').match(/box-shadow:([^;]*);/)?.[1] ?? ''
+
+	expect(shadow.split(',').map((layer) => layer.trim())).toEqual(layers)
+})
+
+test('sets the action and the close button of a toast on the first line of its message, as the snackbar does', () => {
+	const toast = ruleOf('.godmin-toast')
+
+	expect(toast).toMatch(/display:\s*flex/)
+	expect(toast).toMatch(/align-items:\s*baseline/)
+	expect(toast, 'the snackbar spaces its action and close button with margins').not.toMatch(/(?:^|\s)gap:/)
+})
+
+test('shows the arrow pointer over a toast with an action, as the snackbar does', () => {
+	expect(ruleOf('.godmin-toast')).toMatch(/cursor:\s*default/)
+	expect(base.indexOf('.godmin-toast--plain {')).toBeGreaterThan(base.indexOf('.godmin-toast {'))
+})
+
+test('spreads the parts of a toast wider than its message apart, as the snackbar content does', () => {
+	expect(ruleOf('.godmin-toast')).toMatch(/justify-content:\s*space-between/)
+	expect(base, 'the snackbar message takes no free room of its own').not.toMatch(/\.godmin-toast__message\s*\{/)
+})
+
+test('sets the action 32px after the message and the close button 24px after the action, as the snackbar does', () => {
+	expect(ruleOf('.godmin-toast__action')).toMatch(/margin-inline-start:\s*var\(--wpds-dimension-gap-2xl\)/)
+	expect(ruleOf('.godmin-toast__dismiss')).toMatch(/margin-inline-start:\s*var\(--wpds-dimension-gap-xl\)/)
+})
+
+test('sets the close button as a line of text, so a toast with an action is as tall as a plain one', () => {
+	const dismiss = ruleOf('.godmin-toast__dismiss')
+
+	expect(dismiss).toMatch(/font:\s*inherit/)
+	expect(dismiss).not.toMatch(/display:/)
+	expect(dismiss).not.toMatch(/block-size:/)
+	expect(dismiss).not.toMatch(/align-items:/)
+})
+
+test('caps a toast at the large surface width, padding included', () => {
+	const toast = ruleOf('.godmin-toast')
+
+	expect(toast).toMatch(/max-width:\s*var\(--wpds-dimension-surface-width-lg\)/)
+	expect(toast).toMatch(/box-sizing:\s*border-box/)
+})
+
+test('sizes a toast to its message from 600px up', () => {
+	expect(ruleOf('.godmin-toast')).toMatch(/(?:^|[^-])width:\s*fit-content/m)
+})
+
+test('lets a long unbroken word wrap inside a toast', () => {
+	expect(ruleOf('.godmin-toast')).toMatch(/overflow-wrap:\s*anywhere/)
+})
+
+test('widens a toast to the region below 600px and keeps the 560px cap there, as the snackbar does', () => {
+	const toast = ruleOf('.godmin-toast', blockOf('@media (max-width: 599px)'))
+
+	expect(toast).toMatch(/(?:^|[^-])width:\s*100%/m)
+	expect(toast, 'the snackbar keeps its cap below 600px').not.toMatch(/max-width/)
+})
+
+test('leaves the toast width alone between 600px and 640px', () => {
+	expect(blockOf('@media (max-width: 639px)')).not.toMatch(/godmin-toast/)
+})
+
+test('draws the plain toast button like the rest of the snackbar, under a pointer', () => {
+	const plain = ruleOf('.godmin-toast--plain')
+
+	expect(plain).toMatch(/margin:\s*0/)
+	expect(plain).toMatch(/border:\s*0/)
+	expect(plain).toMatch(/text-align:\s*start/)
+	expect(plain).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
+})
+
+test('draws the action as a white link that keeps its width', () => {
+	const action = ruleOf('.godmin-toast__action')
+
+	expect(action).toMatch(/flex:\s*none/)
+	expect(action).toMatch(/padding:\s*0/)
+	expect(action).toMatch(/border:\s*0/)
+	expect(action).toMatch(/background:\s*none/)
+	expect(action).toMatch(/color:\s*inherit/)
+	expect(action).toMatch(/font:\s*inherit/)
+	expect(action).toMatch(/text-decoration:\s*underline/)
+	expect(action).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
+})
+
+test('sets the action underline 0.2em below the text at the font thickness, as a WordPress link button does', () => {
+	const action = ruleOf('.godmin-toast__action')
+
+	expect(action).toMatch(/text-underline-offset:\s*0\.2em/)
+	expect(action).toMatch(/text-decoration-thickness:\s*from-font/)
+})
+
+test('sets the action box on a normal line, as tall as the snackbar link button', () => {
+	const action = ruleOf('.godmin-toast__action')
+
+	expect(action).toMatch(/line-height:\s*normal/)
+	expect(action.indexOf('line-height'), 'the font shorthand resets the line').toBeGreaterThan(action.indexOf('font:'))
+})
+
+test('drops the action underline under the pointer, as the snackbar does', () => {
+	expect(ruleOf('.godmin-toast__action:hover')).toMatch(/text-decoration:\s*none/)
+})
+
+test('draws the close button as a bare white cross', () => {
+	const dismiss = ruleOf('.godmin-toast__dismiss')
+
+	expect(dismiss).toMatch(/flex:\s*none/)
+	expect(dismiss).toMatch(/padding:\s*0/)
+	expect(dismiss).toMatch(/border:\s*0/)
+	expect(dismiss).toMatch(/background:\s*none/)
+	expect(dismiss).toMatch(/color:\s*inherit/)
+	expect(dismiss).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
+	expect(base, 'the cross is a text glyph, not an icon').not.toMatch(/\.godmin-toast__dismiss svg/)
+})
+
+test('rings a focused plain toast with a white inner line and the focus colour, as the snackbar does', () => {
+	const ring = ruleOf('.godmin-toast--plain:focus-visible')
+
+	expect(ring).toMatch(
+		new RegExp(
+			String.raw`box-shadow:\s*inset 0 0 0 var\(--wpds-border-width-xs\) #fff,\s*` +
+				String.raw`0 0 0 var\(--wpds-border-width-focus\) var\(--wpds-color-stroke-focus\)`,
+		),
+	)
+	expect(ring, 'the snackbar keeps the browser outline as well').not.toMatch(/outline/)
+})
+
+test('outlines a focused action with a dotted white line and drops its underline, as the snackbar does', () => {
+	const ring = ruleOf('.godmin-toast__action:focus-visible')
+
+	expect(ring).toMatch(/outline:\s*var\(--wpds-border-width-xs\) dotted #fff/)
+	expect(ring).toMatch(/outline-offset:\s*2px/)
+	expect(ring).toMatch(/border-radius:\s*var\(--wpds-border-radius-sm\)/)
+	expect(ring).toMatch(/text-decoration:\s*none/)
+})
+
+test('leaves the browser focus ring on the close button, as the snackbar cross keeps it', () => {
+	expect(base).not.toMatch(/\.godmin-toast__dismiss:focus/)
+})
+
+test('draws no ring on the toast region, which takes focus only from a leaving toast', () => {
+	expect(ruleOf('.godmin-toasts:focus')).toMatch(/outline:\s*none/)
+})
+
+test('fades a toast in as it arrives', () => {
+	expect(ruleOf('.godmin-toast')).toMatch(
+		/animation:\s*godmin-fade-in var\(--wpds-motion-duration-md\) var\(--wpds-motion-easing-balanced\)/,
+	)
+})
+
+test('fades a leaving toast out and holds it hidden until it goes', () => {
+	const leaving = ruleOf('.godmin-toast--leaving')
+
+	expect(leaving).toMatch(/animation:[^;]*godmin-fade-out/)
+	expect(leaving).toMatch(/animation:[^;]*var\(--wpds-motion-duration-sm\)/)
+	expect(leaving).toMatch(/animation:[^;]*forwards/)
+	expect(base).toMatch(/@keyframes godmin-fade-out\s*\{\s*0%\s*\{\s*opacity:\s*1;?\s*\}\s*100%\s*\{\s*opacity:\s*0/)
+})
+
+test('lets the leaving look outrank the arriving fade', () => {
+	expect(base.indexOf('.godmin-toast--leaving {')).toBeGreaterThan(base.indexOf('.godmin-toast {'))
+})
+
+test('stops fading toasts for a reduced motion preference', () => {
+	const guard = blockOf('@media (prefers-reduced-motion: reduce)')
+
+	expect(guard).toMatch(/\.godmin-toast\s*[,{]/)
+	expect(guard).toMatch(/animation-duration:\s*1ms/)
 })
 
 test('raises the drawer above the toast region', () => {

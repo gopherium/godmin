@@ -6,6 +6,7 @@
 export const godminDedupe = [
 	'react',
 	'react-dom',
+	'@wordpress/a11y',
 	'@wordpress/element',
 	'@wordpress/i18n',
 	'@wordpress/theme',

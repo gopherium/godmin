@@ -25,6 +25,10 @@ test('lists the packages that break when duplicated', () => {
 	expect(godminDedupe).toContain('@wordpress/ui')
 })
 
+test('watches the announcer, whose live region and last message a second copy would not share', () => {
+	expect(godminDedupe).toContain('@wordpress/a11y')
+})
+
 test('watches the auth client, whose transport is module state a second copy would not share', () => {
 	expect(godminDedupe).toContain('@gopherium/react-auth')
 })
