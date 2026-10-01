@@ -22,6 +22,11 @@ body {
 }
 
 @layer godmin {
+	:root {
+		--godmin-rail-width: 300px;
+		--godmin-canvas-margin: 16px;
+	}
+
 	.godmin-layout {
 		display: flex;
 		height: 100vh;
@@ -38,7 +43,7 @@ body {
 		display: flex;
 		flex-direction: column;
 		flex-shrink: 0;
-		width: 300px;
+		width: var(--godmin-rail-width);
 		padding: 16px;
 		box-sizing: border-box;
 		overflow-y: auto;
@@ -49,7 +54,28 @@ body {
 		flex-shrink: 0;
 		align-items: center;
 		gap: 8px;
-		padding: 8px 16px;
+		block-size: 46px;
+		padding-inline-end: 16px;
+	}
+
+	.godmin-layout__menu {
+		display: flex;
+		flex: none;
+		padding: 0;
+		border: 0;
+		background: none;
+		color: color-mix(in srgb, var(--wpds-color-foreground-content-neutral) 60%, transparent);
+		cursor: var(--wpds-cursor-control);
+	}
+
+	.godmin-layout__menu:is(:hover, :focus-visible) {
+		background: var(--wpds-color-background-interactive-neutral-weak-active);
+		color: var(--wpds-color-foreground-interactive-brand);
+	}
+
+	.godmin-layout__menu:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: calc(-1 * var(--wpds-border-width-focus));
 	}
 
 	.godmin-layout__drawer {
@@ -61,15 +87,18 @@ body {
 	}
 
 	.godmin-layout__canvas {
+		--godmin-canvas-gutter: 24px;
+		--godmin-canvas-gutter-block: var(--wpds-dimension-padding-lg);
+		--wp-dataviews-color-background: var(--wpds-color-background-surface-neutral-strong);
 		display: flex;
 		flex-direction: column;
 		flex: 1;
 		min-width: 0;
-		margin: 16px;
-		padding: 24px;
+		margin: var(--godmin-canvas-margin);
+		padding: var(--godmin-canvas-gutter-block) var(--godmin-canvas-gutter);
 		box-sizing: border-box;
 		border-radius: var(--wpds-border-radius-xl);
-		background: var(--wpds-color-background-surface-neutral);
+		background: var(--wpds-color-background-surface-neutral-strong);
 		color: var(--wpds-color-foreground-content-neutral);
 		box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
 		overflow-x: hidden;
@@ -77,8 +106,13 @@ body {
 	}
 
 	.godmin-layout__canvas--bleed {
-		padding: 0;
+		--godmin-canvas-gutter: 0px;
+		--godmin-canvas-gutter-block: 0px;
 		overflow: hidden;
+	}
+
+	.godmin-layout:has(> .godmin-layout__rail) .godmin-layout__canvas {
+		margin-inline-start: 0;
 	}
 
 	.godmin-toasts {
@@ -370,16 +404,21 @@ body {
 
 	/* Small viewport overrides live together at the end of the sheet, so they
 	   always win over the rules above them without extra specificity. */
-	@media (max-width: 639px) {
+	@media (max-width: 781px) {
 		.godmin-layout__canvas {
 			margin: 0;
-			padding: 16px;
 			border-radius: 0;
 			box-shadow: none;
 		}
+	}
+
+	@media (max-width: 639px) {
+		.godmin-layout__canvas {
+			--godmin-canvas-gutter: 16px;
+		}
 
 		.godmin-layout__canvas--bleed {
-			padding: 0;
+			--godmin-canvas-gutter: 0px;
 		}
 
 		/* The region needs a containing block, or absolutely positioned content
@@ -392,7 +431,7 @@ body {
 		.godmin-table-scroll .godmin-table__actions {
 			position: sticky;
 			inset-inline-end: 0;
-			background: var(--wpds-color-background-surface-neutral);
+			background: var(--wpds-color-background-surface-neutral-strong);
 			box-shadow: inset var(--wpds-border-width-xs) 0 0 var(--wpds-color-stroke-surface-neutral);
 		}
 

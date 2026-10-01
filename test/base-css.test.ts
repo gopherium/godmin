@@ -5,6 +5,8 @@ import { resolve } from 'node:path'
 
 import { expect, test } from 'vitest'
 
+import { DENSE_BREAKPOINT, EDGE_BREAKPOINT } from '../src/breakpoints.js'
+
 const base = readFileSync(resolve('src/base.css'), 'utf8')
 
 /**
@@ -116,6 +118,103 @@ test('lets a long unbroken value wrap inside the aside instead of spilling past 
 
 test('hides an aside that renders nothing', () => {
 	expect(ruleOf('.godmin-page__aside:empty')).toMatch(/display:\s*none/)
+})
+
+test('names the rail width once and sizes the rail with it', () => {
+	expect(ruleOf(':root')).toMatch(/--godmin-rail-width:\s*300px/)
+	expect(ruleOf('.godmin-layout__rail')).toMatch(/(?:^|\s)width:\s*var\(--godmin-rail-width\)/)
+})
+
+test('names the canvas margin once, 16px, and frames the canvas with it', () => {
+	expect(ruleOf(':root')).toMatch(/--godmin-canvas-margin:\s*16px/)
+	expect(ruleOf('.godmin-layout__canvas')).toMatch(/(?:^|\s)margin:\s*var\(--godmin-canvas-margin\);/)
+})
+
+test('sets the canvas against the rail, so the 16px rail padding alone parts them like the other edges', () => {
+	expect(ruleOf('.godmin-layout:has(> .godmin-layout__rail) .godmin-layout__canvas')).toMatch(
+		/margin-inline-start:\s*0;/,
+	)
+	expect(ruleOf('.godmin-layout__rail')).toMatch(/padding:\s*16px/)
+})
+
+test('names the canvas gutter once and pads the canvas sides with it', () => {
+	const canvas = ruleOf('.godmin-layout__canvas')
+
+	expect(canvas).toMatch(/--godmin-canvas-gutter:\s*24px/)
+	expect(canvas).toMatch(/padding:\s*var\(--godmin-canvas-gutter-block\) var\(--godmin-canvas-gutter\);/)
+})
+
+test('pads the canvas 16px above and below its screen, as WordPress pads a page', () => {
+	expect(ruleOf('.godmin-layout__canvas')).toMatch(/--godmin-canvas-gutter-block:\s*var\(--wpds-dimension-padding-lg\)/)
+})
+
+test('takes the canvas to the screen edges below 782px, with no margin, corners or shadow', () => {
+	const canvas = ruleOf('.godmin-layout__canvas', blockOf(`@media (max-width: ${EDGE_BREAKPOINT - 1}px)`))
+
+	expect(EDGE_BREAKPOINT).toBe(782)
+	expect(canvas).toMatch(/margin:\s*0/)
+	expect(canvas).toMatch(/border-radius:\s*0/)
+	expect(canvas).toMatch(/box-shadow:\s*none/)
+	expect(canvas, 'the gutter stays 24px down to 640px').not.toMatch(/--godmin-canvas-gutter/)
+})
+
+test('narrows the canvas gutter at the dense breakpoint and leaves the edges to the wider block', () => {
+	const canvas = ruleOf('.godmin-layout__canvas', blockOf(`@media (max-width: ${DENSE_BREAKPOINT - 1}px)`))
+
+	expect(canvas).toMatch(/--godmin-canvas-gutter:\s*16px/)
+	expect(canvas).not.toMatch(/margin|border-radius|box-shadow/)
+})
+
+test('draws the top bar 46px tall, as the WordPress admin bar is on a narrow screen', () => {
+	const bar = ruleOf('.godmin-layout__topbar')
+
+	expect(bar).toMatch(/block-size:\s*46px/)
+	expect(bar).toMatch(/padding-inline-end:\s*16px/)
+	expect(bar, 'the menu control fills the bar height').not.toMatch(/(?:^|\s)padding:/)
+})
+
+test('draws the menu control bare like the admin bar menu toggle, its bars the chrome text colour at 60%', () => {
+	const menu = ruleOf('.godmin-layout__menu')
+
+	expect(menu).toMatch(/display:\s*flex/)
+	expect(menu).toMatch(/flex:\s*none/)
+	expect(menu).toMatch(/padding:\s*0/)
+	expect(menu).toMatch(/border:\s*0/)
+	expect(menu).toMatch(/background:\s*none/)
+	expect(menu).toMatch(/color:\s*color-mix\(in srgb, var\(--wpds-color-foreground-content-neutral\) 60%, transparent\);/)
+	expect(menu).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
+})
+
+test('lights the menu control under the pointer or the keyboard, as the admin bar does', () => {
+	const lit = ruleOf('.godmin-layout__menu:is(:hover, :focus-visible)')
+
+	expect(lit).toMatch(/background:\s*var\(--wpds-color-background-interactive-neutral-weak-active\)/)
+	expect(lit).toMatch(/color:\s*var\(--wpds-color-foreground-interactive-brand\)/)
+	expect(ruleOf('.godmin-layout__menu:focus-visible')).toMatch(
+		/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\)/,
+	)
+})
+
+test('narrows the canvas gutter to 16px below 640px and lets the gutter alone set the padding', () => {
+	const canvas = ruleOf('.godmin-layout__canvas', blockOf('@media (max-width: 639px)'))
+
+	expect(canvas).toMatch(/--godmin-canvas-gutter:\s*16px/)
+	expect(canvas).not.toMatch(/(?:^|\s)padding:/)
+})
+
+test('gives a full bleed canvas no gutter at every width', () => {
+	const phone = blockOf('@media (max-width: 639px)')
+
+	expect(ruleOf('.godmin-layout__canvas--bleed')).toMatch(/--godmin-canvas-gutter:\s*0px/)
+	expect(ruleOf('.godmin-layout__canvas--bleed')).toMatch(/--godmin-canvas-gutter-block:\s*0px/)
+	expect(ruleOf('.godmin-layout__canvas--bleed', phone)).toMatch(/--godmin-canvas-gutter:\s*0px/)
+})
+
+test('paints the canvas and a DataViews list on it with the strong surface, white like a WordPress page', () => {
+	const canvas = ruleOf('.godmin-layout__canvas')
+
+	expect(canvas).toMatch(/(?:^|[^-])background:\s*var\(--wpds-color-background-surface-neutral-strong\);/m)
+	expect(canvas).toMatch(/--wp-dataviews-color-background:\s*var\(--wpds-color-background-surface-neutral-strong\);/)
 })
 
 test('caps a form at the large surface width', () => {
@@ -412,7 +511,9 @@ test('pins the actions column of a scrolling table to the end edge on a small sc
 
 	expect(actions).toMatch(/position:\s*sticky/)
 	expect(actions).toMatch(/inset-inline-end:\s*0/)
-	expect(actions).toMatch(/background:\s*var\(--wpds-color-background-surface-neutral\)/)
+	expect(actions, 'the pinned column hides the cells under it with the canvas colour').toMatch(
+		/background:\s*var\(--wpds-color-background-surface-neutral-strong\)/,
+	)
 })
 
 test('draws the start edge of the pinned actions column with an inset shadow rather than a border', () => {
