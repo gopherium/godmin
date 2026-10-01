@@ -217,11 +217,160 @@ test('gives a full bleed canvas no gutter at every width', () => {
 	expect(ruleOf('.godmin-layout__canvas--bleed', phone)).toMatch(/--godmin-canvas-gutter:\s*0px/)
 })
 
+test('takes a list page body out to the canvas edges, so the list gutter lines up with the page title', () => {
+	expect(ruleOf('.godmin-page > .godmin-page__list')).toMatch(
+		/margin-inline:\s*calc\(-1 \* var\(--godmin-canvas-gutter, 0px\)\)/,
+	)
+})
+
+test('lines a DataViews list nested in a page section up with the page text, never past the canvas gutter', () => {
+	expect(ruleOf('.godmin-list')).toMatch(
+		/margin-inline:\s*calc\(-1 \* min\(var\(--wpds-dimension-padding-2xl\), var\(--godmin-canvas-gutter, 0px\)\)\)/,
+	)
+})
+
+test('keeps the row of the title and the actions 40px tall, where the WordPress header puts the title', () => {
+	expect(ruleOf('.godmin-page__head')).toMatch(/min-block-size:\s*var\(--wpds-dimension-size-lg\)/)
+})
+
+test('leaves 4px under the subtitle, as the WordPress page header does', () => {
+	expect(ruleOf('.godmin-page__subtitle')).toMatch(/padding-block-end:\s*var\(--wpds-dimension-padding-xs\)/)
+})
+
+test('pads the header of a list page by what the list pads past the gutter, so both line up on a phone', () => {
+	expect(ruleOf('.godmin-page:has(> .godmin-page__list) > .godmin-page__header')).toMatch(
+		/padding-inline:\s*calc\(var\(--wpds-dimension-padding-2xl\) - var\(--godmin-canvas-gutter, 0px\)\)/,
+	)
+})
+
+test('lays the page tabs out in a row 16px apart, as the minimal WordPress tabs are', () => {
+	const tabs = ruleOf('.godmin-page-tabs')
+
+	expect(tabs).toMatch(/display:\s*flex/)
+	expect(tabs).toMatch(/gap:\s*var\(--wpds-dimension-gap-lg\)/)
+	expect(tabs).toMatch(/overflow-x:\s*auto/)
+})
+
+test('draws a page tab like a minimal WordPress tab: a 48px tall 13px label with no padding', () => {
+	const tab = ruleOf('.godmin-page-tabs__tab')
+
+	expect(tab).toMatch(/display:\s*flex/)
+	expect(tab).toMatch(/align-items:\s*center/)
+	expect(tab).toMatch(/position:\s*relative/)
+	expect(tab).toMatch(/block-size:\s*48px/)
+	expect(tab).toMatch(/padding:\s*0/)
+	expect(tab).toMatch(/color:\s*var\(--wpds-color-foreground-interactive-neutral\)/)
+	expect(tab).toMatch(/font-family:\s*var\(--wpds-typography-font-family-body\)/)
+	expect(tab).toMatch(/font-size:\s*var\(--wpds-typography-font-size-md\)/)
+	expect(tab).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-default\)/)
+	expect(tab).toMatch(/line-height:\s*1\.2/)
+	expect(tab).toMatch(/text-decoration:\s*none/)
+	expect(tab).toMatch(/white-space:\s*nowrap/)
+})
+
+test('darkens a page tab under the pointer or the keyboard', () => {
+	expect(ruleOf('.godmin-page-tabs__tab:is(:hover, :focus-visible)')).toMatch(
+		/color:\s*var\(--wpds-color-foreground-interactive-neutral-active\)/,
+	)
+})
+
+test('underlines the current page tab with a 2px strong neutral line as wide as its label', () => {
+	const line = ruleOf('.godmin-page-tabs__tab--current::after')
+
+	expect(line).toMatch(/content:\s*''/)
+	expect(line).toMatch(/position:\s*absolute/)
+	expect(line).toMatch(/inset-inline:\s*0/)
+	expect(line).toMatch(/inset-block-end:\s*0/)
+	expect(line).toMatch(/block-size:\s*var\(--wpds-border-width-focus\)/)
+	expect(line).toMatch(/background:\s*var\(--wpds-color-stroke-interactive-neutral-strong\)/)
+})
+
+test('underlines the tab godmin marks current, not every link a router marks active', () => {
+	expect(base).not.toMatch(/aria-current/)
+})
+
+test('rings a focused page tab around its label, as the WordPress tabs do', () => {
+	const ring = ruleOf('.godmin-page-tabs__tab::before')
+
+	expect(ring).toMatch(/content:\s*''/)
+	expect(ring).toMatch(/position:\s*absolute/)
+	expect(ring).toMatch(/inset:\s*var\(--wpds-dimension-padding-md\) var\(--wpds-border-width-focus\)/)
+	expect(ring).toMatch(/border-radius:\s*var\(--wpds-border-radius-sm\)/)
+	expect(ring).toMatch(/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\)/)
+	expect(ring).toMatch(/opacity:\s*0/)
+	expect(ruleOf('.godmin-page-tabs__tab:focus-visible::before')).toMatch(/opacity:\s*1/)
+	expect(ruleOf('.godmin-page-tabs__tab:focus-visible')).toMatch(/outline:\s*none/)
+})
+
+test('draws a 1px weak divider under the page tabs out to the canvas edges', () => {
+	const tabs = ruleOf('.godmin-page__tabs')
+
+	expect(tabs).toMatch(/margin-inline:\s*calc\(-1 \* var\(--godmin-canvas-gutter, 0px\)\)/)
+	expect(tabs).toMatch(/padding-inline:\s*var\(--godmin-canvas-gutter, 0px\)/)
+	expect(tabs).toMatch(
+		/border-block-end:\s*var\(--wpds-border-width-xs\) solid var\(--wpds-color-stroke-surface-neutral-weak\)/,
+	)
+})
+
+test('lines the page tabs of a list page up with its title', () => {
+	expect(ruleOf('.godmin-page:has(> .godmin-page__list) > .godmin-page__tabs')).toMatch(
+		/padding-inline:\s*var\(--wpds-dimension-padding-2xl\)/,
+	)
+})
+
+test('lets the DataViews toolbar padding alone part the tabs from a list under them, 16px as in WordPress', () => {
+	expect(ruleOf('.godmin-page > .godmin-page__tabs + .godmin-page__list:has(> .dataviews-wrapper:first-child)')).toMatch(
+		/margin-block-start:\s*calc\(-1 \* var\(--wpds-dimension-gap-lg\)\)/,
+	)
+})
+
+test('keeps the page gap under the tabs when a list opens with a notice or a table rather than DataViews', () => {
+	expect(base).not.toMatch(/\.godmin-page__tabs \+ \.godmin-page__list\s*\{/)
+})
+
+test('keeps a list beside an aside inside its column', () => {
+	expect(base).not.toMatch(/^\s*\.godmin-page__list\s*[,{]/m)
+})
+
 test('paints the canvas and a DataViews list on it with the strong surface, white like a WordPress page', () => {
 	const canvas = ruleOf('.godmin-layout__canvas')
 
 	expect(canvas).toMatch(/(?:^|[^-])background:\s*var\(--wpds-color-background-surface-neutral-strong\);/m)
 	expect(canvas).toMatch(/--wp-dataviews-color-background:\s*var\(--wpds-color-background-surface-neutral-strong\);/)
+})
+
+test('lets a list page fill the canvas, so the DataViews footer rests on the canvas bottom', () => {
+	expect(ruleOf('.godmin-page:has(> .godmin-page__list)')).toMatch(/flex:\s*1 0 auto/)
+	expect(ruleOf('.godmin-page > .godmin-page__list')).toMatch(/flex:\s*1 0 auto/)
+})
+
+test('bleeds a list page to the canvas bottom the way it bleeds to the sides', () => {
+	expect(ruleOf('.godmin-page > .godmin-page__list')).toMatch(
+		/margin-block-end:\s*calc\(-1 \* var\(--godmin-canvas-gutter-block, 0px\)\)/,
+	)
+})
+
+test('scrolls a DataViews list inside its own area, so the header, toolbar and footer stay put', () => {
+	expect(ruleOf('.godmin-page:has(> .godmin-page__list > .dataviews-wrapper)')).toMatch(
+		/flex-shrink:\s*1;\s*min-block-size:\s*0/,
+	)
+	expect(ruleOf('.godmin-page > .godmin-page__list:has(> .dataviews-wrapper)')).toMatch(
+		/flex-shrink:\s*1;\s*min-block-size:\s*0/,
+	)
+})
+
+test('stacks a list region as a column with the page gap between a notice and the list under it', () => {
+	const regions = ruleOf('.godmin-page > .godmin-page__list,\n\t.godmin-page__main > .godmin-page__list')
+
+	expect(regions).toMatch(/display:\s*flex/)
+	expect(regions).toMatch(/flex-direction:\s*column/)
+	expect(regions).toMatch(/gap:\s*var\(--wpds-dimension-gap-lg\)/)
+})
+
+test('lines up a notice in a list region with the title rather than the canvas edge', () => {
+	const notice = '.godmin-page > .godmin-page__list > :not(.dataviews-wrapper, .godmin-table-scroll, .godmin-table)'
+
+	expect(ruleOf(notice)).toMatch(/margin-inline:\s*var\(--wpds-dimension-padding-2xl\)/)
 })
 
 test('caps a form at the large surface width', () => {

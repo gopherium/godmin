@@ -91,6 +91,64 @@ test('renders the actions beside the title', () => {
 	expect(screen.getByRole('button', { name: 'New report' })).not.toBeNull()
 })
 
+test('sets the title and the actions in the page head, the first row of the page header', () => {
+	const { container } = renderAdmin(
+		<Page title="Reports" actions={<button type="button">New report</button>}>
+			body
+		</Page>,
+	)
+
+	const header = container.querySelector('.godmin-page > .godmin-page__header:first-child')
+	const head = header?.querySelector(':scope > .godmin-page__head:first-child')
+	expect(head?.querySelector('h1')?.textContent).toBe('Reports')
+	expect(head?.textContent).toContain('New report')
+})
+
+test('wraps the actions of the page head under the title once they no longer fit beside it', () => {
+	const { container } = renderAdmin(
+		<Page title="Reports" actions={<button type="button">New report</button>}>
+			body
+		</Page>,
+	)
+
+	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('wrap')
+})
+
+test('sets the subtitle under the row of the title and the actions, as the WordPress page header does', () => {
+	const { container } = renderAdmin(
+		<Page title="Reports" subtitle="Friday, Aug 1" actions={<button type="button">New report</button>}>
+			body
+		</Page>,
+	)
+
+	const subtitle = screen.getByText('Friday, Aug 1')
+	expect(subtitle.tagName).toBe('P')
+	expect(subtitle.closest('.godmin-page__head')).toBeNull()
+	expect(container.querySelector('.godmin-page__header > .godmin-page__head + .godmin-page__subtitle')).toBe(subtitle)
+})
+
+test('sets the subtitle at the body size, 13px like the WordPress page subtitle', () => {
+	const body = sampledClasses(<Text id="sample" variant="body-md" />)
+
+	renderAdmin(
+		<Page title="Reports" subtitle="Friday, Aug 1">
+			body
+		</Page>,
+	)
+
+	expect([...screen.getByText('Friday, Aug 1').classList]).toEqual(expect.arrayContaining(body))
+})
+
+test('renders the page title at the large heading size, 15px like the WordPress page title', () => {
+	const large = sampledClasses(<Text id="sample" variant="heading-lg" />)
+
+	renderAdmin(<Page title="Reports">body</Page>)
+
+	expect([...screen.getByRole('heading', { level: 1, name: 'Reports' }).classList]).toEqual(
+		expect.arrayContaining(large),
+	)
+})
+
 test('carries the shared page class, with a screen class when given one', () => {
 	const { container: plain } = renderAdmin(<Page title="Reports">body</Page>)
 	expect(plain.querySelector('.godmin-page')).not.toBeNull()
@@ -154,6 +212,33 @@ test('renders one column when a screen gives no aside', () => {
 
 	expect(container.querySelector('.godmin-page__split')).toBeNull()
 	expect(screen.getByText('body')).not.toBeNull()
+})
+
+test('sets a list body in the list region, a direct child of the page the stylesheet takes to the canvas edges', () => {
+	const { container } = renderAdmin(
+		<Page title="Users" list>
+			<p>rows</p>
+		</Page>,
+	)
+
+	expect(container.querySelector('.godmin-page > .godmin-page__list')?.textContent).toBe('rows')
+})
+
+test('sets no list region around a body that is not a list', () => {
+	const { container } = renderAdmin(<Page title="Reports">body</Page>)
+
+	expect(container.querySelector('.godmin-page__list')).toBeNull()
+})
+
+test('keeps a list inside the main column beside an aside', () => {
+	const { container } = renderAdmin(
+		<Page title="Users" list aside={<p>Details</p>}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	expect(container.querySelector('.godmin-page__main > .godmin-page__list')?.textContent).toBe('rows')
+	expect(container.querySelector('.godmin-page > .godmin-page__list')).toBeNull()
 })
 
 test('renders a page title on its own for a screen building its own chrome', () => {

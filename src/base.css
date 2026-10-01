@@ -242,7 +242,12 @@ body {
 		color: var(--wpds-color-foreground-content-neutral-weak);
 	}
 
+	.godmin-page__head {
+		min-block-size: var(--wpds-dimension-size-lg);
+	}
+
 	.godmin-page__subtitle {
+		padding-block-end: var(--wpds-dimension-padding-xs);
 		color: var(--wpds-color-foreground-content-neutral-weak);
 	}
 
@@ -265,6 +270,111 @@ body {
 
 	.godmin-page__aside:empty {
 		display: none;
+	}
+
+	.godmin-page:has(> .godmin-page__list) {
+		flex: 1 0 auto;
+	}
+
+	.godmin-page:has(> .godmin-page__list > .dataviews-wrapper) {
+		flex-shrink: 1;
+		min-block-size: 0;
+	}
+
+	.godmin-page > .godmin-page__list,
+	.godmin-page__main > .godmin-page__list {
+		display: flex;
+		flex-direction: column;
+		gap: var(--wpds-dimension-gap-lg);
+	}
+
+	.godmin-page > .godmin-page__list {
+		flex: 1 0 auto;
+		margin-inline: calc(-1 * var(--godmin-canvas-gutter, 0px));
+		margin-block-end: calc(-1 * var(--godmin-canvas-gutter-block, 0px));
+	}
+
+	.godmin-page > .godmin-page__list:has(> .dataviews-wrapper) {
+		flex-shrink: 1;
+		min-block-size: 0;
+	}
+
+	.godmin-list {
+		margin-inline: calc(-1 * min(var(--wpds-dimension-padding-2xl), var(--godmin-canvas-gutter, 0px)));
+	}
+
+	.godmin-page > .godmin-page__list > :not(.dataviews-wrapper, .godmin-table-scroll, .godmin-table) {
+		margin-inline: var(--wpds-dimension-padding-2xl);
+	}
+
+	.godmin-page__tabs {
+		margin-inline: calc(-1 * var(--godmin-canvas-gutter, 0px));
+		padding-inline: var(--godmin-canvas-gutter, 0px);
+		border-block-end: var(--wpds-border-width-xs) solid var(--wpds-color-stroke-surface-neutral-weak);
+	}
+
+	.godmin-page:has(> .godmin-page__list) > .godmin-page__tabs {
+		padding-inline: var(--wpds-dimension-padding-2xl);
+	}
+
+	.godmin-page > .godmin-page__tabs + .godmin-page__list:has(> .dataviews-wrapper:first-child) {
+		margin-block-start: calc(-1 * var(--wpds-dimension-gap-lg));
+	}
+
+	.godmin-page-tabs {
+		display: flex;
+		gap: var(--wpds-dimension-gap-lg);
+		overflow-x: auto;
+	}
+
+	.godmin-page-tabs__tab {
+		display: flex;
+		align-items: center;
+		position: relative;
+		block-size: 48px;
+		padding: 0;
+		color: var(--wpds-color-foreground-interactive-neutral);
+		font-family: var(--wpds-typography-font-family-body);
+		font-size: var(--wpds-typography-font-size-md);
+		font-weight: var(--wpds-typography-font-weight-default);
+		line-height: 1.2;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	.godmin-page-tabs__tab:is(:hover, :focus-visible) {
+		color: var(--wpds-color-foreground-interactive-neutral-active);
+	}
+
+	.godmin-page-tabs__tab:focus-visible {
+		outline: none;
+	}
+
+	.godmin-page-tabs__tab::before {
+		content: '';
+		position: absolute;
+		inset: var(--wpds-dimension-padding-md) var(--wpds-border-width-focus);
+		border-radius: var(--wpds-border-radius-sm);
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.godmin-page-tabs__tab:focus-visible::before {
+		opacity: 1;
+	}
+
+	.godmin-page-tabs__tab--current::after {
+		content: '';
+		position: absolute;
+		inset-inline: 0;
+		inset-block-end: 0;
+		block-size: var(--wpds-border-width-focus);
+		background: var(--wpds-color-stroke-interactive-neutral-strong);
+	}
+
+	.godmin-page:has(> .godmin-page__list) > .godmin-page__header {
+		padding-inline: calc(var(--wpds-dimension-padding-2xl) - var(--godmin-canvas-gutter, 0px));
 	}
 
 	.godmin-form {
