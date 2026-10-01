@@ -12,6 +12,18 @@ const base = readFileSync(resolve('src/base.css'), 'utf8')
 /** The selector of the sticky DataViews toolbar and filters inside a list page body. */
 const listToolbars = '.godmin-page > .godmin-page__list :is(.dataviews__view-actions, .dataviews-filters__container)'
 
+/** The selector of the DataViews media boxes that hold an initials avatar. */
+const avatarMedia = [
+	'.dataviews-column-primary__media:has(> .godmin-avatar)',
+	'.dataviews-view-list .dataviews-view-list__media-wrapper:has(> .godmin-avatar)',
+].join(',\n')
+
+/** The selector of the rings DataViews draws over the media boxes that hold an initials avatar. */
+const avatarRings = [
+	'.dataviews-column-primary__media:has(> .godmin-avatar)::after',
+	'.dataviews-view-list .dataviews-view-list__media-wrapper:has(> .godmin-avatar)::after',
+].join(',\n')
+
 /** The selector of the title and description column of a DataViews table inside a list region. */
 const primaryColumn = '.godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content'
 
@@ -367,11 +379,73 @@ test('sets the list toolbar edge outside every layer, so it outranks the unlayer
 	expect(unlayered(listToolbars)).toBe(true)
 })
 
+test('draws an initials avatar as a 32px circle with a 12px semibold letter in its middle', () => {
+	const avatar = ruleOf('.godmin-avatar', base.slice(base.lastIndexOf('@layer godmin')))
+
+	expect(avatar).toMatch(/display:\s*inline-block/)
+	expect(avatar).toMatch(/text-align:\s*center/)
+	expect(avatar).toMatch(/align-content:\s*center/)
+	expect(avatar).toMatch(/flex:\s*none/)
+	expect(avatar).toMatch(/inline-size:\s*var\(--wpds-dimension-size-md\)/)
+	expect(avatar).toMatch(/block-size:\s*var\(--wpds-dimension-size-md\)/)
+	expect(avatar).toMatch(/border-radius:\s*50%/)
+	expect(avatar).toMatch(/font-family:\s*var\(--wpds-typography-font-family-body\)/)
+	expect(avatar).toMatch(/font-size:\s*var\(--wpds-typography-font-size-sm\)/)
+	expect(avatar).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\)/)
+	expect(avatar).toMatch(/line-height:\s*1;/)
+})
+
+test('leaves the letter colour of an initials avatar to the palette pair the avatar sets', () => {
+	const avatar = ruleOf('.godmin-avatar', base.slice(base.lastIndexOf('@layer godmin')))
+
+	expect(avatar).not.toMatch(/(^|[\s;])color:/)
+})
+
+test('centres the capital of an initial in the circle rather than the line it sits on', () => {
+	const avatar = ruleOf('.godmin-avatar', base.slice(base.lastIndexOf('@layer godmin')))
+
+	expect(avatar).toMatch(/text-box:\s*trim-both cap alphabetic;/)
+	expect(avatar, 'the trim never reaches the anonymous box of a flex container').not.toMatch(/display:\s*inline-flex/)
+})
+
+test('rounds the DataViews media box around an initials avatar, in the table and the list', () => {
+	const media = ruleOf(avatarMedia)
+
+	expect(media).toMatch(/border-radius:\s*50%/)
+	expect(unlayered(avatarMedia)).toBe(true)
+})
+
+test('drops the dark DataViews media ring around an initials avatar, which the WordPress avatar draws without', () => {
+	expect(ruleOf(avatarRings)).toMatch(/box-shadow:\s*none/)
+	expect(unlayered(avatarRings)).toBe(true)
+})
+
 test('centres the media of a list row on its title and description, as the WordPress list does', () => {
 	const media = '.godmin-page__list .dataviews-view-table tbody .dataviews-column-primary__media'
 
 	expect(ruleOf(media)).toMatch(/align-self:\s*center/)
 	expect(unlayered(media)).toBe(true)
+})
+
+test('sets the name 8px after an avatar in a DataViews table, as the WordPress list does', () => {
+	const table = '.dataviews-column-primary__media:has(> .godmin-avatar)'
+
+	expect(ruleOf(table)).toMatch(
+		/margin-inline-end:\s*calc\(var\(--wpds-dimension-gap-sm\) - var\(--wpds-dimension-gap-md\)\)/,
+	)
+	expect(unlayered(table)).toBe(true)
+})
+
+test('fills the larger media box of the DataViews list with the avatar and keeps its letter in proportion', () => {
+	const wrapper = '.dataviews-view-list .dataviews-view-list__media-wrapper:has(> .godmin-avatar)'
+	const avatar = '.dataviews-view-list .dataviews-view-list__media-wrapper > .godmin-avatar'
+
+	expect(ruleOf(wrapper)).toMatch(/container-type:\s*size/)
+	expect(ruleOf(avatar)).toMatch(/inline-size:\s*100%/)
+	expect(ruleOf(avatar)).toMatch(/block-size:\s*100%/)
+	expect(ruleOf(avatar), 'the letter keeps the 12px to 32px ratio').toMatch(/font-size:\s*37\.5cqi/)
+	expect(unlayered(wrapper)).toBe(true)
+	expect(unlayered(avatar)).toBe(true)
 })
 
 test('keeps the sticky DataViews footer of a list page on the canvas bottom the list reaches', () => {

@@ -2,6 +2,8 @@
 
 export { AdminRoot } from './admin-root.js'
 export type { AdminRootProps } from './admin-root.js'
+export { InitialsAvatar } from './avatar.js'
+export type { InitialsAvatarProps } from './avatar.js'
 export { DENSE_BREAKPOINT, EDGE_BREAKPOINT, RAIL_BREAKPOINT, SMALL_VIEWPORT } from './breakpoints.js'
 export { Frame } from './frame.js'
 export type {
