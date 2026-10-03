@@ -17,8 +17,9 @@ body {
 	inset-inline-start: calc(-1 * var(--godmin-canvas-gutter, 0px));
 }
 
-/* Keeps the sticky DataViews footer of a list page on the canvas bottom the list reaches. */
-.godmin-page > .godmin-page__list .dataviews-footer {
+/* Keeps the sticky DataViews footer of a list page or a list inside a page on the canvas bottom. */
+.godmin-page > .godmin-page__list .dataviews-footer,
+.godmin-list .dataviews-footer {
 	inset-block-end: calc(-1 * var(--godmin-canvas-gutter-block, 0px));
 }
 

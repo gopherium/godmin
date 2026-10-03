@@ -4,6 +4,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Fixed
+
+- The DataViews footer of a `godmin-list` rests on the canvas bottom, so no row shows below it.
+
 ## [0.14.0] - 2026-10-01
 
 ### Added

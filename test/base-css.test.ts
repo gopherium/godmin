@@ -448,8 +448,8 @@ test('fills the larger media box of the DataViews list with the avatar and keeps
 	expect(unlayered(avatar)).toBe(true)
 })
 
-test('keeps the sticky DataViews footer of a list page on the canvas bottom the list reaches', () => {
-	const footer = '.godmin-page > .godmin-page__list .dataviews-footer'
+test('keeps the sticky DataViews footer of a list page or a list inside a page on the canvas bottom', () => {
+	const footer = '.godmin-page > .godmin-page__list .dataviews-footer,\n.godmin-list .dataviews-footer'
 
 	expect(ruleOf(footer)).toMatch(/inset-block-end:\s*calc\(-1 \* var\(--godmin-canvas-gutter-block, 0px\)\)/)
 	expect(unlayered(footer)).toBe(true)
