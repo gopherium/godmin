@@ -191,6 +191,12 @@ test('raises nothing when no item was asked', async () => {
 	expect(await notesFor([])).toEqual({})
 })
 
+test('leaves out the toast or the notice it has no words for', async () => {
+	expect(Object.keys(await notesFor([]))).toEqual([])
+	expect(Object.keys(await notesFor(['first'], ['first']))).toEqual(['notice'])
+	expect(Object.keys(await notesFor(['first']))).toEqual(['toast'])
+})
+
 test('names the one item asked when the items hold an empty slot before it', async () => {
 	const rows: string[] = []
 	rows[1] = 'second'

@@ -86,8 +86,12 @@ export interface BulkNotes {
  */
 export function bulkNotes<Item>(items: readonly Item[], outcome: BulkOutcome<Item>, words: BulkWords<Item>): BulkNotes {
 	const only = outcome.asked === 1 ? items.filter(() => true)[0] : undefined
-	return {
-		toast: outcome.done > 0 ? words.done(outcome.done, only) : undefined,
-		notice: outcome.failures.length > 0 ? words.failed(outcome.failures, outcome.asked) : undefined,
+	const notes: BulkNotes = {}
+	if (outcome.done > 0) {
+		notes.toast = words.done(outcome.done, only)
 	}
+	if (outcome.failures.length > 0) {
+		notes.notice = words.failed(outcome.failures, outcome.asked)
+	}
+	return notes
 }
