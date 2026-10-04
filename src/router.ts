@@ -2,6 +2,17 @@ import { useRouterState } from '@tanstack/react-router'
 
 import type { CanvasMode } from './frame.js'
 
+export { listSearch, openOnTap, useListView } from './list-view.js'
+export type {
+	LayoutDefaults,
+	ListDefaults,
+	ListFilter,
+	ListSearch,
+	ListSortDirection,
+	ListView,
+	ListViewShape,
+} from './list-view.js'
+
 declare module '@tanstack/react-router' {
 	interface StaticDataRouteOption {
 		canvas?: CanvasMode
