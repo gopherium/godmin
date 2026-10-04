@@ -27,7 +27,8 @@ function answeredError(answer: unknown): unknown {
 	if (typeof answer !== 'object' || answer === null || !('error' in answer)) {
 		return undefined
 	}
-	return answer.error === null ? undefined : answer.error
+	const error = answer.error
+	return error === null ? undefined : error
 }
 
 /**
