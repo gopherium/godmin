@@ -22,7 +22,7 @@ export interface PageWindow {
 export interface ServedPage {
 	/** How many rows match, across every page. */
 	total: number
-	/** How many rows the server put on one page. */
+	/** The page size the server used, not the rows on this page. */
 	limit: number
 }
 
@@ -46,22 +46,21 @@ export interface ServedSize {
 export interface ServerPaging {
 	/** The rows to ask the server for. */
 	window: PageWindow
-	/** Records the size of the page the server served, given as the object the query answered. */
-	record: (page: ServedPage | undefined) => void
+	/** Records the page size the server used, with the limit the request that got that page asked for. */
+	record: (page: ServedPage | undefined, asked: number | null) => void
 }
 
 /**
  * Returns how many rows each page before the shown one holds.
  * @param limit - The rows asked for on one page, or null for the size the server serves by default.
  * @param last - The size the server last served, absent before it served any.
- * @returns The size served when it answered this same ask and is no larger, the size asked otherwise.
+ * @returns The size served when it answered this same ask, the size asked otherwise.
  */
 function stepOf(limit: number | null, last?: ServedSize): number {
-	const answered = last !== undefined && last.asked === limit
-	if (limit === null) {
-		return answered ? last.served : 0
+	if (last !== undefined && last.asked === limit && last.served > 0) {
+		return last.served
 	}
-	return answered && last.served < limit ? last.served : limit
+	return limit ?? 0
 }
 
 /**
@@ -85,13 +84,8 @@ export function paginationOf(page: ServedPage | undefined): PaginationInfo {
 	if (page === undefined) {
 		return { totalItems: 0, totalPages: 0 }
 	}
-	return { totalItems: page.total, totalPages: Math.ceil(page.total / page.limit) }
-}
-
-/** The size the server last served, with the page that carried it. */
-interface Recorded extends ServedSize {
-	/** The page the query answered. */
-	page: ServedPage
+	const totalPages = page.limit > 0 ? Math.ceil(page.total / page.limit) : Math.min(page.total, 1)
+	return { totalItems: page.total, totalPages }
 }
 
 /**
@@ -101,16 +95,12 @@ interface Recorded extends ServedSize {
  * @returns The page window and the recorder of each page the server serves.
  */
 export function useServerPaging(view: PagedView, cap?: number): ServerPaging {
-	const [last, setLast] = useState<Recorded>()
-	const window = pageWindow(view, last, cap)
+	const [last, setLast] = useState<ServedSize>()
 	return {
-		window,
-		record: (page) => {
-			if (page === undefined || page === last?.page) {
-				return
-			}
-			if (page.limit !== last?.served || window.limit !== last.asked) {
-				setLast({ asked: window.limit, served: page.limit, page })
+		window: pageWindow(view, last, cap),
+		record: (page, asked) => {
+			if (page !== undefined && (page.limit !== last?.served || asked !== last.asked)) {
+				setLast({ asked, served: page.limit })
 			}
 		},
 	}

@@ -43,8 +43,12 @@ test('steps by the size the server served when it is smaller than the one asked'
 	expect(pageWindow({ page: 2, perPage: 500 }, { asked: 500, served: 200 })).toEqual({ limit: 500, offset: 200 })
 })
 
-test('steps by the size asked when the server served a larger one', () => {
-	expect(pageWindow({ page: 2, perPage: 2 }, { asked: 2, served: 4 })).toEqual({ limit: 2, offset: 2 })
+test('steps by the size the server served when it is larger than the one asked', () => {
+	expect(pageWindow({ page: 2, perPage: 2 }, { asked: 2, served: 4 })).toEqual({ limit: 2, offset: 4 })
+})
+
+test('steps by the size asked when the server served no size', () => {
+	expect(pageWindow({ page: 2, perPage: 20 }, { asked: 20, served: 0 })).toEqual({ limit: 20, offset: 20 })
 })
 
 test('steps by the size asked when the size served answered another page size', () => {
@@ -77,20 +81,29 @@ test('counts no pages when no row matches', () => {
 	expect(paginationOf({ total: 0, limit: 20 })).toEqual({ totalItems: 0, totalPages: 0 })
 })
 
+test('counts no pages when the server served no size and no row matches', () => {
+	expect(paginationOf({ total: 0, limit: 0 })).toEqual({ totalItems: 0, totalPages: 0 })
+})
+
+test('counts one page when the server served no size for rows that match', () => {
+	expect(paginationOf({ total: 5, limit: 0 })).toEqual({ totalItems: 5, totalPages: 1 })
+})
+
 test('answers the totals DataViews pages through', () => {
 	const info: DataViewsProps<unknown>['paginationInfo'] = paginationOf({ total: 5, limit: 2 })
 
 	expect(info).toEqual({ totalItems: 5, totalPages: 3 })
 })
 
-/** The view a list shows and the page the server served it last. */
+/** The view a list shows, the page the server served it last, and the size the request for that page asked. */
 interface Shown {
 	view: PagedView
 	page?: ServedPage
+	asked?: number | null
 }
 
 /**
- * Renders the server paging of a view, recording each page the server served.
+ * Renders the server paging of a view, recording each page for the request that asked it, the current one by default.
  * @param view - The view the list shows first.
  * @param cap - The largest page the server serves.
  * @returns The hook render result, rerendered with the next view and page.
@@ -98,9 +111,9 @@ interface Shown {
 function renderPaging(view: PagedView, cap?: number) {
 	const initialProps: Shown = { view }
 	return renderHook(
-		({ view: shown, page }: Shown) => {
+		({ view: shown, page, asked }: Shown) => {
 			const paging = useServerPaging(shown, cap)
-			paging.record(page)
+			paging.record(page, asked === undefined ? paging.window.limit : asked)
 			return paging.window
 		},
 		{ initialProps },
@@ -142,11 +155,19 @@ test('steps by the size asked while the page shown answered an older page size',
 	const paging = renderPaging({ page: 1, perPage: 20 })
 	paging.rerender({ view: { page: 1, perPage: 20 }, page: answered })
 
-	paging.rerender({ view: { page: 3, perPage: 50 }, page: answered })
+	paging.rerender({ view: { page: 3, perPage: 50 }, page: answered, asked: 20 })
 	expect(paging.result.current).toEqual({ limit: 50, offset: 100 })
 
 	paging.rerender({ view: { page: 3, perPage: 50 }, page: { total: 100, limit: 30 } })
 	expect(paging.result.current).toEqual({ limit: 50, offset: 60 })
+})
+
+test('steps by the size asked when a late answer to an older page size arrives', () => {
+	const paging = renderPaging({ page: 3, perPage: 50 })
+
+	paging.rerender({ view: { page: 3, perPage: 50 }, page: { total: 100, limit: 20 }, asked: 20 })
+
+	expect(paging.result.current).toEqual({ limit: 50, offset: 100 })
 })
 
 test('records a page built afresh on every render once', () => {
