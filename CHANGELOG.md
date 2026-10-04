@@ -4,6 +4,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `useListView` in `@gopherium/godmin/router` holds a DataViews list view in the address, one layout on each side of 640px, and keeps the columns a reader picks in memory.
+- `listSearch` keeps the parts of a list view an address may carry, for a route's `validateSearch`.
+- `openOnTap` opens the record a tap lands on in the phone layout of a list.
+- `ListEmpty` draws the empty state of a list: an icon, a title and an optional hint.
+- `ConfirmBody` draws the body of a confirmation modal: the question, a failure notice, Cancel and the confirm button.
+- `bulkNotes` turns a bulk outcome into one toast and one notice in your own words.
+- `FileButton` draws a compact upload button over a hidden file input, with an optional icon.
+- `useToaster().name` cuts a name longer than `nameLength` and ends it with an ellipsis. `Toaster` takes `nameLength`, 45 by default.
+- `InitialsAvatar` takes `size`, its width and height in pixels.
+- `godmin-list-overlay` lays an element such as a drop zone over a list region.
+- `textClasses`, `badgeClasses` and `buttonClasses` in `@gopherium/godmin/testing` sample the classes of a design system text, badge and button.
+
+### Changed
+
+- `Frame.Root` paints the chrome `#26292b` and the canvas `#fcfcfc` when no colour is given, so an application passing none sees its frame change.
+- The canvas no longer takes the chrome colour when only `chromeColor` is given.
+
 ## [0.15.0] - 2026-10-04
 
 ### Added

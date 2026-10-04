@@ -60,3 +60,38 @@ export async function runEach<Item>(
 	const failures = settled.flatMap((result, at) => failureOf(result, given[at]))
 	return { asked: given.length, done: given.length - failures.length, failures }
 }
+
+/** The words a product turns a bulk outcome into. */
+export interface BulkWords<Item> {
+	/** The toast for the items that finished, given their count and the one item when only one was asked. */
+	done: (count: number, only: Item | undefined) => string
+	/** The notice for the items that failed, given every failure and how many items were asked. */
+	failed: (failures: BulkFailure<Item>[], asked: number) => string
+}
+
+/** The messages a bulk outcome reads as, each absent when nothing calls for it. */
+export interface BulkNotes {
+	/** The toast confirming the items that finished. */
+	toast?: string
+	/** The notice naming the items that failed. */
+	notice?: string
+}
+
+/**
+ * Returns the toast and the notice a bulk outcome reads as, in the product's words.
+ * @param items - The items the run was given.
+ * @param outcome - What the run reached.
+ * @param words - The words for the items that finished and for the ones that failed.
+ * @returns A toast when an item finished and a notice when one failed.
+ */
+export function bulkNotes<Item>(items: readonly Item[], outcome: BulkOutcome<Item>, words: BulkWords<Item>): BulkNotes {
+	const only = outcome.asked === 1 ? items.filter(() => true)[0] : undefined
+	const notes: BulkNotes = {}
+	if (outcome.done > 0) {
+		notes.toast = words.done(outcome.done, only)
+	}
+	if (outcome.failures.length > 0) {
+		notes.notice = words.failed(outcome.failures, outcome.asked)
+	}
+	return notes
+}

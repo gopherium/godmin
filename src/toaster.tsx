@@ -34,6 +34,31 @@ const DISMISS_GLYPH = '✕'
  */
 const LIMIT = 3
 
+/**
+ * How many characters of a name a toast shows before the ellipsis.
+ */
+const NAME_LENGTH = 45
+
+/**
+ * The mark that ends a name a toast cut short.
+ */
+const ELLIPSIS = '…'
+
+/**
+ * Returns a title cut to the given number of characters, its trailing spaces trimmed and an ellipsis added.
+ * @param title - The title to name.
+ * @param length - How many characters to keep.
+ * @returns The title whole when it fits, the cut title otherwise.
+ */
+function cutName(title: string, length: number): string {
+	const characters = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+	const parts = Array.from(characters.segment(title), (part) => part.segment)
+	if (parts.length <= length) {
+		return title
+	}
+	return `${parts.slice(0, length).join('').trimEnd()}${ELLIPSIS}`
+}
+
 export interface ToastAction {
 	label: string
 	onAct: () => void
@@ -48,6 +73,8 @@ interface Toast {
 
 export interface ToasterHandle {
 	show: (message: string, action?: ToastAction) => void
+	/** The title cut to the toaster's name length, with an ellipsis when cut. */
+	name: (title: string) => string
 }
 
 const ToasterContext = createContext<ToasterHandle | null>(null)
@@ -234,11 +261,13 @@ export interface ToasterProps {
 	dismissLabel?: string
 	/** How many toasts stay on screen at once, the oldest leaving first. */
 	limit?: number
+	/** How many characters of a name a toast shows before the ellipsis. */
+	nameLength?: number
 }
 
 /**
  * Renders the region holding raised messages around the given tree.
- * @param props - The tree the region wraps, how long a toast stays, the dismiss control name and how many stay.
+ * @param props - The tree the region wraps, the toast time, the close button name, how many stay and the name length.
  * @returns The wrapped tree with its region.
  */
 export function Toaster({
@@ -246,6 +275,7 @@ export function Toaster({
 	dismissAfter = DISMISS_AFTER,
 	dismissLabel = DISMISS_LABEL,
 	limit = LIMIT,
+	nameLength = NAME_LENGTH,
 }: ToasterProps) {
 	const [toasts, setToasts] = useState<Toast[]>([])
 	const nextId = useRef(0)
@@ -275,7 +305,8 @@ export function Toaster({
 		},
 		[limit],
 	)
-	const handle = useMemo(() => ({ show }), [show])
+	const name = useCallback((title: string) => cutName(title, nameLength), [nameLength])
+	const handle = useMemo(() => ({ show, name }), [show, name])
 	const hint = useId()
 	return (
 		<ToasterContext.Provider value={handle}>

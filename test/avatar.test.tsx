@@ -126,6 +126,28 @@ test('keeps the palette small', () => {
 	expect(new Set(backgrounds()).size).toBe(AVATAR_COLORS.length)
 })
 
+test('keeps the size of the stylesheet when no size is given', () => {
+	const avatar = avatarFor('Maria Perez')
+
+	expect(avatar.style.inlineSize).toBe('')
+	expect(avatar.style.blockSize).toBe('')
+	expect(avatar.style.fontSize).toBe('')
+})
+
+test('draws the circle at the size it is given, as the 16px avatar before an author name', () => {
+	const { container } = renderAdmin(<InitialsAvatar name="Maria Perez" size={16} />)
+	const avatar = container.querySelector('.godmin-avatar') as HTMLElement
+
+	expect(avatar.style.inlineSize).toBe('16px')
+	expect(avatar.style.blockSize).toBe('16px')
+})
+
+test('scales the letter with the circle, as the default draws a 12px letter in 32px', () => {
+	const { container } = renderAdmin(<InitialsAvatar name="Maria Perez" size={24} />)
+
+	expect((container.querySelector('.godmin-avatar') as HTMLElement).style.fontSize).toBe('9px')
+})
+
 test('offers the avatar from the package entry', () => {
 	expect(entry.InitialsAvatar).toBe(InitialsAvatar)
 })

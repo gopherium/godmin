@@ -377,6 +377,19 @@ body {
 		margin-inline: var(--wpds-dimension-padding-2xl);
 	}
 
+	.godmin-page__list:has(> .godmin-list-overlay),
+	.godmin-list:has(> .godmin-list-overlay) {
+		position: relative;
+	}
+
+	.godmin-page > .godmin-page__list > .godmin-list-overlay,
+	.godmin-page__main > .godmin-page__list > .godmin-list-overlay,
+	.godmin-list > .godmin-list-overlay {
+		position: absolute;
+		inset: 0;
+		margin: 0;
+	}
+
 	.godmin-page__tabs {
 		margin-inline: calc(-1 * var(--godmin-canvas-gutter, 0px));
 		padding-inline: var(--godmin-canvas-gutter, 0px);

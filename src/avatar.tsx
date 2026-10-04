@@ -1,4 +1,5 @@
 /* oxlint-disable react/only-export-components -- the palette ships beside the avatar that paints with it. */
+import type { CSSProperties } from 'react'
 
 /** A circle colour of the initials avatar and the colour its letter takes on it. */
 export interface AvatarColor {
@@ -43,20 +44,43 @@ function initialOf(name: string): string {
 	return first.toLocaleUpperCase()
 }
 
+/**
+ * The share of the circle a letter takes, 12px in the 32px stylesheet circle.
+ */
+const LETTER_SHARE = 12 / 32
+
+/**
+ * Returns the inline size of an avatar drawn at the given size, none for the stylesheet size.
+ * @param size - The width and height in pixels, absent for the stylesheet size.
+ * @returns The circle and letter sizes, or nothing.
+ */
+function sizedBy(size: number | undefined): CSSProperties {
+	if (size === undefined) {
+		return {}
+	}
+	return { inlineSize: size, blockSize: size, fontSize: size * LETTER_SHARE }
+}
+
 export interface InitialsAvatarProps {
 	/** The name the avatar stands for, whose first letter it draws. */
 	name: string
+	/** The avatar's width and height in pixels, the stylesheet size when absent. */
+	size?: number
 }
 
 /**
  * Renders a round avatar with the first letter of a name, in the letter colour of the circle colour the name picks.
- * @param props - The name the avatar stands for.
+ * @param props - The name the avatar stands for and its size.
  * @returns The avatar element.
  */
-export function InitialsAvatar({ name }: InitialsAvatarProps) {
+export function InitialsAvatar({ name, size }: InitialsAvatarProps) {
 	const { background, letter } = colorFor(name)
 	return (
-		<span className="godmin-avatar" aria-hidden="true" style={{ backgroundColor: background, color: letter }}>
+		<span
+			className="godmin-avatar"
+			aria-hidden="true"
+			style={{ backgroundColor: background, color: letter, ...sizedBy(size) }}
+		>
 			{initialOf(name)}
 		</span>
 	)
