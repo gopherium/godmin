@@ -2,7 +2,8 @@
 
 import { expect, test, vi } from 'vitest'
 
-import { runEach } from '../src/index'
+import { bulkNotes, runEach } from '../src/index'
+import type { BulkFailure, BulkWords } from '../src/index'
 
 test('calls once for each item with the item alone', async () => {
 	const call = vi.fn(async () => {})
@@ -133,4 +134,68 @@ test('asks nothing when no item is given', async () => {
 
 	expect(await runEach([], call)).toEqual({ asked: 0, done: 0, failures: [] })
 	expect(call).not.toHaveBeenCalled()
+})
+
+/** The words a test hands the notes, each echoing what it was given. */
+const echo: BulkWords<string> = {
+	done: (count, only) => `done ${count} ${only ?? 'none'}`,
+	failed: (failures: BulkFailure<string>[], asked) =>
+		`failed ${failures.map((failure) => `${failure.item}:${String(failure.error)}`).join(',')} of ${asked}`,
+}
+
+/**
+ * Runs a bulk action whose call refuses the named items, and returns its notes.
+ * @param items - The items to act on.
+ * @param refused - The items whose call rejects with their own name.
+ * @returns The toast and the notice the outcome reads as.
+ */
+async function notesFor(items: string[], refused: string[] = []) {
+	const outcome = await runEach(items, async (item) => {
+		if (refused.includes(item)) {
+			throw item
+		}
+	})
+	return bulkNotes(items, outcome, echo)
+}
+
+test('toasts how many finished and notices nothing when every call finished', async () => {
+	expect(await notesFor(['first', 'second'])).toEqual({ toast: 'done 2 none' })
+})
+
+test('hands the toast words the one item asked, so the toast can name it', async () => {
+	expect(await notesFor(['first'])).toEqual({ toast: 'done 1 first' })
+})
+
+test('hands the toast words no item when several were asked, even when only one finished', async () => {
+	expect((await notesFor(['first', 'second'], ['second'])).toast).toBe('done 1 none')
+})
+
+test('hands the notice words every failure and how many items were asked', async () => {
+	expect((await notesFor(['first', 'second', 'third'], ['first', 'third'])).notice).toBe(
+		'failed first:first,third:third of 3',
+	)
+})
+
+test('raises a toast and a notice when some calls finished and some failed', async () => {
+	expect(await notesFor(['first', 'second'], ['first'])).toEqual({
+		toast: 'done 1 none',
+		notice: 'failed first:first of 2',
+	})
+})
+
+test('toasts nothing when no call finished', async () => {
+	expect(await notesFor(['first'], ['first'])).toEqual({ notice: 'failed first:first of 1' })
+})
+
+test('raises nothing when no item was asked', async () => {
+	expect(await notesFor([])).toEqual({})
+})
+
+test('names the one item asked when the items hold an empty slot before it', async () => {
+	const rows: string[] = []
+	rows[1] = 'second'
+
+	const outcome = await runEach(rows, async () => {})
+
+	expect(bulkNotes(rows, outcome, echo)).toEqual({ toast: 'done 1 second' })
 })
