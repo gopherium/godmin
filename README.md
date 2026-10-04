@@ -66,7 +66,7 @@ render unthemed components with no error. Spread `godminDedupe` into
 
 ## Design system versions
 
-Peer ranges are longhand and single window, for example `>=0.22.0 <0.23.0`.
+Peer ranges are longhand and single window, for example `>=0.23.0 <0.24.0`.
 The window moves with each design system release train and never widens, so no
 release accepts two breaking generations at once. `SUPPORTED_WPDS` exports the
 window this build was tested against.
