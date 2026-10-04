@@ -439,6 +439,14 @@ test('a tap in the list a phone shows opens the record it lands on', () => {
 	expect({ ticked, opened }).toEqual({ ticked: [], opened: ['7'] })
 })
 
+test('a tap that lands on no row opens nothing', () => {
+	const opened: string[] = []
+
+	openOnTap(listOn(true, () => {}), (id) => opened.push(id))([])
+
+	expect(opened).toEqual([])
+})
+
 test('a tick in a table stays a selection and opens nothing', () => {
 	const ticked: string[][] = []
 	const opened: string[] = []

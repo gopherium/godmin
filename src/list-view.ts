@@ -359,5 +359,9 @@ export function openOnTap<V extends ListViewShape>(
 	if (!list.phone) {
 		return list.onChangeSelection
 	}
-	return ([id]) => open(id)
+	return ([id]) => {
+		if (id !== undefined) {
+			open(id)
+		}
+	}
 }
