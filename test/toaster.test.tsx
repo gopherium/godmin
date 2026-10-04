@@ -844,6 +844,46 @@ test('leaves focus where it was when a toast it is not in leaves', () => {
 	expect(document.activeElement).toBe(raise)
 })
 
+/**
+ * Returns the name a toaster gives a title, rendering the toaster with the given name length.
+ * @param title - The title to name.
+ * @param nameLength - How many characters the toaster keeps, its default when absent.
+ * @returns The name the toaster handle answers.
+ */
+function nameFrom(title: string, nameLength?: number): string {
+	let kept: ToasterHandle | undefined
+	renderAdmin(
+		<Toaster nameLength={nameLength}>
+			<Keep onHandle={(handle) => (kept = handle)} />
+		</Toaster>,
+	)
+	return (kept as ToasterHandle).name(title)
+}
+
+test('names an item in full when its name fits the toast', () => {
+	expect(nameFrom('Hello world')).toBe('Hello world')
+	expect(nameFrom('a'.repeat(45))).toBe('a'.repeat(45))
+})
+
+test('cuts a name longer than 45 characters to 45 and ends it with an ellipsis', () => {
+	expect(nameFrom('a'.repeat(46))).toBe(`${'a'.repeat(45)}…`)
+})
+
+test('cuts a name at the length the toaster is given', () => {
+	expect(nameFrom('Maria Perez wrote this', 10)).toBe('Maria Pere…')
+})
+
+test('counts an emoji as one character, so a cut never splits it', () => {
+	const family = '\u{1F469}\u{200D}\u{1F469}\u{200D}\u{1F467}\u{200D}\u{1F466}'
+
+	expect(nameFrom(`${'a'.repeat(44)}${family}tail`)).toBe(`${'a'.repeat(44)}${family}…`)
+	expect(nameFrom(family.repeat(45))).toBe(family.repeat(45))
+})
+
+test('trims the spaces a cut leaves before the ellipsis', () => {
+	expect(nameFrom('Maria   Perez', 8)).toBe('Maria…')
+})
+
 test('tells a screen it forgot the region rather than failing silently', () => {
 	const quiet = vi.spyOn(console, 'error').mockImplementation(() => {})
 
