@@ -75,6 +75,17 @@ function holdFade(): { finish: () => Promise<void>, cutShort: () => Promise<void
 	return { finish: () => settle(resolve), cutShort: () => settle(reject) }
 }
 
+test('loads where the platform offers no grapheme splitter', async () => {
+	const held = Object.getOwnPropertyDescriptor(Intl, 'Segmenter') as PropertyDescriptor
+	Reflect.deleteProperty(Intl, 'Segmenter')
+	onTestFinished(() => {
+		Object.defineProperty(Intl, 'Segmenter', held)
+	})
+	vi.resetModules()
+
+	await expect(import('../src/toaster.js')).resolves.toHaveProperty('Toaster')
+})
+
 test('shows a message once a screen raises one', () => {
 	renderAdmin(
 		<Toaster>

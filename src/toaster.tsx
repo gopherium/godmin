@@ -45,17 +45,13 @@ const NAME_LENGTH = 45
 const ELLIPSIS = '…'
 
 /**
- * The splitter that counts what a reader sees as one character, an emoji included.
- */
-const characters = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
-
-/**
  * Returns a title cut to the given number of characters, its trailing spaces trimmed and an ellipsis added.
  * @param title - The title to name.
  * @param length - How many characters to keep.
  * @returns The title whole when it fits, the cut title otherwise.
  */
 function cutName(title: string, length: number): string {
+	const characters = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 	const parts = Array.from(characters.segment(title), (part) => part.segment)
 	if (parts.length <= length) {
 		return title
