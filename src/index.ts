@@ -42,6 +42,6 @@ export { useTokenDocument } from './use-token-document.js'
  * The design system version window this build was tested against.
  */
 export const SUPPORTED_WPDS = {
-	'@wordpress/ui': '>=0.22.0 <0.23.0',
-	'@wordpress/theme': '>=2.1.0 <3.0.0',
+	'@wordpress/ui': '>=0.23.0 <0.24.0',
+	'@wordpress/theme': '>=2.2.0 <3.0.0',
 } as const

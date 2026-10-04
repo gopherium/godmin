@@ -24,7 +24,11 @@ export interface BulkOutcome<Item> {
  * @returns The answer's error.
  */
 function answeredError(answer: unknown): unknown {
-	return typeof answer === 'object' && answer !== null && 'error' in answer ? answer.error : undefined
+	if (typeof answer !== 'object' || answer === null || !('error' in answer)) {
+		return undefined
+	}
+	const error = answer.error
+	return error === null ? undefined : error
 }
 
 /**

@@ -46,7 +46,7 @@ export interface ServedSize {
 export interface ServerPaging {
 	/** The rows to ask the server for. */
 	window: PageWindow
-	/** Records the page size the server used, with the limit the request that got that page asked for. */
+	/** Records the page size the server used, when the request that got that page asked the limit the view asks now. */
 	record: (page: ServedPage | undefined, asked: number | null) => void
 }
 
@@ -96,10 +96,14 @@ export function paginationOf(page: ServedPage | undefined): PaginationInfo {
  */
 export function useServerPaging(view: PagedView, cap?: number): ServerPaging {
 	const [last, setLast] = useState<ServedSize>()
+	const window = pageWindow(view, last, cap)
 	return {
-		window: pageWindow(view, last, cap),
+		window,
 		record: (page, asked) => {
-			if (page !== undefined && (page.limit !== last?.served || asked !== last.asked)) {
+			if (page === undefined || asked !== window.limit) {
+				return
+			}
+			if (page.limit !== last?.served || asked !== last.asked) {
 				setLast({ asked, served: page.limit })
 			}
 		},

@@ -13,6 +13,11 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `useServerPaging` records the page size the server used for each request and steps the offset by it while the view asks that same size.
 - `runEach` runs one call per item at once and answers how many were asked, how many finished and which failed, counting an answer that carries an error as a failure.
 
+### Changed
+
+- The design system window moves to `@wordpress/ui` 0.23, `@wordpress/icons` 17, `@wordpress/theme` 2.2, `@wordpress/style-runtime` 0.12 and `@wordpress/a11y` 4.56.
+- The trash of `RowControls` draws with the stroke of `@wordpress/icons` 17.
+
 ## [0.14.1] - 2026-10-03
 
 ### Fixed

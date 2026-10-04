@@ -42,6 +42,27 @@ test('counts an answer with no error as done', async () => {
 	expect(await runEach(['first'], async () => ({ data: { saved: true } }))).toEqual({ asked: 1, done: 1, failures: [] })
 })
 
+test('counts an answer whose error is null as done', async () => {
+	const outcome = await runEach(['first'], async () => ({ data: { saved: true }, error: null }))
+
+	expect(outcome).toEqual({ asked: 1, done: 1, failures: [] })
+})
+
+test('counts an answer by the error it carries on the first read', async () => {
+	const refused = new Error('refused')
+	let reads = 0
+	const answer = {
+		get error() {
+			reads += 1
+			return reads === 1 ? refused : undefined
+		},
+	}
+
+	const outcome = await runEach(['first'], async () => answer)
+
+	expect(outcome).toEqual({ asked: 1, done: 0, failures: [{ item: 'first', error: refused }] })
+})
+
 test('counts a call that throws before it returns a promise as a failure', async () => {
 	const refused = new Error('refused')
 
