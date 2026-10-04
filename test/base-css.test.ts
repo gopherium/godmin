@@ -522,6 +522,41 @@ test('lines up a notice in a list region with the title rather than the canvas e
 	expect(ruleOf(notice)).toMatch(/margin-inline:\s*var\(--wpds-dimension-padding-2xl\)/)
 })
 
+/** The selector of an overlay laid over a list region, such as a drop zone. */
+const listOverlay = [
+	'.godmin-page > .godmin-page__list > .godmin-list-overlay',
+	'.godmin-page__main > .godmin-page__list > .godmin-list-overlay',
+	'.godmin-list > .godmin-list-overlay',
+].join(',\n\t')
+
+test('makes a list region holding an overlay the box the overlay covers', () => {
+	expect(ruleOf('.godmin-page__list:has(> .godmin-list-overlay),\n\t.godmin-list:has(> .godmin-list-overlay)')).toMatch(
+		/position:\s*relative/,
+	)
+})
+
+test('covers the whole list region with an overlay, out of the flow of the list', () => {
+	const overlay = ruleOf(listOverlay)
+
+	expect(overlay).toMatch(/position:\s*absolute/)
+	expect(overlay).toMatch(/inset:\s*0/)
+})
+
+test('covers the list region in the main column of a page with an aside', () => {
+	const aside = '.godmin-page__main > .godmin-page__list > .godmin-list-overlay'
+	const at = base.indexOf(aside)
+
+	expect(at, `the stylesheet has no ${aside} selector`).toBeGreaterThan(-1)
+	expect(base.slice(base.indexOf('{', at), base.indexOf('}', at))).toMatch(/position:\s*absolute;\s*inset:\s*0/)
+})
+
+test('keeps the overlay off the margin a notice in a list region takes, by coming after that rule', () => {
+	const notice = '.godmin-page > .godmin-page__list > :not(.dataviews-wrapper, .godmin-table-scroll, .godmin-table)'
+
+	expect(ruleOf(listOverlay)).toMatch(/margin:\s*0/)
+	expect(base.indexOf(`${listOverlay} {`)).toBeGreaterThan(base.indexOf(`${notice} {`))
+})
+
 test('caps a form at the large surface width', () => {
 	expect(ruleOf('.godmin-form')).toMatch(/max-width:\s*var\(--wpds-dimension-surface-width-lg\)/)
 })
