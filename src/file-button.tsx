@@ -22,16 +22,16 @@ export interface FileButtonProps {
 }
 
 /**
- * Hands the files an input holds to the handler, none for a closed dialog, then empties the input.
+ * Empties the input, then hands the files it held to the handler, none for a closed dialog.
  * @param event - The change the input reported.
  * @param onChoose - Takes the files the reader chose.
  */
 function handOver(event: ChangeEvent<HTMLInputElement>, onChoose: (files: File[]) => void): void {
 	const files = Array.from(event.target.files ?? [])
+	event.target.value = ''
 	if (files.length > 0) {
 		onChoose(files)
 	}
-	event.target.value = ''
 }
 
 /**

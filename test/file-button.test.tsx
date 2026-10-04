@@ -115,6 +115,17 @@ test('empties its input after a choice, so the same file can be chosen again', (
 	expect(written).toEqual([''])
 })
 
+test('empties its input before it hands the files over, so a failing handler lets the reader choose again', () => {
+	const written: string[] = []
+	const seen: string[][] = []
+	const { input } = renderButton({ onChoose: () => seen.push([...written]) })
+	Object.defineProperty(input, 'value', { configurable: true, get: () => '', set: (value) => written.push(value) })
+
+	fireEvent.change(input, { target: { files: [fileNamed('first.png')] } })
+
+	expect(seen).toEqual([['']])
+})
+
 test('takes the file types it is given and one file by default', () => {
 	const { input } = renderButton({ accept: 'image/*' })
 
