@@ -97,6 +97,16 @@ test('keeps acting on the items it was given while the calls change the list', a
 	expect(outcome).toEqual({ asked: 2, done: 1, failures: [{ item: 'second', error: refused }] })
 })
 
+test('leaves an empty slot in the items out of the calls and the counts', async () => {
+	const call = vi.fn(async () => {})
+	const rows: string[] = []
+	rows[0] = 'first'
+	rows[2] = 'third'
+
+	expect(await runEach(rows, call)).toEqual({ asked: 2, done: 2, failures: [] })
+	expect(call.mock.calls).toEqual([['first'], ['third']])
+})
+
 test('asks nothing when no item is given', async () => {
 	const call = vi.fn(async () => {})
 

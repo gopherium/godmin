@@ -43,7 +43,7 @@ function failureOf<Item>(settled: PromiseSettledResult<unknown>, item: Item): Bu
 
 /**
  * Runs one call for each item, all at once, and counts the calls that finished and the ones that failed.
- * @param items - The items to act on.
+ * @param items - The items to act on, an empty slot left out.
  * @param call - The action on one item, failing when it rejects, throws, or answers with an error.
  * @returns How many items were asked, how many finished, and each failure with its item.
  */
@@ -51,7 +51,7 @@ export async function runEach<Item>(
 	items: readonly Item[],
 	call: (item: Item) => Promise<unknown>,
 ): Promise<BulkOutcome<Item>> {
-	const given = [...items]
+	const given = items.filter(() => true)
 	const settled = await Promise.allSettled(given.map(async (item) => call(item)))
 	const failures = settled.flatMap((result, at) => failureOf(result, given[at]))
 	return { asked: given.length, done: given.length - failures.length, failures }
