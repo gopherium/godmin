@@ -4,6 +4,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `pageWindow` turns a list view into the limit and offset to ask a server for, held under an optional cap.
+- `paginationOf` turns a page the server served into the totals a DataViews list pages through.
+- `useServerPaging` records the page size the server used for each request and steps the offset by it while the view asks that same size.
+- `runEach` runs one call per item at once and answers how many were asked, how many finished and which failed, counting an answer that carries an error as a failure.
+
 ## [0.14.1] - 2026-10-03
 
 ### Fixed
