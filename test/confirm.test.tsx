@@ -1,0 +1,98 @@
+// SPDX-License-Identifier: Apache-2.0
+
+import { fireEvent, render, screen } from '@testing-library/react'
+import { Button } from '@wordpress/ui'
+import type { ComponentProps } from 'react'
+import { expect, test, vi } from 'vitest'
+
+import { ConfirmBody } from '../src/index'
+import { installTestEnvironment, renderAdmin } from '../src/testing.js'
+
+installTestEnvironment()
+
+/**
+ * Renders a confirmation body asking to trash a post, with spies for its handlers.
+ * @param props - The busy flag and the failure to show.
+ * @returns The confirm and cancel spies.
+ */
+function renderConfirm(props: { busy?: boolean; failure?: string } = {}) {
+	const onConfirm = vi.fn()
+	const onCancel = vi.fn()
+	renderAdmin(
+		<ConfirmBody confirmLabel="Trash" cancelLabel="Cancel" onConfirm={onConfirm} onCancel={onCancel} {...props}>
+			Are you sure you want to move "Hello" to the trash?
+		</ConfirmBody>,
+	)
+	return { onConfirm, onCancel }
+}
+
+/**
+ * Returns the classes a design system button draws with at the given variant.
+ * @param variant - The button variant to sample.
+ * @returns The class list.
+ */
+function classesOf(variant: ComponentProps<typeof Button>['variant']): string {
+	const { container, unmount } = render(<Button variant={variant}>probe</Button>)
+	const classes = (container.firstElementChild as Element).className
+	unmount()
+	return classes
+}
+
+test('asks its question', () => {
+	renderConfirm()
+
+	expect(screen.getByText('Are you sure you want to move "Hello" to the trash?')).not.toBeNull()
+})
+
+test('confirms when the confirm button is pressed', () => {
+	const { onConfirm, onCancel } = renderConfirm()
+
+	fireEvent.click(screen.getByRole('button', { name: 'Trash' }))
+
+	expect(onConfirm).toHaveBeenCalledOnce()
+	expect(onCancel).not.toHaveBeenCalled()
+})
+
+test('cancels when Cancel is pressed', () => {
+	const { onConfirm, onCancel } = renderConfirm()
+
+	fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+	expect(onCancel).toHaveBeenCalledOnce()
+	expect(onConfirm).not.toHaveBeenCalled()
+})
+
+test('draws Cancel as a minimal button and the confirm as the solid blue one', () => {
+	renderConfirm()
+
+	expect(screen.getByRole('button', { name: 'Cancel' }).className).toBe(classesOf('minimal'))
+	expect(screen.getByRole('button', { name: 'Trash' }).className).toBe(classesOf('solid'))
+})
+
+test('puts the confirm button after Cancel', () => {
+	renderConfirm()
+
+	expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Cancel', 'Trash'])
+})
+
+test('keeps the confirm button from a second press while the action runs', () => {
+	const { onConfirm } = renderConfirm({ busy: true })
+	const confirm = screen.getByRole('button', { name: 'Trash' })
+
+	fireEvent.click(confirm)
+
+	expect(confirm.getAttribute('aria-disabled')).toBe('true')
+	expect(onConfirm).not.toHaveBeenCalled()
+})
+
+test('shows a failure inside the body, announced as an alert', () => {
+	renderConfirm({ failure: 'The post could not be moved to the trash.' })
+
+	expect(screen.getByRole('alert').textContent).toBe('The post could not be moved to the trash.')
+})
+
+test('shows no alert while nothing failed', () => {
+	renderConfirm()
+
+	expect(screen.queryByRole('alert')).toBeNull()
+})

@@ -7,6 +7,8 @@ export type { InitialsAvatarProps } from './avatar.js'
 export { DENSE_BREAKPOINT, EDGE_BREAKPOINT, RAIL_BREAKPOINT, SMALL_VIEWPORT } from './breakpoints.js'
 export { runEach } from './bulk.js'
 export type { BulkFailure, BulkOutcome } from './bulk.js'
+export { ConfirmBody } from './confirm.js'
+export type { ConfirmBodyProps } from './confirm.js'
 export { Frame } from './frame.js'
 export type {
 	CanvasMode,
