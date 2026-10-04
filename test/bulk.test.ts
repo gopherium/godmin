@@ -42,6 +42,12 @@ test('counts an answer with no error as done', async () => {
 	expect(await runEach(['first'], async () => ({ data: { saved: true } }))).toEqual({ asked: 1, done: 1, failures: [] })
 })
 
+test('counts an answer whose error is null as done', async () => {
+	const outcome = await runEach(['first'], async () => ({ data: { saved: true }, error: null }))
+
+	expect(outcome).toEqual({ asked: 1, done: 1, failures: [] })
+})
+
 test('counts a call that throws before it returns a promise as a failure', async () => {
 	const refused = new Error('refused')
 
