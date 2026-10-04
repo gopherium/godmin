@@ -23,6 +23,11 @@ pnpm add @gopherium/godmin
 The design system packages are peer dependencies, so your application resolves
 and pins them. GodMin never redistributes them.
 
+## Browsers
+
+GodMin needs `Intl.Segmenter`, which every browser WordPress supports has:
+Chrome and Edge 87, Safari 14.1 and Firefox 125 or newer.
+
 ## Setup
 
 Import the stylesheet once at your entry point, then mount `AdminRoot` around
