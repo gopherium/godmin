@@ -170,6 +170,16 @@ test('steps by the size asked when a late answer to an older page size arrives',
 	expect(paging.result.current).toEqual({ limit: 50, offset: 100 })
 })
 
+test('keeps the size served for the current page size when a late answer to an older one arrives', () => {
+	const paging = renderPaging({ page: 3, perPage: 50 })
+	paging.rerender({ view: { page: 3, perPage: 50 }, page: { total: 100, limit: 30 } })
+	expect(paging.result.current).toEqual({ limit: 50, offset: 60 })
+
+	paging.rerender({ view: { page: 3, perPage: 50 }, page: { total: 100, limit: 20 }, asked: 20 })
+
+	expect(paging.result.current).toEqual({ limit: 50, offset: 60 })
+})
+
 test('records a page built afresh on every render once', () => {
 	const paging = renderPaging({ page: 2, perPage: 50 })
 	paging.rerender({ view: { page: 2, perPage: 50 }, page: { total: 100, limit: 30 } })
