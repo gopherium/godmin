@@ -9,6 +9,8 @@ export { bulkNotes, runEach } from './bulk.js'
 export type { BulkFailure, BulkNotes, BulkOutcome, BulkWords } from './bulk.js'
 export { ConfirmBody } from './confirm.js'
 export type { ConfirmBodyProps } from './confirm.js'
+export { FileButton } from './file-button.js'
+export type { FileButtonProps } from './file-button.js'
 export { Frame } from './frame.js'
 export type {
 	CanvasMode,
