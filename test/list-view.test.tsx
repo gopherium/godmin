@@ -447,6 +447,42 @@ test('a tap that lands on no row opens nothing', () => {
 	expect(opened).toEqual([])
 })
 
+/**
+ * Renders the probe on a route whose address names the list it shows.
+ * @param path - The address the memory history starts on.
+ * @param next - The change the probe writes when asked.
+ * @returns The router the probe renders under.
+ */
+function renderKindProbe(path: string, next: Change) {
+	const rootRoute = createRootRoute()
+	const kindRoute = createRoute({
+		getParentRoute: () => rootRoute,
+		path: '/lists/$kind',
+		validateSearch: listSearch,
+		component: () => <Probe next={next} opening={defaults} />,
+	})
+	const router = createRouter({
+		routeTree: rootRoute.addChildren([kindRoute]),
+		history: createMemoryHistory({ initialEntries: [path] }),
+	})
+	render(<RouterProvider router={router} />)
+	return router
+}
+
+test('a screen that moves to another list forgets the columns and ticks of the one it left', async () => {
+	const router = renderKindProbe('/lists/people', (view) => ({ ...view, fields: ['email'] }))
+	fireEvent.click(await screen.findByRole('button', { name: 'Change' }))
+	fireEvent.click(screen.getByRole('button', { name: 'Tick' }))
+	await screen.findByText('["1"]')
+
+	await act(async () => {
+		await router.navigate({ to: '/lists/$kind', params: { kind: 'teams' } })
+	})
+
+	expect(await shown('view')).toMatchObject({ fields: ['email', 'status'] })
+	expect(await shown('selection')).toEqual([])
+})
+
 test('a tick in a table stays a selection and opens nothing', () => {
 	const ticked: string[][] = []
 	const opened: string[] = []

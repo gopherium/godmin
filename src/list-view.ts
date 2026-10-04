@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { useNavigate, useSearch } from '@tanstack/react-router'
+import { useMatch, useNavigate, useSearch } from '@tanstack/react-router'
 import { useState } from 'react'
+import type { Dispatch, SetStateAction } from 'react'
 
 import { DENSE_BREAKPOINT } from './breakpoints.js'
 import { useMediaQuery } from './use-media-query.js'
@@ -303,18 +304,34 @@ function besideList(held: Record<string, unknown>): Record<string, unknown> {
 }
 
 /**
- * Holds the rows ticked in the wide layout, none in the phone layout, and drops them when the viewport flips.
+ * Holds the rows ticked in the wide layout, none on a phone, and drops them when the layout or the list changes.
  * @param phone - Whether the viewport takes the phone layout.
+ * @param list - The address of the list the screen shows.
  * @returns The selection beside the control that changes it.
  */
-function useSelection(phone: boolean): ListSelection {
+function useSelection(phone: boolean, list: string): ListSelection {
 	const [ticked, setTicked] = useState(NO_SELECTION)
-	const [tickedOnPhone, setTickedOnPhone] = useState(phone)
-	if (tickedOnPhone !== phone) {
-		setTickedOnPhone(phone)
+	const [tickedFor, setTickedFor] = useState({ phone, list })
+	if (tickedFor.phone !== phone || tickedFor.list !== list) {
+		setTickedFor({ phone, list })
 		setTicked(NO_SELECTION)
 	}
 	return phone ? INERT : { selection: ticked, onChangeSelection: setTicked }
+}
+
+/**
+ * Holds the columns a reader picked on each side of the phone breakpoint, and forgets them when the list changes.
+ * @param list - The address of the list the screen shows.
+ * @returns The picked columns beside the setter that changes them.
+ */
+function useShapes(list: string): [Record<ListSide, ListShape>, Dispatch<SetStateAction<Record<ListSide, ListShape>>>] {
+	const [shapes, setShapes] = useState(NO_SHAPES)
+	const [shapedFor, setShapedFor] = useState(list)
+	if (shapedFor !== list) {
+		setShapedFor(list)
+		setShapes(NO_SHAPES)
+	}
+	return [shapes, setShapes]
 }
 
 /**
@@ -328,8 +345,9 @@ export function useListView<V extends ListViewShape>(defaults: ListDefaults): Li
 	const phone = useMediaQuery(PHONE_QUERY)
 	const side: ListSide = phone ? 'phone' : 'wide'
 	const layout = (defaults.layouts ?? TABLE_AND_LIST)[side]
-	const [shapes, setShapes] = useState(NO_SHAPES)
-	const selection = useSelection(phone)
+	const list = useMatch({ strict: false, select: (match) => match.pathname })
+	const [shapes, setShapes] = useShapes(list)
+	const selection = useSelection(phone, list)
 	return {
 		view: viewOf(listSearch(raw), defaults, shapes[side], side, layout) as V,
 		onChangeView: (view) => {
