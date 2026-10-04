@@ -1,16 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { setup, speak } from '@wordpress/a11y'
-import { screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import { Badge, Button, Text } from '@wordpress/ui'
+import type { ReactElement } from 'react'
 import { beforeAll, expect, test } from 'vitest'
 
 import {
 	WPDS_IGNORE_SELECTOR,
 	assertElementPatched,
+	badgeClasses,
+	buttonClasses,
 	clearAnnouncements,
 	getAnnouncement,
 	installTestEnvironment,
 	renderAdmin,
+	textClasses,
 } from '../src/testing'
 
 interface LegacyMediaQueryList {
@@ -173,6 +178,40 @@ test('leaves an existing resize observer alone', () => {
 	installTestEnvironment()
 
 	expect(globalThis.ResizeObserver).toBe(existing)
+})
+
+/**
+ * Returns the classes the outer element of a tree draws with, rendered here for comparison.
+ * @param tree - The tree to draw.
+ * @returns The class names in order.
+ */
+function drawn(tree: ReactElement): string[] {
+	const { container, unmount } = render(tree)
+	const classes = [...(container.firstElementChild as Element).classList]
+	unmount()
+	return classes
+}
+
+test('samples the classes a text draws at a variant', () => {
+	expect(textClasses('heading-lg')).toEqual(drawn(<Text variant="heading-lg" />))
+	expect(textClasses('heading-lg')).not.toEqual(textClasses('body-md'))
+})
+
+test('samples the classes a badge draws at an intent', () => {
+	expect(badgeClasses('none')).toEqual(drawn(<Badge intent="none">probe</Badge>))
+	expect(badgeClasses('none')).not.toEqual(badgeClasses('stable'))
+})
+
+test('samples the classes a button draws at a variant and a size', () => {
+	expect(buttonClasses('solid', 'compact')).toEqual(drawn(<Button variant="solid" size="compact">probe</Button>))
+	expect(buttonClasses('solid', 'compact')).not.toEqual(buttonClasses('solid'))
+	expect(buttonClasses('minimal')).toEqual(drawn(<Button variant="minimal">probe</Button>))
+})
+
+test('leaves nothing on the page once it sampled', () => {
+	buttonClasses('outline')
+
+	expect(document.body.textContent).not.toContain('probe')
 })
 
 test('leaves an existing media query implementation alone', () => {

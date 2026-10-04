@@ -2,7 +2,8 @@
 
 import { cleanup, configure, render } from '@testing-library/react'
 import type { RenderOptions, RenderResult } from '@testing-library/react'
-import type { ReactNode } from 'react'
+import { Badge, Button, Text } from '@wordpress/ui'
+import type { ComponentProps, ReactElement, ReactNode } from 'react'
 import { afterEach } from 'vitest'
 
 import { AdminRoot } from './admin-root.js'
@@ -187,6 +188,53 @@ export function installTestEnvironment(): void {
 	afterEach(cleanup)
 	afterEach(clearAnnouncements)
 	afterEach(resetViewport)
+}
+
+/**
+ * Returns the classes the outer element of a tree draws with, removing the tree once read.
+ * @param tree - The tree to sample.
+ * @returns The class names, in order.
+ */
+function classesOf(tree: ReactElement): string[] {
+	const { container, unmount } = render(tree)
+	const classes = [...(container.firstElementChild as Element).classList]
+	unmount()
+	return classes
+}
+
+/**
+ * Returns the classes a design system text draws at the given variant.
+ * @param variant - The text variant to sample.
+ * @returns The class names, in order.
+ */
+export function textClasses(variant: ComponentProps<typeof Text>['variant']): string[] {
+	return classesOf(<Text variant={variant} />)
+}
+
+/**
+ * Returns the classes a design system badge draws at the given intent.
+ * @param intent - The badge intent to sample.
+ * @returns The class names, in order.
+ */
+export function badgeClasses(intent: ComponentProps<typeof Badge>['intent']): string[] {
+	return classesOf(<Badge intent={intent}>probe</Badge>)
+}
+
+/**
+ * Returns the classes a design system button draws at the given variant and size.
+ * @param variant - The button variant to sample.
+ * @param size - The button size, the default one when absent.
+ * @returns The class names, in order.
+ */
+export function buttonClasses(
+	variant: ComponentProps<typeof Button>['variant'],
+	size?: ComponentProps<typeof Button>['size'],
+): string[] {
+	return classesOf(
+		<Button variant={variant} size={size}>
+			probe
+		</Button>,
+	)
 }
 
 /**
