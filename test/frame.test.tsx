@@ -166,6 +166,60 @@ test('leaves a padded canvas unmarked', () => {
 	expect(screen.getByRole('main').className).not.toContain('--bleed')
 })
 
+/**
+ * Returns the value one design token takes on the nearest theme around an element.
+ * @param element - The element the theme wraps.
+ * @param token - The custom property name.
+ * @returns The value the nearest theme sets.
+ */
+function tokenAround(element: Element, token: string): string {
+	return (element.closest(`[style*="${token}:"]`) as HTMLElement).style.getPropertyValue(token)
+}
+
+test('paints the canvas from the default WordPress palette when no colour is given, its greys as wp-admin', () => {
+	renderFrame()
+	const canvas = screen.getByRole('main')
+
+	expect(tokenAround(canvas, '--wpds-color-background-surface-neutral-strong')).toBe('#fff')
+	expect(tokenAround(canvas, '--wpds-color-stroke-surface-neutral-weak')).toBe('#f0f0f0')
+	expect(tokenAround(canvas, '--wpds-color-stroke-interactive-neutral-strong')).toBe('#6e6e6e')
+	expect(tokenAround(canvas, '--wpds-color-stroke-interactive-neutral')).toBe('#8d8d8d')
+	expect(tokenAround(canvas, '--wpds-color-foreground-content-neutral-weak')).toBe('#707070')
+})
+
+test('paints the rail and the top bar one step from the WordPress admin bar grey when no colour is given', () => {
+	renderFrame()
+	const token = '--wpds-color-background-surface-neutral-weak'
+
+	expect(tokenAround(document.querySelector('.godmin-layout') as Element, token)).toBe('#1d2428')
+})
+
+test('keeps the canvas on the default WordPress palette when only the chrome colour is given', () => {
+	renderAdmin(
+		<Frame.Root chromeColor={{ background: '#1e1e1e' }}>
+			<Frame.Canvas>
+				<p>Canvas content</p>
+			</Frame.Canvas>
+		</Frame.Root>,
+	)
+
+	expect(tokenAround(screen.getByRole('main'), '--wpds-color-stroke-surface-neutral-weak')).toBe('#f0f0f0')
+})
+
+test('paints the chrome and the canvas from the colours an application gives', () => {
+	renderAdmin(
+		<Frame.Root chromeColor={{ background: '#1e1e1e' }} canvasColor={{ background: '#ffffff' }}>
+			<Frame.Canvas>
+				<p>Canvas content</p>
+			</Frame.Canvas>
+		</Frame.Root>,
+	)
+	const token = '--wpds-color-background-surface-neutral-weak'
+
+	expect(tokenAround(document.querySelector('.godmin-layout') as Element, token)).toBe('#171717')
+	expect(tokenAround(screen.getByRole('main'), '--wpds-color-stroke-surface-neutral-weak')).toBe('#f3f3f3')
+})
+
 test('collapses the rail region when a screen renders none', () => {
 	renderAdmin(
 		<Frame.Root>

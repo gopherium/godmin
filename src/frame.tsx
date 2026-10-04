@@ -27,6 +27,15 @@ const menuIcon = (
 	</svg>
 )
 
+/**
+ * The chrome background seeded when an application names none.
+ */
+const CHROME_COLOR = { background: '#26292b' }
+
+/**
+ * The canvas background seeded when an application names none, the design system default background.
+ */
+const CANVAS_COLOR = { background: '#fcfcfc' }
 
 interface FrameState {
 	small: boolean
@@ -39,7 +48,9 @@ const FrameContext = createContext<FrameState>({ small: false, location: undefin
 export interface FrameRootProps {
 	children: ReactNode
 	location?: string
+	/** The theme colour of the frame, a #26292b background when absent. */
 	chromeColor?: ThemeColor
+	/** The theme colour of the canvas, a #fcfcfc background when absent. */
 	canvasColor?: ThemeColor
 }
 
@@ -48,7 +59,7 @@ export interface FrameRootProps {
  * @param props - The regions, the current location, and the region colors.
  * @returns The frame element.
  */
-function Root({ children, location, chromeColor, canvasColor }: FrameRootProps) {
+function Root({ children, location, chromeColor = CHROME_COLOR, canvasColor = CANVAS_COLOR }: FrameRootProps) {
 	const small = useMediaQuery(SMALL_VIEWPORT)
 	const [layout, setLayout] = useState<HTMLElement | null>(null)
 	const classes = small ? 'godmin-layout godmin-layout--small' : 'godmin-layout'
