@@ -83,6 +83,20 @@ test('lists the failures in the order of the items', async () => {
 	expect(outcome.failures.map((failure) => failure.item)).toEqual(['second', 'third'])
 })
 
+test('keeps acting on the items it was given while the calls change the list', async () => {
+	const refused = new Error('refused')
+	const rows = ['first', 'second']
+
+	const outcome = await runEach(rows, async (item) => {
+		rows.splice(0, rows.length, 'other')
+		if (item === 'second') {
+			throw refused
+		}
+	})
+
+	expect(outcome).toEqual({ asked: 2, done: 1, failures: [{ item: 'second', error: refused }] })
+})
+
 test('asks nothing when no item is given', async () => {
 	const call = vi.fn(async () => {})
 

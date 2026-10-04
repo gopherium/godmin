@@ -51,7 +51,8 @@ export async function runEach<Item>(
 	items: readonly Item[],
 	call: (item: Item) => Promise<unknown>,
 ): Promise<BulkOutcome<Item>> {
-	const settled = await Promise.allSettled(items.map(async (item) => call(item)))
-	const failures = settled.flatMap((result, at) => failureOf(result, items[at]))
-	return { asked: items.length, done: items.length - failures.length, failures }
+	const given = [...items]
+	const settled = await Promise.allSettled(given.map(async (item) => call(item)))
+	const failures = settled.flatMap((result, at) => failureOf(result, given[at]))
+	return { asked: given.length, done: given.length - failures.length, failures }
 }
