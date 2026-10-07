@@ -40,12 +40,14 @@ export function RenameBody({
 	onCancel,
 }: RenameBodyProps) {
 	const [value, setValue] = useState(name)
-	const ready = value.trim() !== '' && value !== name
+	const writable = !busy && value.trim() !== '' && value !== name
 	return (
 		<form
 			onSubmit={(event) => {
 				event.preventDefault()
-				onSubmit(value)
+				if (writable) {
+					onSubmit(value)
+				}
 			}}
 		>
 			<Stack direction="column" gap="lg">
@@ -55,7 +57,7 @@ export function RenameBody({
 					<Button variant="minimal" onClick={onCancel}>
 						{cancelLabel}
 					</Button>
-					<Button type="submit" loading={busy} disabled={busy || !ready}>
+					<Button type="submit" loading={busy} disabled={!writable}>
 						{submitLabel}
 					</Button>
 				</Stack>

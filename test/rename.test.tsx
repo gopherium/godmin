@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, render, screen } from '@testing-library/react'
+import { userEvent } from '@testing-library/user-event'
 import { Button } from '@wordpress/ui'
-import { expect, test, vi } from 'vitest'
+import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { RenameBody } from '../src/index'
 import { buttonClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
@@ -59,6 +60,26 @@ function type(value: string): void {
 	fireEvent.change(field(), { target: { value } })
 }
 
+/**
+ * Submits the rename form from code, as a caller holding the form can, without the submit button.
+ */
+function submitFromCode(): void {
+	const form = field().form as HTMLFormElement
+	form.requestSubmit()
+}
+
+/**
+ * Watches every form submit that reaches the window until the test ends.
+ * @returns One flag per submit, true when the submit was kept from leaving the page.
+ */
+function watchSubmits(): boolean[] {
+	const kept: boolean[] = []
+	const listener = (event: Event) => kept.push(event.defaultPrevented)
+	window.addEventListener('submit', listener)
+	onTestFinished(() => window.removeEventListener('submit', listener))
+	return kept
+}
+
 test('labels the field with the given label and fills it with the current name', () => {
 	renderRename()
 
@@ -75,14 +96,76 @@ test('writes the typed name when the submit button is pressed', () => {
 	expect(onCancel).not.toHaveBeenCalled()
 })
 
-test('writes the typed name when the form is submitted, as Enter in the field does, and stays on the page', () => {
+test('writes the typed name once when Enter is pressed in the field, and stays on the page', async () => {
 	const { onSubmit } = renderRename()
+	const kept = watchSubmits()
 
-	type('Hello world')
-	const navigates = fireEvent.submit(field().form as HTMLFormElement)
+	await userEvent.setup().type(field(), ' world{Enter}')
 
 	expect(onSubmit).toHaveBeenCalledExactlyOnceWith('Hello world')
-	expect(navigates, 'the browser would send the form and leave the page').toBe(false)
+	expect(kept, 'the browser would send the form and leave the page').toEqual([true])
+})
+
+test('writes nothing when Enter is pressed in the field with the name the item already has', async () => {
+	const { onSubmit } = renderRename()
+
+	await userEvent.setup().type(field(), '{Enter}')
+
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('writes nothing when Enter is pressed in the field with a blank name', async () => {
+	const { onSubmit } = renderRename()
+	const user = userEvent.setup()
+
+	await user.clear(field())
+	await user.type(field(), '   {Enter}')
+
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('writes nothing when Enter is pressed in the field while the write runs', async () => {
+	const { onSubmit, rerender } = renderRename()
+	const user = userEvent.setup()
+	await user.type(field(), ' world')
+	rerender({ busy: true })
+
+	await user.type(field(), '{Enter}')
+
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('writes nothing when code submits the form with the name the item already has, and stays on the page', () => {
+	const { onSubmit } = renderRename()
+	const kept = watchSubmits()
+
+	submitFromCode()
+
+	expect(onSubmit).not.toHaveBeenCalled()
+	expect(kept, 'the browser would send the form and leave the page').toEqual([true])
+})
+
+test('writes nothing when code submits the form with a blank name, and stays on the page', () => {
+	const { onSubmit } = renderRename()
+	const kept = watchSubmits()
+
+	type('   ')
+	submitFromCode()
+
+	expect(onSubmit).not.toHaveBeenCalled()
+	expect(kept, 'the browser would send the form and leave the page').toEqual([true])
+})
+
+test('writes nothing when code submits the form while the write runs, and stays on the page', () => {
+	const { onSubmit, rerender } = renderRename()
+	const kept = watchSubmits()
+	type('Hello world')
+	rerender({ busy: true })
+
+	submitFromCode()
+
+	expect(onSubmit).not.toHaveBeenCalled()
+	expect(kept, 'the browser would send the form and leave the page').toEqual([true])
 })
 
 test('makes the submit button the one Enter presses, and never Cancel', () => {
