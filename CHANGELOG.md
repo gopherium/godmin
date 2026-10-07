@@ -13,6 +13,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `openOnTap` opens the record a tap lands on in the phone layout of a list.
 - `ListEmpty` draws the empty state of a list: an icon, a title and an optional hint.
 - `ConfirmBody` draws the body of a confirmation modal: the question, a failure notice, Cancel and the confirm button.
+- `RenameBody` draws the body of a rename modal: the name field, a failure notice under it, Cancel and the submit button.
 - `bulkNotes` turns a bulk outcome into one toast and one notice in your own words.
 - `FileButton` draws a compact upload button over a hidden file input, with an optional icon.
 - `useToaster().name` cuts a name longer than `nameLength` and ends it with an ellipsis. `Toaster` takes `nameLength`, 45 by default.
