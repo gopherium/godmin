@@ -232,6 +232,36 @@ test('keeps the submit button from a second press while the write runs, and show
 	expect([...submit.classList]).toEqual(loadingClasses())
 })
 
+test('greys Cancel out and keeps it from closing the modal while the write runs', () => {
+	const { onSubmit, onCancel, rerender } = renderRename()
+	type('Hello world')
+	rerender({ busy: true })
+	const cancel = screen.getByRole('button', { name: 'Cancel' })
+
+	fireEvent.click(cancel)
+
+	expect(cancel.getAttribute('aria-disabled')).toBe('true')
+	expect(cancel.hasAttribute('data-disabled'), 'the design system greys out only a data-disabled button').toBe(true)
+	expect([...cancel.classList]).toEqual(buttonClasses('minimal'))
+	expect(onCancel).not.toHaveBeenCalled()
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('keeps a greyed Cancel focusable, and Enter or Space on it closes nothing while the write runs', async () => {
+	const { onSubmit, onCancel, rerender } = renderRename()
+	const user = userEvent.setup()
+	await user.type(field(), ' world')
+	rerender({ busy: true })
+
+	await user.tab()
+	await user.keyboard('{Enter}')
+	await user.keyboard(' ')
+
+	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' }))
+	expect(onCancel).not.toHaveBeenCalled()
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
 test('shows a failure under the field, announced as an alert, with the typed name kept', () => {
 	const { rerender } = renderRename()
 	type('Hello world')

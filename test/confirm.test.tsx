@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, render, screen } from '@testing-library/react'
+import { userEvent } from '@testing-library/user-event'
 import { Button } from '@wordpress/ui'
 import type { ComponentProps } from 'react'
 import { expect, test, vi } from 'vitest'
@@ -83,6 +84,31 @@ test('keeps the confirm button from a second press while the action runs', () =>
 
 	expect(confirm.getAttribute('aria-disabled')).toBe('true')
 	expect(onConfirm).not.toHaveBeenCalled()
+})
+
+test('greys Cancel out and keeps it from closing the modal while the action runs', () => {
+	const { onConfirm, onCancel } = renderConfirm({ busy: true })
+	const cancel = screen.getByRole('button', { name: 'Cancel' })
+
+	fireEvent.click(cancel)
+
+	expect(cancel.getAttribute('aria-disabled')).toBe('true')
+	expect(cancel.hasAttribute('data-disabled'), 'the design system greys out only a data-disabled button').toBe(true)
+	expect(cancel.className).toBe(classesOf('minimal'))
+	expect(onCancel).not.toHaveBeenCalled()
+	expect(onConfirm).not.toHaveBeenCalled()
+})
+
+test('keeps a greyed Cancel focusable, and Enter or Space on it closes nothing while the action runs', async () => {
+	const { onCancel } = renderConfirm({ busy: true })
+	const user = userEvent.setup()
+
+	await user.tab()
+	await user.keyboard('{Enter}')
+	await user.keyboard(' ')
+
+	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' }))
+	expect(onCancel).not.toHaveBeenCalled()
 })
 
 test('shows a failure inside the body, announced as an alert', () => {
