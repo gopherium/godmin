@@ -42,6 +42,66 @@ const CALL = new RegExp(String.raw`\b(__|_x|_n)\(\s*(${QUOTED})(?:\s*,\s*(${QUOT
 const FIELD = /^(msgctxt|msgid_plural|msgid|msgstr)(?:\[(\d+)\])? (".*")$/
 const MARK = /%(?:\d+\$)?[ds]|<\/?[A-Za-z]+(?: \/)?>/g
 
+/** The words the WordPress Spanish catalogue gives each message the DataViews filters ask for, by lookup key. */
+const WORDPRESS_FILTER_WORDS: Record<string, string> = {
+	'<Name>%1$s between (inc): </Name><Value>%2$s and %3$s</Value>':
+		'<Name>%1$s entre (incl.): </Name><Value>%2$s y %3$s</Value>',
+	'<Name>%1$s contains: </Name><Value>%2$s</Value>': '<Name>%1$s contiene: </Name><Value>%2$s</Value>',
+	"<Name>%1$s doesn't contain: </Name><Value>%2$s</Value>": '<Name>%1$s no contiene: </Name><Value>%2$s</Value>',
+	'<Name>%1$s includes all: </Name><Value>%2$s</Value>': '<Name>%1$s incluye todo: </Name><Value>%2$s</Value>',
+	'<Name>%1$s includes: </Name><Value>%2$s</Value>': '<Name>%1$s incluye: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is after: </Name><Value>%2$s</Value>': '<Name>%1$s es después de: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is before: </Name><Value>%2$s</Value>': '<Name>%1$s es antes de: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is greater than or equal to: </Name><Value>%2$s</Value>':
+		'<Name>%1$s superior o igual a: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is greater than: </Name><Value>%2$s</Value>': '<Name>%1$s mayor que: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is in the past: </Name><Value>%2$s</Value>': '<Name>%1$s está en el pasado: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is less than or equal to: </Name><Value>%2$s</Value>':
+		'<Name>%1$s menor o igual a: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is less than: </Name><Value>%2$s</Value>': '<Name>%1$s es menor que: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is none of: </Name><Value>%2$s</Value>':
+		'<Name>%1$s no es ninguno de los siguientes: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is not: </Name><Value>%2$s</Value>': '<Name>%1$s no es: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is on or after: </Name><Value>%2$s</Value>': '<Name>%1$s es o es después de: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is on or before: </Name><Value>%2$s</Value>': '<Name>%1$s es o es antes de: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is over: </Name><Value>%2$s</Value>': '<Name>%1$s ha terminado: </Name><Value>%2$s</Value>',
+	'<Name>%1$s is: </Name><Value>%2$s</Value>': '<Name>%1$s es: </Name><Value>%2$s</Value>',
+	'<Name>%1$s starts with: </Name><Value>%2$s</Value>': '<Name>%1$s empieza por: </Name><Value>%2$s</Value>',
+	'Add filter': 'Añadir filtro',
+	After: 'Después',
+	'After (inc)': 'Después (incl.)',
+	Before: 'Antes',
+	'Before (inc)': 'Antes (incl.)',
+	'Between (inc)': 'Entre (incl.)',
+	Conditions: 'Condiciones',
+	Contains: 'Contiene',
+	"Doesn't contain": 'No contiene',
+	'Filter by: %1$s': 'Filtrar por: %1$s',
+	'Greater than': 'Mayor que',
+	'Greater than or equal': 'Superior a o igual',
+	'In the past': 'En el pasado',
+	Includes: 'Incluye',
+	'Includes all': 'Incluye todos',
+	Is: 'Es',
+	'Is none of': 'No es ninguno de',
+	'Is not': 'No es',
+	'Less than': 'Menor que',
+	'Less than or equal': 'Inferior a o igual',
+	'List of: %1$s': 'Lista de: %1$s',
+	'No elements found': 'No se han encontrado elementos',
+	'No results found': 'No se encontraron resultados',
+	'Not on': 'No el',
+	On: 'Conectado',
+	Over: 'Hace más de',
+	Remove: 'Eliminar',
+	Reset: 'Restablecer',
+	Search: 'Buscar',
+	'Search items': 'Buscar elementos',
+	'Starts with': 'Empieza con',
+	'Unknown status for %1$s': 'Estado desconocido para %1$s',
+	'verb\u0004Filter': 'Filtrar',
+}
+
 const [header, ...messages] = parsePo(readFileSync(resolve('src/list-chrome/es-ES.po'), 'utf8'))
 
 /**
@@ -193,6 +253,15 @@ function rendersInList(path: string): boolean {
 }
 
 /**
+ * Reports whether a DataViews module draws the list filters.
+ * @param path - The module path inside the build.
+ * @returns Whether the module is the filter operators or a filter component.
+ */
+function drawsFilters(path: string): boolean {
+	return path === 'utils/operators.mjs' || path.startsWith('components/dataviews-filters/')
+}
+
+/**
  * Returns the placeholders and tags a message carries, sorted.
  * @param text - The message or one of its translations.
  * @returns The marks.
@@ -246,6 +315,19 @@ test('reads every kind of gettext call the DataViews list chrome makes', () => {
 		if (path.endsWith('.mjs') && drawsListChrome(path)) {
 			expect(readFileSync(join(dataviewsBuild, path), 'utf8'), path).not.toMatch(/\b_nx\(/)
 		}
+	}
+})
+
+test('knows the WordPress Spanish words of every message the DataViews filters ask for', () => {
+	const asked = new Set(messagesIn(dataviewsBuild, drawsFilters).map(keyOf))
+
+	expect(asked.size, 'the reader found no filter message in the build').toBeGreaterThan(40)
+	expect(new Set(Object.keys(WORDPRESS_FILTER_WORDS))).toEqual(asked)
+})
+
+test('words every list filter as the WordPress Spanish catalogue does', () => {
+	for (const [key, words] of Object.entries(WORDPRESS_FILTER_WORDS)) {
+		expect(spanish[key], key).toEqual([words])
 	}
 })
 
