@@ -405,9 +405,36 @@ body {
 	}
 
 	.godmin-page-tabs {
+		--godmin-page-tabs-start: left;
+		--godmin-page-tabs-end: right;
+		--godmin-page-tabs-fade-width: 4rem;
+		--godmin-page-tabs-fade: transparent 0%, #000 var(--godmin-page-tabs-fade-width);
+		--godmin-page-tabs-fade-both: var(--godmin-page-tabs-fade), #000 60%, transparent 50%;
+
 		display: flex;
+		position: relative;
 		gap: var(--wpds-dimension-gap-lg);
 		overflow-x: auto;
+		overscroll-behavior-inline: none;
+	}
+
+	.godmin-page-tabs:dir(rtl) {
+		--godmin-page-tabs-start: right;
+		--godmin-page-tabs-end: left;
+	}
+
+	.godmin-page-tabs--overflowing-first {
+		mask-image: linear-gradient(to var(--godmin-page-tabs-end), var(--godmin-page-tabs-fade));
+	}
+
+	.godmin-page-tabs--overflowing-last {
+		mask-image: linear-gradient(to var(--godmin-page-tabs-start), var(--godmin-page-tabs-fade));
+	}
+
+	.godmin-page-tabs--overflowing-first.godmin-page-tabs--overflowing-last {
+		mask-image:
+			linear-gradient(to right, var(--godmin-page-tabs-fade-both)),
+			linear-gradient(to left, var(--godmin-page-tabs-fade-both));
 	}
 
 	.godmin-page-tabs__tab {
@@ -416,6 +443,7 @@ body {
 		position: relative;
 		block-size: 48px;
 		padding: 0;
+		scroll-margin: 24px;
 		color: var(--wpds-color-foreground-interactive-neutral);
 		font-family: var(--wpds-typography-font-family-body);
 		font-size: var(--wpds-typography-font-size-md);
