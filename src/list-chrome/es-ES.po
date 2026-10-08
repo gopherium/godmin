@@ -52,7 +52,7 @@ msgstr "<Name>%1$s no contiene: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s includes all: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s incluye todos: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s incluye todo: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s includes: </Name><Value>%2$s</Value>"
@@ -60,27 +60,27 @@ msgstr "<Name>%1$s incluye: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is after: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s es posterior a: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es después de: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is before: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s es anterior a: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es antes de: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is greater than or equal to: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s es mayor o igual que: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s superior o igual a: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is greater than: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s es mayor que: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s mayor que: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is in the past: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s en los últimos: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s está en el pasado: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is less than or equal to: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s es menor o igual que: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s menor o igual a: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is less than: </Name><Value>%2$s</Value>"
@@ -88,7 +88,7 @@ msgstr "<Name>%1$s es menor que: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is none of: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s no es ninguno de: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s no es ninguno de los siguientes: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is not: </Name><Value>%2$s</Value>"
@@ -96,15 +96,15 @@ msgstr "<Name>%1$s no es: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is on or after: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s es igual o posterior a: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es o es después de: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is on or before: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s es igual o anterior a: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s es o es antes de: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is over: </Name><Value>%2$s</Value>"
-msgstr "<Name>%1$s hace más de: </Name><Value>%2$s</Value>"
+msgstr "<Name>%1$s ha terminado: </Name><Value>%2$s</Value>"
 
 #, fuzzy
 msgid "<Name>%1$s is: </Name><Value>%2$s</Value>"
@@ -133,11 +133,11 @@ msgstr "Añadir filtro"
 
 #, fuzzy
 msgid "After"
-msgstr "Después de"
+msgstr "Después"
 
 #, fuzzy
 msgid "After (inc)"
-msgstr "Después de (incl.)"
+msgstr "Después (incl.)"
 
 #, fuzzy
 msgid "Appearance"
@@ -154,11 +154,11 @@ msgstr "Equilibrada"
 
 #, fuzzy
 msgid "Before"
-msgstr "Antes de"
+msgstr "Antes"
 
 #, fuzzy
 msgid "Before (inc)"
-msgstr "Antes de (incl.)"
+msgstr "Antes (incl.)"
 
 #, fuzzy
 msgid "Between (inc)"
@@ -229,7 +229,7 @@ msgstr "Mayor que"
 
 #, fuzzy
 msgid "Greater than or equal"
-msgstr "Mayor o igual que"
+msgstr "Superior a o igual"
 
 #, fuzzy
 msgid "Grid"
@@ -241,7 +241,7 @@ msgstr "Ocultar columna"
 
 #, fuzzy
 msgid "In the past"
-msgstr "En los últimos"
+msgstr "En el pasado"
 
 #, fuzzy
 msgid "Includes"
@@ -285,7 +285,7 @@ msgstr "Menor que"
 
 #, fuzzy
 msgid "Less than or equal"
-msgstr "Menor o igual que"
+msgstr "Inferior a o igual"
 
 #, fuzzy
 msgid "List"
@@ -321,15 +321,15 @@ msgstr "Sin resultados"
 
 #, fuzzy
 msgid "No results found"
-msgstr "No se han encontrado resultados"
+msgstr "No se encontraron resultados"
 
 #, fuzzy
 msgid "Not on"
-msgstr "No en la fecha"
+msgstr "No el"
 
 #, fuzzy
 msgid "On"
-msgstr "En la fecha"
+msgstr "El"
 
 #, fuzzy
 msgid "Order"
@@ -361,7 +361,7 @@ msgstr "Propiedades"
 
 #, fuzzy
 msgid "Remove"
-msgstr "Quitar"
+msgstr "Eliminar"
 
 #, fuzzy
 msgid "Reset"
@@ -405,7 +405,7 @@ msgstr "Orden descendente"
 
 #, fuzzy
 msgid "Starts with"
-msgstr "Empieza por"
+msgstr "Empieza con"
 
 #, fuzzy
 msgid "Table"
@@ -417,7 +417,7 @@ msgstr "Verdadero"
 
 #, fuzzy
 msgid "Unknown status for %1$s"
-msgstr "Estado desconocido de %1$s"
+msgstr "Estado desconocido para %1$s"
 
 #, fuzzy
 msgctxt "View is used as a noun"

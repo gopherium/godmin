@@ -294,6 +294,47 @@ test('lays the page tabs out in a row 16px apart, as the minimal WordPress tabs 
 	expect(tabs).toMatch(/overflow-x:\s*auto/)
 })
 
+test('keeps a page tab row from scrolling the page on past its ends, as the WordPress tabs do', () => {
+	expect(ruleOf('.godmin-page-tabs')).toMatch(/overscroll-behavior-inline:\s*none/)
+})
+
+test('measures the page tab offsets from the tab row itself', () => {
+	expect(ruleOf('.godmin-page-tabs')).toMatch(/position:\s*relative/)
+})
+
+test('fades a cut edge of the page tabs over 4rem, as the WordPress tabs do', () => {
+	const tabs = ruleOf('.godmin-page-tabs')
+
+	expect(tabs).toMatch(/--godmin-page-tabs-start:\s*left;/)
+	expect(tabs).toMatch(/--godmin-page-tabs-end:\s*right;/)
+	expect(tabs).toMatch(/--godmin-page-tabs-fade-width:\s*4rem;/)
+	expect(tabs).toMatch(/--godmin-page-tabs-fade:\s*transparent 0%, #000 var\(--godmin-page-tabs-fade-width\);/)
+	expect(tabs).toMatch(/--godmin-page-tabs-fade-both:\s*var\(--godmin-page-tabs-fade\), #000 60%, transparent 50%;/)
+	expect(ruleOf('.godmin-page-tabs--overflowing-first')).toMatch(
+		/mask-image:\s*linear-gradient\(to var\(--godmin-page-tabs-end\), var\(--godmin-page-tabs-fade\)\);/,
+	)
+	expect(ruleOf('.godmin-page-tabs--overflowing-last')).toMatch(
+		/mask-image:\s*linear-gradient\(to var\(--godmin-page-tabs-start\), var\(--godmin-page-tabs-fade\)\);/,
+	)
+	expect(ruleOf('.godmin-page-tabs--overflowing-first.godmin-page-tabs--overflowing-last')).toMatch(
+		new RegExp(
+			String.raw`mask-image:\s*linear-gradient\(to right, var\(--godmin-page-tabs-fade-both\)\),` +
+				String.raw`\s*linear-gradient\(to left, var\(--godmin-page-tabs-fade-both\)\);`,
+		),
+	)
+})
+
+test('fades the cut edges of a right to left page tab row from its own start and end', () => {
+	const flipped = ruleOf('.godmin-page-tabs:dir(rtl)')
+
+	expect(flipped).toMatch(/--godmin-page-tabs-start:\s*right;/)
+	expect(flipped).toMatch(/--godmin-page-tabs-end:\s*left;/)
+})
+
+test('keeps 24px between the current page tab and the row edge it scrolls to, as the WordPress tabs do', () => {
+	expect(ruleOf('.godmin-page-tabs__tab')).toMatch(/scroll-margin:\s*24px/)
+})
+
 test('draws a page tab like a minimal WordPress tab: a 48px tall 13px label with no padding', () => {
 	const tab = ruleOf('.godmin-page-tabs__tab')
 
