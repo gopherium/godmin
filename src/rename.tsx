@@ -14,7 +14,7 @@ export interface RenameBodyProps {
 	submitLabel: string
 	/** The label of the button that closes the modal. */
 	cancelLabel: string
-	/** Whether the write is running, the submit button then busy. */
+	/** Whether the write is running, the submit button then busy and Cancel greyed out. */
 	busy?: boolean
 	/** The failure of the last try, shown under the field. */
 	failure?: string
@@ -54,7 +54,7 @@ export function RenameBody({
 				<InputControl label={fieldLabel} value={value} onChange={(event) => setValue(event.target.value)} />
 				{failure === undefined ? null : <ErrorNotice>{failure}</ErrorNotice>}
 				<Stack direction="row" gap="sm" justify="flex-end">
-					<Button variant="minimal" onClick={onCancel}>
+					<Button variant="minimal" disabled={busy} onClick={onCancel}>
 						{cancelLabel}
 					</Button>
 					<Button type="submit" loading={busy} disabled={!writable}>

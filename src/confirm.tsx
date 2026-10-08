@@ -12,7 +12,7 @@ export interface ConfirmBodyProps {
 	confirmLabel: string
 	/** The label of the button that closes the modal. */
 	cancelLabel: string
-	/** Whether the action is running, the confirm button then busy. */
+	/** Whether the action is running, the confirm button then busy and Cancel greyed out. */
 	busy?: boolean
 	/** The failure of the last try, shown inside the modal. */
 	failure?: string
@@ -41,7 +41,7 @@ export function ConfirmBody({
 			<Text>{children}</Text>
 			{failure === undefined ? null : <ErrorNotice>{failure}</ErrorNotice>}
 			<Stack direction="row" gap="sm" justify="flex-end">
-				<Button variant="minimal" onClick={onCancel}>
+				<Button variant="minimal" disabled={busy} onClick={onCancel}>
 					{cancelLabel}
 				</Button>
 				<Button loading={busy} onClick={onConfirm}>

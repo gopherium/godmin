@@ -26,6 +26,10 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `Frame.Root` paints the chrome `#26292b` and the canvas `#fcfcfc` when no colour is given, so an application passing none sees its frame change.
 - The canvas no longer takes the chrome colour when only `chromeColor` is given.
 
+### Fixed
+
+- `ConfirmBody` and `RenameBody` grey Cancel out while `busy`, so it stays focusable but closes nothing.
+
 ## [0.15.0] - 2026-10-04
 
 ### Added
