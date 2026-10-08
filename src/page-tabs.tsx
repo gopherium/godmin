@@ -105,7 +105,7 @@ function reveal(row: HTMLElement, tab: HTMLElement): void {
 }
 
 /**
- * Scrolls a tab row to its current tab each time another tab becomes current.
+ * Scrolls a tab row to its current tab each time a tab becomes current, forgetting the last one while none is.
  * @param ref - The tab row element.
  */
 function useRevealCurrent(ref: RefObject<HTMLElement | null>): void {
@@ -113,10 +113,11 @@ function useRevealCurrent(ref: RefObject<HTMLElement | null>): void {
 	useLayoutEffect(() => {
 		const row = ref.current as HTMLElement
 		const tab = row.querySelector<HTMLElement>(`.${CURRENT_CLASS}`)
-		if (tab === null || tab === shown.current) {
+		const last = shown.current
+		shown.current = tab
+		if (tab === null || tab === last) {
 			return
 		}
-		shown.current = tab
 		reveal(row, tab)
 	})
 }

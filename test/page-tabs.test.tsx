@@ -497,3 +497,18 @@ test('scrolls to a tab once it becomes current and leaves a row the reader scrol
 	rerender(<UserTabs current="Application passwords" />)
 	expect(row.scrollLeft).toBe(148)
 })
+
+test('scrolls to a tab that becomes current again after a spell with no current tab', () => {
+	measure(LEFT_TO_RIGHT)
+	giveScrollMargin('24px')
+	const { rerender } = renderAdmin(<UserTabs current="Application passwords" />)
+	const row = tabRow()
+	expect(row.scrollLeft).toBe(116)
+
+	row.scrollLeft = 0
+	rerender(<UserTabs />)
+	expect(row.scrollLeft).toBe(0)
+
+	rerender(<UserTabs current="Application passwords" />)
+	expect(row.scrollLeft).toBe(116)
+})
