@@ -120,7 +120,7 @@ const catalog: ListChromeCatalog = {
 	'No results': ['Sin resultados'],
 	'No results found': ['No se encontraron resultados'],
 	'Not on': ['No el'],
-	On: ['Conectado'],
+	On: ['El'],
 	Order: ['Orden'],
 	'Original aspect ratio': ['Proporción original'],
 	Over: ['Hace más de'],

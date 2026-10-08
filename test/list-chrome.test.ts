@@ -42,7 +42,7 @@ const CALL = new RegExp(String.raw`\b(__|_x|_n)\(\s*(${QUOTED})(?:\s*,\s*(${QUOT
 const FIELD = /^(msgctxt|msgid_plural|msgid|msgstr)(?:\[(\d+)\])? (".*")$/
 const MARK = /%(?:\d+\$)?[ds]|<\/?[A-Za-z]+(?: \/)?>/g
 
-/** The words the WordPress Spanish catalogue gives each message the DataViews filters ask for, by lookup key. */
+/** The WordPress Spanish words of each message the DataViews filters ask for, On read as a date, by lookup key. */
 const WORDPRESS_FILTER_WORDS: Record<string, string> = {
 	'<Name>%1$s between (inc): </Name><Value>%2$s and %3$s</Value>':
 		'<Name>%1$s entre (incl.): </Name><Value>%2$s y %3$s</Value>',
@@ -91,7 +91,7 @@ const WORDPRESS_FILTER_WORDS: Record<string, string> = {
 	'No elements found': 'No se han encontrado elementos',
 	'No results found': 'No se encontraron resultados',
 	'Not on': 'No el',
-	On: 'Conectado',
+	On: 'El',
 	Over: 'Hace más de',
 	Remove: 'Eliminar',
 	Reset: 'Restablecer',
@@ -329,6 +329,12 @@ test('words every list filter as the WordPress Spanish catalogue does', () => {
 	for (const [key, words] of Object.entries(WORDPRESS_FILTER_WORDS)) {
 		expect(spanish[key], key).toEqual([words])
 	}
+})
+
+test('reads the date operator On as a date beside Not on, never as the switch word Conectado', () => {
+	expect(spanish.On).toEqual(['El'])
+	expect(spanish['Not on']).toEqual(['No el'])
+	expect(spanish.On).not.toContain('Conectado')
 })
 
 test('translates every form of every message', () => {

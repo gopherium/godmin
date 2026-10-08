@@ -329,7 +329,7 @@ msgstr "No el"
 
 #, fuzzy
 msgid "On"
-msgstr "Conectado"
+msgstr "El"
 
 #, fuzzy
 msgid "Order"
