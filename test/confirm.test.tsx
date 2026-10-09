@@ -28,12 +28,20 @@ function renderConfirm(props: { busy?: boolean; failure?: string } = {}) {
 }
 
 /**
- * Returns the classes a design system button draws with at the given variant.
+ * Returns the classes a design system button draws with at the given variant and tone.
  * @param variant - The button variant to sample.
+ * @param tone - The button tone to sample, the brand one when absent.
  * @returns The class list.
  */
-function classesOf(variant: ComponentProps<typeof Button>['variant']): string {
-	const { container, unmount } = render(<Button variant={variant}>probe</Button>)
+function classesOf(
+	variant: ComponentProps<typeof Button>['variant'],
+	tone?: ComponentProps<typeof Button>['tone'],
+): string {
+	const { container, unmount } = render(
+		<Button variant={variant} tone={tone}>
+			probe
+		</Button>,
+	)
 	const classes = (container.firstElementChild as Element).className
 	unmount()
 	return classes
@@ -63,10 +71,10 @@ test('cancels when Cancel is pressed', () => {
 	expect(onConfirm).not.toHaveBeenCalled()
 })
 
-test('draws Cancel as a minimal button and the confirm as the solid blue one', () => {
+test('draws Cancel minimal and neutral like the WordPress alert dialog, and the confirm as the solid blue one', () => {
 	renderConfirm()
 
-	expect(screen.getByRole('button', { name: 'Cancel' }).className).toBe(classesOf('minimal'))
+	expect(screen.getByRole('button', { name: 'Cancel' }).className).toBe(classesOf('minimal', 'neutral'))
 	expect(screen.getByRole('button', { name: 'Trash' }).className).toBe(classesOf('solid'))
 })
 
@@ -94,7 +102,7 @@ test('greys Cancel out and keeps it from closing the modal while the action runs
 
 	expect(cancel.getAttribute('aria-disabled')).toBe('true')
 	expect(cancel.hasAttribute('data-disabled'), 'the design system greys out only a data-disabled button').toBe(true)
-	expect(cancel.className).toBe(classesOf('minimal'))
+	expect(cancel.className).toBe(classesOf('minimal', 'neutral'))
 	expect(onCancel).not.toHaveBeenCalled()
 	expect(onConfirm).not.toHaveBeenCalled()
 })

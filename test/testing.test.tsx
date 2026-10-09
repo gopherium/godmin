@@ -206,6 +206,14 @@ test('samples the classes a button draws at a variant and a size', () => {
 	expect(buttonClasses('solid', 'compact')).toEqual(drawn(<Button variant="solid" size="compact">probe</Button>))
 	expect(buttonClasses('solid', 'compact')).not.toEqual(buttonClasses('solid'))
 	expect(buttonClasses('minimal')).toEqual(drawn(<Button variant="minimal">probe</Button>))
+	expect(buttonClasses('minimal', undefined, 'neutral')).toEqual(
+		drawn(
+			<Button variant="minimal" tone="neutral">
+				probe
+			</Button>,
+		),
+	)
+	expect(buttonClasses('minimal', undefined, 'neutral')).not.toEqual(buttonClasses('minimal'))
 })
 
 test('leaves nothing on the page once it sampled', () => {
