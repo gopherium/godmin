@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { createRequire } from 'node:module'
+import { dirname, join, resolve } from 'node:path'
 
 import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT } from '../src/breakpoints.js'
 
 const base = readFileSync(resolve('src/base.css'), 'utf8')
+const dataviewsManifest = createRequire(import.meta.url).resolve('@wordpress/dataviews/package.json')
 
 /** The selector of the sticky DataViews toolbar and filters inside a list page body. */
 const listToolbars = '.godmin-page > .godmin-page__list :is(.dataviews__view-actions, .dataviews-filters__container)'
@@ -274,6 +276,17 @@ test('ends a DataViews table title link wider than its column in an ellipsis, as
 	expect(title).toMatch(/align-content:\s*center/)
 	expect(title).toMatch(/overflow:\s*hidden/)
 	expect(unlayered(selector)).toBe(true)
+})
+
+test('relies on the DataViews title rules that ask for the ellipsis and bound the column', () => {
+	const dataviews = readFileSync(join(dirname(dataviewsManifest), 'build-style', 'style.css'), 'utf8')
+	const title = ruleOf('.dataviews-title-field', dataviews)
+	const column = '.dataviews-view-table__primary-column-content:not(.dataviews-column-primary__media)'
+	const wrapper = ruleOf(column, dataviews)
+
+	expect(title).toMatch(/text-overflow:\s*ellipsis/)
+	expect(title).toMatch(/white-space:\s*nowrap/)
+	expect(wrapper).toMatch(/max-width:\s*80ch/)
 })
 
 test('draws a DataViews media link without an underline or the browser link colour', () => {
