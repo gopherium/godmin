@@ -23,7 +23,7 @@ export interface ConfirmBodyProps {
 }
 
 /**
- * Renders the body of a confirmation modal: the question, a failure notice, a minimal Cancel and the confirm button.
+ * Renders the body of a confirmation modal: the question, a failure notice, a neutral Cancel and the confirm button.
  * @param props - The question, the labels, the busy flag, the failure and the handlers.
  * @returns The confirmation body.
  */
@@ -41,7 +41,7 @@ export function ConfirmBody({
 			<Text>{children}</Text>
 			{failure === undefined ? null : <ErrorNotice>{failure}</ErrorNotice>}
 			<Stack direction="row" gap="sm" justify="flex-end">
-				<Button variant="minimal" disabled={busy} onClick={onCancel}>
+				<Button variant="minimal" tone="neutral" disabled={busy} onClick={onCancel}>
 					{cancelLabel}
 				</Button>
 				<Button loading={busy} onClick={onConfirm}>

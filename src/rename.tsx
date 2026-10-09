@@ -25,7 +25,7 @@ export interface RenameBodyProps {
 }
 
 /**
- * Renders the body of a rename modal: the name field, a failure notice, a minimal Cancel and the submit button.
+ * Renders the body of a rename modal: the name field, a failure notice, a minimal neutral Cancel and the submit button.
  * @param props - The current name, the labels, the busy flag, the failure and the handlers.
  * @returns The rename form.
  */
@@ -54,7 +54,7 @@ export function RenameBody({
 				<InputControl label={fieldLabel} value={value} onChange={(event) => setValue(event.target.value)} />
 				{failure === undefined ? null : <ErrorNotice>{failure}</ErrorNotice>}
 				<Stack direction="row" gap="sm" justify="flex-end">
-					<Button variant="minimal" disabled={busy} onClick={onCancel}>
+					<Button variant="minimal" tone="neutral" disabled={busy} onClick={onCancel}>
 						{cancelLabel}
 					</Button>
 					<Button type="submit" loading={busy} disabled={!writable}>

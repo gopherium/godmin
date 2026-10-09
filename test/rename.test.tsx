@@ -205,11 +205,13 @@ test('cancels when Cancel is pressed', () => {
 	expect(onSubmit).not.toHaveBeenCalled()
 })
 
-test('draws Cancel as a minimal button and the submit as the solid blue one', () => {
+test('draws Cancel minimal and neutral like the WordPress alert dialog, and the submit as the solid blue one', () => {
 	renderRename()
 	type('Hello world')
 
-	expect([...screen.getByRole('button', { name: 'Cancel' }).classList]).toEqual(buttonClasses('minimal'))
+	expect([...screen.getByRole('button', { name: 'Cancel' }).classList]).toEqual(
+		buttonClasses('minimal', undefined, 'neutral'),
+	)
 	expect([...screen.getByRole('button', { name: 'Rename' }).classList]).toEqual(buttonClasses('solid'))
 })
 
@@ -242,7 +244,7 @@ test('greys Cancel out and keeps it from closing the modal while the write runs'
 
 	expect(cancel.getAttribute('aria-disabled')).toBe('true')
 	expect(cancel.hasAttribute('data-disabled'), 'the design system greys out only a data-disabled button').toBe(true)
-	expect([...cancel.classList]).toEqual(buttonClasses('minimal'))
+	expect([...cancel.classList]).toEqual(buttonClasses('minimal', undefined, 'neutral'))
 	expect(onCancel).not.toHaveBeenCalled()
 	expect(onSubmit).not.toHaveBeenCalled()
 })
