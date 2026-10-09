@@ -31,6 +31,8 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `ConfirmBody` and `RenameBody` grey Cancel out while `busy`, so it stays focusable but closes nothing.
 - `PageTabs` fades the edge its row of tabs is cut at and scrolls the current tab into view, as the WordPress tabs do.
 - The Spanish list chrome takes the WordPress words for the list filters, such as "Antes" and "es antes de:".
+- A DataViews table title link wider than its column ends in an ellipsis instead of running into the next column.
+- The Spanish list chrome translates the date filter's calendar and date field, and takes the WordPress words for the rest of the list, such as "Ver opciones" and "No hay resultados".
 
 ## [0.15.0] - 2026-10-04
 

@@ -28,6 +28,13 @@ body {
 	text-decoration: none;
 }
 
+/* Ends a DataViews table title link wider than its column in an ellipsis, as WordPress cuts its titles. */
+.dataviews-view-table tbody .dataviews-view-table__cell-content-wrapper.dataviews-title-field--clickable {
+	display: block;
+	align-content: center;
+	overflow: hidden;
+}
+
 /* Draws a DataViews media link without an underline or the browser link colour. */
 .dataviews-column-primary__media--clickable {
 	color: inherit;
