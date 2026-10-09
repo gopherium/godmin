@@ -265,6 +265,17 @@ test('draws a DataViews title link without an underline, as WordPress does', () 
 	expect(ruleOf('.dataviews-title-field--clickable')).toMatch(/text-decoration:\s*none/)
 })
 
+test('ends a DataViews table title link wider than its column in an ellipsis, as WordPress cuts its titles', () => {
+	const selector =
+		'.dataviews-view-table tbody .dataviews-view-table__cell-content-wrapper.dataviews-title-field--clickable'
+	const title = ruleOf(selector)
+
+	expect(title).toMatch(/display:\s*block/)
+	expect(title).toMatch(/align-content:\s*center/)
+	expect(title).toMatch(/overflow:\s*hidden/)
+	expect(unlayered(selector)).toBe(true)
+})
+
 test('draws a DataViews media link without an underline or the browser link colour', () => {
 	const media = ruleOf('.dataviews-column-primary__media--clickable')
 
