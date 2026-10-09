@@ -15,6 +15,10 @@ msgstr[0] "%1$d de %2$d elemento"
 msgstr[1] "%1$d de %2$d elementos"
 
 #, fuzzy
+msgid "%1$s, %2$s"
+msgstr "%1$s, %2$s"
+
+#, fuzzy
 msgid "%1$s: %2$s"
 msgstr "%1$s: %2$s"
 
@@ -29,6 +33,10 @@ msgid "%d Item selected"
 msgid_plural "%d Items selected"
 msgstr[0] "%d elemento seleccionado"
 msgstr[1] "%d elementos seleccionados"
+
+#, fuzzy
+msgid "%s, selected"
+msgstr "%s, seleccionado"
 
 #, fuzzy
 msgid "%s: <groupName />"
@@ -145,12 +153,12 @@ msgstr "Apariencia"
 
 #, fuzzy
 msgid "Automatically load more content as you scroll, instead of showing pagination links."
-msgstr "Carga más contenido de forma automática al desplazarte, en lugar de mostrar enlaces de paginación."
+msgstr "Carga automáticamente más contenido a medida que navegas, en lugar de mostrar enlaces de paginación."
 
 #, fuzzy
 msgctxt "Density option for DataView layout"
 msgid "Balanced"
-msgstr "Equilibrada"
+msgstr "Equilibrado"
 
 #, fuzzy
 msgid "Before"
@@ -175,12 +183,12 @@ msgstr "Cerrar"
 #, fuzzy
 msgctxt "Density option for DataView layout"
 msgid "Comfortable"
-msgstr "Cómoda"
+msgstr "Cómodo"
 
 #, fuzzy
 msgctxt "Density option for DataView layout"
 msgid "Compact"
-msgstr "Compacta"
+msgstr "Compacto"
 
 #, fuzzy
 msgid "Conditions"
@@ -191,8 +199,24 @@ msgid "Contains"
 msgstr "Contiene"
 
 #, fuzzy
+msgid "Coordinated Universal Time"
+msgstr "Hora universal coordinada"
+
+#, fuzzy
 msgid "Current page"
 msgstr "Página actual"
+
+#, fuzzy
+msgid "Date calendar"
+msgstr "Calendario de fechas"
+
+#, fuzzy
+msgid "Date range calendar"
+msgstr "Calendario de rango de fechas"
+
+#, fuzzy
+msgid "Date time"
+msgstr "Fecha y hora"
 
 #, fuzzy
 msgid "Density"
@@ -200,7 +224,7 @@ msgstr "Densidad"
 
 #, fuzzy
 msgid "Deselect all"
-msgstr "Deseleccionar todo"
+msgstr "Anular selección de todo"
 
 #, fuzzy
 msgid "Doesn't contain"
@@ -277,7 +301,7 @@ msgstr "Elementos por página"
 
 #, fuzzy
 msgid "Layout"
-msgstr "Diseño"
+msgstr "Estructura"
 
 #, fuzzy
 msgid "Less than"
@@ -305,7 +329,15 @@ msgstr "Mover a la derecha"
 
 #, fuzzy
 msgid "Navigate to item"
-msgstr "Ir al elemento"
+msgstr "Navegar hasta el elemento"
+
+#, fuzzy
+msgid "Navigation bar"
+msgstr "Barra de navegación"
+
+#, fuzzy
+msgid "Next month"
+msgstr "Mes siguiente"
 
 #, fuzzy
 msgid "Next page"
@@ -317,7 +349,7 @@ msgstr "No se han encontrado elementos"
 
 #, fuzzy
 msgid "No results"
-msgstr "Sin resultados"
+msgstr "No hay resultados"
 
 #, fuzzy
 msgid "No results found"
@@ -330,6 +362,10 @@ msgstr "No el"
 #, fuzzy
 msgid "On"
 msgstr "El"
+
+#, fuzzy
+msgid "Optional"
+msgstr "Opcional"
 
 #, fuzzy
 msgid "Order"
@@ -352,6 +388,10 @@ msgid "Preview size"
 msgstr "Tamaño de la vista previa"
 
 #, fuzzy
+msgid "Previous month"
+msgstr "Mes anterior"
+
+#, fuzzy
 msgid "Previous page"
 msgstr "Página anterior"
 
@@ -364,6 +404,10 @@ msgid "Remove"
 msgstr "Eliminar"
 
 #, fuzzy
+msgid "Required"
+msgstr "Obligatorio"
+
+#, fuzzy
 msgid "Reset"
 msgstr "Restablecer"
 
@@ -373,7 +417,7 @@ msgstr "Restablecer la búsqueda"
 
 #, fuzzy
 msgid "Reset view"
-msgstr "Restablecer la vista"
+msgstr "Restablecer vista"
 
 #, fuzzy
 msgid "Row %d"
@@ -412,6 +456,18 @@ msgid "Table"
 msgstr "Tabla"
 
 #, fuzzy
+msgid "Timezone: %s"
+msgstr "Zona horaria: %s"
+
+#, fuzzy
+msgid "Today, %s"
+msgstr "Hoy, %s"
+
+#, fuzzy
+msgid "Today, %s, selected"
+msgstr "Hoy, %s, seleccionado"
+
+#, fuzzy
 msgid "True"
 msgstr "Verdadero"
 
@@ -422,4 +478,4 @@ msgstr "Estado desconocido para %1$s"
 #, fuzzy
 msgctxt "View is used as a noun"
 msgid "View options"
-msgstr "Opciones de vista"
+msgstr "Ver opciones"

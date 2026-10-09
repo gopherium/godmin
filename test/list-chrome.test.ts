@@ -36,6 +36,7 @@ const dataviewsManifest = require.resolve('@wordpress/dataviews/package.json')
 const besideDataViews = createRequire(dataviewsManifest)
 const dataviewsBuild = join(dirname(dataviewsManifest), 'build-module')
 const componentsBuild = join(dirname(besideDataViews.resolve('@wordpress/components/package.json')), 'build-module')
+const uiBuild = join(dirname(besideDataViews.resolve('@wordpress/ui/package.json')), 'build-module')
 
 const QUOTED = String.raw`"(?:[^"\\]|\\.)*"`
 const CALL = new RegExp(String.raw`\b(__|_x|_n)\(\s*(${QUOTED})(?:\s*,\s*(${QUOTED}))?`, 'g')
@@ -100,6 +101,39 @@ const WORDPRESS_FILTER_WORDS: Record<string, string> = {
 	'Starts with': 'Empieza con',
 	'Unknown status for %1$s': 'Estado desconocido para %1$s',
 	'verb\u0004Filter': 'Filtrar',
+}
+
+/** The WordPress Spanish words of each message the date filter popover asks for, by lookup key. */
+const WORDPRESS_DATE_FILTER_WORDS: Record<string, string> = {
+	'%1$s, %2$s': '%1$s, %2$s',
+	'%s, selected': '%s, seleccionado',
+	'Coordinated Universal Time': 'Hora universal coordinada',
+	'Date calendar': 'Calendario de fechas',
+	'Date range calendar': 'Calendario de rango de fechas',
+	'Date time': 'Fecha y hora',
+	'Navigation bar': 'Barra de navegación',
+	'Next month': 'Mes siguiente',
+	Optional: 'Opcional',
+	'Previous month': 'Mes anterior',
+	Required: 'Obligatorio',
+	'Timezone: %s': 'Zona horaria: %s',
+	'Today, %s': 'Hoy, %s',
+	'Today, %s, selected': 'Hoy, %s, seleccionado',
+}
+
+/** The WordPress Spanish words of list chrome messages outside the filters, by lookup key. */
+const WORDPRESS_LIST_WORDS: Record<string, string> = {
+	'Automatically load more content as you scroll, instead of showing pagination links.':
+		'Carga automáticamente más contenido a medida que navegas, en lugar de mostrar enlaces de paginación.',
+	'Density option for DataView layout\u0004Balanced': 'Equilibrado',
+	'Density option for DataView layout\u0004Comfortable': 'Cómodo',
+	'Density option for DataView layout\u0004Compact': 'Compacto',
+	'Deselect all': 'Anular selección de todo',
+	Layout: 'Estructura',
+	'Navigate to item': 'Navegar hasta el elemento',
+	'No results': 'No hay resultados',
+	'Reset view': 'Restablecer vista',
+	'View is used as a noun\u0004View options': 'Ver opciones',
 }
 
 const [header, ...messages] = parsePo(readFileSync(resolve('src/list-chrome/es-ES.po'), 'utf8'))
@@ -262,6 +296,27 @@ function drawsFilters(path: string): boolean {
 }
 
 /**
+ * Reports whether a DataViews module draws the date and time field of a date filter.
+ * @param path - The module path inside the build.
+ * @returns Whether the module is the date and time control or its time zone line.
+ */
+function drawsDateControl(path: string): boolean {
+	return (
+		path === 'components/dataform-controls/datetime.mjs' ||
+		path === 'components/dataform-controls/utils/get-timezone-description.mjs'
+	)
+}
+
+/**
+ * Reports whether a WordPress UI module draws the calendar a date filter opens.
+ * @param path - The module path inside the build.
+ * @returns Whether the module belongs to the calendar.
+ */
+function drawsCalendar(path: string): boolean {
+	return path.startsWith('calendar/')
+}
+
+/**
  * Returns the placeholders and tags a message carries, sorted.
  * @param text - The message or one of its translations.
  * @returns The marks.
@@ -292,7 +347,11 @@ test('compiles the catalogue from the PO source beside it', () => {
 
 test('ships only messages the DataViews build or the components it renders with ask for', () => {
 	const asked = new Set(
-		[...messagesIn(dataviewsBuild, () => true), ...messagesIn(componentsBuild, rendersInList)].map(signatureOf),
+		[
+			...messagesIn(dataviewsBuild, () => true),
+			...messagesIn(componentsBuild, rendersInList),
+			...messagesIn(uiBuild, drawsCalendar),
+		].map(signatureOf),
 	)
 
 	for (const entry of messages) {
@@ -331,6 +390,27 @@ test('words every list filter as the WordPress Spanish catalogue does', () => {
 	}
 })
 
+test('knows the WordPress Spanish words of every message the date filter popover asks for', () => {
+	const asked = new Set(
+		[...messagesIn(dataviewsBuild, drawsDateControl), ...messagesIn(uiBuild, drawsCalendar)].map(keyOf),
+	)
+
+	expect(asked.size, 'the reader found no date filter message in the build').toBeGreaterThan(10)
+	expect(new Set(Object.keys(WORDPRESS_DATE_FILTER_WORDS))).toEqual(asked)
+})
+
+test('words the date filter popover as the WordPress Spanish catalogue does', () => {
+	for (const [key, words] of Object.entries(WORDPRESS_DATE_FILTER_WORDS)) {
+		expect(spanish[key], key).toEqual([words])
+	}
+})
+
+test('words the list chrome outside the filters as the WordPress Spanish catalogue does', () => {
+	for (const [key, words] of Object.entries(WORDPRESS_LIST_WORDS)) {
+		expect(spanish[key], key).toEqual([words])
+	}
+})
+
 test('reads the date operator On as a date beside Not on, never as the switch word Conectado', () => {
 	expect(spanish.On).toEqual(['El'])
 	expect(spanish['Not on']).toEqual(['No el'])
@@ -361,7 +441,7 @@ test('answers the list chrome in Spanish through the i18n runtime DataViews read
 	const i18n = createI18n(spanish, LIST_CHROME_DOMAIN)
 
 	expect(i18n.__('Search')).toBe('Buscar')
-	expect(i18n._x('View options', 'View is used as a noun')).toBe('Opciones de vista')
+	expect(i18n._x('View options', 'View is used as a noun')).toBe('Ver opciones')
 	expect(i18n._x('Filter', 'verb')).toBe('Filtrar')
 	expect(i18n._n('%d Item', '%d Items', 1)).toBe('%d elemento')
 	expect(i18n._n('%d Item', '%d Items', 3)).toBe('%d elementos')
