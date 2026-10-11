@@ -4,7 +4,7 @@ import { setup, speak } from '@wordpress/a11y'
 import { render, screen } from '@testing-library/react'
 import { Badge, Button, Text } from '@wordpress/ui'
 import type { ReactElement } from 'react'
-import { beforeAll, expect, test } from 'vitest'
+import { afterEach, beforeAll, expect, test, vi } from 'vitest'
 
 import {
 	WPDS_IGNORE_SELECTOR,
@@ -27,6 +27,10 @@ installTestEnvironment()
 
 beforeAll(() => {
 	setup()
+})
+
+afterEach(() => {
+	vi.unstubAllGlobals()
 })
 
 test('names both node kinds the design system announces through', () => {
@@ -147,9 +151,12 @@ test('provides the media query listeners the animation library still calls', () 
 	query.removeListener(() => {})
 })
 
-test('provides the feature query jsdom leaves off its CSS object', () => {
-	expect(typeof CSS.supports).toBe('function')
+test('provides the feature query when the environment has no CSS object', () => {
+	vi.stubGlobal('CSS', undefined)
 
+	installTestEnvironment()
+
+	expect(typeof CSS.supports).toBe('function')
 	expect(CSS.supports('scrollbar-gutter', 'stable')).toBe(false)
 	expect(CSS.supports('-webkit-backdrop-filter:none')).toBe(false)
 })
