@@ -4,6 +4,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Changed
+
+- The design system window moves to the `@wordpress/ui` 0.24 train: `@wordpress/ui` 0.24, `@wordpress/icons` 18, `@wordpress/style-runtime` 0.13, `@wordpress/theme` from 2.3.0 and `@wordpress/a11y` from 4.57.0. The suite runs on `@wordpress/dataviews` 20. Applications on the 0.23 train stay on GodMin 0.16.
+
 ## [0.16.2] - 2026-10-11
 
 ### Changed
