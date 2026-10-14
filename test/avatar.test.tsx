@@ -1,12 +1,23 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect, test } from 'vitest'
+import { fireEvent } from '@testing-library/react'
+import { afterEach, expect, test, vi } from 'vitest'
 
 import { AVATAR_COLORS, InitialsAvatar } from '../src/avatar.js'
 import * as entry from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
+
+afterEach(() => {
+	vi.restoreAllMocks()
+})
+
+/** The address of the picture the image tests show. */
+const PICTURE = 'https://example.com/avatar.png'
+
+/** The address of a second picture, shown after the first one fails. */
+const OTHER_PICTURE = 'https://example.com/other-avatar.png'
 
 /**
  * Returns the avatar element drawn for a name.
@@ -150,4 +161,71 @@ test('scales the letter with the circle, as the default draws a 12px letter in 3
 
 test('offers the avatar from the package entry', () => {
 	expect(entry.InitialsAvatar).toBe(InitialsAvatar)
+})
+
+test('shows the picture it is given in the round box, as decorative as the letter', () => {
+	const { container } = renderAdmin(<InitialsAvatar name="Maria Perez" src={PICTURE} />)
+	const avatar = container.querySelector('.godmin-avatar') as HTMLElement
+	const image = avatar.querySelector('img') as HTMLImageElement
+
+	expect(image.getAttribute('src')).toBe(PICTURE)
+	expect(image.getAttribute('alt')).toBe('')
+	expect(avatar.getAttribute('aria-hidden')).toBe('true')
+	expect(avatar.textContent).toBe('')
+	expect(avatar.style.backgroundColor).toBe('')
+})
+
+test('draws the picture at the size it is given', () => {
+	const { container } = renderAdmin(<InitialsAvatar name="Maria Perez" src={PICTURE} size={16} />)
+	const avatar = container.querySelector('.godmin-avatar') as HTMLElement
+
+	expect(avatar.style.inlineSize).toBe('16px')
+	expect(avatar.style.blockSize).toBe('16px')
+})
+
+test('draws the letter for an empty picture address', () => {
+	const { container } = renderAdmin(<InitialsAvatar name="Maria Perez" src="" />)
+	const avatar = container.querySelector('.godmin-avatar') as HTMLElement
+
+	expect(avatar.querySelector('img')).toBeNull()
+	expect(avatar.textContent).toBe('M')
+})
+
+test('draws the letter in its colours when the picture fails to load', () => {
+	const { container } = renderAdmin(<InitialsAvatar name="Maria Perez" src={PICTURE} />)
+	fireEvent.error(container.querySelector('.godmin-avatar img') as HTMLImageElement)
+	const avatar = container.querySelector('.godmin-avatar') as HTMLElement
+
+	expect(avatar.querySelector('img')).toBeNull()
+	expect(avatar.textContent).toBe('M')
+	expect(hexOf(avatar.style.backgroundColor)).toBe('#c6396e')
+})
+
+test('tries a new picture address after one failed', () => {
+	const { container, rerender } = renderAdmin(<InitialsAvatar name="Maria Perez" src={PICTURE} />)
+	fireEvent.error(container.querySelector('.godmin-avatar img') as HTMLImageElement)
+	rerender(<InitialsAvatar name="Maria Perez" src={OTHER_PICTURE} />)
+
+	expect(container.querySelector('.godmin-avatar img')?.getAttribute('src')).toBe(OTHER_PICTURE)
+})
+
+test('tries a picture again when its address comes back after another one', () => {
+	const { container, rerender } = renderAdmin(<InitialsAvatar name="Maria Perez" src={PICTURE} />)
+	fireEvent.error(container.querySelector('.godmin-avatar img') as HTMLImageElement)
+	rerender(<InitialsAvatar name="Maria Perez" src={OTHER_PICTURE} />)
+	rerender(<InitialsAvatar name="Maria Perez" src={PICTURE} />)
+
+	expect(container.querySelector('.godmin-avatar img')?.getAttribute('src')).toBe(PICTURE)
+})
+
+test('picks the colour and the letter without the browser locale, as the server does', () => {
+	vi.spyOn(String.prototype, 'toLocaleLowerCase').mockImplementation(function (this: string) {
+		return this.replaceAll('I', 'ı').toLowerCase()
+	})
+	vi.spyOn(String.prototype, 'toLocaleUpperCase').mockImplementation(function (this: string) {
+		return this.replaceAll('i', 'İ').toUpperCase()
+	})
+
+	expect(hexOf(avatarFor('Ines').style.backgroundColor)).toBe('#50575e')
+	expect(avatarFor('ines').textContent).toBe('I')
 })

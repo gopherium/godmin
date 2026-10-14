@@ -618,6 +618,14 @@ body {
 		user-select: none;
 	}
 
+	.godmin-avatar__image {
+		display: block;
+		inline-size: 100%;
+		block-size: 100%;
+		border-radius: 50%;
+		object-fit: cover;
+	}
+
 	.godmin-table__actions * {
 		white-space: nowrap;
 	}

@@ -4,6 +4,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `InitialsAvatar` takes `src`, a picture shown in its round box, with the letter back when the address is empty or fails to load.
+
+### Changed
+
+- `InitialsAvatar` picks its colour and letter without the browser's locale, so every visitor sees the same avatar.
+
 ## [0.17.0] - 2026-10-11
 
 ### Changed
