@@ -209,6 +209,15 @@ test('tries a new picture address after one failed', () => {
 	expect(container.querySelector('.godmin-avatar img')?.getAttribute('src')).toBe(OTHER_PICTURE)
 })
 
+test('tries a picture again when its address comes back after another one', () => {
+	const { container, rerender } = renderAdmin(<InitialsAvatar name="Maria Perez" src={PICTURE} />)
+	fireEvent.error(container.querySelector('.godmin-avatar img') as HTMLImageElement)
+	rerender(<InitialsAvatar name="Maria Perez" src={OTHER_PICTURE} />)
+	rerender(<InitialsAvatar name="Maria Perez" src={PICTURE} />)
+
+	expect(container.querySelector('.godmin-avatar img')?.getAttribute('src')).toBe(PICTURE)
+})
+
 test('picks the colour and the letter without the browser locale, as the server does', () => {
 	vi.spyOn(String.prototype, 'toLocaleLowerCase').mockImplementation(function (this: string) {
 		return this.replaceAll('I', 'ı').toLowerCase()

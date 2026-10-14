@@ -76,14 +76,35 @@ export interface InitialsAvatarProps {
  * @returns The avatar element.
  */
 export function InitialsAvatar({ name, size, src }: InitialsAvatarProps) {
-	const [failed, setFailed] = useState<string>()
-	if (src && src !== failed) {
-		return (
-			<span className="godmin-avatar" aria-hidden="true" style={sizedBy(size)}>
-				<img className="godmin-avatar__image" src={src} alt="" onError={() => setFailed(src)} />
-			</span>
-		)
+	if (!src) {
+		return <LetterAvatar name={name} size={size} />
 	}
+	return <PictureAvatar key={src} name={name} size={size} src={src} />
+}
+
+/**
+ * Renders the picture at one address, or the letter once that picture fails to load.
+ * @param props - The name the avatar stands for, its size and the address of its picture.
+ * @returns The avatar element.
+ */
+function PictureAvatar({ name, size, src }: InitialsAvatarProps) {
+	const [failed, setFailed] = useState(false)
+	if (failed) {
+		return <LetterAvatar name={name} size={size} />
+	}
+	return (
+		<span className="godmin-avatar" aria-hidden="true" style={sizedBy(size)}>
+			<img className="godmin-avatar__image" src={src} alt="" onError={() => setFailed(true)} />
+		</span>
+	)
+}
+
+/**
+ * Renders the first letter of a name in the circle and letter colours the name picks.
+ * @param props - The name the avatar stands for and its size.
+ * @returns The avatar element.
+ */
+function LetterAvatar({ name, size }: InitialsAvatarProps) {
 	const { background, letter } = colorFor(name)
 	return (
 		<span
