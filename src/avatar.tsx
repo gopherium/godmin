@@ -1,5 +1,5 @@
 /* oxlint-disable react/only-export-components -- the palette ships beside the avatar that paints with it. */
-import type { CSSProperties } from 'react'
+import { type CSSProperties, useState } from 'react'
 
 /** A circle colour of the initials avatar and the colour its letter takes on it. */
 export interface AvatarColor {
@@ -28,7 +28,7 @@ export const AVATAR_COLORS: readonly AvatarColor[] = [
  */
 function colorFor(name: string): AvatarColor {
 	let hash = 0
-	for (const letter of name.trim().toLocaleLowerCase()) {
+	for (const letter of name.trim().toLowerCase()) {
 		hash = (hash * 31 + (letter.codePointAt(0) as number)) % 2147483647
 	}
 	return AVATAR_COLORS[hash % AVATAR_COLORS.length]
@@ -41,7 +41,7 @@ function colorFor(name: string): AvatarColor {
  */
 function initialOf(name: string): string {
 	const [first = ''] = Array.from(name.trim())
-	return first.toLocaleUpperCase()
+	return first.toUpperCase()
 }
 
 /**
@@ -66,14 +66,24 @@ export interface InitialsAvatarProps {
 	name: string
 	/** The avatar's width and height in pixels, the stylesheet size when absent. */
 	size?: number
+	/** The address of a picture shown in place of the letter, the letter when absent, empty or failing to load. */
+	src?: string
 }
 
 /**
- * Renders a round avatar with the first letter of a name, in the letter colour of the circle colour the name picks.
- * @param props - The name the avatar stands for and its size.
+ * Renders a round avatar with a picture, or the first letter of a name in the colours the name picks.
+ * @param props - The name the avatar stands for, its size and the address of its picture.
  * @returns The avatar element.
  */
-export function InitialsAvatar({ name, size }: InitialsAvatarProps) {
+export function InitialsAvatar({ name, size, src }: InitialsAvatarProps) {
+	const [failed, setFailed] = useState<string>()
+	if (src && src !== failed) {
+		return (
+			<span className="godmin-avatar" aria-hidden="true" style={sizedBy(size)}>
+				<img className="godmin-avatar__image" src={src} alt="" onError={() => setFailed(src)} />
+			</span>
+		)
+	}
 	const { background, letter } = colorFor(name)
 	return (
 		<span
