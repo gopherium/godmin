@@ -7,7 +7,9 @@ import { dirname, join, resolve } from 'node:path'
 import { expect, test } from 'vitest'
 
 import { LIST_CHROME_DOMAIN, listChromeCatalogFor } from '../src/index'
+import type { ListChromeCatalog } from '../src/index'
 import spanish from '../src/list-chrome/es-ES'
+import french from '../src/list-chrome/fr-FR'
 
 /** One entry of a PO source. */
 interface PoEntry {
@@ -15,6 +17,15 @@ interface PoEntry {
 	msgid: string
 	plural?: string
 	msgstr: string[]
+	fuzzy: boolean
+}
+
+/** One catalogue the package ships: its PO header and entries, and the module compiled from them. */
+interface Shipped {
+	locale: string
+	header: PoEntry
+	messages: PoEntry[]
+	module: ListChromeCatalog
 }
 
 /** One message a build asks gettext for. */
@@ -38,7 +49,7 @@ const dataviewsBuild = join(dirname(dataviewsManifest), 'build-module')
 const componentsBuild = join(dirname(besideDataViews.resolve('@wordpress/components/package.json')), 'build-module')
 const uiBuild = join(dirname(besideDataViews.resolve('@wordpress/ui/package.json')), 'build-module')
 
-const QUOTED = String.raw`"(?:[^"\\]|\\.)*"`
+const QUOTED = String.raw`"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'`
 const CALL = new RegExp(String.raw`\b(__|_x|_n)\(\s*(${QUOTED})(?:\s*,\s*(${QUOTED}))?`, 'g')
 const FIELD = /^(msgctxt|msgid_plural|msgid|msgstr)(?:\[(\d+)\])? (".*")$/
 const MARK = /%(?:\d+\$)?[ds]|<\/?[A-Za-z]+(?: \/)?>/g
@@ -136,7 +147,80 @@ const WORDPRESS_LIST_WORDS: Record<string, string> = {
 	'View is used as a noun\u0004View options': 'Ver opciones',
 }
 
-const [header, ...messages] = parsePo(readFileSync(resolve('src/list-chrome/es-ES.po'), 'utf8'))
+/** The WordPress Spanish words of each message the list dates ask for, by lookup key. */
+const WORDPRESS_DATE_WORDS: Record<string, string> = {
+	'F j, Y g:i a': String.raw`j \d\e F \d\e Y H:i`,
+	'M j, Y g:i a': 'j M Y H:i',
+	AM: 'AM',
+	'April abbreviation\u0004Apr': 'Abr',
+	April: 'abril',
+	'August abbreviation\u0004Aug': 'Ago',
+	August: 'agosto',
+	'December abbreviation\u0004Dec': 'Dic',
+	December: 'diciembre',
+	'February abbreviation\u0004Feb': 'Feb',
+	February: 'febrero',
+	Fri: 'Vie',
+	Friday: 'viernes',
+	'January abbreviation\u0004Jan': 'Ene',
+	January: 'enero',
+	'July abbreviation\u0004Jul': 'Jul',
+	July: 'julio',
+	'June abbreviation\u0004Jun': 'Jun',
+	June: 'junio',
+	'March abbreviation\u0004Mar': 'Mar',
+	March: 'marzo',
+	'May abbreviation\u0004May': 'May',
+	May: 'mayo',
+	Mon: 'Lun',
+	Monday: 'lunes',
+	'November abbreviation\u0004Nov': 'Nov',
+	November: 'noviembre',
+	'October abbreviation\u0004Oct': 'Oct',
+	October: 'octubre',
+	PM: 'PM',
+	Sat: 'Sáb',
+	Saturday: 'sábado',
+	'September abbreviation\u0004Sep': 'Sep',
+	September: 'septiembre',
+	Sun: 'Dom',
+	Sunday: 'domingo',
+	Thu: 'Jue',
+	Thursday: 'jueves',
+	Tue: 'Mar',
+	Tuesday: 'martes',
+	Wed: 'Mié',
+	Wednesday: 'miércoles',
+	am: 'am',
+	pm: 'pm',
+	'start of week\u00041': '1',
+}
+
+const SPANISH = shipped('es-ES', spanish)
+const CATALOGUES = [SPANISH, shipped('fr-FR', french)]
+const LIST_DATE_MESSAGES = [...readFileSync(resolve('src/list-dates.ts'), 'utf8').matchAll(CALL)].map(callOf)
+
+/**
+ * Returns a catalogue the package ships, read from its PO source beside the module compiled from it.
+ * @param locale - The language of the catalogue.
+ * @param module - The compiled catalogue.
+ * @returns The PO header and entries, and the module.
+ */
+function shipped(locale: string, module: ListChromeCatalog): Shipped {
+	const [header, ...messages] = parsePo(readFileSync(resolve(`src/list-chrome/${locale}.po`), 'utf8'))
+	return { locale, header, messages, module }
+}
+
+/**
+ * Returns the text a quoted string literal holds, in single or double quotes.
+ * @param literal - The literal, quotes included.
+ * @returns The text.
+ */
+function unquote(literal: string): string {
+	const inner = literal.slice(1, -1)
+	const json = literal.startsWith("'") ? inner.replaceAll("\\'", "'").replaceAll('"', '\\"') : inner
+	return JSON.parse(`"${json}"`) as string
+}
 
 /**
  * Returns the key the i18n runtime looks a message up under.
@@ -171,7 +255,7 @@ function parsePo(source: string): PoEntry[] {
  * @returns The entry.
  */
 function parseEntry(block: string): PoEntry {
-	const entry: PoEntry = { context: '', msgid: '', msgstr: [] }
+	const entry: PoEntry = { context: '', msgid: '', msgstr: [], fuzzy: false }
 	let append = (text: string): void => {
 		expect.fail(`a continuation line opens ${block}`, text)
 	}
@@ -190,6 +274,7 @@ function parseEntry(block: string): PoEntry {
  */
 function readLine(entry: PoEntry, line: string, append: (text: string) => void): (text: string) => void {
 	if (line.startsWith('#')) {
+		entry.fuzzy ||= line.startsWith('#,') && line.includes('fuzzy')
 		return append
 	}
 	if (line.startsWith('"')) {
@@ -225,18 +310,19 @@ function writerFor(entry: PoEntry, keyword: string, index: number): (text: strin
 
 /**
  * Returns the catalogue the i18n runtime reads, compiled from the PO entries.
+ * @param catalogue - The PO header and entries.
  * @returns The metadata entry and one entry per message.
  */
-function compiled(): Record<string, unknown> {
+function compiled(catalogue: Shipped): Record<string, unknown> {
 	const headers = new Map(
-		header.msgstr[0]
+		catalogue.header.msgstr[0]
 			.split('\n')
 			.filter((line) => line !== '')
 			.map((line) => line.split(': ', 2) as [string, string]),
 	)
 	return Object.fromEntries([
 		['', { lang: headers.get('Language'), 'plural-forms': headers.get('Plural-Forms') }],
-		...messages.map((entry) => [keyOf(entry), entry.msgstr]),
+		...catalogue.messages.map((entry) => [keyOf(entry), entry.msgstr]),
 	])
 }
 
@@ -250,7 +336,16 @@ function messagesIn(root: string, within: (path: string) => boolean): Message[] 
 	return readdirSync(root, { recursive: true, encoding: 'utf8' })
 		.filter((path) => path.endsWith('.mjs') && within(path))
 		.flatMap((path) => [...readFileSync(join(root, path), 'utf8').matchAll(CALL)])
-		.map(([, call, msgid, second]) => messageOf(call, JSON.parse(msgid) as string, second))
+		.map(callOf)
+}
+
+/**
+ * Returns the message one matched gettext call asks for.
+ * @param match - The call: the function called and its quoted arguments.
+ * @returns The message, with its context or plural.
+ */
+function callOf([, call, msgid, second]: RegExpMatchArray): Message {
+	return messageOf(call, unquote(msgid), second)
 }
 
 /**
@@ -261,7 +356,7 @@ function messagesIn(root: string, within: (path: string) => boolean): Message[] 
  * @returns The message, with its context or plural.
  */
 function messageOf(call: string, msgid: string, second: string | undefined): Message {
-	const text = second === undefined ? undefined : (JSON.parse(second) as string)
+	const text = second === undefined ? undefined : unquote(second)
 	if (call === '_x') {
 		return { context: text ?? '', msgid }
 	}
@@ -333,39 +428,75 @@ test('loads the Spanish list chrome for es-ES', async () => {
 	expect(await listChromeCatalogFor('es-ES')).toEqual(spanish)
 })
 
+test('loads the French list dates for fr-FR', async () => {
+	expect(await listChromeCatalogFor('fr-FR')).toEqual(french)
+})
+
 test('ships no list chrome for a language it has none for', async () => {
-	expect(await listChromeCatalogFor('fr-FR')).toBeUndefined()
+	expect(await listChromeCatalogFor('de-DE')).toBeUndefined()
 })
 
 test('names Spanish and its two plural forms in the catalogue header', () => {
 	expect(spanish['']).toEqual({ lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' })
 })
 
-test('compiles the catalogue from the PO source beside it', () => {
-	expect(spanish).toEqual(compiled())
+test('names French and the WordPress French plural rule in the catalogue header', () => {
+	expect(french['']).toEqual({ lang: 'fr-FR', 'plural-forms': 'nplurals=2; plural=(n > 1);' })
 })
 
-test('ships only messages the DataViews build or the components it renders with ask for', () => {
+test('compiles each catalogue from the PO source beside it', () => {
+	for (const catalogue of CATALOGUES) {
+		expect(catalogue.module, catalogue.locale).toEqual(compiled(catalogue))
+	}
+})
+
+test('ships only messages the DataViews build, the components it renders with or the list dates ask for', () => {
 	const asked = new Set(
 		[
 			...messagesIn(dataviewsBuild, () => true),
 			...messagesIn(componentsBuild, rendersInList),
 			...messagesIn(uiBuild, drawsCalendar),
+			...LIST_DATE_MESSAGES,
 		].map(signatureOf),
 	)
 
-	for (const entry of messages) {
+	for (const entry of CATALOGUES.flatMap((catalogue) => catalogue.messages)) {
 		expect(asked.has(signatureOf(entry)), `${keyOf(entry)} is asked for nowhere in the build`).toBe(true)
 	}
 })
 
 test('covers every message the DataViews list chrome asks for', () => {
-	const shipped = new Set(messages.map(signatureOf))
+	const ships = new Set(SPANISH.messages.map(signatureOf))
 	const asked = messagesIn(dataviewsBuild, drawsListChrome)
 
 	expect(asked.length, 'the reader found no message in the build').toBeGreaterThan(90)
 	for (const message of asked) {
-		expect(shipped.has(signatureOf(message)), `${keyOf(message)} ships no translation`).toBe(true)
+		expect(ships.has(signatureOf(message)), `${keyOf(message)} ships no translation`).toBe(true)
+	}
+})
+
+test('ships every message the list dates ask for, in each language', () => {
+	expect(LIST_DATE_MESSAGES.length, 'the reader found no message in the list dates').toBeGreaterThan(40)
+	for (const catalogue of CATALOGUES) {
+		const ships = new Set(catalogue.messages.map(signatureOf))
+		for (const message of LIST_DATE_MESSAGES) {
+			expect(ships.has(signatureOf(message)), `${catalogue.locale} ships no ${keyOf(message)}`).toBe(true)
+		}
+	}
+})
+
+test('words the list dates as the WordPress Spanish catalogue does', () => {
+	expect(new Set(Object.keys(WORDPRESS_DATE_WORDS))).toEqual(new Set(LIST_DATE_MESSAGES.map(keyOf)))
+	for (const [key, words] of Object.entries(WORDPRESS_DATE_WORDS)) {
+		expect(spanish[key], key).toEqual([words])
+	}
+})
+
+test('marks every entry fuzzy until a translator checks it', () => {
+	for (const catalogue of CATALOGUES) {
+		for (const entry of catalogue.messages) {
+			expect(entry.fuzzy, `${catalogue.locale} ${keyOf(entry)}`).toBe(true)
+		}
 	}
 })
 
@@ -418,7 +549,7 @@ test('reads the date operator On as a date beside Not on, never as the switch wo
 })
 
 test('translates every form of every message', () => {
-	for (const entry of messages) {
+	for (const entry of CATALOGUES.flatMap((catalogue) => catalogue.messages)) {
 		expect(entry.msgstr, entry.msgid).toHaveLength(entry.plural === undefined ? 1 : 2)
 		for (const form of entry.msgstr) {
 			expect(form, entry.msgid).not.toBe('')
@@ -427,7 +558,7 @@ test('translates every form of every message', () => {
 })
 
 test('keeps every placeholder and tag of a message in each of its translations', () => {
-	for (const entry of messages) {
+	for (const entry of CATALOGUES.flatMap((catalogue) => catalogue.messages)) {
 		for (const form of entry.msgstr) {
 			expect(marksOf(form), entry.msgid).toEqual(marksOf(entry.msgid))
 		}

@@ -1,0 +1,202 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: gopherium-godmin\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Domain: default\n"
+"Language: fr-FR\n"
+
+#, fuzzy
+msgctxt "start of week"
+msgid "1"
+msgstr "1"
+
+#, fuzzy
+msgid "AM"
+msgstr "AM"
+
+#, fuzzy
+msgctxt "April abbreviation"
+msgid "Apr"
+msgstr "Avr"
+
+#, fuzzy
+msgid "April"
+msgstr "avril"
+
+#, fuzzy
+msgctxt "August abbreviation"
+msgid "Aug"
+msgstr "Août"
+
+#, fuzzy
+msgid "August"
+msgstr "août"
+
+#, fuzzy
+msgctxt "December abbreviation"
+msgid "Dec"
+msgstr "Déc"
+
+#, fuzzy
+msgid "December"
+msgstr "décembre"
+
+#, fuzzy
+msgid "F j, Y g:i a"
+msgstr "d F Y G\\hi"
+
+#, fuzzy
+msgctxt "February abbreviation"
+msgid "Feb"
+msgstr "Fév"
+
+#, fuzzy
+msgid "February"
+msgstr "février"
+
+#, fuzzy
+msgid "Fri"
+msgstr "Ven"
+
+#, fuzzy
+msgid "Friday"
+msgstr "vendredi"
+
+#, fuzzy
+msgctxt "January abbreviation"
+msgid "Jan"
+msgstr "Jan"
+
+#, fuzzy
+msgid "January"
+msgstr "janvier"
+
+#, fuzzy
+msgctxt "July abbreviation"
+msgid "Jul"
+msgstr "Juil"
+
+#, fuzzy
+msgid "July"
+msgstr "juillet"
+
+#, fuzzy
+msgctxt "June abbreviation"
+msgid "Jun"
+msgstr "Juin"
+
+#, fuzzy
+msgid "June"
+msgstr "juin"
+
+#, fuzzy
+msgid "M j, Y g:i a"
+msgstr "d F Y G\\hi"
+
+#, fuzzy
+msgctxt "March abbreviation"
+msgid "Mar"
+msgstr "Mar"
+
+#, fuzzy
+msgid "March"
+msgstr "mars"
+
+#, fuzzy
+msgid "May"
+msgstr "mai"
+
+#, fuzzy
+msgctxt "May abbreviation"
+msgid "May"
+msgstr "Mai"
+
+#, fuzzy
+msgid "Mon"
+msgstr "Lun"
+
+#, fuzzy
+msgid "Monday"
+msgstr "lundi"
+
+#, fuzzy
+msgctxt "November abbreviation"
+msgid "Nov"
+msgstr "Nov"
+
+#, fuzzy
+msgid "November"
+msgstr "novembre"
+
+#, fuzzy
+msgctxt "October abbreviation"
+msgid "Oct"
+msgstr "Oct"
+
+#, fuzzy
+msgid "October"
+msgstr "octobre"
+
+#, fuzzy
+msgid "PM"
+msgstr "PM"
+
+#, fuzzy
+msgid "Sat"
+msgstr "Sam"
+
+#, fuzzy
+msgid "Saturday"
+msgstr "samedi"
+
+#, fuzzy
+msgctxt "September abbreviation"
+msgid "Sep"
+msgstr "Sep"
+
+#, fuzzy
+msgid "September"
+msgstr "septembre"
+
+#, fuzzy
+msgid "Sun"
+msgstr "Dim"
+
+#, fuzzy
+msgid "Sunday"
+msgstr "dimanche"
+
+#, fuzzy
+msgid "Thu"
+msgstr "Jeu"
+
+#, fuzzy
+msgid "Thursday"
+msgstr "jeudi"
+
+#, fuzzy
+msgid "Tue"
+msgstr "Mar"
+
+#, fuzzy
+msgid "Tuesday"
+msgstr "mardi"
+
+#, fuzzy
+msgid "Wed"
+msgstr "Mer"
+
+#, fuzzy
+msgid "Wednesday"
+msgstr "mercredi"
+
+#, fuzzy
+msgid "am"
+msgstr "am"
+
+#, fuzzy
+msgid "pm"
+msgstr "pm"

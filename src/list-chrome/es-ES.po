@@ -47,6 +47,11 @@ msgid "(no title)"
 msgstr "(sin título)"
 
 #, fuzzy
+msgctxt "start of week"
+msgid "1"
+msgstr "1"
+
+#, fuzzy
 msgid "<Name>%1$s between (inc): </Name><Value>%2$s and %3$s</Value>"
 msgstr "<Name>%1$s entre (incl.): </Name><Value>%2$s y %3$s</Value>"
 
@@ -128,6 +133,10 @@ msgid "<div>Page</div>%1$s<div>of %2$d</div>"
 msgstr "<div>Página</div>%1$s<div>de %2$d</div>"
 
 #, fuzzy
+msgid "AM"
+msgstr "AM"
+
+#, fuzzy
 msgid "Actions"
 msgstr "Acciones"
 
@@ -150,6 +159,24 @@ msgstr "Después (incl.)"
 #, fuzzy
 msgid "Appearance"
 msgstr "Apariencia"
+
+#, fuzzy
+msgctxt "April abbreviation"
+msgid "Apr"
+msgstr "Abr"
+
+#, fuzzy
+msgid "April"
+msgstr "abril"
+
+#, fuzzy
+msgctxt "August abbreviation"
+msgid "Aug"
+msgstr "Ago"
+
+#, fuzzy
+msgid "August"
+msgstr "agosto"
 
 #, fuzzy
 msgid "Automatically load more content as you scroll, instead of showing pagination links."
@@ -219,6 +246,15 @@ msgid "Date time"
 msgstr "Fecha y hora"
 
 #, fuzzy
+msgctxt "December abbreviation"
+msgid "Dec"
+msgstr "Dic"
+
+#, fuzzy
+msgid "December"
+msgstr "diciembre"
+
+#, fuzzy
 msgid "Density"
 msgstr "Densidad"
 
@@ -235,8 +271,21 @@ msgid "Enable infinite scroll"
 msgstr "Activar el desplazamiento infinito"
 
 #, fuzzy
+msgid "F j, Y g:i a"
+msgstr "j \\d\\e F \\d\\e Y H:i"
+
+#, fuzzy
 msgid "False"
 msgstr "Falso"
+
+#, fuzzy
+msgctxt "February abbreviation"
+msgid "Feb"
+msgstr "Feb"
+
+#, fuzzy
+msgid "February"
+msgstr "febrero"
 
 #, fuzzy
 msgctxt "verb"
@@ -246,6 +295,14 @@ msgstr "Filtrar"
 #, fuzzy
 msgid "Filter by: %1$s"
 msgstr "Filtrar por: %1$s"
+
+#, fuzzy
+msgid "Fri"
+msgstr "Vie"
+
+#, fuzzy
+msgid "Friday"
+msgstr "viernes"
 
 #, fuzzy
 msgid "Greater than"
@@ -300,6 +357,33 @@ msgid "Items per page"
 msgstr "Elementos por página"
 
 #, fuzzy
+msgctxt "January abbreviation"
+msgid "Jan"
+msgstr "Ene"
+
+#, fuzzy
+msgid "January"
+msgstr "enero"
+
+#, fuzzy
+msgctxt "July abbreviation"
+msgid "Jul"
+msgstr "Jul"
+
+#, fuzzy
+msgid "July"
+msgstr "julio"
+
+#, fuzzy
+msgctxt "June abbreviation"
+msgid "Jun"
+msgstr "Jun"
+
+#, fuzzy
+msgid "June"
+msgstr "junio"
+
+#, fuzzy
 msgid "Layout"
 msgstr "Estructura"
 
@@ -318,6 +402,36 @@ msgstr "Lista"
 #, fuzzy
 msgid "List of: %1$s"
 msgstr "Lista de: %1$s"
+
+#, fuzzy
+msgid "M j, Y g:i a"
+msgstr "j M Y H:i"
+
+#, fuzzy
+msgctxt "March abbreviation"
+msgid "Mar"
+msgstr "Mar"
+
+#, fuzzy
+msgid "March"
+msgstr "marzo"
+
+#, fuzzy
+msgid "May"
+msgstr "mayo"
+
+#, fuzzy
+msgctxt "May abbreviation"
+msgid "May"
+msgstr "May"
+
+#, fuzzy
+msgid "Mon"
+msgstr "Lun"
+
+#, fuzzy
+msgid "Monday"
+msgstr "lunes"
 
 #, fuzzy
 msgid "Move left"
@@ -360,6 +474,24 @@ msgid "Not on"
 msgstr "No el"
 
 #, fuzzy
+msgctxt "November abbreviation"
+msgid "Nov"
+msgstr "Nov"
+
+#, fuzzy
+msgid "November"
+msgstr "noviembre"
+
+#, fuzzy
+msgctxt "October abbreviation"
+msgid "Oct"
+msgstr "Oct"
+
+#, fuzzy
+msgid "October"
+msgstr "octubre"
+
+#, fuzzy
 msgid "On"
 msgstr "El"
 
@@ -378,6 +510,10 @@ msgstr "Proporción original"
 #, fuzzy
 msgid "Over"
 msgstr "Hace más de"
+
+#, fuzzy
+msgid "PM"
+msgstr "PM"
 
 #, fuzzy
 msgid "Page %1$d of %2$d"
@@ -424,6 +560,14 @@ msgid "Row %d"
 msgstr "Fila %d"
 
 #, fuzzy
+msgid "Sat"
+msgstr "Sáb"
+
+#, fuzzy
+msgid "Saturday"
+msgstr "sábado"
+
+#, fuzzy
 msgid "Search"
 msgstr "Buscar"
 
@@ -434,6 +578,15 @@ msgstr "Buscar elementos"
 #, fuzzy
 msgid "Select all"
 msgstr "Seleccionar todo"
+
+#, fuzzy
+msgctxt "September abbreviation"
+msgid "Sep"
+msgstr "Sep"
+
+#, fuzzy
+msgid "September"
+msgstr "septiembre"
 
 #, fuzzy
 msgid "Sort ascending"
@@ -452,8 +605,24 @@ msgid "Starts with"
 msgstr "Empieza con"
 
 #, fuzzy
+msgid "Sun"
+msgstr "Dom"
+
+#, fuzzy
+msgid "Sunday"
+msgstr "domingo"
+
+#, fuzzy
 msgid "Table"
 msgstr "Tabla"
+
+#, fuzzy
+msgid "Thu"
+msgstr "Jue"
+
+#, fuzzy
+msgid "Thursday"
+msgstr "jueves"
 
 #, fuzzy
 msgid "Timezone: %s"
@@ -472,6 +641,14 @@ msgid "True"
 msgstr "Verdadero"
 
 #, fuzzy
+msgid "Tue"
+msgstr "Mar"
+
+#, fuzzy
+msgid "Tuesday"
+msgstr "martes"
+
+#, fuzzy
 msgid "Unknown status for %1$s"
 msgstr "Estado desconocido para %1$s"
 
@@ -479,3 +656,19 @@ msgstr "Estado desconocido para %1$s"
 msgctxt "View is used as a noun"
 msgid "View options"
 msgstr "Ver opciones"
+
+#, fuzzy
+msgid "Wed"
+msgstr "Mié"
+
+#, fuzzy
+msgid "Wednesday"
+msgstr "miércoles"
+
+#, fuzzy
+msgid "am"
+msgstr "am"
+
+#, fuzzy
+msgid "pm"
+msgstr "pm"
