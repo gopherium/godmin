@@ -4,6 +4,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `startListDates` hands `@wordpress/date` the month and weekday names, am and pm, the date and time formats and the first weekday of the loaded catalogue, and a time zone, the browser's own by default.
+- `listDate` writes a moment in the abbreviated date and time WordPress lists show, such as "Oct 13, 2026 5:04 pm", or "13 Oct 2026 17:04" in Spanish.
+- `listChromeCatalogFor` answers a French catalogue for `fr-FR` with the list date words.
+
+### Changed
+
+- The Spanish list chrome catalogue carries the list date words.
+- `@wordpress/date` and `@wordpress/i18n` are peer dependencies, and `godminDedupe` lists `@wordpress/date`.
+
 ## [0.18.0] - 2026-10-14
 
 ### Added
