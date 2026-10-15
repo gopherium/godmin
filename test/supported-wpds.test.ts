@@ -26,7 +26,15 @@ test('the declared windows match the versions this package develops against', as
 	}
 })
 
-test.each(['@wordpress/a11y', '@wordpress/icons', '@wordpress/style-runtime', '@wordpress/theme', '@wordpress/ui'])(
+test.each([
+	'@wordpress/a11y',
+	'@wordpress/date',
+	'@wordpress/i18n',
+	'@wordpress/icons',
+	'@wordpress/style-runtime',
+	'@wordpress/theme',
+	'@wordpress/ui',
+])(
 	'pins %s inside its peer window',
 	async (name) => {
 		const manifest = await import('../package.json')
