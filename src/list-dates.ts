@@ -7,7 +7,7 @@ import { __, _x } from '@wordpress/i18n'
 /** The days a week may start on, Sunday first, as the date settings number them. */
 const WEEK_DAYS = [0, 1, 2, 3, 4, 5, 6] as const
 
-/** The word sets each language was booted with, the first kept under the language's own name. */
+/** The word sets each language was booted with, each kept under a private name of its own. */
 const wordSets = new Map<string, string[]>()
 
 /**
@@ -106,10 +106,10 @@ function zoneSettings(zone: string): TimezoneConfig {
 }
 
 /**
- * Returns the name the date package keeps a word set under, a fresh one when the language was booted with other words.
+ * Returns the private name the date package keeps a word set under, so no language registered elsewhere holds it.
  * @param locale - The language the reader settled on.
  * @param words - The words of this boot, as JSON.
- * @returns The language itself for its first word set, then the language with a private use suffix.
+ * @returns The language with a private use suffix naming this word set.
  */
 function localeName(locale: string, words: string): string {
 	const sets = wordSets.get(locale) ?? []
@@ -117,8 +117,7 @@ function localeName(locale: string, words: string): string {
 		sets.push(words)
 	}
 	wordSets.set(locale, sets)
-	const index = sets.indexOf(words)
-	return index === 0 ? locale : `${locale}-x-${index}`
+	return `${locale}-x-g${sets.indexOf(words)}`
 }
 
 /**

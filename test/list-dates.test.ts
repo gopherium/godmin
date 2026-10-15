@@ -184,7 +184,17 @@ test('keeps the date settings it does not own', () => {
 test('hands the calendars the reader language', () => {
 	startListDates('de-DE')
 
-	expect(getSettings().l10n.locale).toBe('de-DE')
+	expect(new Intl.Locale(getSettings().l10n.locale).baseName).toBe('de-DE')
+})
+
+test('writes the catalogue words when the language name was registered before with other words', () => {
+	const monthsShort = SPANISH_CALENDAR.monthsShort.map((short) => short.toLowerCase())
+	setSettings({ ...DATE_DEFAULTS, l10n: { ...DATE_DEFAULTS.l10n, locale: 'es-MX', monthsShort } })
+	loadCatalogue(SPANISH_WORDS)
+
+	startListDates('es-MX', 'Europe/Madrid')
+
+	expect(listDate(new Date(WINTER))).toBe('5 Ene 2026 09:09')
 })
 
 test('reads the month and weekday words and the formats from the loaded catalogue', () => {
