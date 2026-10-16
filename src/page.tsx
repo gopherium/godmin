@@ -1,7 +1,7 @@
 /* oxlint-disable react/only-export-components -- the page kit ships its parts
    beside the type they share. */
 import { Button, Notice, Stack, Text } from '@wordpress/ui'
-import type { ComponentProps, ReactNode } from 'react'
+import type { ComponentProps, HTMLAttributes, ReactNode, Ref } from 'react'
 
 type TextVariant = ComponentProps<typeof Text>['variant']
 
@@ -60,16 +60,42 @@ export interface PageProps {
 	tabs?: ReactNode
 	aside?: ReactNode
 	list?: boolean
+	/** The name of the list region. */
+	listLabel?: string
+	/** The ref to the list region. */
+	listRef?: Ref<HTMLDivElement>
 	className?: string
 	children: ReactNode
 }
 
 /**
+ * Returns the props that let code focus a list with a name or a ref, and name a list region given a label.
+ * @param label - The name of the list region.
+ * @param reached - Whether code holds a ref to the list.
+ * @returns A tab index that keeps the list out of the tab order, and the role and the name of a named one.
+ */
+function regionOf(label: string | undefined, reached: boolean): HTMLAttributes<HTMLDivElement> {
+	const focus = label === undefined && !reached ? {} : { tabIndex: -1 }
+	return label === undefined ? focus : { ...focus, role: 'region', 'aria-label': label }
+}
+
+/**
  * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content.
- * @param props - The title, subtitle, actions, tabs, aside, list flag, extra class and content.
+ * @param props - The title, subtitle, actions, tabs, aside, list flag, list name and ref, extra class and content.
  * @returns The page element.
  */
-export function Page({ title, subtitle, actions, tabs, aside, list = false, className, children }: PageProps) {
+export function Page({
+	title,
+	subtitle,
+	actions,
+	tabs,
+	aside,
+	list = false,
+	listLabel,
+	listRef,
+	className,
+	children,
+}: PageProps) {
 	const classes = className === undefined ? 'godmin-page' : `godmin-page ${className}`
 	return (
 		<Stack direction="column" gap="lg" className={classes}>
@@ -96,7 +122,15 @@ export function Page({ title, subtitle, actions, tabs, aside, list = false, clas
 				)}
 			</Stack>
 			{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
-			<PageBody aside={aside}>{list ? <div className="godmin-page__list">{children}</div> : children}</PageBody>
+			<PageBody aside={aside}>
+				{list ? (
+					<div className="godmin-page__list" ref={listRef} {...regionOf(listLabel, listRef !== undefined)}>
+						{children}
+					</div>
+				) : (
+					children
+				)}
+			</PageBody>
 		</Stack>
 	)
 }

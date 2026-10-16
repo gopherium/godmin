@@ -2,6 +2,7 @@
 
 import { screen } from '@testing-library/react'
 import { Text } from '@wordpress/ui'
+import { createRef } from 'react'
 import { expect, test, vi } from 'vitest'
 
 import { ErrorNotice, LoadMore, Page, PageTitle, SectionTitle } from '../src/page.js'
@@ -228,6 +229,65 @@ test('sets no list region around a body that is not a list', () => {
 	const { container } = renderAdmin(<Page title="Reports">body</Page>)
 
 	expect(container.querySelector('.godmin-page__list')).toBeNull()
+})
+
+test('names the list region with the label given, keeps it out of the tab order and lets code focus it', () => {
+	const listRef = createRef<HTMLDivElement>()
+	renderAdmin(
+		<Page title="Posts" list listLabel="Posts" listRef={listRef}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	const region = screen.getByRole('region', { name: 'Posts' })
+	expect(region.classList.contains('godmin-page__list')).toBe(true)
+	expect(region.tabIndex).toBe(-1)
+	expect(region.getAttribute('tabindex')).toBe('-1')
+	listRef.current?.focus()
+	expect(document.activeElement).toBe(region)
+})
+
+test('draws a list given no label and no ref as a plain wrapper, with no region role and no tab index', () => {
+	const { container } = renderAdmin(
+		<Page title="Users" list>
+			<p>rows</p>
+		</Page>,
+	)
+
+	const list = container.querySelector('.godmin-page__list') as HTMLElement
+	expect(list.hasAttribute('role')).toBe(false)
+	expect(list.hasAttribute('aria-label')).toBe(false)
+	expect(list.hasAttribute('tabindex')).toBe(false)
+})
+
+test('lets code focus a list given a ref and no label, still with no region role', () => {
+	const listRef = createRef<HTMLDivElement>()
+	const { container } = renderAdmin(
+		<Page title="Users" list listRef={listRef}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	const list = container.querySelector('.godmin-page__list') as HTMLElement
+	expect(listRef.current).toBe(list)
+	expect(list.hasAttribute('role')).toBe(false)
+	expect(list.hasAttribute('aria-label')).toBe(false)
+	listRef.current?.focus()
+	expect(document.activeElement).toBe(list)
+	expect(list.getAttribute('tabindex')).toBe('-1')
+})
+
+test('sets no region around a body that is not a list, even given a label', () => {
+	const listRef = createRef<HTMLDivElement>()
+	const { container } = renderAdmin(
+		<Page title="Reports" listLabel="Reports" listRef={listRef}>
+			<p>body</p>
+		</Page>,
+	)
+
+	expect(screen.queryByRole('region')).toBeNull()
+	expect(container.querySelector('.godmin-page__list')).toBeNull()
+	expect(listRef.current).toBeNull()
 })
 
 test('keeps a list inside the main column beside an aside', () => {
