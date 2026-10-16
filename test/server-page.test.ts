@@ -4,7 +4,7 @@ import { renderHook } from '@testing-library/react'
 import type { DataViewsProps, View } from '@wordpress/dataviews'
 import { expect, test } from 'vitest'
 
-import { pageWindow, paginationOf, useServerPaging } from '../src/index'
+import { offeredSize, pageWindow, paginationOf, sizedView, useServerPaging } from '../src/index'
 import type { PagedView, ServedPage } from '../src/index'
 
 test('asks for the page size the view names from the first row of the first page', () => {
@@ -63,6 +63,37 @@ test('takes a DataViews view as it is', () => {
 	const view: View = { type: 'table', page: 2, perPage: 10 }
 
 	expect(pageWindow(view)).toEqual({ limit: 10, offset: 10 })
+})
+
+test('keeps a page size the list offers', () => {
+	expect(offeredSize(50, [20, 50, 100], 20)).toBe(50)
+})
+
+test('falls back to the opening size for a page size the list does not offer, or for none', () => {
+	expect(offeredSize(30, [20, 50, 100], 20)).toBe(20)
+	expect(offeredSize(undefined, [20, 50, 100], 20)).toBe(20)
+	expect(offeredSize(30, [20, 50, 100], undefined)).toBeUndefined()
+})
+
+test('keeps the size asked while the sizes are unknown', () => {
+	expect(offeredSize(30, undefined, 20)).toBe(30)
+	expect(offeredSize(undefined, undefined, 20)).toBeUndefined()
+})
+
+test('leaves the size out of the request while the sizes are unknown, keeping the page', () => {
+	expect(sizedView({ page: 3, perPage: 30 }, undefined)).toEqual({ page: 3 })
+	expect(pageWindow(sizedView({ page: 3, perPage: 30 }, undefined))).toEqual({ limit: null, offset: 0 })
+})
+
+test('asks the size of the view once the sizes are known', () => {
+	expect(sizedView({ page: 3, perPage: 50 }, [20, 50, 100])).toEqual({ page: 3, perPage: 50 })
+})
+
+test('takes a DataViews view and its page sizes as they are', () => {
+	const view: View = { type: 'table', page: 2, perPage: 50 }
+	const sizes: NonNullable<DataViewsProps<unknown>['config']>['perPageSizes'] = [20, 50]
+
+	expect(sizedView({ ...view, perPage: offeredSize(view.perPage, sizes, 20) }, sizes)).toEqual({ page: 2, perPage: 50 })
 })
 
 test('counts no rows and no pages before the server answers', () => {
