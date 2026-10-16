@@ -26,12 +26,15 @@ export function useBulkRun<Item>(list: ListRun, refresh: (items: Item[]) => Prom
 		async (items, call, words) => {
 			const settle = list.onStart()
 			const outcome = await runEach(items, call)
-			await refresh(items)
-			const notes = bulkNotes(items, outcome, words)
-			if (notes.toast !== undefined) {
-				toaster.show(notes.toast)
+			try {
+				await refresh(items)
+			} finally {
+				const notes = bulkNotes(items, outcome, words)
+				if (notes.toast !== undefined) {
+					toaster.show(notes.toast)
+				}
+				settle(notes.notice, outcome.done > 0)
 			}
-			settle(notes.notice, outcome.done > 0)
 		},
 		[list, refresh, toaster],
 	)

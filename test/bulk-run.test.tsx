@@ -211,6 +211,26 @@ test('waits for the refresh before it settles the list', async () => {
 	expect(toasts()).toEqual(['Moved to the trash: 1.'])
 })
 
+test('reports what the run reached and settles it when the refresh fails, then hands the error on', async () => {
+	const thrown = new Error('offline')
+	const bench = renderTrash({
+		call: failHello,
+		refresh: vi.fn(async () => {
+			throw thrown
+		}),
+	})
+
+	pressTrash()
+	const handed = expect(bench.runs[0]).rejects.toBe(thrown)
+	await act(async () => {
+		await handed
+	})
+
+	expect(screen.getByRole('alert').textContent).toBe('Not moved to the trash: 1 of 2.')
+	expect(toasts()).toEqual(['Moved to the trash: 1.'])
+	expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Posts' }))
+})
+
 /**
  * Records the bulk run a list hands on each render.
  * @param props - The refresh the run takes and the runs seen so far.
