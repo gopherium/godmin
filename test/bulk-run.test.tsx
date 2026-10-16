@@ -37,6 +37,8 @@ interface Bench {
 	call: (post: Post) => Promise<unknown>
 	/** Reloads the list, given the items the run acted on. */
 	refresh: (items: Post[]) => Promise<unknown>
+	/** The words the run reports its outcome in. */
+	words: BulkWords<Post>
 	/** The runs the Trash button started, in order. */
 	runs: Promise<void>[]
 }
@@ -56,7 +58,7 @@ function TrashScreen({ bench }: { bench: Bench }) {
 			listLabel="Posts"
 			listRef={region}
 			actions={
-				<button type="button" onClick={() => bench.runs.push(bulk(bench.items, bench.call, WORDS))}>
+				<button type="button" onClick={() => bench.runs.push(bulk(bench.items, bench.call, bench.words))}>
 					Trash
 				</button>
 			}
@@ -76,6 +78,7 @@ function renderTrash(bench: Partial<Bench> = {}): Bench {
 		items: POSTS,
 		call: vi.fn(async () => undefined),
 		refresh: vi.fn(async () => undefined),
+		words: WORDS,
 		runs: [],
 		...bench,
 	}
@@ -228,6 +231,27 @@ test('reports what the run reached and settles it when the refresh fails, then h
 
 	expect(screen.getByRole('alert').textContent).toBe('Not moved to the trash: 1 of 2.')
 	expect(toasts()).toEqual(['Moved to the trash: 1.'])
+	expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Posts' }))
+})
+
+test('settles the run when the words it reports in throw, then hands the error on', async () => {
+	const thrown = new Error('no words')
+	const bench = renderTrash({
+		call: failHello,
+		words: {
+			...WORDS,
+			failed: () => {
+				throw thrown
+			},
+		},
+	})
+
+	pressTrash()
+	const handed = expect(bench.runs[0]).rejects.toBe(thrown)
+	await act(async () => {
+		await handed
+	})
+
 	expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Posts' }))
 })
 

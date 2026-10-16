@@ -3,7 +3,7 @@
 import { useCallback } from 'react'
 
 import { bulkNotes, runEach } from './bulk.js'
-import type { BulkWords } from './bulk.js'
+import type { BulkNotes, BulkWords } from './bulk.js'
 import type { ListRun } from './list-run.js'
 import { useToaster } from './toaster.js'
 
@@ -26,14 +26,18 @@ export function useBulkRun<Item>(list: ListRun, refresh: (items: Item[]) => Prom
 		async (items, call, words) => {
 			const settle = list.onStart()
 			const outcome = await runEach(items, call)
+			let notes: BulkNotes = {}
 			try {
 				await refresh(items)
 			} finally {
-				const notes = bulkNotes(items, outcome, words)
-				if (notes.toast !== undefined) {
-					toaster.show(notes.toast)
+				try {
+					notes = bulkNotes(items, outcome, words)
+					if (notes.toast !== undefined) {
+						toaster.show(notes.toast)
+					}
+				} finally {
+					settle(notes.notice, outcome.done > 0)
 				}
-				settle(notes.notice, outcome.done > 0)
 			}
 		},
 		[list, refresh, toaster],
