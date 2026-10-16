@@ -15,6 +15,12 @@ export interface FileButtonProps {
 	icon?: ComponentProps<typeof Button.Icon>['icon']
 	/** The name of the hidden file input. */
 	inputLabel?: string
+	/** The button look, solid when absent. */
+	variant?: ComponentProps<typeof Button>['variant']
+	/** The button tone, the brand one when absent. */
+	tone?: ComponentProps<typeof Button>['tone']
+	/** The button size, compact when absent, as a page header button. */
+	size?: ComponentProps<typeof Button>['size']
 	/** Takes the files the reader chose, never called for a dialog closed with none. */
 	onChoose: (files: File[]) => void
 	/** The button label. */
@@ -35,8 +41,8 @@ function handOver(event: ChangeEvent<HTMLInputElement>, onChoose: (files: File[]
 }
 
 /**
- * Renders a compact solid button that opens the file dialog of a hidden file input.
- * @param props - The file types, the many flag, the busy flag, the icon, the input name, the handler and the label.
+ * Renders a button, compact and solid unless told otherwise, that opens the file dialog of a hidden file input.
+ * @param props - The file types, the many and busy flags, the icon, the input name, the look, the handler, the label.
  * @returns The button beside its hidden input.
  */
 export function FileButton({
@@ -45,13 +51,22 @@ export function FileButton({
 	busy = false,
 	icon,
 	inputLabel,
+	variant = 'solid',
+	tone,
+	size = 'compact',
 	onChoose,
 	children,
 }: FileButtonProps) {
 	const input = useRef<HTMLInputElement>(null)
 	return (
 		<>
-			<Button variant="solid" size="compact" loading={busy} onClick={() => (input.current as HTMLInputElement).click()}>
+			<Button
+				variant={variant}
+				tone={tone}
+				size={size}
+				loading={busy}
+				onClick={() => (input.current as HTMLInputElement).click()}
+			>
 				{icon === undefined ? null : <Button.Icon icon={icon} />}
 				{children}
 			</Button>

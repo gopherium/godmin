@@ -8,7 +8,7 @@ import { expect, test, vi } from 'vitest'
 
 import { FileButton } from '../src/index'
 import type { FileButtonProps } from '../src/index'
-import { installTestEnvironment, renderAdmin } from '../src/testing.js'
+import { buttonClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
 
@@ -69,6 +69,12 @@ test('draws a compact solid button, as a page header button', () => {
 	unmount()
 
 	expect(button.className).toBe(sample)
+})
+
+test('draws the variant, tone and size it is given, as a dialog header button', () => {
+	const { button } = renderButton({ variant: 'minimal', tone: 'neutral', size: 'default' })
+
+	expect([...button.classList]).toEqual(buttonClasses('minimal', 'default', 'neutral'))
 })
 
 test('opens the file dialog of its input when pressed', () => {
