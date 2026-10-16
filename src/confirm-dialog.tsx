@@ -52,7 +52,7 @@ export function ConfirmDialog({ children, title, confirmLabel, cancelLabel, onCo
 			focusOnMount="firstContentElement"
 			title={title}
 			__experimentalHideHeader={title === undefined}
-			aria={{ labelledby: question }}
+			aria={{ labelledby: question, describedby: title === undefined ? undefined : question }}
 			isDismissible={!busy}
 			shouldCloseOnEsc={!busy}
 			shouldCloseOnClickOutside={!busy}

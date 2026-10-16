@@ -152,6 +152,19 @@ test('draws a plain confirm\'s title as the dialog heading, with a close button'
 	expect(screen.getByRole('button', { name: 'Close' })).not.toBeNull()
 })
 
+test('describes a plain confirm by its question, so a screen reader reads it after the title', async () => {
+	await openDialog({ title: 'Set as homepage', question: 'Set "Hello" as the site homepage?' })
+
+	expect(screen.getByRole('dialog', { name: 'Set as homepage', description: 'Set "Hello" as the site homepage?' }))
+		.toBe(dialog())
+})
+
+test('gives a confirm with no title no description, since its question already names it', async () => {
+	await openDialog()
+
+	expect(dialog().getAttribute('aria-describedby')).toBeNull()
+})
+
 test.each([
 	['without a title', undefined],
 	['with a title', 'Set as homepage'],
