@@ -25,6 +25,8 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `@wordpress/date` and `@wordpress/i18n` become optional peer dependencies, needed only by the dates entry.
 - `ConfirmBody` and `RenameBody` draw Cancel as accent text, as the WordPress Site Editor dialogs do, instead of the neutral tone.
 - `@wordpress/components` is an optional peer dependency, needed only by the dialogs entry.
+- `@wordpress/dataviews` is an optional peer dependency, `>=20.0.0 <21.0.0`, the release whose filter rules `offeredView` follows.
+- The Spanish and French catalogues carry "Loading" and "Scrollable section", which the WordPress button and modal speak inside a dialog.
 
 ## [0.19.0] - 2026-10-15
 
