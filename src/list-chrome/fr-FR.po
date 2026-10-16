@@ -93,6 +93,10 @@ msgid "June"
 msgstr "juin"
 
 #, fuzzy
+msgid "Loading"
+msgstr "Chargement"
+
+#, fuzzy
 msgid "M j, Y g:i a"
 msgstr "d F Y G\\hi"
 
@@ -151,6 +155,10 @@ msgstr "Sam"
 #, fuzzy
 msgid "Saturday"
 msgstr "samedi"
+
+#, fuzzy
+msgid "Scrollable section"
+msgstr "Section défilable"
 
 #, fuzzy
 msgctxt "September abbreviation"
