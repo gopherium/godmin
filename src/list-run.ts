@@ -40,12 +40,18 @@ export function useListRun(scope: string, onChangeSelection: (selection: string[
 	const [shown, setShown] = useState<Shown>({ scope })
 	const region = useRef<HTMLDivElement>(null)
 	const latest = useRef(0)
+	const committed = useRef(scope)
 	useLayoutEffect(() => {
 		latest.current += 1
 	}, [scope])
+	useLayoutEffect(() => {
+		if (committed.current !== scope) {
+			committed.current = scope
+			onChangeSelection([])
+		}
+	}, [scope, onChangeSelection])
 	if (shown.scope !== scope) {
 		setShown({ scope })
-		onChangeSelection([])
 	}
 	const run = useMemo<ListRun>(
 		() => ({

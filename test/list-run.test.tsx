@@ -2,7 +2,7 @@
 
 import { act, fireEvent, screen } from '@testing-library/react'
 import { useState } from 'react'
-import { expect, test, vi } from 'vitest'
+import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { ErrorNotice, Page, useListRun } from '../src/index'
 import type { ListRun, RunSettled } from '../src/index'
@@ -177,6 +177,41 @@ test('clears the ticked rows once another list is shown, and only then', () => {
 
 	expect(onTicks).toHaveBeenCalledExactlyOnceWith([])
 	expect(seen.ticked.at(-1)).toEqual([])
+})
+
+/**
+ * Runs a list run with the selection setter a parent handed down.
+ * @param props - The list on show and the parent's setter.
+ * @returns Nothing.
+ */
+function ChildList({ scope, onChangeSelection }: { scope: string; onChangeSelection: (selection: string[]) => void }) {
+	useListRun(scope, onChangeSelection)
+	return null
+}
+
+/**
+ * Holds the ticked rows and hands their setter to a child list.
+ * @param props - The list on show and the ticked rows seen on each render.
+ * @returns The child list.
+ */
+function ParentList({ scope, ticked }: { scope: string; ticked: string[][] }) {
+	const [rows, setRows] = useState(['1', '2'])
+	ticked.push(rows)
+	return <ChildList scope={scope} onChangeSelection={setRows} />
+}
+
+test('clears ticked rows a parent holds once another list is shown, with no warning from React', () => {
+	const errors = vi.spyOn(console, 'error').mockImplementation(() => {})
+	onTestFinished(() => {
+		errors.mockRestore()
+	})
+	const ticked: string[][] = []
+	const { rerender } = renderAdmin(<ParentList scope="post publish" ticked={ticked} />)
+
+	rerender(<ParentList scope="post trash" ticked={ticked} />)
+
+	expect(errors.mock.calls.filter(([message]) => /Cannot update a component/.test(String(message)))).toEqual([])
+	expect(ticked.at(-1)).toEqual([])
 })
 
 test('hands the same run while the list stays the same', () => {
