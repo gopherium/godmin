@@ -154,6 +154,20 @@ test('takes the confirm again after a run that rejects, when it has no way to cl
 	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('aria-disabled')).not.toBe('true')
 })
 
+test('closes once a run that throws before it returns a promise settles, and hands the error on', async () => {
+	const thrown = new Error('offline')
+	const reasons = heardRejections()
+	const run = vi.fn((): Promise<void> => {
+		throw thrown
+	})
+	const { closeModal } = renderConfirm({ run })
+
+	await press('Trash')
+
+	await waitFor(() => expect(reasons).toEqual([thrown]))
+	expect(closeModal).toHaveBeenCalledOnce()
+})
+
 test('closes when Cancel is pressed before anything runs', async () => {
 	const { run, closeModal } = renderConfirm()
 

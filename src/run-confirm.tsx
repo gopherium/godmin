@@ -43,10 +43,12 @@ export function RunConfirm<Item>({
 			onCancel={closeModal}
 			onConfirm={() => {
 				setBusy(true)
-				void run(items).finally(() => {
-					setBusy(false)
-					closeModal?.()
-				})
+				void Promise.resolve()
+					.then(() => run(items))
+					.finally(() => {
+						setBusy(false)
+						closeModal?.()
+					})
 			}}
 		>
 			{children}
