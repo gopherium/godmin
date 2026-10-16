@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, screen } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import type { ActionModal } from '@wordpress/dataviews'
-import { expect, test, vi } from 'vitest'
+import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { RunConfirm } from '../src/index'
 import type { RunConfirmProps } from '../src/index'
@@ -34,6 +34,33 @@ function heldRun() {
 			}),
 	)
 	return { run, settle: () => settle() }
+}
+
+/**
+ * Returns a run that rejects with the given error.
+ * @param thrown - The error the run rejects with.
+ * @returns The run spy.
+ */
+function failingRun(thrown: Error) {
+	return vi.fn(async () => {
+		throw thrown
+	})
+}
+
+/**
+ * Listens for rejections no code handled, until the test finishes.
+ * @returns The reasons heard so far.
+ */
+function heardRejections(): unknown[] {
+	const reasons: unknown[] = []
+	const listener = (reason: unknown) => {
+		reasons.push(reason)
+	}
+	process.on('unhandledRejection', listener)
+	onTestFinished(() => {
+		process.off('unhandledRejection', listener)
+	})
+	return reasons
 }
 
 /**
@@ -102,6 +129,29 @@ test('shows the confirm busy and keeps Cancel inert while the run goes', async (
 	expect(run).toHaveBeenCalledOnce()
 	expect(closeModal).not.toHaveBeenCalled()
 	await act(async () => held.settle())
+})
+
+test('closes once a run that rejects settles, and hands the error on', async () => {
+	const thrown = new Error('offline')
+	const reasons = heardRejections()
+	const { closeModal } = renderConfirm({ run: failingRun(thrown) })
+
+	await press('Trash')
+
+	await waitFor(() => expect(reasons).toEqual([thrown]))
+	expect(closeModal).toHaveBeenCalledOnce()
+})
+
+test('takes the confirm again after a run that rejects, when it has no way to close', async () => {
+	const thrown = new Error('offline')
+	const reasons = heardRejections()
+	renderConfirm({ closeModal: undefined, run: failingRun(thrown) })
+
+	await press('Trash')
+	await waitFor(() => expect(reasons).toEqual([thrown]))
+
+	expect(screen.getByRole('button', { name: 'Trash' }).getAttribute('aria-disabled')).not.toBe('true')
+	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('aria-disabled')).not.toBe('true')
 })
 
 test('closes when Cancel is pressed before anything runs', async () => {

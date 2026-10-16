@@ -43,7 +43,10 @@ export function RunConfirm<Item>({
 			onCancel={closeModal}
 			onConfirm={() => {
 				setBusy(true)
-				void run(items).then(() => closeModal?.())
+				void run(items).finally(() => {
+					setBusy(false)
+					closeModal?.()
+				})
 			}}
 		>
 			{children}
