@@ -26,6 +26,10 @@
 			"default": "./dist/index.js"
 		},
 		"./base.css": "./dist/base.css",
+		"./dates": {
+			"types": "./dist/dates.d.ts",
+			"default": "./dist/dates.js"
+		},
 		"./router": {
 			"types": "./dist/router.d.ts",
 			"default": "./dist/router.js"
@@ -74,6 +78,12 @@
 			"optional": true
 		},
 		"@testing-library/react": {
+			"optional": true
+		},
+		"@wordpress/date": {
+			"optional": true
+		},
+		"@wordpress/i18n": {
 			"optional": true
 		},
 		"stylelint": {
