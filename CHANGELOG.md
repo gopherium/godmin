@@ -4,6 +4,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Changed
+
+- `startListDates` and `listDate` move to `@gopherium/godmin/dates`, so the main entry no longer loads `@wordpress/date`, moment and its time zone data.
+- `@wordpress/date` and `@wordpress/i18n` become optional peer dependencies, needed only by the dates entry.
+
 ## [0.19.0] - 2026-10-15
 
 ### Added

@@ -4,7 +4,8 @@ import { dateI18n, getSettings, setSettings } from '@wordpress/date'
 import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
 import { afterEach, expect, test, vi } from 'vitest'
 
-import { LIST_CHROME_DOMAIN, listChromeCatalogFor, listDate, startListDates } from '../src/index'
+import { listDate, startListDates } from '../src/dates'
+import { LIST_CHROME_DOMAIN, listChromeCatalogFor } from '../src/index'
 
 /** The date settings the date package starts with, restored after each test. */
 const DATE_DEFAULTS = getSettings()
