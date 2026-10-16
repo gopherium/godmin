@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import { CONTROLS, offerOf, SINGLE_OPERATORS } from './filter-offer.js'
 import type { ListFilter, ListSortDirection, ListViewShape } from './list-view.js'
 
 /** The parts of a list field the guard reads, as a DataViews field holds them. */
@@ -10,13 +11,17 @@ export interface GuardedField {
 	type?: string
 	/** Whether the list sorts by the field, when absent true unless the field holds media or a password. */
 	enableSorting?: boolean
-	/** The operators the field filters with, none when absent or false. */
+	/** The operators the field filters with, its type's defaults when it names none, none when false. */
 	filterBy?: { operators?: readonly string[] } | false
-	/** The values a filter on the field may hold, any value its check takes when absent. */
+	/** The values a filter on the field may hold, any value its check takes when absent or empty. */
 	elements?: readonly { value: unknown }[]
+	/** Loads the values a filter on the field may hold in place of elements, any value its check takes then. */
+	getElements?: unknown
+	/** The control that edits the field: a component, a control name or a control config. */
+	Edit?: unknown
 }
 
-/** How a field with no elements checks a filter value, keyed by field id. */
+/** How a field with no elements to match checks a filter value, keyed by field id. */
 type ValueChecks = Record<string, (value: unknown) => boolean>
 
 /** The field types DataViews never sorts by unless the field says it sorts. */
@@ -26,7 +31,7 @@ const UNSORTED_TYPES: readonly (string | undefined)[] = ['media', 'password']
 export interface ViewGuard {
 	/** The order the list opens in, taken in place of a sort the fields do not offer. */
 	opening: { field: string; direction: ListSortDirection }
-	/** How a field with no elements checks a filter value, keyed by field id, any value taken when absent. */
+	/** How a field with no elements to match checks a filter value, keyed by field id, any value taken when absent. */
 	checks?: ValueChecks
 }
 
@@ -61,24 +66,90 @@ function sorts(field: GuardedField): boolean {
 }
 
 /**
- * Returns the operators a field filters with.
+ * Reports whether a field holds the values a filter on it may pick, as DataViews reads it.
  * @param field - The field a filter names.
- * @returns The operators it names, none when it offers no filter.
+ * @returns Whether it holds at least one element or loads them.
+ */
+function hasElements(field: GuardedField): boolean {
+	return (field.elements?.length ?? 0) > 0 || typeof field.getElements === 'function'
+}
+
+/**
+ * Reports whether a field draws a control, as DataViews reads its Edit and else its type.
+ * @param field - The field a filter names.
+ * @returns Whether its Edit is a component or names a control DataViews knows, or else its type draws one.
+ */
+function hasControl(field: GuardedField): boolean {
+	const edit = field.Edit
+	if (typeof edit === 'function') {
+		return true
+	}
+	const name = typeof edit === 'object' && edit !== null ? (edit as { control?: unknown }).control : edit
+	return typeof name === 'string' ? CONTROLS.includes(name) : offerOf(field.type).control
+}
+
+/**
+ * Reports whether DataViews can draw a filter for a field, from its elements or its control.
+ * @param field - The field a filter names.
+ * @returns Whether the field has elements or a control.
+ */
+function canDraw(field: GuardedField): boolean {
+	return hasElements(field) || hasControl(field)
+}
+
+/**
+ * Returns the operators a field filters with, as DataViews resolves them.
+ * @param field - The field a filter names.
+ * @returns The named operators its type takes, else its type's defaults, none when DataViews draws no filter.
  */
 function operatorsOf(field: GuardedField): readonly string[] {
-	return field.filterBy === undefined || field.filterBy === false ? [] : (field.filterBy.operators ?? [])
+	const filterBy = field.filterBy
+	if (filterBy === false || !canDraw(field)) {
+		return []
+	}
+	const offer = offerOf(field.type)
+	return filterBy?.operators?.filter((operator) => offer.valid.includes(operator)) ?? offer.defaults
+}
+
+/**
+ * Reports whether a field picks one value, as DataViews reads it from the field's operators.
+ * @param operators - The operators the field filters with.
+ * @returns Whether any of them picks one value.
+ */
+function picksOne(operators: readonly string[]): boolean {
+	return operators.some((operator) => SINGLE_OPERATORS.includes(operator))
+}
+
+/**
+ * Reports whether a value has the shape DataViews writes on a field with elements.
+ * @param field - The field the filter narrows by.
+ * @param operators - The operators the field filters with.
+ * @param value - The value the filter holds.
+ * @returns Whether it is one value where the field picks one or a list where it picks many, or it has no elements.
+ */
+function fitsShape(field: GuardedField, operators: readonly string[], value: unknown): boolean {
+	return !hasElements(field) || Array.isArray(value) !== picksOne(operators)
+}
+
+/**
+ * Returns the elements a filter value must be one of, as DataViews shows them.
+ * @param field - The field the filter narrows by.
+ * @returns Its elements, none when it loads its own.
+ */
+function matchedElements(field: GuardedField): readonly { value: unknown }[] {
+	return typeof field.getElements === 'function' ? [] : (field.elements ?? [])
 }
 
 /**
  * Reports whether a field takes the value a filter holds.
  * @param field - The field the filter narrows by.
  * @param value - The value the filter holds, one value or a pick of many.
- * @param checks - How a field with no elements checks a value.
+ * @param checks - How a field with no elements to match checks a value.
  * @returns Whether each picked value is one of the elements, or the value passes the field's check, or it has none.
  */
 function takes(field: GuardedField, value: unknown, checks: ValueChecks | undefined): boolean {
-	const elements = field.elements
-	if (elements !== undefined) {
+	const elements = matchedElements(field)
+	if (elements.length > 0) {
 		const picked: unknown[] = Array.isArray(value) ? value : [value]
 		return picked.every((one) => elements.some((element) => element.value === one))
 	}
@@ -90,15 +161,20 @@ function takes(field: GuardedField, value: unknown, checks: ValueChecks | undefi
  * Reports whether a filter names a field the list filters by, with an operator and a value that field offers.
  * @param filter - The filter the view carries.
  * @param fields - The fields the list shows.
- * @param checks - How a field with no elements checks a value.
+ * @param checks - How a field with no elements to match checks a value.
  * @returns Whether the list can apply the filter, one still waiting for its value included.
  */
 function offers(filter: ListFilter, fields: readonly GuardedField[], checks: ValueChecks | undefined): boolean {
 	const field = fields.find((held) => held.id === filter.field)
-	if (field === undefined || !operatorsOf(field).includes(filter.operator)) {
+	if (field === undefined) {
 		return false
 	}
-	return filter.value === undefined || takes(field, filter.value, checks)
+	const operators = operatorsOf(field)
+	if (!operators.includes(filter.operator)) {
+		return false
+	}
+	const value = filter.value
+	return value === undefined || (fitsShape(field, operators, value) && takes(field, value, checks))
 }
 
 /**

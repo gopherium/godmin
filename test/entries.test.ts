@@ -18,6 +18,9 @@ const datePackages = ['@wordpress/date', '@wordpress/i18n']
 /** The package that brings the WordPress components. */
 const componentsPackage = '@wordpress/components'
 
+/** The package that brings DataViews. */
+const dataviewsPackage = '@wordpress/dataviews'
+
 /**
  * Returns the source file a relative import names.
  * @param from - The file holding the import.
@@ -94,6 +97,16 @@ test('the date packages are optional peers, needed only by the dates entry', () 
 
 test('the main entry reaches no components package, so importing it never loads the WordPress components', () => {
 	expect(packagesReachedFrom(join(source, 'index.ts')).has(componentsPackage)).toBe(false)
+})
+
+test('the main entry reaches no DataViews package, so importing it never loads DataViews', () => {
+	expect(packagesReachedFrom(join(source, 'index.ts')).has(dataviewsPackage)).toBe(false)
+})
+
+test('the DataViews package is an optional peer, its filter rules copied by the view guard', () => {
+	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
+
+	expect(meta[dataviewsPackage]?.optional).toBe(true)
 })
 
 test('the dialogs entry hands out the confirm dialog', () => {

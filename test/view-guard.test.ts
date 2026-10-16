@@ -10,20 +10,39 @@ import type { GuardedField, OfferedView, ViewGuard } from '../src/index'
 const FIELDS: GuardedField[] = [
 	{ id: 'title', enableSorting: true, filterBy: false },
 	{ id: 'excerpt', enableSorting: false, filterBy: false },
-	{ id: 'author', filterBy: { operators: ['isAny', 'isNone'] } },
-	{ id: 'date', filterBy: { operators: ['before', 'after'] } },
+	{ id: 'author', type: 'text', filterBy: { operators: ['isAny', 'isNone'] } },
+	{ id: 'date', type: 'date', filterBy: { operators: ['before', 'after'] } },
 	{
 		id: 'status',
 		enableSorting: false,
 		filterBy: { operators: ['is', 'isAny'] },
 		elements: [{ value: 'draft' }, { value: 'publish' }],
 	},
-	{ id: 'genre', filterBy: { operators: ['is'] } },
+	{ id: 'genre', type: 'text', filterBy: { operators: ['is'] } },
 	{ id: 'tags', filterBy: {} },
 	{ id: 'slug' },
-	{ id: 'cover', type: 'media' },
+	{ id: 'cover', type: 'media', filterBy: { operators: ['is'] } },
 	{ id: 'passcode', type: 'password' },
 	{ id: 'poster', type: 'media', enableSorting: true },
+	{ id: 'kind', elements: [{ value: 'post' }, { value: 'page' }] },
+	{ id: 'topic', type: 'text', filterBy: {} },
+	{ id: 'headline', type: 'text', filterBy: { operators: ['before', 'is'] } },
+	{ id: 'note', filterBy: { operators: ['is'] } },
+	{ id: 'rating', Edit: () => null },
+	{ id: 'mood', Edit: 'nope', filterBy: { operators: ['is'] } },
+	{
+		id: 'format',
+		filterBy: { operators: ['isAny', 'isNone'] },
+		elements: [{ value: 'standard' }, { value: 'aside' }],
+	},
+	{ id: 'label', type: 'text', elements: [], filterBy: { operators: ['is'] } },
+	{ id: 'category', getElements: async () => [], filterBy: { operators: ['isAny'] } },
+	{
+		id: 'writer',
+		elements: [{ value: 'me' }],
+		getElements: async () => [{ value: '184467235' }],
+		filterBy: { operators: ['isAny'] },
+	},
 ]
 
 /** The order the list opens in. */
@@ -32,8 +51,8 @@ const OPENING = { field: 'date', direction: 'desc' } as const
 /** Reports whether a value names accounts, each one a whole number. */
 const namesAccounts = (value: unknown) => Array.isArray(value) && value.every((id) => /^\d+$/.test(String(id)))
 
-/** The opening order and the check of the field with no elements. */
-const GUARD: ViewGuard = { opening: OPENING, checks: { author: namesAccounts } }
+/** The opening order and the checks of the fields with no elements to match. */
+const GUARD: ViewGuard = { opening: OPENING, checks: { author: namesAccounts, writer: namesAccounts } }
 
 /**
  * Returns the view the guard hands back for a table view holding the given parts.
@@ -101,18 +120,42 @@ test('drops a filter on a field the list does not have, or one that offers no fi
 		{ field: 'menu_order', operator: 'is' as const, value: 1 },
 		{ field: 'title', operator: 'is' as const, value: 'Hello' },
 		{ field: 'slug', operator: 'is' as const, value: 'hello' },
+		{ field: 'tags', operator: 'is' as const, value: 'news' },
 	]
 
 	expect(offered({ filters }).filters).toEqual([])
 })
 
-test('drops a filter with an operator the field does not name, or on a field that names none', () => {
+test('drops a filter with an operator the field does not name', () => {
+	expect(offered({ filters: [{ field: 'status', operator: 'isNot', value: 'draft' }] }).filters).toEqual([])
+})
+
+test('keeps a filter on a field that names no operators, by the operators DataViews gives its type', () => {
 	const filters = [
-		{ field: 'status', operator: 'isNot' as const, value: 'draft' },
-		{ field: 'tags', operator: 'isAny' as const, value: ['news'] },
+		{ field: 'kind', operator: 'is' as const, value: 'page' },
+		{ field: 'topic', operator: 'isAny' as const, value: ['news'] },
 	]
 
-	expect(offered({ filters }).filters).toEqual([])
+	expect(offered({ filters }).filters).toEqual(filters)
+})
+
+test('drops an operator the type does not take, and any filter on a field with no elements and no control', () => {
+	const kept = { field: 'headline', operator: 'is' as const, value: 'Hello' }
+	const filters = [
+		{ field: 'headline', operator: 'before' as const, value: 'Hello' },
+		{ field: 'note', operator: 'is' as const, value: 'Hello' },
+		{ field: 'cover', operator: 'is' as const, value: 'hello.png' },
+		kept,
+	]
+
+	expect(offered({ filters }).filters).toEqual([kept])
+})
+
+test('keeps a filter on a field whose own Edit draws a control, and drops one whose Edit names no control', () => {
+	const kept = { field: 'rating', operator: 'isNot' as const, value: 3 }
+	const dropped = { field: 'mood', operator: 'is' as const, value: 'calm' }
+
+	expect(offered({ filters: [kept, dropped] }).filters).toEqual([kept])
 })
 
 test('drops a filter whose value is not one of the field\'s elements', () => {
@@ -120,10 +163,46 @@ test('drops a filter whose value is not one of the field\'s elements', () => {
 })
 
 test('keeps a pick whose every value is one of the field\'s elements, and drops one holding any other', () => {
-	const kept = { field: 'status', operator: 'isAny' as const, value: ['draft', 'publish'] }
-	const dropped = { field: 'status', operator: 'isAny' as const, value: ['draft', 'trash'] }
+	const kept = { field: 'format', operator: 'isAny' as const, value: ['standard', 'aside'] }
+	const dropped = { field: 'format', operator: 'isAny' as const, value: ['standard', 'gallery'] }
 
 	expect(offered({ filters: [kept, dropped] }).filters).toEqual([kept])
+})
+
+test('drops a value of the wrong shape, a list where the field picks one or one value where it picks many', () => {
+	const filters = [
+		{ field: 'kind', operator: 'is' as const, value: ['page'] },
+		{ field: 'status', operator: 'isAny' as const, value: ['draft'] },
+		{ field: 'format', operator: 'isAny' as const, value: 'standard' },
+		{ field: 'category', operator: 'isAny' as const, value: 'news' },
+	]
+
+	expect(offered({ filters }).filters).toEqual([])
+})
+
+test('keeps one value under isAny on a field that mixes single and many operators, as DataViews writes it', () => {
+	const filters = [{ field: 'status', operator: 'isAny' as const, value: 'draft' }]
+
+	expect(offered({ filters }).filters).toEqual(filters)
+})
+
+test('takes any pick of the right shape on a field that loads its elements', () => {
+	const filters = [{ field: 'category', operator: 'isAny' as const, value: ['news'] }]
+
+	expect(offered({ filters }).filters).toEqual(filters)
+})
+
+test('checks a value on a field with elements and getElements by its check, as DataViews shows the loaded ones', () => {
+	const kept = { field: 'writer', operator: 'isAny' as const, value: ['184467235'] }
+	const dropped = { field: 'writer', operator: 'isAny' as const, value: ['maria@example.com'] }
+
+	expect(offered({ filters: [kept, dropped] }).filters).toEqual([kept])
+})
+
+test('reads an empty elements list as none, as DataViews does', () => {
+	const filters = [{ field: 'label', operator: 'is' as const, value: 'Hello' }]
+
+	expect(offered({ filters }).filters).toEqual(filters)
 })
 
 test('keeps a filter still waiting for its value', () => {
