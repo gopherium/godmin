@@ -59,9 +59,19 @@ function packagesReachedFrom(entry: string): Set<string> {
 		const specifiers = seen.has(file) ? [] : importsOf(file)
 		seen.add(file)
 		pending.push(...specifiers.filter((name) => name.startsWith('.')).map((name) => sourceOf(file, name)))
-		specifiers.filter((name) => !name.startsWith('.')).forEach((name) => packages.add(name))
+		specifiers.filter((name) => !name.startsWith('.')).forEach((name) => packages.add(packageOf(name)))
 	}
 	return packages
+}
+
+/**
+ * Returns the package a bare import specifier names, without any subpath.
+ * @param specifier - The specifier, such as `@wordpress/dataviews/build-module/field-types`.
+ * @returns The package name, such as `@wordpress/dataviews`.
+ */
+function packageOf(specifier: string): string {
+	const parts = specifier.split('/')
+	return parts.slice(0, specifier.startsWith('@') ? 2 : 1).join('/')
 }
 
 test('the walk follows imports written with either quote', () => {
@@ -70,6 +80,13 @@ test('the walk follows imports written with either quote', () => {
 	writeFileSync(join(tree, 'dates.ts'), `import { dateI18n } from '@wordpress/date'\n`)
 
 	expect([...packagesReachedFrom(join(tree, 'index.ts'))]).toEqual(['@wordpress/date'])
+})
+
+test('the walk names a package reached through a subpath by the package itself', () => {
+	const tree = mkdtempSync(join(tmpdir(), 'godmin-entries-'))
+	writeFileSync(join(tree, 'index.ts'), `import { fieldTypes } from '@wordpress/dataviews/build-module/field-types'\n`)
+
+	expect([...packagesReachedFrom(join(tree, 'index.ts'))]).toEqual([dataviewsPackage])
 })
 
 test('the main entry reaches no date package, so importing it never loads moment', () => {
