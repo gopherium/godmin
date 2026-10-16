@@ -7,12 +7,16 @@ import { dirname, join, resolve } from 'node:path'
 import { expect, test } from 'vitest'
 
 import manifest from '../package.json'
+import * as dialogs from '../src/dialogs.js'
 
 /** The source folder the entries are built from. */
 const source = resolve(import.meta.dirname, '../src')
 
 /** The packages that bring the date engine, moment and its time zone data. */
 const datePackages = ['@wordpress/date', '@wordpress/i18n']
+
+/** The package that brings the WordPress components. */
+const componentsPackage = '@wordpress/components'
 
 /**
  * Returns the source file a relative import names.
@@ -86,4 +90,25 @@ test('the date packages are optional peers, needed only by the dates entry', () 
 	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
 
 	expect(datePackages.map((name) => meta[name]?.optional)).toEqual([true, true])
+})
+
+test('the main entry reaches no components package, so importing it never loads the WordPress components', () => {
+	expect(packagesReachedFrom(join(source, 'index.ts')).has(componentsPackage)).toBe(false)
+})
+
+test('the dialogs entry hands out the confirm dialog', () => {
+	expect(typeof dialogs.ConfirmDialog).toBe('function')
+	expect(packagesReachedFrom(join(source, 'dialogs.ts')).has(componentsPackage)).toBe(true)
+})
+
+test('the package publishes the dialogs entry beside the main one', () => {
+	const exported = manifest.exports as Record<string, unknown>
+
+	expect(exported['./dialogs']).toEqual({ types: './dist/dialogs.d.ts', default: './dist/dialogs.js' })
+})
+
+test('the components package is an optional peer, needed only by the dialogs entry', () => {
+	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
+
+	expect(meta[componentsPackage]?.optional).toBe(true)
 })

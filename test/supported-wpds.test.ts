@@ -28,6 +28,7 @@ test('the declared windows match the versions this package develops against', as
 
 test.each([
 	'@wordpress/a11y',
+	'@wordpress/components',
 	'@wordpress/date',
 	'@wordpress/i18n',
 	'@wordpress/icons',

@@ -137,6 +137,9 @@ importers:
       '@wordpress/a11y':
         specifier: 4.57.0
         version: 4.57.0
+      '@wordpress/components':
+        specifier: 42.0.0
+        version: 42.0.0(@date-fns/tz@1.5.0)(@emotion/is-prop-valid@1.4.0)(@types/react-dom@18.3.7(@types/react@19.2.17))(@types/react@19.2.17)(lightningcss@1.33.0)(postcss@8.5.25)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(stylelint@17.14.1(typescript@6.0.3))(supports-color@10.2.2)(vite@8.1.5(@types/node@26.1.2)(yaml@2.9.0))
       '@wordpress/dataviews':
         specifier: 20.0.0
         version: 20.0.0(@emotion/is-prop-valid@1.4.0)(@types/react-dom@18.3.7(@types/react@19.2.17))(@types/react@19.2.17)(lightningcss@1.33.0)(postcss@8.5.25)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(stylelint@17.14.1(typescript@6.0.3))(supports-color@10.2.2)(vite@8.1.5(@types/node@26.1.2)(yaml@2.9.0))
