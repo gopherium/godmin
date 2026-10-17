@@ -4,7 +4,14 @@ export { AdminRoot } from './admin-root.js'
 export type { AdminRootProps } from './admin-root.js'
 export { InitialsAvatar } from './avatar.js'
 export type { InitialsAvatarProps } from './avatar.js'
-export { DENSE_BREAKPOINT, EDGE_BREAKPOINT, RAIL_BREAKPOINT, SMALL_VIEWPORT } from './breakpoints.js'
+export {
+	DENSE_BREAKPOINT,
+	EDGE_BREAKPOINT,
+	RAIL_BREAKPOINT,
+	SHEET_BREAKPOINT,
+	SMALL_VIEWPORT,
+	TITLE_BREAKPOINT,
+} from './breakpoints.js'
 export { useBulkRun } from './bulk-run.js'
 export type { BulkRun } from './bulk-run.js'
 export { bulkNotes, runEach } from './bulk.js'
