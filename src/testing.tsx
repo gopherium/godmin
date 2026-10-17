@@ -79,9 +79,14 @@ export async function assertElementPatched(
 }
 
 /**
- * Whether every media query currently reports a match.
+ * What the media queries report: one answer for every query, or each width query answered by a width in pixels.
  */
-let viewportMatches = false
+export type TestViewport = { matches: boolean } | { width: number }
+
+/**
+ * The viewport the media queries currently read.
+ */
+let viewport: TestViewport = { matches: false }
 
 /**
  * The listeners registered on the media query lists handed out so far.
@@ -89,11 +94,21 @@ let viewportMatches = false
 const viewportListeners = new Set<() => void>()
 
 /**
- * Sets what every media query reports, and tells its listeners.
- * @param viewport - Whether queries should report a match.
+ * One width condition of a media query, such as `(max-width: 599px)`.
  */
-export function setViewport(viewport: { matches: boolean }): void {
-	viewportMatches = viewport.matches
+const WIDTH_CONDITION = /^\(\s*(min|max)-width\s*:\s*(\d+(?:\.\d+)?)px\s*\)$/
+
+/**
+ * The media types a screen matches, such as `screen` or `only all`.
+ */
+const SCREEN_MEDIA = /^(?:only\s+)?(?:all|screen)$/
+
+/**
+ * Sets what the media queries report, and tells their listeners.
+ * @param next - Whether every query reports a match, or the width in pixels the width queries are answered by.
+ */
+export function setViewport(next: TestViewport): void {
+	viewport = next
 	for (const listener of [...viewportListeners]) {
 		listener()
 	}
@@ -103,8 +118,48 @@ export function setViewport(viewport: { matches: boolean }): void {
  * Returns every media query to reporting no match, with no listeners left.
  */
 function resetViewport(): void {
-	viewportMatches = false
+	viewport = { matches: false }
 	viewportListeners.clear()
+}
+
+/**
+ * Tells whether one condition of a media query holds at a width.
+ * @param condition - The condition, such as `screen` or `(max-width: 599px)`.
+ * @param width - The viewport width in pixels.
+ * @returns Whether it holds, always for a screen media type, never for a condition other than a width in pixels.
+ */
+function conditionHolds(condition: string, width: number): boolean {
+	const part = condition.trim()
+	if (SCREEN_MEDIA.test(part)) {
+		return true
+	}
+	const found = WIDTH_CONDITION.exec(part)
+	if (found === null) {
+		return false
+	}
+	const bound = Number(found[2])
+	return found[1] === 'min' ? width >= bound : width <= bound
+}
+
+/**
+ * Tells whether a media query list matches at a width.
+ * @param media - The media query text, queries parted by commas and conditions joined by and.
+ * @param width - The viewport width in pixels.
+ * @returns Whether every condition of any one query holds.
+ */
+function matchesWidth(media: string, width: number): boolean {
+	return media
+		.split(',')
+		.some((query) => query.split(/\s+and\s+/).every((condition) => conditionHolds(condition, width)))
+}
+
+/**
+ * Answers a media query from the viewport this module controls.
+ * @param media - The media query text.
+ * @returns Whether the query matches.
+ */
+function answer(media: string): boolean {
+	return 'width' in viewport ? matchesWidth(media, viewport.width) : viewport.matches
 }
 
 /**
@@ -116,7 +171,7 @@ function mediaQueryList(media: string): MediaQueryList {
 	return {
 		media,
 		get matches() {
-			return viewportMatches
+			return answer(media)
 		},
 		addEventListener: (_type: string, listener: () => void) => {
 			viewportListeners.add(listener)
