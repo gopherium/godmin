@@ -1,14 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
+import { SHEET_BREAKPOINT } from '../src/breakpoints.js'
 import { ConfirmDialog } from '../src/dialogs'
 import { buttonClasses, installTestEnvironment, renderAdmin, stubLayout } from '../src/testing.js'
 
 installTestEnvironment()
+
+/** The stylesheet the WordPress modal draws with. */
+const components = readFileSync(
+	createRequire(import.meta.url).resolve('@wordpress/components/build-style/style.css'),
+	'utf8',
+)
 
 /** The question a confirm that removes something asks. */
 const TRASH_QUESTION = 'Move "Hello" to the trash?'
@@ -20,6 +30,8 @@ const FAILURE = 'The post could not be moved to the trash.'
 interface Opening {
 	/** The title of a plain confirm, none for one that removes something. */
 	title?: string
+	/** The size of the card, the default one when absent. */
+	size?: 'small' | 'medium'
 	/** The question the dialog asks. */
 	question?: string
 	/** Carries the action out. */
@@ -28,11 +40,12 @@ interface Opening {
 
 /**
  * Renders a button that opens a confirmation dialog, beside a list region an action may focus.
- * @param props - The title, the question, the action and the spy told when the dialog is taken away.
+ * @param props - The title, the size, the question, the action and the spy told when the dialog is taken away.
  * @returns The opener, the region and the dialog while it is asked for.
  */
 function TrashButton({
 	title,
+	size,
 	question = TRASH_QUESTION,
 	onConfirm,
 	onClose,
@@ -47,6 +60,7 @@ function TrashButton({
 			{asking ? (
 				<ConfirmDialog
 					title={title}
+					size={size}
 					confirmLabel="Trash"
 					cancelLabel="Cancel"
 					onConfirm={onConfirm}
@@ -189,6 +203,34 @@ test('opens on the WordPress modal frame at the medium size', async () => {
 
 	expect(dialog().classList.contains('components-modal__frame')).toBe(true)
 	expect(dialog().classList.contains('has-size-medium')).toBe(true)
+})
+
+test('rises as a sheet below the sheet breakpoint and centres a card from it, as the WordPress modal does', () => {
+	const card = `@media (min-width: ${SHEET_BREAKPOINT}px) {\n  .components-modal__frame {\n    align-self: auto;`
+
+	expect(components.includes(card), `the modal stylesheet has no ${card} rule`).toBe(true)
+})
+
+/**
+ * Returns the widest the WordPress modal draws a card of the given size from the sheet breakpoint up.
+ * @param size - The modal size.
+ * @returns The width in pixels the size falls back to, none when the stylesheet has no such rule.
+ */
+function cardWidth(size: string): string | undefined {
+	const card = components.indexOf(`@media (min-width: ${SHEET_BREAKPOINT}px) {\n  .components-modal__frame {`)
+	const rule = components.indexOf(`.components-modal__frame.has-size-${size} {`, card)
+	return /max-width:\s*var\([^,]+,\s*(\d+px)\)/.exec(components.slice(rule, components.indexOf('}', rule)))?.[1]
+}
+
+test.each([
+	['small', '400px', 'medium'],
+	['medium', '560px', 'small'],
+] as const)('draws a %s confirm as the WordPress card %s wide from the sheet width', async (size, width, other) => {
+	await openDialog({ size })
+
+	expect(dialog().classList.contains(`has-size-${size}`)).toBe(true)
+	expect(dialog().classList.contains(`has-size-${other}`)).toBe(false)
+	expect(cardWidth(size)).toBe(width)
 })
 
 test('closes when Cancel is pressed', async () => {

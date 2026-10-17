@@ -12,6 +12,8 @@ export interface ConfirmDialogProps {
 	children: ReactNode
 	/** The title of a plain confirm, drawn in a header with a close button, none on a confirm that removes something. */
 	title?: string
+	/** The width of the card from 600px up, small at 400px or medium at 560px, the default. */
+	size?: 'small' | 'medium'
 	/** The label of the button that carries the action out. */
 	confirmLabel: string
 	/** The label of the button that closes the dialog. */
@@ -24,10 +26,18 @@ export interface ConfirmDialogProps {
 
 /**
  * Renders a confirmation dialog for an action outside a list, as WordPress dialogs ask, Cancel focused.
- * @param props - The question, the title, the labels and the handlers.
+ * @param props - The question, the title, the size, the labels and the handlers.
  * @returns The dialog.
  */
-export function ConfirmDialog({ children, title, confirmLabel, cancelLabel, onConfirm, onClose }: ConfirmDialogProps) {
+export function ConfirmDialog({
+	children,
+	title,
+	size = 'medium',
+	confirmLabel,
+	cancelLabel,
+	onConfirm,
+	onClose,
+}: ConfirmDialogProps) {
 	const [busy, setBusy] = useState(false)
 	const [failure, setFailure] = useState<string>()
 	const question = useId()
@@ -48,7 +58,7 @@ export function ConfirmDialog({ children, title, confirmLabel, cancelLabel, onCo
 	}
 	return (
 		<Modal
-			size="medium"
+			size={size}
 			focusOnMount="firstContentElement"
 			title={title}
 			__experimentalHideHeader={title === undefined}
