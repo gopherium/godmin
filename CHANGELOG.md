@@ -4,7 +4,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
-## [0.20.0] - 2026-10-16
+## [0.21.0] - 2026-10-17
 
 ### Added
 
@@ -21,12 +21,17 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 ### Changed
 
-- **Breaking.** `startListDates` and `listDate` move to `@gopherium/godmin/dates`, so the main entry no longer loads `@wordpress/date`, moment and its time zone data. Import them from `@gopherium/godmin/dates`.
-- `@wordpress/date` and `@wordpress/i18n` become optional peer dependencies, needed only by the dates entry.
 - `ConfirmBody` and `RenameBody` draw Cancel as accent text, as the WordPress Site Editor dialogs do, instead of the neutral tone.
 - `@wordpress/components` is an optional peer dependency, needed only by the dialogs entry.
 - `@wordpress/dataviews` is an optional peer dependency, `>=20.0.0 <21.0.0`, the release whose filter rules `offeredView` follows.
 - The Spanish and French catalogues carry "Loading" and "Scrollable section", which the WordPress button and modal speak inside a dialog.
+
+## [0.20.0] - 2026-10-16
+
+### Changed
+
+- **Breaking.** `startListDates` and `listDate` move to `@gopherium/godmin/dates`, so the main entry no longer loads `@wordpress/date`, moment and its time zone data. Import them from `@gopherium/godmin/dates`.
+- `@wordpress/date` and `@wordpress/i18n` become optional peer dependencies, needed only by the dates entry.
 
 ## [0.19.0] - 2026-10-15
 
