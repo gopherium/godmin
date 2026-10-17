@@ -4,7 +4,8 @@ import { cleanup, configure, render } from '@testing-library/react'
 import type { RenderOptions, RenderResult } from '@testing-library/react'
 import { Badge, Button, Text } from '@wordpress/ui'
 import type { ComponentProps, ReactElement, ReactNode } from 'react'
-import { afterEach } from 'vitest'
+import { afterEach, vi } from 'vitest'
+import type { MockInstance } from 'vitest'
 
 import { AdminRoot } from './admin-root.js'
 import type { AdminRootProps } from './admin-root.js'
@@ -177,6 +178,29 @@ function installResizeObserver(): void {
 	}
 }
 
+/** The one layout box every element reports while the layout is stubbed. */
+const LAYOUT_BOX = { x: 0, y: 0, width: 1, height: 1, top: 0, right: 1, bottom: 1, left: 0 }
+
+/** The stub that gives every element a layout box, held until the test ends. */
+let layoutStub: MockInstance | undefined
+
+/**
+ * Makes every element report one layout box until the test ends, as a browser does for an element on screen.
+ */
+export function stubLayout(): void {
+	layoutStub = vi
+		.spyOn(Element.prototype, 'getClientRects')
+		.mockReturnValue([LAYOUT_BOX] as unknown as DOMRectList)
+}
+
+/**
+ * Gives every element back the layout jsdom reports, none.
+ */
+function restoreLayout(): void {
+	layoutStub?.mockRestore()
+	layoutStub = undefined
+}
+
 /**
  * Prepares the test environment a design system application needs.
  */
@@ -188,6 +212,7 @@ export function installTestEnvironment(): void {
 	afterEach(cleanup)
 	afterEach(clearAnnouncements)
 	afterEach(resetViewport)
+	afterEach(restoreLayout)
 }
 
 /**

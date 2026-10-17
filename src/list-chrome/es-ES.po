@@ -404,6 +404,10 @@ msgid "List of: %1$s"
 msgstr "Lista de: %1$s"
 
 #, fuzzy
+msgid "Loading"
+msgstr "Cargando"
+
+#, fuzzy
 msgid "M j, Y g:i a"
 msgstr "j M Y H:i"
 
@@ -566,6 +570,10 @@ msgstr "Sáb"
 #, fuzzy
 msgid "Saturday"
 msgstr "sábado"
+
+#, fuzzy
+msgid "Scrollable section"
+msgstr "Sección desplazable"
 
 #, fuzzy
 msgid "Search"

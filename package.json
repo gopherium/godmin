@@ -30,6 +30,10 @@
 			"types": "./dist/dates.d.ts",
 			"default": "./dist/dates.js"
 		},
+		"./dialogs": {
+			"types": "./dist/dialogs.d.ts",
+			"default": "./dist/dialogs.js"
+		},
 		"./router": {
 			"types": "./dist/router.d.ts",
 			"default": "./dist/router.js"
@@ -63,6 +67,8 @@
 		"@tanstack/react-router": "^1.170.0",
 		"@testing-library/react": "^16.3.2",
 		"@wordpress/a11y": ">=4.57.0 <5.0.0",
+		"@wordpress/components": ">=42.0.0 <43.0.0",
+		"@wordpress/dataviews": ">=20.0.0 <21.0.0",
 		"@wordpress/date": ">=5.57.0 <6.0.0",
 		"@wordpress/i18n": ">=6.30.0 <7.0.0",
 		"@wordpress/icons": ">=18.0.0 <19.0.0",
@@ -78,6 +84,12 @@
 			"optional": true
 		},
 		"@testing-library/react": {
+			"optional": true
+		},
+		"@wordpress/components": {
+			"optional": true
+		},
+		"@wordpress/dataviews": {
 			"optional": true
 		},
 		"@wordpress/date": {
@@ -102,6 +114,7 @@
 		"@vitejs/plugin-react": "^6.0.3",
 		"@vitest/coverage-v8": "^5.0.3",
 		"@wordpress/a11y": "4.57.0",
+		"@wordpress/components": "42.0.0",
 		"@wordpress/dataviews": "20.0.0",
 		"@wordpress/date": "5.57.0",
 		"@wordpress/element": "9.0.0",

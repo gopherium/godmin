@@ -51,16 +51,23 @@ export interface ServerPaging {
 }
 
 /**
+ * Reports whether the size the server last served answered this same ask with rows on the page.
+ * @param limit - The rows asked for on one page, or null for the size the server serves by default.
+ * @param last - The size the server last served, absent before it served any.
+ * @returns Whether that size answered the ask and is above zero.
+ */
+function answers(limit: number | null, last?: ServedSize): last is ServedSize {
+	return last !== undefined && last.asked === limit && last.served > 0
+}
+
+/**
  * Returns how many rows each page before the shown one holds.
  * @param limit - The rows asked for on one page, or null for the size the server serves by default.
  * @param last - The size the server last served, absent before it served any.
  * @returns The size served when it answered this same ask, the size asked otherwise.
  */
 function stepOf(limit: number | null, last?: ServedSize): number {
-	if (last !== undefined && last.asked === limit && last.served > 0) {
-		return last.served
-	}
-	return limit ?? 0
+	return answers(limit, last) ? last.served : (limit ?? 0)
 }
 
 /**
@@ -86,6 +93,34 @@ export function paginationOf(page: ServedPage | undefined): PaginationInfo {
 	}
 	const totalPages = page.limit > 0 ? Math.ceil(page.total / page.limit) : Math.min(page.total, 1)
 	return { totalItems: page.total, totalPages }
+}
+
+/**
+ * Returns the page size a list shows: the one asked while the sizes offer it or are unknown, the fallback otherwise.
+ * @param asked - The page size the view holds, absent when it names none.
+ * @param sizes - The page sizes the list offers, absent while unknown.
+ * @param fallback - The size the list opens on, taken in place of one the sizes do not offer.
+ * @returns The page size.
+ */
+export function offeredSize(
+	asked: number | undefined,
+	sizes: readonly number[] | undefined,
+	fallback: number | undefined,
+): number | undefined {
+	if (sizes === undefined || sizes.some((size) => size === asked)) {
+		return asked
+	}
+	return fallback
+}
+
+/**
+ * Returns the part of a view a server pages by, leaving its page size out while the sizes are unknown.
+ * @param view - The view the list shows.
+ * @param sizes - The page sizes the list offers, absent while unknown.
+ * @returns The page alone while the sizes are unknown, else the page and its size.
+ */
+export function sizedView(view: PagedView, sizes: readonly number[] | undefined): PagedView {
+	return sizes === undefined ? { page: view.page } : { page: view.page, perPage: view.perPage }
 }
 
 /**

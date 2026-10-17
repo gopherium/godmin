@@ -15,6 +15,7 @@ import {
 	getAnnouncement,
 	installTestEnvironment,
 	renderAdmin,
+	stubLayout,
 	textClasses,
 } from '../src/testing'
 
@@ -227,6 +228,22 @@ test('leaves nothing on the page once it sampled', () => {
 	buttonClasses('outline')
 
 	expect(document.body.textContent).not.toContain('probe')
+})
+
+test('gives every element one layout box while a test asks for it, so focus code finds it', () => {
+	const { container } = render(<button type="button">Cancel</button>)
+	const button = container.querySelector('button') as HTMLButtonElement
+	expect(button.getClientRects()).toHaveLength(0)
+
+	stubLayout()
+
+	expect(button.getClientRects()).toHaveLength(1)
+	expect(document.createElement('div').getClientRects()[0]).toMatchObject({ width: 1, height: 1 })
+})
+
+test('takes the layout box away once the test ends', () => {
+	expect(document.createElement('button').getClientRects()).toHaveLength(0)
+	expect(vi.isMockFunction(Element.prototype.getClientRects)).toBe(false)
 })
 
 test('leaves an existing media query implementation alone', () => {

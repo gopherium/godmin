@@ -7,12 +7,19 @@ import { dirname, join, resolve } from 'node:path'
 import { expect, test } from 'vitest'
 
 import manifest from '../package.json'
+import * as dialogs from '../src/dialogs.js'
 
 /** The source folder the entries are built from. */
 const source = resolve(import.meta.dirname, '../src')
 
 /** The packages that bring the date engine, moment and its time zone data. */
 const datePackages = ['@wordpress/date', '@wordpress/i18n']
+
+/** The package that brings the WordPress components. */
+const componentsPackage = '@wordpress/components'
+
+/** The package that brings DataViews. */
+const dataviewsPackage = '@wordpress/dataviews'
 
 /**
  * Returns the source file a relative import names.
@@ -52,9 +59,19 @@ function packagesReachedFrom(entry: string): Set<string> {
 		const specifiers = seen.has(file) ? [] : importsOf(file)
 		seen.add(file)
 		pending.push(...specifiers.filter((name) => name.startsWith('.')).map((name) => sourceOf(file, name)))
-		specifiers.filter((name) => !name.startsWith('.')).forEach((name) => packages.add(name))
+		specifiers.filter((name) => !name.startsWith('.')).forEach((name) => packages.add(packageOf(name)))
 	}
 	return packages
+}
+
+/**
+ * Returns the package a bare import specifier names, without any subpath.
+ * @param specifier - The specifier, such as `@wordpress/dataviews/build-module/field-types`.
+ * @returns The package name, such as `@wordpress/dataviews`.
+ */
+function packageOf(specifier: string): string {
+	const parts = specifier.split('/')
+	return parts.slice(0, specifier.startsWith('@') ? 2 : 1).join('/')
 }
 
 test('the walk follows imports written with either quote', () => {
@@ -63,6 +80,13 @@ test('the walk follows imports written with either quote', () => {
 	writeFileSync(join(tree, 'dates.ts'), `import { dateI18n } from '@wordpress/date'\n`)
 
 	expect([...packagesReachedFrom(join(tree, 'index.ts'))]).toEqual(['@wordpress/date'])
+})
+
+test('the walk names a package reached through a subpath by the package itself', () => {
+	const tree = mkdtempSync(join(tmpdir(), 'godmin-entries-'))
+	writeFileSync(join(tree, 'index.ts'), `import { fieldTypes } from '@wordpress/dataviews/build-module/field-types'\n`)
+
+	expect([...packagesReachedFrom(join(tree, 'index.ts'))]).toEqual([dataviewsPackage])
 })
 
 test('the main entry reaches no date package, so importing it never loads moment', () => {
@@ -86,4 +110,35 @@ test('the date packages are optional peers, needed only by the dates entry', () 
 	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
 
 	expect(datePackages.map((name) => meta[name]?.optional)).toEqual([true, true])
+})
+
+test('the main entry reaches no components package, so importing it never loads the WordPress components', () => {
+	expect(packagesReachedFrom(join(source, 'index.ts')).has(componentsPackage)).toBe(false)
+})
+
+test('the main entry reaches no DataViews package, so importing it never loads DataViews', () => {
+	expect(packagesReachedFrom(join(source, 'index.ts')).has(dataviewsPackage)).toBe(false)
+})
+
+test('the DataViews package is an optional peer, its filter rules copied by the view guard', () => {
+	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
+
+	expect(meta[dataviewsPackage]?.optional).toBe(true)
+})
+
+test('the dialogs entry hands out the confirm dialog', () => {
+	expect(typeof dialogs.ConfirmDialog).toBe('function')
+	expect(packagesReachedFrom(join(source, 'dialogs.ts')).has(componentsPackage)).toBe(true)
+})
+
+test('the package publishes the dialogs entry beside the main one', () => {
+	const exported = manifest.exports as Record<string, unknown>
+
+	expect(exported['./dialogs']).toEqual({ types: './dist/dialogs.d.ts', default: './dist/dialogs.js' })
+})
+
+test('the components package is an optional peer, needed only by the dialogs entry', () => {
+	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
+
+	expect(meta[componentsPackage]?.optional).toBe(true)
 })

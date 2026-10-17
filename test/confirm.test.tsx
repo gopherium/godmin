@@ -71,10 +71,10 @@ test('cancels when Cancel is pressed', () => {
 	expect(onConfirm).not.toHaveBeenCalled()
 })
 
-test('draws Cancel minimal and neutral like the WordPress alert dialog, and the confirm as the solid blue one', () => {
+test('draws Cancel as accent text like the WordPress Site Editor dialogs, and the confirm as the solid one', () => {
 	renderConfirm()
 
-	expect(screen.getByRole('button', { name: 'Cancel' }).className).toBe(classesOf('minimal', 'neutral'))
+	expect(screen.getByRole('button', { name: 'Cancel' }).className).toBe(classesOf('minimal'))
 	expect(screen.getByRole('button', { name: 'Trash' }).className).toBe(classesOf('solid'))
 })
 
@@ -102,7 +102,7 @@ test('greys Cancel out and keeps it from closing the modal while the action runs
 
 	expect(cancel.getAttribute('aria-disabled')).toBe('true')
 	expect(cancel.hasAttribute('data-disabled'), 'the design system greys out only a data-disabled button').toBe(true)
-	expect(cancel.className).toBe(classesOf('minimal', 'neutral'))
+	expect(cancel.className).toBe(classesOf('minimal'))
 	expect(onCancel).not.toHaveBeenCalled()
 	expect(onConfirm).not.toHaveBeenCalled()
 })

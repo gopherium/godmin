@@ -412,6 +412,15 @@ function drawsCalendar(path: string): boolean {
 }
 
 /**
+ * Reports whether a WordPress UI module is the button a dialog's actions are drawn with.
+ * @param path - The module path inside the build.
+ * @returns Whether the module is the button.
+ */
+function drawsButton(path: string): boolean {
+	return path === 'button/button.mjs'
+}
+
+/**
  * Returns the placeholders and tags a message carries, sorted.
  * @param text - The message or one of its translations.
  * @returns The marks.
@@ -456,6 +465,7 @@ test('ships only messages the DataViews build, the components it renders with or
 			...messagesIn(dataviewsBuild, () => true),
 			...messagesIn(componentsBuild, rendersInList),
 			...messagesIn(uiBuild, drawsCalendar),
+			...messagesIn(uiBuild, drawsButton),
 			...LIST_DATE_MESSAGES,
 		].map(signatureOf),
 	)
@@ -472,6 +482,15 @@ test('covers every message the DataViews list chrome asks for', () => {
 	expect(asked.length, 'the reader found no message in the build').toBeGreaterThan(90)
 	for (const message of asked) {
 		expect(ships.has(signatureOf(message)), `${keyOf(message)} ships no translation`).toBe(true)
+	}
+})
+
+test('ships the words the WordPress button and modal speak inside a dialog, in each language', () => {
+	for (const catalogue of CATALOGUES) {
+		const ships = new Set(catalogue.messages.map(keyOf))
+		for (const spoken of ['Loading', 'Scrollable section']) {
+			expect(ships.has(spoken), `${catalogue.locale} ships no ${spoken}`).toBe(true)
+		}
 	}
 })
 

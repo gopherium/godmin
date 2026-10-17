@@ -6,10 +6,27 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 ## [0.20.0] - 2026-10-16
 
+### Added
+
+- `useListRun` holds what a list does around an action on its rows: one failure notice, a run that is no longer the latest ignored, the ticked rows cleared when the list changes, and the list focused once an item moved.
+- `useBulkRun` runs one call per picked row, refreshes the list, shows one toast and settles the run.
+- `RunConfirm` is the body of a DataViews confirm that runs the action, keeps Cancel inert while it runs and closes once it settles.
+- `Page` takes `listLabel` to name its list region and `listRef` to focus it.
+- `viewNarrows` tells whether a search or a filter holding a value narrows a list.
+- `offeredView` drops a sort or a filter the list fields do not offer, back to the opening order.
+- `offeredSize` keeps a page size the list offers and falls back for one it does not, and `sizedView` leaves the size out while the sizes are unknown.
+- `FileButton` takes `variant`, `tone` and `size`, still compact and solid by default.
+- `ConfirmDialog` in the new `@gopherium/godmin/dialogs` entry asks before an action outside a list as WordPress does: no header on a confirm that removes something, Cancel focused, 560px wide and a bottom sheet below 600px.
+- `stubLayout` in `@gopherium/godmin/testing` gives every element a layout box until the test ends.
+
 ### Changed
 
-- `startListDates` and `listDate` move to `@gopherium/godmin/dates`, so the main entry no longer loads `@wordpress/date`, moment and its time zone data.
+- **Breaking.** `startListDates` and `listDate` move to `@gopherium/godmin/dates`, so the main entry no longer loads `@wordpress/date`, moment and its time zone data. Import them from `@gopherium/godmin/dates`.
 - `@wordpress/date` and `@wordpress/i18n` become optional peer dependencies, needed only by the dates entry.
+- `ConfirmBody` and `RenameBody` draw Cancel as accent text, as the WordPress Site Editor dialogs do, instead of the neutral tone.
+- `@wordpress/components` is an optional peer dependency, needed only by the dialogs entry.
+- `@wordpress/dataviews` is an optional peer dependency, `>=20.0.0 <21.0.0`, the release whose filter rules `offeredView` follows.
+- The Spanish and French catalogues carry "Loading" and "Scrollable section", which the WordPress button and modal speak inside a dialog.
 
 ## [0.19.0] - 2026-10-15
 
