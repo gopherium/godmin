@@ -6,7 +6,7 @@ import { dirname, join, resolve } from 'node:path'
 
 import { expect, test } from 'vitest'
 
-import { DENSE_BREAKPOINT, EDGE_BREAKPOINT } from '../src/breakpoints.js'
+import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
 
 const base = readFileSync(resolve('src/base.css'), 'utf8')
 const dataviewsManifest = createRequire(import.meta.url).resolve('@wordpress/dataviews/package.json')
@@ -1134,9 +1134,10 @@ test('lets a long unbroken word wrap inside a toast', () => {
 	expect(ruleOf('.godmin-toast')).toMatch(/overflow-wrap:\s*anywhere/)
 })
 
-test('widens a toast to the region below 600px and keeps the 560px cap there, as the snackbar does', () => {
-	const toast = ruleOf('.godmin-toast', blockOf('@media (max-width: 599px)'))
+test('widens a toast to the region below the sheet breakpoint, keeping the 560px cap, as the snackbar does', () => {
+	const toast = ruleOf('.godmin-toast', blockOf(`@media (max-width: ${SHEET_BREAKPOINT - 1}px)`))
 
+	expect(SHEET_BREAKPOINT).toBe(600)
 	expect(toast).toMatch(/(?:^|[^-])width:\s*100%/m)
 	expect(toast, 'the snackbar keeps its cap below 600px').not.toMatch(/max-width/)
 })

@@ -52,12 +52,12 @@ two lines do for you.
 
 | Entry point | Contents |
 | --- | --- |
-| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `PageTabs`, `PageTab`, `SectionTitle`, `InitialsAvatar`, `NavScreen`, `ErrorNotice`, `LoadMore`, `LogList`, `LogItem`, `LogTime`, `LoadingScreen`, `LoadingRows`, `Toaster`, `useToaster`, `RepeatRows`, `RowControls`, `useRowKeys`, `keyFromLabel`, `listChromeCatalogFor`, `LIST_CHROME_DOMAIN`, `ListEmpty`, `ConfirmBody`, `RenameBody`, `FileButton`, `useServerPaging`, `pageWindow`, `paginationOf`, `runEach`, `bulkNotes`, `useListRun`, `useBulkRun`, `RunConfirm`, `viewNarrows`, `offeredView`, `offeredSize`, `sizedView`, `useMediaQuery`, `useTokenDocument`, the breakpoints, `SUPPORTED_WPDS` |
+| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `PageTabs`, `PageTab`, `SectionTitle`, `InitialsAvatar`, `NavScreen`, `ErrorNotice`, `LoadMore`, `LogList`, `LogItem`, `LogTime`, `LoadingScreen`, `LoadingRows`, `Toaster`, `useToaster`, `RepeatRows`, `RowControls`, `useRowKeys`, `keyFromLabel`, `listChromeCatalogFor`, `LIST_CHROME_DOMAIN`, `ListEmpty`, `ConfirmBody`, `RenameBody`, `FileButton`, `useServerPaging`, `pageWindow`, `paginationOf`, `runEach`, `bulkNotes`, `useListRun`, `useBulkRun`, `RunConfirm`, `viewNarrows`, `offeredView`, `offeredSize`, `sizedView`, `useMediaQuery`, `useTokenDocument`, the breakpoints `RAIL_BREAKPOINT`, `EDGE_BREAKPOINT`, `DENSE_BREAKPOINT`, `SHEET_BREAKPOINT`, `TITLE_BREAKPOINT` and `SMALL_VIEWPORT`, `SUPPORTED_WPDS` |
 | `@gopherium/godmin/base.css` | Cascade layer order, design tokens, host rules, frame and screen styles |
 | `@gopherium/godmin/dates` | `startListDates`, `listDate`, the only entry that loads `@wordpress/date` |
 | `@gopherium/godmin/dialogs` | `ConfirmDialog`, the only entry that loads `@wordpress/components`. Load `@wordpress/components/build-style/style.css` once in your app, as DataViews asks |
 | `@gopherium/godmin/router` | `useListView`, `listSearch`, `openOnTap`, `useCanvas`, `useFrameLocation`, the `canvas` route static data |
-| `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport`, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR`, `textClasses`, `badgeClasses`, `buttonClasses`, `stubLayout` |
+| `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport` and its `TestViewport` type, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR`, `textClasses`, `badgeClasses`, `buttonClasses`, `stubLayout` |
 | `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `godminStylesheetFirst`, `duplicateCopies`, `hoistStylesheet` |
 | `@gopherium/godmin/stylelint` | The design system stylelint rules |
 
