@@ -113,6 +113,21 @@ test('answers the query the WordPress viewport hook asks at the edge breakpoint,
 	expect([390, 782, 783].map((width) => matchesAt(width, wordpressNarrow))).toEqual([true, true, false])
 })
 
+test('reads a query in any letter case, as a browser does', () => {
+	expect(matchesAt(390, 'SCREEN AND (MAX-WIDTH: 599PX)')).toBe(true)
+	expect(matchesAt(600, 'sCrEeN aNd (MiN-WiDtH: 600pX)')).toBe(true)
+	expect(matchesAt(600, 'ONLY ALL AND (MAX-WIDTH: 599PX)')).toBe(false)
+})
+
+test('answers a query holding a long run of spaces at once', () => {
+	const spaces = ' '.repeat(50_000)
+	const started = performance.now()
+
+	expect(matchesAt(390, `screen${spaces}and${spaces}(max-width: 599px)`)).toBe(true)
+	expect(matchesAt(390, `screen${spaces}x`)).toBe(false)
+	expect(performance.now() - started).toBeLessThan(250)
+})
+
 test('reports no match for print, a negated query, a width in em or a feature other than the width', () => {
 	expect(matchesAt(390, 'print and (max-width: 599px)')).toBe(false)
 	expect(matchesAt(390, 'not screen and (max-width: 599px)')).toBe(false)

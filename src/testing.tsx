@@ -149,8 +149,18 @@ function conditionHolds(condition: string, width: number): boolean {
  */
 function matchesWidth(media: string, width: number): boolean {
 	return media
+		.toLowerCase()
 		.split(',')
-		.some((query) => query.split(/\s+and\s+/).every((condition) => conditionHolds(condition, width)))
+		.some((query) => conditionsOf(query).every((condition) => conditionHolds(condition, width)))
+}
+
+/**
+ * Returns the conditions a media query joins with and, its spaces folded to one.
+ * @param query - One query of a media query list, in lower case.
+ * @returns The conditions, such as `screen` and `(max-width: 599px)`.
+ */
+function conditionsOf(query: string): string[] {
+	return query.trim().split(/\s+/).join(' ').split(' and ')
 }
 
 /**
