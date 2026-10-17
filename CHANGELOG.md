@@ -4,6 +4,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `SHEET_BREAKPOINT`, 600, the width below which a modal is a bottom sheet and a toast widens to the screen less a 16px gap on each side, as in WordPress.
+- `TITLE_BREAKPOINT`, 404, the width below which an editor header drops its document title, as the WordPress editor does.
+- `setViewport` in `@gopherium/godmin/testing` takes `{ width }` and answers `min-width` and `max-width` queries by it, `screen` ones included, so a test can sit between two breakpoints. `{ matches }` works as before, and the new `TestViewport` type names both.
+- `ConfirmDialog` takes `size`, `small` for a 400px card or `medium` for the 560px default, as WordPress uses small for the Move to trash button of its editor and medium for the Trash action of its menus.
+
 ## [0.21.0] - 2026-10-17
 
 ### Added
