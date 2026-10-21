@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Modal } from '@wordpress/components'
-import { useId, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
 import { ConfirmBody } from './confirm.js'
@@ -18,8 +18,8 @@ export interface ConfirmDialogProps {
 	confirmLabel: string
 	/** The label of the button that closes the dialog. */
 	cancelLabel: string
-	/** Carries the action out, resolving with the failure to show, or with nothing once it is done. */
-	onConfirm: () => Promise<string | undefined>
+	/** Carries the action out. Return nothing to close at once, or the write's promise to stay busy until it ends. */
+	onConfirm: () => void | Promise<void>
 	/** Takes the dialog away after Cancel, Escape, a click outside it, its close button or a confirm that finished. */
 	onClose: () => void
 }
@@ -39,22 +39,25 @@ export function ConfirmDialog({
 	onClose,
 }: ConfirmDialogProps) {
 	const [busy, setBusy] = useState(false)
-	const [failure, setFailure] = useState<string>()
+	const open = useRef(true)
 	const question = useId()
-	const confirm = async () => {
-		setBusy(true)
-		setFailure(undefined)
-		let failed: string | undefined
-		try {
-			failed = await onConfirm()
-		} finally {
-			setBusy(false)
-		}
-		if (failed === undefined) {
+	const close = () => {
+		if (open.current) {
+			open.current = false
 			onClose()
+		}
+	}
+	const confirm = () => {
+		const running = onConfirm()
+		if (!(running instanceof Promise)) {
+			close()
 			return
 		}
-		setFailure(failed)
+		setBusy(true)
+		void running.finally(() => {
+			setBusy(false)
+			close()
+		})
 	}
 	return (
 		<Modal
@@ -63,19 +66,9 @@ export function ConfirmDialog({
 			title={title}
 			__experimentalHideHeader={title === undefined}
 			aria={{ labelledby: question, describedby: title === undefined ? undefined : question }}
-			isDismissible={!busy}
-			shouldCloseOnEsc={!busy}
-			shouldCloseOnClickOutside={!busy}
-			onRequestClose={onClose}
+			onRequestClose={close}
 		>
-			<ConfirmBody
-				confirmLabel={confirmLabel}
-				cancelLabel={cancelLabel}
-				busy={busy}
-				failure={failure}
-				onConfirm={() => void confirm()}
-				onCancel={onClose}
-			>
+			<ConfirmBody confirmLabel={confirmLabel} cancelLabel={cancelLabel} busy={busy} onConfirm={confirm} onCancel={close}>
 				<span id={question}>{children}</span>
 			</ConfirmBody>
 		</Modal>

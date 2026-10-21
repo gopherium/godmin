@@ -8,15 +8,16 @@ import { expect, test, vi } from 'vitest'
 
 import { ConfirmBody } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
+import { declaredValue, gapInPixels } from './styles.js'
 
 installTestEnvironment()
 
 /**
  * Renders a confirmation body asking to trash a post, with spies for its handlers.
- * @param props - The busy flag and the failure to show.
+ * @param props - The busy flag, and any prop the body no longer takes.
  * @returns The confirm and cancel spies.
  */
-function renderConfirm(props: { busy?: boolean; failure?: string } = {}) {
+function renderConfirm(props: { busy?: boolean } & Record<string, unknown> = {}) {
 	const onConfirm = vi.fn()
 	const onCancel = vi.fn()
 	renderAdmin(
@@ -119,14 +120,23 @@ test('keeps a greyed Cancel focusable, and Enter or Space on it closes nothing w
 	expect(onCancel).not.toHaveBeenCalled()
 })
 
-test('shows a failure inside the body, announced as an alert', () => {
+test('shows no failure inside the body, since a failure belongs in a toast', () => {
 	renderConfirm({ failure: 'The post could not be moved to the trash.' })
 
-	expect(screen.getByRole('alert').textContent).toBe('The post could not be moved to the trash.')
+	expect(screen.queryByRole('alert')).toBeNull()
+	expect(screen.queryByText('The post could not be moved to the trash.')).toBeNull()
 })
 
-test('shows no alert while nothing failed', () => {
+test('sets the question on the line WordPress gives its confirm text, 1.4 times the 13px text', () => {
 	renderConfirm()
+	const question = screen.getByText('Are you sure you want to move "Hello" to the trash?')
 
-	expect(screen.queryByRole('alert')).toBeNull()
+	expect(declaredValue(question, 'line-height')).toBe('1.4')
+})
+
+test('leaves 20px between the question and the buttons, as the WordPress row confirms do', () => {
+	renderConfirm()
+	const body = (screen.getByRole('button', { name: 'Cancel' }).parentElement as HTMLElement).parentElement
+
+	expect(gapInPixels(body as HTMLElement)).toBe(20)
 })
