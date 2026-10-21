@@ -19,7 +19,7 @@ export interface ConfirmDialogProps {
 	/** The label of the button that closes the dialog. */
 	cancelLabel: string
 	/** Carries the action out. Return nothing to close at once, or the write's promise to stay busy until it ends. */
-	onConfirm: () => void | Promise<void>
+	onConfirm: () => void | Promise<unknown>
 	/** Takes the dialog away after Cancel, Escape, a click outside it, its close button or a confirm that finished. */
 	onClose: () => void
 }

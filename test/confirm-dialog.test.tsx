@@ -272,6 +272,31 @@ test('stays busy with Cancel greyed while the returned promise runs, then closes
 	expect(screen.queryByRole('dialog')).toBeNull()
 })
 
+test('waits for a write that ends with the saved item, then closes', async () => {
+	let finish: (saved: { id: string }) => void = () => {}
+	const onClose = vi.fn()
+	renderAdmin(
+		<ConfirmDialog
+			confirmLabel="Trash"
+			cancelLabel="Cancel"
+			onConfirm={() =>
+				new Promise<{ id: string }>((done) => {
+					finish = done
+				})
+			}
+			onClose={onClose}
+		>
+			{TRASH_QUESTION}
+		</ConfirmDialog>,
+	)
+
+	await press('Trash')
+	expect(onClose).not.toHaveBeenCalled()
+
+	await act(async () => finish({ id: '1' }))
+	expect(onClose).toHaveBeenCalledOnce()
+})
+
 test('closes after a promise that rejects, and hands the error on', async () => {
 	const thrown = new Error('offline')
 	const reasons = heardRejections()

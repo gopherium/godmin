@@ -116,6 +116,22 @@ test('closes only once the run settles', async () => {
 	expect(closeModal).toHaveBeenCalledOnce()
 })
 
+test('closes once a run that ends with the items it saved settles', async () => {
+	let finish: (saved: Post[]) => void = () => {}
+	const { closeModal } = renderConfirm({
+		run: () =>
+			new Promise<Post[]>((done) => {
+				finish = done
+			}),
+	})
+
+	await press('Trash')
+	expect(closeModal).not.toHaveBeenCalled()
+
+	await act(async () => finish([HELLO]))
+	expect(closeModal).toHaveBeenCalledOnce()
+})
+
 test('shows the confirm busy and keeps Cancel inert while the run goes', async () => {
 	const held = heldRun()
 	const { run, closeModal } = renderConfirm({ run: held.run })

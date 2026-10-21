@@ -4,6 +4,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Fixed
+
+- `ConfirmDialog`'s `onConfirm`, `FormDialog`'s `onSubmit` and `RunConfirm`'s `run` take the promise of a write that ends with a value, such as the saved item, so a caller can return `save(values).catch(...)` as it is.
+
 ## [0.23.0] - 2026-10-21
 
 ### Added

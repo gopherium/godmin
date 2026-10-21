@@ -224,6 +224,22 @@ test('keeps the submit busy while the returned promise runs and ignores a second
 	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
 })
 
+test('keeps the submit busy until a write that ends with the saved item ends', async () => {
+	let finish: (saved: { id: string }) => void = () => {}
+	await openDialog({
+		onSubmit: () =>
+			new Promise<{ id: string }>((done) => {
+				finish = done
+			}),
+	})
+
+	await press('Add')
+	expect(submit().getAttribute('aria-disabled')).toBe('true')
+
+	await act(async () => finish({ id: '1' }))
+	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+})
+
 test('keeps Cancel live while the send runs', async () => {
 	const held = heldSend()
 	await openDialog({ onSubmit: held.send })
