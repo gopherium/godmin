@@ -18,7 +18,7 @@ export interface RunConfirmProps<Item> {
 	/** The label of the button that closes the modal. */
 	cancelLabel: string
 	/** Runs the action over the items, settling once the list shows how it went. */
-	run: (items: Item[]) => Promise<void>
+	run: (items: Item[]) => Promise<unknown>
 }
 
 /**

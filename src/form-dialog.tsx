@@ -24,7 +24,7 @@ export interface FormDialogProps {
 	/** What the form does: 16px above the buttons for a create, the default, 20px for an edit, 12px for a copy. */
 	kind?: FormKind
 	/** Sends the form. Return the write's promise to keep the button busy until it ends. */
-	onSubmit: () => void | Promise<void>
+	onSubmit: () => void | Promise<unknown>
 	/** Takes the dialog away after Cancel, Escape, a click on the dimmed page or the close button. */
 	onClose: () => void
 }
