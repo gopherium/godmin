@@ -19,12 +19,21 @@ export interface BulkOutcome<Item> {
 }
 
 /**
+ * Tells whether an answer is an object with an error field.
+ * @param answer - What a call resolved with.
+ * @returns Whether the answer names an error, null included.
+ */
+function namesError(answer: unknown): answer is { error: unknown } {
+	return typeof answer === 'object' && answer !== null && 'error' in answer
+}
+
+/**
  * Returns the error an answer carries, or undefined when it carries none.
  * @param answer - What a call resolved with.
  * @returns The answer's error.
  */
 function answeredError(answer: unknown): unknown {
-	if (typeof answer !== 'object' || answer === null || !('error' in answer)) {
+	if (!namesError(answer)) {
 		return undefined
 	}
 	const error = answer.error
@@ -65,7 +74,7 @@ export async function runEach<Item>(
 export interface BulkWords<Item> {
 	/** The toast for the items that finished, given their count and the one item when only one was asked. */
 	done: (count: number, only: Item | undefined) => string
-	/** The notice for the items that failed, given every failure and how many items were asked. */
+	/** The toast for the items that failed, shown instead of the done one, given each failure and how many were asked. */
 	failed: (failures: BulkFailure<Item>[], asked: number) => string
 }
 
@@ -73,7 +82,7 @@ export interface BulkWords<Item> {
 export interface BulkNotes {
 	/** The toast confirming the items that finished. */
 	toast?: string
-	/** The notice naming the items that failed. */
+	/** The words naming the items that failed, which a bulk run toasts in place of the confirming toast. */
 	notice?: string
 }
 

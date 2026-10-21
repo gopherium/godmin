@@ -3,7 +3,7 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 
-import { ErrorNotice, Page, Toaster, useBulkRun, useListRun } from '../src/index'
+import { Page, Toaster, useBulkRun, useListRun } from '../src/index'
 import type { BulkRun, BulkWords } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
@@ -46,10 +46,10 @@ interface Bench {
 /**
  * Renders the rows of a list with a Trash button that runs one call per item.
  * @param props - The bench the test set up.
- * @returns The page with its failure notice above the list.
+ * @returns The page with its list.
  */
 function TrashScreen({ bench }: { bench: Bench }) {
-	const { failure, run, region } = useListRun('post publish', () => {})
+	const { run, region } = useListRun('post publish', () => {})
 	const bulk = useBulkRun<Post>(run, bench.refresh)
 	return (
 		<Page
@@ -63,7 +63,7 @@ function TrashScreen({ bench }: { bench: Bench }) {
 				</button>
 			}
 		>
-			{failure === undefined ? null : <ErrorNotice>{failure}</ErrorNotice>}
+			<p>Hello</p>
 		</Page>
 	)
 }
@@ -160,22 +160,31 @@ test('names the one item in the toast when only one was asked', async () => {
 	expect(toasts()).toEqual(['"Maria Perez" moved to the trash.'])
 })
 
-test('settles the list with the notice for the items that failed', async () => {
+test('shows one toast with the failure words when an item failed, as the WordPress Trash does', async () => {
 	const bench = renderTrash({ call: failHello })
 
 	await trash(bench)
 
-	expect(screen.getByRole('alert').textContent).toBe('Not moved to the trash: 1 of 2.')
-	expect(toasts()).toEqual(['Moved to the trash: 1.'])
+	expect(toasts()).toEqual(['Not moved to the trash: 1 of 2.'])
+	expect(screen.queryByRole('alert')).toBeNull()
 })
 
-test('shows no toast when every item failed', async () => {
+test('shows one toast with the failure words when every item failed', async () => {
 	const bench = renderTrash({ call: failAll })
 
 	await trash(bench)
 
+	expect(toasts()).toEqual(['Not moved to the trash: 2 of 2.'])
+	expect(screen.queryByRole('alert')).toBeNull()
+})
+
+test('shows no toast for a run handed no items', async () => {
+	const bench = renderTrash({ items: [] })
+
+	await trash(bench)
+
 	expect(toasts()).toEqual([])
-	expect(screen.getByRole('alert').textContent).toBe('Not moved to the trash: 2 of 2.')
+	expect(bench.refresh).toHaveBeenCalledExactlyOnceWith([])
 })
 
 test('focuses the list once an item finished, and leaves the focus alone when every item failed', async () => {
@@ -201,7 +210,6 @@ test('waits for the refresh before it settles the list', async () => {
 		await vi.waitFor(() => expect(refresh).toHaveBeenCalledOnce())
 	})
 
-	expect(screen.queryByRole('alert')).toBeNull()
 	expect(toasts()).toEqual([])
 	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Trash' }))
 
@@ -210,8 +218,8 @@ test('waits for the refresh before it settles the list', async () => {
 		await bench.runs[0]
 	})
 
-	expect(screen.getByRole('alert').textContent).toBe('Not moved to the trash: 1 of 2.')
-	expect(toasts()).toEqual(['Moved to the trash: 1.'])
+	expect(toasts()).toEqual(['Not moved to the trash: 1 of 2.'])
+	expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Posts' }))
 })
 
 test('reports what the run reached and settles it when the refresh fails, then hands the error on', async () => {
@@ -229,8 +237,7 @@ test('reports what the run reached and settles it when the refresh fails, then h
 		await handed
 	})
 
-	expect(screen.getByRole('alert').textContent).toBe('Not moved to the trash: 1 of 2.')
-	expect(toasts()).toEqual(['Moved to the trash: 1.'])
+	expect(toasts()).toEqual(['Not moved to the trash: 1 of 2.'])
 	expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Posts' }))
 })
 
@@ -288,17 +295,4 @@ test('hands the same run while the list run and the refresh stay the same, and a
 		</Toaster>,
 	)
 	expect(seen.at(-1)).not.toBe(seen[0])
-})
-
-test('clears the last failure as the run starts', async () => {
-	const bench = renderTrash({ call: failHello })
-	await trash(bench)
-	expect(screen.getByRole('alert')).not.toBeNull()
-
-	pressTrash()
-
-	expect(screen.queryByRole('alert')).toBeNull()
-	await act(async () => {
-		await bench.runs[1]
-	})
 })

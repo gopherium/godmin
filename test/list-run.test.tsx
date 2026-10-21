@@ -4,8 +4,8 @@ import { act, fireEvent, screen } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
-import { ErrorNotice, Page, useListRun } from '../src/index'
-import type { ListRun, RunSettled } from '../src/index'
+import { Page, useListRun } from '../src/index'
+import type { ListRun, ListRunState, RunSettled } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -16,6 +16,8 @@ interface Seen {
 	settles: RunSettled[]
 	/** The run the list handed on each render, in the order rendered. */
 	runs: ListRun[]
+	/** What the list run handed on each render. */
+	states: ListRunState[]
 	/** The ticked rows the screen held on each render. */
 	ticked: string[][]
 }
@@ -23,7 +25,7 @@ interface Seen {
 /**
  * Renders a list screen around one list run, with a button that starts a run.
  * @param props - The list on show, whether it draws its region, the spy on the selection setter and what to record.
- * @returns The page with its list region and failure notice.
+ * @returns The page with its list region.
  */
 function ListScreen({
 	scope,
@@ -37,10 +39,12 @@ function ListScreen({
 	seen: Seen
 }) {
 	const [ticked, setTicked] = useState(['1', '2'])
-	const { failure, run, region: listRef } = useListRun(scope, (selection) => {
+	const state = useListRun(scope, (selection) => {
 		onTicks(selection)
 		setTicked(selection)
 	})
+	const { run, region: listRef } = state
+	seen.states.push(state)
 	seen.runs.push(run)
 	seen.ticked.push(ticked)
 	return (
@@ -55,7 +59,7 @@ function ListScreen({
 				</button>
 			}
 		>
-			{failure === undefined ? null : <ErrorNotice>{failure}</ErrorNotice>}
+			<p>Hello</p>
 		</Page>
 	)
 }
@@ -67,7 +71,7 @@ function ListScreen({
  * @returns What the screen recorded, the selection spy and a rerender onto another list.
  */
 function renderList(scope: string, region = true) {
-	const seen: Seen = { settles: [], runs: [], ticked: [] }
+	const seen: Seen = { settles: [], runs: [], states: [], ticked: [] }
 	const onTicks = vi.fn()
 	const { rerender, unmount } = renderAdmin(<ListScreen scope={scope} region={region} onTicks={onTicks} seen={seen} />)
 	return {
@@ -90,30 +94,19 @@ function start(): void {
 /**
  * Settles a run the list started.
  * @param settle - The settle function the run was handed.
- * @param failure - The failure to show, none when every item finished.
  * @param moved - Whether an item moved.
  */
-function settle(settle: RunSettled, failure: string | undefined, moved: boolean): void {
-	act(() => settle(failure, moved))
+function settle(settle: RunSettled, moved: boolean): void {
+	act(() => settle(moved))
 }
 
-test('shows the failure a run settles with, and clears it once the next run starts', () => {
+test('holds no failure above the list, since a run shows its failure in a toast', () => {
 	const { seen } = renderList('post publish')
 	start()
 
-	settle(seen.settles[0], '"Hello" could not be moved to the trash.', false)
-	expect(screen.getByRole('alert').textContent).toBe('"Hello" could not be moved to the trash.')
+	settle(seen.settles[0], false)
 
-	start()
-	expect(screen.queryByRole('alert')).toBeNull()
-})
-
-test('shows no failure once a run settles with none', () => {
-	const { seen } = renderList('post publish')
-	start()
-
-	settle(seen.settles[0], undefined, true)
-
+	expect(Object.keys(seen.states.at(-1) as ListRunState).sort()).toEqual(['region', 'run'])
 	expect(screen.queryByRole('alert')).toBeNull()
 })
 
@@ -121,7 +114,7 @@ test('focuses the list region once a run moved an item', () => {
 	const { seen } = renderList('post publish')
 	start()
 
-	settle(seen.settles[0], undefined, true)
+	settle(seen.settles[0], true)
 
 	expect(document.activeElement).toBe(screen.getByRole('region', { name: 'Posts' }))
 })
@@ -130,7 +123,7 @@ test('leaves the focus alone when a run moved nothing', () => {
 	const { seen } = renderList('post publish')
 	start()
 
-	settle(seen.settles[0], '"Hello" could not be moved to the trash.', false)
+	settle(seen.settles[0], false)
 
 	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Trash' }))
 })
@@ -140,10 +133,9 @@ test('ignores a run that is no longer the latest', () => {
 	start()
 	start()
 
-	settle(seen.settles[1], undefined, false)
-	settle(seen.settles[0], '"Hello" could not be moved to the trash.', true)
+	settle(seen.settles[1], false)
+	settle(seen.settles[0], true)
 
-	expect(screen.queryByRole('alert')).toBeNull()
 	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Trash' }))
 })
 
@@ -152,20 +144,9 @@ test('ignores a run started before the list changed, and leaves the focus alone'
 	start()
 	show('post trash')
 
-	settle(seen.settles[0], '"Hello" could not be moved to the trash.', true)
+	settle(seen.settles[0], true)
 
-	expect(screen.queryByRole('alert')).toBeNull()
 	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Trash' }))
-})
-
-test('forgets the failure of one list once another is shown', () => {
-	const { seen, show } = renderList('post publish')
-	start()
-	settle(seen.settles[0], '"Hello" could not be moved to the trash.', false)
-
-	show('post trash')
-
-	expect(screen.queryByRole('alert')).toBeNull()
 })
 
 test('clears the ticked rows once another list is shown, and only then', () => {
@@ -214,21 +195,32 @@ test('clears ticked rows a parent holds once another list is shown, with no warn
 	expect(ticked.at(-1)).toEqual([])
 })
 
-test('hands the same run while the list stays the same', () => {
+test('hands the same run for as long as the screen stays, whichever list it shows', () => {
 	const { seen, show } = renderList('post publish')
 	show('post publish')
 	expect(seen.runs.at(-1)).toBe(seen.runs[0])
 
 	show('post trash')
 
-	expect(seen.runs.at(-1)).not.toBe(seen.runs[0])
+	expect(seen.runs.at(-1)).toBe(seen.runs[0])
+})
+
+test('ignores a run started before the list changed, even once the first list is shown again', () => {
+	const { seen, show } = renderList('post publish')
+	start()
+	show('post trash')
+	show('post publish')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Trash' }))
 })
 
 test('settles a run on a screen that draws no list region, with nothing to focus', () => {
 	const { seen } = renderList('post publish', false)
 	start()
 
-	settle(seen.settles[0], undefined, true)
+	settle(seen.settles[0], true)
 
 	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Trash' }))
 })
