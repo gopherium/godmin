@@ -4,6 +4,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `FormBody` draws the body of a form modal: the fields, Cancel as accent text and the submit button, spaced as WordPress spaces an edit, a copy or a create.
+- `FormDialog` in `@gopherium/godmin/dialogs` asks for a form from a button outside a list, as WordPress opens Add Page: a title, the first field focused, 400px or 560px wide, a bottom sheet below 600px.
+
+### Changed
+
+- **Breaking.** `ConfirmDialog` takes an `onConfirm` that returns nothing, to close at once, or a promise, to stay busy until it ends. Show a failure in a toast.
+- **Breaking.** `ConfirmDialog` closes on Escape, a click outside it or its close button while it works.
+- **Breaking.** `ConfirmBody` and `RenameBody` no longer take `failure`, and `RenameBody` no longer takes `busy`. Show a failure in a toast.
+- **Breaking.** `RenameBody` sends an unchanged name and stops only a blank one.
+- **Breaking.** `useListRun` no longer holds a failure, and `RunSettled` takes only whether an item moved.
+- **Breaking.** `useBulkRun` shows one toast, the failure words when an item failed.
+- `useListRun` hands the same `run` for as long as the screen stays, whichever list it shows.
+- `ConfirmBody` and `RenameBody` leave 20px above their buttons, and `ConfirmBody` sets its question on the 1.4 line WordPress gives confirm text.
+
 ## [0.22.0] - 2026-10-18
 
 ### Added
