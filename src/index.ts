@@ -20,6 +20,8 @@ export { ConfirmBody } from './confirm.js'
 export type { ConfirmBodyProps } from './confirm.js'
 export { FileButton } from './file-button.js'
 export type { FileButtonProps } from './file-button.js'
+export { FormBody } from './form.js'
+export type { FormBodyProps, FormKind } from './form.js'
 export { Frame } from './frame.js'
 export type {
 	CanvasMode,

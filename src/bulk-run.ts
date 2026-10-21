@@ -3,7 +3,7 @@
 import { useCallback } from 'react'
 
 import { bulkNotes, runEach } from './bulk.js'
-import type { BulkNotes, BulkWords } from './bulk.js'
+import type { BulkOutcome, BulkWords } from './bulk.js'
 import type { ListRun } from './list-run.js'
 import { useToaster } from './toaster.js'
 
@@ -15,7 +15,19 @@ export type BulkRun<Item> = (
 ) => Promise<void>
 
 /**
- * Returns the handler that runs one call per item, refreshes the list, toasts what finished and settles the run.
+ * Returns the one message a bulk outcome shows: the failure words when an item failed, else the done words.
+ * @param items - The items the run was given.
+ * @param outcome - What the run reached.
+ * @param words - The words for the items that finished and for the ones that failed.
+ * @returns The message, none when the run was given no items.
+ */
+function bulkToast<Item>(items: Item[], outcome: BulkOutcome<Item>, words: BulkWords<Item>): string | undefined {
+	const notes = bulkNotes(items, outcome, words)
+	return notes.notice ?? notes.toast
+}
+
+/**
+ * Returns the handler that runs one call per item, refreshes the list, shows one toast and settles the run.
  * @param list - What the list does around a run.
  * @param refresh - Reloads the list, given the items the run acted on.
  * @returns The run handler, the same while the list run and the refresh stay the same.
@@ -26,17 +38,16 @@ export function useBulkRun<Item>(list: ListRun, refresh: (items: Item[]) => Prom
 		async (items, call, words) => {
 			const settle = list.onStart()
 			const outcome = await runEach(items, call)
-			let notes: BulkNotes = {}
 			try {
 				await refresh(items)
 			} finally {
 				try {
-					notes = bulkNotes(items, outcome, words)
-					if (notes.toast !== undefined) {
-						toaster.show(notes.toast)
+					const message = bulkToast(items, outcome, words)
+					if (message !== undefined) {
+						toaster.show(message)
 					}
 				} finally {
-					settle(notes.notice, outcome.done > 0)
+					settle(outcome.done > 0)
 				}
 			}
 		},

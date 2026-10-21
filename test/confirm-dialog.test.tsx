@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { readFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
-
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { useState } from 'react'
@@ -11,20 +8,12 @@ import { expect, onTestFinished, test, vi } from 'vitest'
 import { SHEET_BREAKPOINT } from '../src/breakpoints.js'
 import { ConfirmDialog } from '../src/dialogs'
 import { buttonClasses, installTestEnvironment, renderAdmin, stubLayout } from '../src/testing.js'
+import { cardWidth, components } from './styles.js'
 
 installTestEnvironment()
 
-/** The stylesheet the WordPress modal draws with. */
-const components = readFileSync(
-	createRequire(import.meta.url).resolve('@wordpress/components/build-style/style.css'),
-	'utf8',
-)
-
 /** The question a confirm that removes something asks. */
 const TRASH_QUESTION = 'Move "Hello" to the trash?'
-
-/** The failure the action resolves with when the move fails. */
-const FAILURE = 'The post could not be moved to the trash.'
 
 /** How a test opens the dialog and what it does on confirm. */
 interface Opening {
@@ -34,8 +23,8 @@ interface Opening {
 	size?: 'small' | 'medium'
 	/** The question the dialog asks. */
 	question?: string
-	/** Carries the action out. */
-	onConfirm?: () => Promise<string | undefined>
+	/** Carries the action out, returning nothing or the write's promise. */
+	onConfirm?: () => void | Promise<void>
 }
 
 /**
@@ -82,7 +71,7 @@ function TrashButton({
  * @returns The action spy, the close spy, the opener and the region.
  */
 async function openDialog(opening: Opening = {}) {
-	const onConfirm = vi.fn(opening.onConfirm ?? (async () => undefined))
+	const onConfirm = vi.fn(opening.onConfirm ?? (() => undefined))
 	const onClose = vi.fn()
 	renderAdmin(<TrashButton {...opening} onConfirm={onConfirm} onClose={onClose} />)
 	const opener = screen.getByRole('button', { name: 'Move to trash' })
@@ -93,15 +82,33 @@ async function openDialog(opening: Opening = {}) {
 
 /**
  * Returns an action the test settles by hand.
- * @returns The action and the function that settles the run it started with the given failure.
+ * @returns The action and the functions that fulfil or reject the write it started.
  */
 function heldAction() {
-	let settle: (failure: string | undefined) => void = () => {}
+	let fulfil = () => {}
+	let reject: (error: Error) => void = () => {}
 	const action = async () =>
-		new Promise<string | undefined>((done) => {
-			settle = done
+		new Promise<void>((done, fail) => {
+			fulfil = done
+			reject = fail
 		})
-	return { action, settle: (failure?: string) => settle(failure) }
+	return { action, settle: () => fulfil(), fail: (error: Error) => reject(error) }
+}
+
+/**
+ * Listens for rejections no code handled, until the test finishes.
+ * @returns The reasons heard so far.
+ */
+function heardRejections(): unknown[] {
+	const reasons: unknown[] = []
+	const listener = (reason: unknown) => {
+		reasons.push(reason)
+	}
+	process.on('unhandledRejection', listener)
+	onTestFinished(() => {
+		process.off('unhandledRejection', listener)
+	})
+	return reasons
 }
 
 /**
@@ -129,15 +136,6 @@ function clickOutside(): void {
 	const overlay = document.querySelector('.components-modal__screen-overlay') as HTMLElement
 	fireEvent.pointerDown(overlay, { button: 0 })
 	fireEvent.pointerUp(overlay, { button: 0 })
-}
-
-/**
- * Waits longer than the dialog's exit animation.
- */
-async function outlastExit(): Promise<void> {
-	await act(async () => {
-		await new Promise((done) => setTimeout(done, 300))
-	})
 }
 
 test('asks its question in a dialog named by the question when it has no title', async () => {
@@ -211,17 +209,6 @@ test('rises as a sheet below the sheet breakpoint and centres a card from it, as
 	expect(components.includes(card), `the modal stylesheet has no ${card} rule`).toBe(true)
 })
 
-/**
- * Returns the widest the WordPress modal draws a card of the given size from the sheet breakpoint up.
- * @param size - The modal size.
- * @returns The width in pixels the size falls back to, none when the stylesheet has no such rule.
- */
-function cardWidth(size: string): string | undefined {
-	const card = components.indexOf(`@media (min-width: ${SHEET_BREAKPOINT}px) {\n  .components-modal__frame {`)
-	const rule = components.indexOf(`.components-modal__frame.has-size-${size} {`, card)
-	return /max-width:\s*var\([^,]+,\s*(\d+px)\)/.exec(components.slice(rule, components.indexOf('}', rule)))?.[1]
-}
-
 test.each([
 	['small', '400px', 'medium'],
 	['medium', '560px', 'small'],
@@ -256,43 +243,57 @@ test('closes on Escape and on a click outside it', async () => {
 	expect(onClose).toHaveBeenCalledTimes(2)
 })
 
-test('closes once the action resolves with nothing', async () => {
-	const { onConfirm, onClose } = await openDialog()
+test('runs the action and closes at once when the action returns nothing, as the WordPress editor trash does', () => {
+	const order: string[] = []
+	const onClose = vi.fn(() => order.push('close'))
+	renderAdmin(
+		<ConfirmDialog confirmLabel="Trash" cancelLabel="Cancel" onConfirm={() => void order.push('run')} onClose={onClose}>
+			{TRASH_QUESTION}
+		</ConfirmDialog>,
+	)
+
+	fireEvent.click(screen.getByRole('button', { name: 'Trash' }))
+
+	expect(order).toEqual(['run', 'close'])
+	expect(onClose).toHaveBeenCalledOnce()
+})
+
+test('stays busy with Cancel greyed while the returned promise runs, then closes, as row Trash does', async () => {
+	const held = heldAction()
+	const { onClose } = await openDialog({ onConfirm: held.action })
 
 	await press('Trash')
 
-	expect(onConfirm).toHaveBeenCalledOnce()
+	expect(screen.getByRole('button', { name: 'Trash' }).getAttribute('aria-disabled')).toBe('true')
+	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('aria-disabled')).toBe('true')
+	expect(onClose).not.toHaveBeenCalled()
+	await act(async () => held.settle())
 	expect(onClose).toHaveBeenCalledOnce()
 	expect(screen.queryByRole('dialog')).toBeNull()
 })
 
-test('shows the failure the action resolves with inside it, above the buttons, and stays open', async () => {
-	const { onClose } = await openDialog({ onConfirm: async () => FAILURE })
+test('closes after a promise that rejects, and hands the error on', async () => {
+	const thrown = new Error('offline')
+	const reasons = heardRejections()
+	const held = heldAction()
+	const { onClose } = await openDialog({ onConfirm: held.action })
 
 	await press('Trash')
+	await act(async () => held.fail(thrown))
 
-	const alert = screen.getByRole('alert')
-	expect(alert.textContent).toBe(FAILURE)
-	expect(dialog().contains(alert)).toBe(true)
-	expect(
-		alert.compareDocumentPosition(screen.getByRole('button', { name: 'Cancel' })) & Node.DOCUMENT_POSITION_FOLLOWING,
-	).toBeTruthy()
-	expect(onClose).not.toHaveBeenCalled()
+	await waitFor(() => expect(reasons).toEqual([thrown]))
+	expect(onClose).toHaveBeenCalledOnce()
+	expect(screen.queryByRole('dialog')).toBeNull()
 })
 
-test('clears the last failure as the next try starts', async () => {
+test('shows no failure inside, since a failure belongs in a toast', async () => {
 	const held = heldAction()
-	const onConfirm = vi.fn(async (): Promise<string | undefined> => FAILURE)
-	await openDialog({ onConfirm })
-	await press('Trash')
-	expect(screen.getByRole('alert')).not.toBeNull()
-	onConfirm.mockImplementation(held.action)
+	await openDialog({ onConfirm: held.action })
 
 	await press('Trash')
+	await act(async () => held.settle())
 
 	expect(screen.queryByRole('alert')).toBeNull()
-	await act(async () => held.settle(FAILURE))
-	expect(screen.getByRole('alert').textContent).toBe(FAILURE)
 })
 
 test('keeps the confirm button from a second press while the action runs', async () => {
@@ -307,56 +308,21 @@ test('keeps the confirm button from a second press while the action runs', async
 	await act(async () => held.settle())
 })
 
-test('closes nothing on Cancel, Escape or a click outside while the action runs', async () => {
+test.each([
+	['Escape', () => fireEvent.keyDown(dialog(), { key: 'Escape', code: 'Escape' })],
+	['a click on the dimmed page', clickOutside],
+	['the close button of a titled confirm', () => fireEvent.click(screen.getByRole('button', { name: 'Close' }))],
+])('closes on %s while the action runs, and only once', async (_way, close) => {
 	const held = heldAction()
-	const { onClose } = await openDialog({ onConfirm: held.action })
+	const { onClose } = await openDialog({ title: 'Set as homepage', onConfirm: held.action })
 	await press('Trash')
 
-	await press('Cancel')
-	fireEvent.keyDown(dialog(), { key: 'Escape', code: 'Escape' })
-	clickOutside()
-	await outlastExit()
-
-	expect(screen.getByRole('dialog')).not.toBeNull()
-	expect(onClose).not.toHaveBeenCalled()
-	await act(async () => held.settle())
-	expect(onClose).toHaveBeenCalledOnce()
-})
-
-test('lets the reader close the dialog again when the action throws, and hands the error on', async () => {
-	const thrown = new Error('offline')
-	const reasons: unknown[] = []
-	const listener = (reason: unknown) => {
-		reasons.push(reason)
-	}
-	process.on('unhandledRejection', listener)
-	onTestFinished(() => {
-		process.off('unhandledRejection', listener)
-	})
-	const { onClose } = await openDialog({
-		onConfirm: async () => {
-			throw thrown
-		},
-	})
-
-	await press('Trash')
-	await waitFor(() => expect(reasons).toEqual([thrown]))
-	fireEvent.keyDown(dialog(), { key: 'Escape', code: 'Escape' })
+	close()
 
 	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
 	expect(onClose).toHaveBeenCalledOnce()
-})
-
-test('hides the close button of a titled confirm while the action runs', async () => {
-	const held = heldAction()
-	await openDialog({ title: 'Set as homepage', onConfirm: held.action })
-	expect(screen.getByRole('button', { name: 'Close' })).not.toBeNull()
-
-	await press('Trash')
-
-	expect(screen.queryByRole('button', { name: 'Close' })).toBeNull()
-	await act(async () => held.settle(FAILURE))
-	expect(screen.getByRole('button', { name: 'Close' })).not.toBeNull()
+	await act(async () => held.settle())
+	expect(onClose).toHaveBeenCalledOnce()
 })
 
 test('gives the focus back to the button that opened it once cancelled', async () => {
@@ -376,7 +342,6 @@ test('leaves the focus where the action moved it', async () => {
 	const moved = await openDialog({
 		onConfirm: async () => {
 			region?.focus()
-			return undefined
 		},
 	})
 	region = moved.region

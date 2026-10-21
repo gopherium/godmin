@@ -2,13 +2,14 @@
 
 import { speak } from '@wordpress/a11y'
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { Modal } from '@wordpress/components'
 import { StrictMode, useEffect } from 'react'
 import { afterEach, beforeEach, expect, onTestFinished, test, vi } from 'vitest'
 
 import manifest from '../package.json'
 import { getAnnouncement, installTestEnvironment, renderAdmin } from '../src/testing.js'
 import { Toaster, useToaster } from '../src/toaster.js'
-import type { ToasterHandle } from '../src/toaster.js'
+import type { ToastAction, ToasterHandle } from '../src/toaster.js'
 
 vi.mock('@wordpress/a11y', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('@wordpress/a11y')>()
@@ -25,17 +26,47 @@ afterEach(() => {
 })
 
 /**
+ * Returns the toast region, wherever the toaster draws it.
+ * @returns The region element.
+ */
+function region(): HTMLElement {
+	return document.querySelector('.godmin-toasts') as HTMLElement
+}
+
+/**
  * Renders a button that raises a toast when pressed.
  * @param props - The message and optional action the toast carries.
  * @returns The trigger element.
  */
-function Raise({ message, action }: { message: string; action?: { label: string; onAct: () => void } }) {
+function Raise({ message, action }: { message: string; action?: ToastAction }) {
 	const toaster = useToaster()
 	return (
 		<button type="button" onClick={() => toaster.show(message, action)}>
 			Raise
 		</button>
 	)
+}
+
+/**
+ * Renders a toaster around a button that raises one toast, and presses it.
+ * @param message - The message the toast carries.
+ * @param action - The action the toast offers, none for a plain toast.
+ */
+function raiseToast(message: string, action?: ToastAction): void {
+	renderAdmin(
+		<Toaster>
+			<Raise message={message} action={action} />
+		</Toaster>,
+	)
+	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+}
+
+/**
+ * Raises the toast a trash offers to undo.
+ * @param onAct - The undo the toast runs.
+ */
+function raiseUndo(onAct: () => void = vi.fn()): void {
+	raiseToast('Post moved to trash', { label: 'Undo', onAct })
 }
 
 /**
@@ -133,7 +164,7 @@ test('asks the application for the announcer, so the page keeps one live region'
 })
 
 test('leaves the toast region silent, since the live region already spoke', () => {
-	const { container } = renderAdmin(
+	renderAdmin(
 		<Toaster>
 			<Raise message="Saved" />
 		</Toaster>,
@@ -141,10 +172,8 @@ test('leaves the toast region silent, since the live region already spoke', () =
 
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 
-	const region = container.querySelector('.godmin-toasts')
-	expect(region).not.toBeNull()
-	expect(region?.querySelector('[aria-live], [role="status"], [role="alert"]')).toBeNull()
-	expect(region?.hasAttribute('aria-live')).toBe(false)
+	expect(region().querySelector('[aria-live], [role="status"], [role="alert"]')).toBeNull()
+	expect(region().hasAttribute('aria-live')).toBe(false)
 })
 
 test('draws a plain toast as one snackbar button inside the toast region', () => {
@@ -249,7 +278,7 @@ test('draws a toast with an action as the message, the action and a close button
 })
 
 test('keeps a toast with an action from being a button itself, so no button sits inside another', () => {
-	const { container } = renderAdmin(
+	renderAdmin(
 		<Toaster>
 			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
 		</Toaster>,
@@ -258,7 +287,7 @@ test('keeps a toast with an action from being a button itself, so no button sits
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 
 	expect(screen.queryByRole('button', { name: /Post moved to trash/ })).toBeNull()
-	expect(container.querySelector('button button, [role="button"] button')).toBeNull()
+	expect(region().querySelector('button button, [role="button"] button')).toBeNull()
 })
 
 test('draws the close button as the cross the snackbar shows, named by its label rather than the cross', () => {
@@ -288,7 +317,7 @@ test('shows no tooltip on a plain toast, as the snackbar shows none', () => {
 })
 
 test('keeps the hint of a plain toast out of the toast region, so the region holds only toasts', () => {
-	const { container } = renderAdmin(
+	renderAdmin(
 		<Toaster>
 			<Raise message="Saved" />
 		</Toaster>,
@@ -296,19 +325,13 @@ test('keeps the hint of a plain toast out of the toast region, so the region hol
 
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 
-	const region = container.querySelector('.godmin-toasts')
-	expect([...(region?.children ?? [])].map((toast) => toast.textContent)).toEqual(['Saved'])
+	expect([...region().children].map((toast) => toast.textContent)).toEqual(['Saved'])
 	expect(screen.getByText('Dismiss').hidden).toBe(true)
 })
 
 test('runs the action and clears the toast that offered it', () => {
 	const onAct = vi.fn()
-	renderAdmin(
-		<Toaster>
-			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct }} />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	raiseUndo(onAct)
 
 	fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
 
@@ -318,12 +341,7 @@ test('runs the action and clears the toast that offered it', () => {
 
 test('clears a toast with an action through its close button without running the action', () => {
 	const onAct = vi.fn()
-	renderAdmin(
-		<Toaster>
-			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct }} />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	raiseUndo(onAct)
 
 	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
 
@@ -545,12 +563,7 @@ test('forgets the timer of a toast dropped past the limit', () => {
 
 test('forgets the timer of a toast the reader dismissed', () => {
 	vi.useFakeTimers()
-	renderAdmin(
-		<Toaster>
-			<Raise message="Saved" action={{ label: 'Undo', onAct: vi.fn() }} />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	raiseUndo()
 	const running = vi.getTimerCount()
 
 	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
@@ -561,28 +574,18 @@ test('forgets the timer of a toast the reader dismissed', () => {
 test('forgets the timer of a dismissed toast as soon as it starts fading out', () => {
 	holdFade()
 	vi.useFakeTimers()
-	renderAdmin(
-		<Toaster>
-			<Raise message="Saved" action={{ label: 'Undo', onAct: vi.fn() }} />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	raiseUndo()
 	const running = vi.getTimerCount()
 
 	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
 
-	expect(screen.getByText('Saved')).not.toBeNull()
+	expect(screen.getByText('Post moved to trash')).not.toBeNull()
 	expect(vi.getTimerCount()).toBe(running - 1)
 })
 
 test('forgets the timer of a toast whose action ran', () => {
 	vi.useFakeTimers()
-	renderAdmin(
-		<Toaster>
-			<Raise message="Saved" action={{ label: 'Undo', onAct: vi.fn() }} />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	raiseUndo()
 	const running = vi.getTimerCount()
 
 	fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
@@ -721,68 +724,41 @@ test('holds every message raised, the newest at the bottom', () => {
 })
 
 test('lets the toast region take focus from script but not from the tab key', () => {
-	const { container } = renderAdmin(
+	renderAdmin(
 		<Toaster>
 			<Raise message="Saved" />
 		</Toaster>,
 	)
 
-	expect(container.querySelector('.godmin-toasts')?.getAttribute('tabindex')).toBe('-1')
+	expect(region().getAttribute('tabindex')).toBe('-1')
 })
 
-test('hands focus to the toast region when a focused toast leaves through its action', () => {
-	const { container } = renderAdmin(
-		<Toaster>
-			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
-	const undo = screen.getByRole('button', { name: 'Undo' })
-	undo.focus()
+test.each([
+	['a focused toast leaves through its action', 'Undo'],
+	['a focused toast leaves through its close button', 'Dismiss'],
+])('hands focus to the toast region when %s', (_case, name) => {
+	raiseUndo()
+	const pressed = screen.getByRole('button', { name })
+	pressed.focus()
 
-	fireEvent.click(undo)
+	fireEvent.click(pressed)
 
-	expect(document.activeElement).toBe(container.querySelector('.godmin-toasts'))
-})
-
-test('hands focus to the toast region when a focused toast leaves through its close button', () => {
-	const { container } = renderAdmin(
-		<Toaster>
-			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
-	const close = screen.getByRole('button', { name: 'Dismiss' })
-	close.focus()
-
-	fireEvent.click(close)
-
-	expect(document.activeElement).toBe(container.querySelector('.godmin-toasts'))
+	expect(document.activeElement).toBe(region())
 })
 
 test('hands focus to the toast region when a focused plain toast is clicked away', () => {
-	const { container } = renderAdmin(
-		<Toaster>
-			<Raise message="Saved" />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	raiseToast('Saved')
 	const toast = screen.getByRole('button', { name: 'Saved' })
 	toast.focus()
 
 	fireEvent.click(toast)
 
-	expect(document.activeElement).toBe(container.querySelector('.godmin-toasts'))
+	expect(document.activeElement).toBe(region())
 })
 
 test('hands focus to the toast region when a focused toast runs out of time', () => {
 	vi.useFakeTimers()
-	const { container } = renderAdmin(
-		<Toaster>
-			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	raiseUndo()
 	screen.getByRole('button', { name: 'Undo' }).focus()
 
 	act(() => {
@@ -790,11 +766,11 @@ test('hands focus to the toast region when a focused toast runs out of time', ()
 	})
 
 	expect(screen.queryByText('Post moved to trash')).toBeNull()
-	expect(document.activeElement).toBe(container.querySelector('.godmin-toasts'))
+	expect(document.activeElement).toBe(region())
 })
 
 test('moves focus out of a toast running out of time before the toast turns inert, as a browser renders', async () => {
-	const { container } = renderAdmin(
+	renderAdmin(
 		<Toaster dismissAfter={1}>
 			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
 		</Toaster>,
@@ -802,13 +778,13 @@ test('moves focus out of a toast running out of time before the toast turns iner
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 	screen.getByRole('button', { name: 'Undo' }).focus()
 	const toast = screen.getByText('Post moved to trash').parentElement as HTMLElement
-	const region = container.querySelector('.godmin-toasts') as HTMLElement
+	const holder = region()
 	const observers: MutationObserver[] = []
 	const focusOnceInert = new Promise<Element | null>((resolve) => {
 		const turnedInert = new MutationObserver(() => resolve(document.activeElement))
 		const removed = new MutationObserver(() => resolve(null))
 		turnedInert.observe(toast, { attributeFilter: ['inert'] })
-		removed.observe(region, { childList: true })
+		removed.observe(holder, { childList: true })
 		observers.push(turnedInert, removed)
 	})
 	const acting = Reflect.get(globalThis, 'IS_REACT_ACT_ENVIRONMENT')
@@ -820,24 +796,46 @@ test('moves focus out of a toast running out of time before the toast turns iner
 		}
 	})
 
-	expect(await focusOnceInert).toBe(region)
+	expect(await focusOnceInert).toBe(holder)
 })
 
 test('hands focus to the toast region before a focused toast starts fading out', () => {
 	holdFade()
-	const { container } = renderAdmin(
-		<Toaster>
-			<Raise message="Saved" />
-		</Toaster>,
-	)
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	raiseToast('Saved')
 	const toast = screen.getByRole('button', { name: 'Saved' })
 	toast.focus()
 
 	fireEvent.click(toast)
 
 	expect(screen.getByText('Saved').hasAttribute('inert')).toBe(true)
-	expect(document.activeElement).toBe(container.querySelector('.godmin-toasts'))
+	expect(document.activeElement).toBe(region())
+})
+
+/**
+ * Renders a WordPress modal holding a button that raises a toast.
+ * @returns The modal.
+ */
+function DialogThatRaises() {
+	return (
+		<Modal title="Add Page" onRequestClose={vi.fn()}>
+			<Raise message="Injected failure for the measurement." />
+		</Modal>
+	)
+}
+
+test('keeps the toast region inside the application, under an open dialog, as WordPress draws its snackbar', () => {
+	const { container } = renderAdmin(
+		<Toaster>
+			<DialogThatRaises />
+		</Toaster>,
+	)
+
+	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+
+	expect(screen.getByRole('dialog', { name: 'Add Page' })).not.toBeNull()
+	expect(region().textContent).toBe('Injected failure for the measurement.')
+	expect(region().closest('[data-wp-compat-overlay-slot]')).toBeNull()
+	expect(container.contains(region())).toBe(true)
 })
 
 test('leaves focus where it was when a toast it is not in leaves', () => {

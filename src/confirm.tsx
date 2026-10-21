@@ -3,8 +3,6 @@
 import { Button, Stack, Text } from '@wordpress/ui'
 import type { ReactNode } from 'react'
 
-import { ErrorNotice } from './page.js'
-
 export interface ConfirmBodyProps {
 	/** The question the modal asks. */
 	children: ReactNode
@@ -14,8 +12,6 @@ export interface ConfirmBodyProps {
 	cancelLabel: string
 	/** Whether the action is running, the confirm button then busy and Cancel greyed out. */
 	busy?: boolean
-	/** The failure of the last try, shown inside the modal. */
-	failure?: string
 	/** Carries the action out. */
 	onConfirm: () => void
 	/** Closes the modal. */
@@ -23,8 +19,8 @@ export interface ConfirmBodyProps {
 }
 
 /**
- * Renders a confirmation modal body: the question, a failure notice, an accent text Cancel and the confirm button.
- * @param props - The question, the labels, the busy flag, the failure and the handlers.
+ * Renders a confirmation modal body: the question, an accent text Cancel and the confirm button, 20px apart.
+ * @param props - The question, the labels, the busy flag and the handlers.
  * @returns The confirmation body.
  */
 export function ConfirmBody({
@@ -32,14 +28,12 @@ export function ConfirmBody({
 	confirmLabel,
 	cancelLabel,
 	busy = false,
-	failure,
 	onConfirm,
 	onCancel,
 }: ConfirmBodyProps) {
 	return (
-		<Stack direction="column" gap="lg">
-			<Text>{children}</Text>
-			{failure === undefined ? null : <ErrorNotice>{failure}</ErrorNotice>}
+		<div className="godmin-modal-body">
+			<Text className="godmin-modal-body__question">{children}</Text>
 			<Stack direction="row" gap="sm" justify="flex-end">
 				<Button variant="minimal" disabled={busy} onClick={onCancel}>
 					{cancelLabel}
@@ -48,6 +42,6 @@ export function ConfirmBody({
 					{confirmLabel}
 				</Button>
 			</Stack>
-		</Stack>
+		</div>
 	)
 }

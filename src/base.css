@@ -510,6 +510,24 @@ body {
 		align-self: flex-start;
 	}
 
+	.godmin-modal-body {
+		display: flex;
+		flex-direction: column;
+		gap: calc(var(--wpds-dimension-gap-lg) + var(--wpds-dimension-gap-xs));
+	}
+
+	.godmin-modal-body--copy {
+		gap: var(--wpds-dimension-gap-md);
+	}
+
+	.godmin-modal-body--create {
+		gap: var(--wpds-dimension-gap-lg);
+	}
+
+	.godmin-modal-body__question {
+		line-height: 1.4;
+	}
+
 	.godmin-form__row {
 		display: flex;
 		flex-wrap: wrap;

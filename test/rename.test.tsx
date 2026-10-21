@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
-import { Button } from '@wordpress/ui'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { RenameBody } from '../src/index'
 import { buttonClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
+import { gapInPixels } from './styles.js'
 
 installTestEnvironment()
 
 /**
  * Renders a rename body for a post named Hello, with spies for its handlers.
- * @param props - The busy flag and the failure to show.
- * @returns The submit and cancel spies, and a rerender taking new busy and failure values.
+ * @param props - Any prop the body no longer takes.
+ * @returns The submit and cancel spies.
  */
-function renderRename(props: { busy?: boolean; failure?: string } = {}) {
+function renderRename(props: Record<string, unknown> = {}) {
 	const onSubmit = vi.fn()
 	const onCancel = vi.fn()
-	const body = (next: { busy?: boolean; failure?: string }) => (
+	renderAdmin(
 		<RenameBody
 			name="Hello"
 			fieldLabel="Name"
@@ -26,22 +26,10 @@ function renderRename(props: { busy?: boolean; failure?: string } = {}) {
 			cancelLabel="Cancel"
 			onSubmit={onSubmit}
 			onCancel={onCancel}
-			{...next}
-		/>
+			{...props}
+		/>,
 	)
-	const { rerender } = renderAdmin(body(props))
-	return { onSubmit, onCancel, rerender: (next: { busy?: boolean; failure?: string }) => rerender(body(next)) }
-}
-
-/**
- * Returns the classes a solid design system button draws while it loads.
- * @returns The class names, in order.
- */
-function loadingClasses(): string[] {
-	const { container, unmount } = render(<Button loading>probe</Button>)
-	const classes = [...(container.firstElementChild as Element).classList]
-	unmount()
-	return classes
+	return { onSubmit, onCancel }
 }
 
 /**
@@ -86,6 +74,14 @@ test('labels the field with the given label and fills it with the current name',
 	expect(field().value).toBe('Hello')
 })
 
+test('fills the field with the text a caller hands back, such as a name a failed write turned away', () => {
+	renderAdmin(
+		<RenameBody name="Hello world" fieldLabel="Name" submitLabel="Rename" cancelLabel="Cancel" onSubmit={vi.fn()} />,
+	)
+
+	expect(field().value).toBe('Hello world')
+})
+
 test('writes the typed name when the submit button is pressed', () => {
 	const { onSubmit, onCancel } = renderRename()
 
@@ -106,12 +102,22 @@ test('writes the typed name once when Enter is pressed in the field, and stays o
 	expect(kept, 'the browser would send the form and leave the page').toEqual([true])
 })
 
-test('writes nothing when Enter is pressed in the field with the name the item already has', async () => {
+test('writes the name the item already has when Enter is pressed, as the WordPress Rename does', async () => {
 	const { onSubmit } = renderRename()
 
 	await userEvent.setup().type(field(), '{Enter}')
 
-	expect(onSubmit).not.toHaveBeenCalled()
+	expect(onSubmit).toHaveBeenCalledExactlyOnceWith('Hello')
+})
+
+test('offers the submit button for the name the item already has, as the WordPress Rename does', () => {
+	const { onSubmit } = renderRename()
+	const submit = screen.getByRole('button', { name: 'Rename' })
+
+	fireEvent.click(submit)
+
+	expect(submit.getAttribute('aria-disabled')).not.toBe('true')
+	expect(onSubmit).toHaveBeenCalledExactlyOnceWith('Hello')
 })
 
 test('writes nothing when Enter is pressed in the field with a blank name', async () => {
@@ -122,27 +128,6 @@ test('writes nothing when Enter is pressed in the field with a blank name', asyn
 	await user.type(field(), '   {Enter}')
 
 	expect(onSubmit).not.toHaveBeenCalled()
-})
-
-test('writes nothing when Enter is pressed in the field while the write runs', async () => {
-	const { onSubmit, rerender } = renderRename()
-	const user = userEvent.setup()
-	await user.type(field(), ' world')
-	rerender({ busy: true })
-
-	await user.type(field(), '{Enter}')
-
-	expect(onSubmit).not.toHaveBeenCalled()
-})
-
-test('writes nothing when code submits the form with the name the item already has, and stays on the page', () => {
-	const { onSubmit } = renderRename()
-	const kept = watchSubmits()
-
-	submitFromCode()
-
-	expect(onSubmit).not.toHaveBeenCalled()
-	expect(kept, 'the browser would send the form and leave the page').toEqual([true])
 })
 
 test('writes nothing when code submits the form with a blank name, and stays on the page', () => {
@@ -156,35 +141,6 @@ test('writes nothing when code submits the form with a blank name, and stays on 
 	expect(kept, 'the browser would send the form and leave the page').toEqual([true])
 })
 
-test('writes nothing when code submits the form while the write runs, and stays on the page', () => {
-	const { onSubmit, rerender } = renderRename()
-	const kept = watchSubmits()
-	type('Hello world')
-	rerender({ busy: true })
-
-	submitFromCode()
-
-	expect(onSubmit).not.toHaveBeenCalled()
-	expect(kept, 'the browser would send the form and leave the page').toEqual([true])
-})
-
-test('makes the submit button the one Enter presses, and never Cancel', () => {
-	renderRename()
-
-	expect(screen.getByRole('button', { name: 'Rename' }).getAttribute('type')).toBe('submit')
-	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('type')).toBe('button')
-})
-
-test('keeps the submit button from writing the name the item already has', () => {
-	const { onSubmit } = renderRename()
-	const submit = screen.getByRole('button', { name: 'Rename' })
-
-	fireEvent.click(submit)
-
-	expect(submit.getAttribute('aria-disabled')).toBe('true')
-	expect(onSubmit).not.toHaveBeenCalled()
-})
-
 test('keeps the submit button from writing a blank name', () => {
 	const { onSubmit } = renderRename()
 	const submit = screen.getByRole('button', { name: 'Rename' })
@@ -194,6 +150,13 @@ test('keeps the submit button from writing a blank name', () => {
 
 	expect(submit.getAttribute('aria-disabled')).toBe('true')
 	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('makes the submit button the one Enter presses, and never Cancel', () => {
+	renderRename()
+
+	expect(screen.getByRole('button', { name: 'Rename' }).getAttribute('type')).toBe('submit')
+	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('type')).toBe('button')
 })
 
 test('cancels when Cancel is pressed', () => {
@@ -207,7 +170,6 @@ test('cancels when Cancel is pressed', () => {
 
 test('draws Cancel as accent text like the WordPress Site Editor dialogs, and the submit as the solid one', () => {
 	renderRename()
-	type('Hello world')
 
 	expect([...screen.getByRole('button', { name: 'Cancel' }).classList]).toEqual(buttonClasses('minimal'))
 	expect([...screen.getByRole('button', { name: 'Rename' }).classList]).toEqual(buttonClasses('solid'))
@@ -219,66 +181,25 @@ test('puts the submit button after Cancel', () => {
 	expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Cancel', 'Rename'])
 })
 
-test('keeps the submit button from a second press while the write runs, and shows it busy', () => {
-	const { onSubmit, rerender } = renderRename()
-	type('Hello world')
-	rerender({ busy: true })
-	const submit = screen.getByRole('button', { name: 'Rename' })
-
-	fireEvent.click(submit)
-
-	expect(submit.getAttribute('aria-disabled')).toBe('true')
-	expect(onSubmit).not.toHaveBeenCalled()
-	expect([...submit.classList]).toEqual(loadingClasses())
-})
-
-test('greys Cancel out and keeps it from closing the modal while the write runs', () => {
-	const { onSubmit, onCancel, rerender } = renderRename()
-	type('Hello world')
-	rerender({ busy: true })
-	const cancel = screen.getByRole('button', { name: 'Cancel' })
-
-	fireEvent.click(cancel)
-
-	expect(cancel.getAttribute('aria-disabled')).toBe('true')
-	expect(cancel.hasAttribute('data-disabled'), 'the design system greys out only a data-disabled button').toBe(true)
-	expect([...cancel.classList]).toEqual(buttonClasses('minimal'))
-	expect(onCancel).not.toHaveBeenCalled()
-	expect(onSubmit).not.toHaveBeenCalled()
-})
-
-test('keeps a greyed Cancel focusable, and Enter or Space on it closes nothing while the write runs', async () => {
-	const { onSubmit, onCancel, rerender } = renderRename()
-	const user = userEvent.setup()
-	await user.type(field(), ' world')
-	rerender({ busy: true })
-
-	await user.tab()
-	await user.keyboard('{Enter}')
-	await user.keyboard(' ')
-
-	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' }))
-	expect(onCancel).not.toHaveBeenCalled()
-	expect(onSubmit).not.toHaveBeenCalled()
-})
-
-test('shows a failure under the field, announced as an alert, with the typed name kept', () => {
-	const { rerender } = renderRename()
-	type('Hello world')
-
-	rerender({ failure: 'The name could not be updated.' })
-	const alert = screen.getByRole('alert')
-
-	expect(alert.textContent).toBe('The name could not be updated.')
-	expect(field().value).toBe('Hello world')
-	expect(field().compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-	expect(
-		alert.compareDocumentPosition(screen.getByRole('button', { name: 'Cancel' })) & Node.DOCUMENT_POSITION_FOLLOWING,
-	).toBeTruthy()
-})
-
-test('shows no alert while nothing failed', () => {
+test('leaves 20px between the field and the buttons, as the WordPress Rename does', () => {
 	renderRename()
 
+	expect(gapInPixels(field().form as HTMLFormElement)).toBe(20)
+})
+
+test('shows no failure inside the body, since a failure belongs in a toast', () => {
+	renderRename({ failure: 'The name could not be updated.' })
+
 	expect(screen.queryByRole('alert')).toBeNull()
+	expect(screen.queryByText('The name could not be updated.')).toBeNull()
+})
+
+test('takes no busy flag, so Cancel and the submit stay live, since a rename closes before its write', () => {
+	const { onSubmit, onCancel } = renderRename({ busy: true })
+
+	fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
+	fireEvent.click(screen.getByRole('button', { name: 'Cancel' }))
+
+	expect(onSubmit).toHaveBeenCalledOnce()
+	expect(onCancel).toHaveBeenCalledOnce()
 })
