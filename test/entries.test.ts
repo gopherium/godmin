@@ -126,9 +126,19 @@ test('the DataViews package is an optional peer, its filter rules copied by the 
 	expect(meta[dataviewsPackage]?.optional).toBe(true)
 })
 
-test('the dialogs entry hands out the confirm dialog', () => {
-	expect(typeof dialogs.ConfirmDialog).toBe('function')
+test('the dialogs entry hands out the confirm dialog and the form dialog', () => {
+	const entry = dialogs as Record<string, unknown>
+
+	expect(typeof entry.ConfirmDialog).toBe('function')
+	expect(typeof entry.FormDialog).toBe('function')
 	expect(packagesReachedFrom(join(source, 'dialogs.ts')).has(componentsPackage)).toBe(true)
+})
+
+test('the main entry hands out the form body, which needs no components package', async () => {
+	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
+
+	expect(typeof main.FormBody).toBe('function')
+	expect(packagesReachedFrom(join(source, 'form.tsx')).has(componentsPackage)).toBe(false)
 })
 
 test('the package publishes the dialogs entry beside the main one', () => {
