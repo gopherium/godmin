@@ -42,19 +42,39 @@ function pixelsOf(value: string): number {
 }
 
 /**
+ * Returns the value the rule starting at an index of the stylesheet gives a property.
+ * @param at - The index the rule starts at.
+ * @param property - The property, such as gap.
+ * @returns The value as written, none when the rule does not set it.
+ */
+function valueAt(at: number, property: string): string | undefined {
+	return new RegExp(`(?:^|\\s)${property}:\\s*([^;]+);`).exec(base.slice(at, base.indexOf('}', at)))?.[1]
+}
+
+/**
  * Returns the value the stylesheet gives an element for a property, from the last of its class rules that sets it.
  * @param element - The element whose classes the stylesheet styles.
  * @param property - The property, such as gap.
  * @returns The value as written, none when no rule of its classes sets it.
  */
 export function declaredValue(element: Element, property: string): string | undefined {
-	const declaration = new RegExp(`(?:^|\\s)${property}:\\s*([^;]+);`)
 	const values = [...element.classList]
 		.map((name) => base.indexOf(`.${name} {`))
 		.filter((at) => at > -1)
 		.sort((one, other) => one - other)
-		.flatMap((at) => declaration.exec(base.slice(at, base.indexOf('}', at)))?.[1] ?? [])
+		.flatMap((at) => valueAt(at, property) ?? [])
 	return values.at(-1)
+}
+
+/**
+ * Returns the value the rule a selector opens gives a property.
+ * @param selector - The exact selector the rule starts with.
+ * @param property - The property, such as display.
+ * @returns The value as written, none when the stylesheet has no such rule or the rule does not set it.
+ */
+export function ruleValue(selector: string, property: string): string | undefined {
+	const at = base.indexOf(`${selector} {`)
+	return at === -1 ? undefined : valueAt(at, property)
 }
 
 /**
