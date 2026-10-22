@@ -163,6 +163,24 @@ body {
 		overflow-y: auto;
 	}
 
+	.godmin-menu-count__badge {
+		--godmin-menu-count-size: 18px;
+		display: inline-block;
+		vertical-align: top;
+		box-sizing: border-box;
+		min-inline-size: var(--godmin-menu-count-size);
+		block-size: var(--godmin-menu-count-size);
+		margin-block: 1px -1px;
+		margin-inline-start: 2px;
+		padding-block: 0;
+		padding-inline: 5px;
+		border-radius: calc(var(--godmin-menu-count-size) / 2);
+		font-size: var(--wpds-typography-font-size-xs);
+		font-weight: inherit;
+		line-height: 1.6;
+		text-align: center;
+	}
+
 	.godmin-layout__canvas {
 		--godmin-canvas-gutter: 24px;
 		--godmin-canvas-gutter-block: var(--wpds-dimension-padding-lg);
@@ -190,6 +208,31 @@ body {
 
 	.godmin-layout:has(> .godmin-layout__rail) .godmin-layout__canvas {
 		margin-inline-start: 0;
+	}
+
+	.godmin-layout__notices {
+		display: flex;
+		flex: none;
+		flex-direction: column;
+		gap: var(--wpds-dimension-gap-md);
+		margin-block-end: var(--godmin-canvas-gutter-block);
+	}
+
+	.godmin-layout__notices:empty {
+		display: none;
+	}
+
+	.godmin-layout__canvas:not(.godmin-layout__canvas--bleed):has(.godmin-page > .godmin-page__list) > .godmin-layout__notices {
+		padding-inline: calc(var(--wpds-dimension-padding-2xl) - var(--godmin-canvas-gutter));
+	}
+
+	.godmin-layout__canvas--bleed .godmin-layout__notices {
+		gap: 0;
+	}
+
+	.godmin-layout__canvas--bleed .godmin-layout__notices > * {
+		border-block-start-width: 0;
+		border-inline-width: 0;
 	}
 
 	.godmin-toasts {

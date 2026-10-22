@@ -2,7 +2,7 @@
    object export standing beside the parts it is built from. */
 import { ThemeProvider } from '@wordpress/theme'
 import { Drawer, VisuallyHidden } from '@wordpress/ui'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { Children, createContext, useContext, useEffect, useState } from 'react'
 import type { ComponentProps, ReactNode } from 'react'
 
 import { SMALL_VIEWPORT } from './breakpoints.js'
@@ -142,14 +142,38 @@ export type CanvasMode = 'padded' | 'bleed'
 export interface FrameCanvasProps {
 	children: ReactNode
 	canvas?: CanvasMode
+	/** The notices drawn in a band above the screen, such as a notice that an update is available. */
+	notices?: ReactNode
 }
 
 /**
- * Renders the region showing the active screen.
- * @param props - The screen, and whether it fills the canvas edge to edge.
+ * Tells whether notices hold anything React draws.
+ * @param notices - The notices the app gives.
+ * @returns Whether any of them is something other than nothing or an empty string.
+ */
+function hasNotices(notices: ReactNode): boolean {
+	return Children.toArray(notices).some((notice) => notice !== '')
+}
+
+/**
+ * Renders the notices in a band of their own, with square corners on a bleed canvas, or nothing when there are none.
+ * @param props - The notices and how the screen fills the canvas.
+ * @returns The band element, or null.
+ */
+function Notices({ notices, canvas }: { notices: ReactNode; canvas: CanvasMode }) {
+	if (!hasNotices(notices)) {
+		return null
+	}
+	const band = <div className="godmin-layout__notices">{notices}</div>
+	return canvas === 'bleed' ? <ThemeProvider cornerRadius="none">{band}</ThemeProvider> : band
+}
+
+/**
+ * Renders the region showing the active screen, under a band of notices when the app gives some.
+ * @param props - The screen, whether it fills the canvas edge to edge, and the notices.
  * @returns The canvas element.
  */
-function Canvas({ children, canvas = 'padded' }: FrameCanvasProps) {
+function Canvas({ children, canvas = 'padded', notices }: FrameCanvasProps) {
 	const color = useContext(CanvasColorContext)
 	const classes =
 		canvas === 'bleed'
@@ -158,6 +182,7 @@ function Canvas({ children, canvas = 'padded' }: FrameCanvasProps) {
 	return (
 		<ThemeProvider color={color}>
 			<main className={classes} style={{ isolation: 'isolate' }}>
+				<Notices notices={notices} canvas={canvas} />
 				{children}
 			</main>
 		</ThemeProvider>

@@ -4,6 +4,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `MenuCount`, the count beside a menu label as WordPress draws it, hidden at zero.
+- `Frame.Canvas` takes `notices`, drawn in a band above the screen.
+
 ## [0.23.1] - 2026-10-21
 
 ### Fixed

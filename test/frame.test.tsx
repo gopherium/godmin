@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { fireEvent, screen, within } from '@testing-library/react'
+import type { ReactNode } from 'react'
 import { expect, test } from 'vitest'
 
 import { Frame } from '../src/frame.js'
+import type { CanvasMode } from '../src/frame.js'
 import { EDGE_BREAKPOINT } from '../src/index'
 import { installTestEnvironment, renderAdmin, setViewport } from '../src/testing.js'
+import { declaredValue, gapInPixels, ruleValue } from './styles.js'
 
 installTestEnvironment()
 
@@ -218,6 +221,138 @@ test('paints the chrome and the canvas from the colours an application gives', (
 
 	expect(tokenAround(document.querySelector('.godmin-layout') as Element, token)).toBe('#171717')
 	expect(tokenAround(screen.getByRole('main'), '--wpds-color-stroke-surface-neutral-weak')).toBe('#f3f3f3')
+})
+
+/**
+ * Renders a canvas holding a screen and the notices given.
+ * @param props - The notices and the canvas mode to render with.
+ * @returns The testing library render result.
+ */
+function renderCanvas(props: { notices?: ReactNode; canvas?: CanvasMode }) {
+	return renderAdmin(
+		<Frame.Root>
+			<Frame.Canvas canvas={props.canvas} notices={props.notices}>
+				<p>Canvas content</p>
+			</Frame.Canvas>
+		</Frame.Root>,
+	)
+}
+
+test('draws the notices in a band of their own above the screen, inside the canvas', () => {
+	renderCanvas({ notices: <p>An update is available.</p> })
+
+	const band = screen.getByRole('main').firstElementChild as Element
+	expect(band.className).toBe('godmin-layout__notices')
+	expect(band.textContent).toBe('An update is available.')
+	expect(band.nextElementSibling?.textContent).toBe('Canvas content')
+})
+
+test('draws no band when the app gives no notices', () => {
+	renderCanvas({})
+
+	expect(document.querySelector('.godmin-layout__notices')).toBeNull()
+	expect(screen.getByRole('main').firstElementChild?.textContent).toBe('Canvas content')
+})
+
+test.each([
+	['null', null],
+	['false', false],
+	['an empty string', ''],
+	['an empty list', []],
+	['a list of nothing', [null, false, '']],
+])('draws no band for notices that are %s', (_condition, notices) => {
+	renderCanvas({ notices })
+
+	expect(document.querySelector('.godmin-layout__notices')).toBeNull()
+})
+
+test.each<CanvasMode>(['padded', 'bleed'])('keeps the band inside a %s canvas', (canvas) => {
+	renderCanvas({ notices: <p>An update is available.</p>, canvas })
+
+	const band = document.querySelector('.godmin-layout__notices') as Element
+	expect(band.closest('main')).toBe(screen.getByRole('main'))
+	expect(band.closest('main')?.className.includes('--bleed')).toBe(canvas === 'bleed')
+})
+
+test('draws every notice given in the one band, in order', () => {
+	renderCanvas({ notices: [<p key="first">First notice</p>, <p key="second">Second notice</p>] })
+
+	const bands = document.querySelectorAll('.godmin-layout__notices')
+	expect(bands.length).toBe(1)
+	expect([...bands[0].children].map((notice) => notice.textContent)).toEqual(['First notice', 'Second notice'])
+})
+
+/**
+ * Returns the band a canvas draws around one notice.
+ * @returns The band element.
+ */
+function noticesBand(): Element {
+	renderCanvas({ notices: <p>An update is available.</p> })
+	return document.querySelector('.godmin-layout__notices') as Element
+}
+
+test('stacks the notices in a column 12px apart, as the WordPress inline notices are', () => {
+	const band = noticesBand()
+
+	expect(declaredValue(band, 'display')).toBe('flex')
+	expect(declaredValue(band, 'flex-direction')).toBe('column')
+	expect(gapInPixels(band)).toBe(12)
+})
+
+test('keeps the band at its own height, so the screen under it takes the rest of the canvas', () => {
+	expect(declaredValue(noticesBand(), 'flex')).toBe('none')
+})
+
+test('parts the band from the screen by the canvas block gutter, so a full bleed canvas sets them flush', () => {
+	expect(declaredValue(noticesBand(), 'margin-block-end')).toBe('var(--godmin-canvas-gutter-block)')
+})
+
+test('leaves the side inset of the band to the canvas gutter, so it follows the gutter at every width', () => {
+	const band = noticesBand()
+
+	for (const property of ['padding', 'padding-inline', 'margin', 'margin-inline']) {
+		expect(declaredValue(band, property), property).toBeUndefined()
+	}
+})
+
+test('lines the band of a padded canvas up with the title of a list page, which sits 24px in at every width', () => {
+	const canvas = '.godmin-layout__canvas:not(.godmin-layout__canvas--bleed)'
+	const band = `${canvas}:has(.godmin-page > .godmin-page__list) > .godmin-layout__notices`
+	const header = '.godmin-page:has(> .godmin-page__list) > .godmin-page__header'
+
+	expect(ruleValue(band, 'padding-inline')).toBe('calc(var(--wpds-dimension-padding-2xl) - var(--godmin-canvas-gutter))')
+	expect(ruleValue(header, 'padding-inline')).toBe(
+		'calc(var(--wpds-dimension-padding-2xl) - var(--godmin-canvas-gutter, 0px))',
+	)
+})
+
+test('hides a band whose notices render nothing themselves', () => {
+	expect(ruleValue('.godmin-layout__notices:empty', 'display')).toBe('none')
+})
+
+test('stacks the notices of a bleed canvas with no space between them, as the WordPress editors do', () => {
+	expect(ruleValue('.godmin-layout__canvas--bleed .godmin-layout__notices', 'gap')).toBe('0')
+})
+
+test('drops the top and side borders of the notices of a bleed canvas, so they run as full width strips', () => {
+	const notice = '.godmin-layout__canvas--bleed .godmin-layout__notices > *'
+
+	expect(ruleValue(notice, 'border-block-start-width')).toBe('0')
+	expect(ruleValue(notice, 'border-inline-width')).toBe('0')
+})
+
+test('squares the notices of a bleed canvas, as the WordPress editors square theirs', () => {
+	renderCanvas({ notices: <p>An update is available.</p>, canvas: 'bleed' })
+
+	const band = document.querySelector('.godmin-layout__notices') as Element
+	expect(band.closest('[data-wpds-corner-radius]')?.getAttribute('data-wpds-corner-radius')).toBe('none')
+})
+
+test('keeps the notices of a padded canvas on the corners of the frame', () => {
+	renderCanvas({ notices: <p>An update is available.</p> })
+
+	const band = document.querySelector('.godmin-layout__notices') as Element
+	expect(band.closest('[data-wpds-corner-radius]')).toBe(screen.getByRole('main').closest('[data-wpds-corner-radius]'))
 })
 
 test('collapses the rail region when a screen renders none', () => {
