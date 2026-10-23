@@ -146,6 +146,62 @@ test('draws a row whose address opens no route with a sidebar as a navigation it
 	expect(row.querySelector('.godmin-navigation-item__drilldown-indicator')).toBeNull()
 })
 
+/**
+ * Returns the class of every element a row link holds, in order.
+ * @param row - The row link.
+ * @returns The class attribute of each child of the link.
+ */
+function partsOf(row: Element): (string | null)[] {
+	return [...row.children].map((part) => part.getAttribute('class'))
+}
+
+test(
+	'draws the count of a row at its end, the number hidden from screen readers and the sentence read for it',
+	async () => {
+		await renderRows(
+			'/profile',
+			<NavigationList items={[{ label: 'Posts', to: '/posts', count: { value: 3, label: '3 posts waiting' } }]} />,
+		)
+
+		const row = screen.getByRole('link', { name: 'Posts 3 posts waiting' })
+		expect(row.className).toBe('godmin-navigation-item godmin-navigation-item--with-suffix')
+		expect(partsOf(row)).toEqual(['godmin-navigation-item__label', 'godmin-navigation-item__suffix'])
+		const badge = row.querySelector('.godmin-navigation-item__suffix .godmin-menu-count__badge') as Element
+		expect(badge.textContent).toBe('3')
+		expect(badge.getAttribute('aria-hidden')).toBe('true')
+		expect(within(row).getByText('3 posts waiting').hasAttribute('data-visually-hidden')).toBe(true)
+	},
+)
+
+test.each([0, -1])('draws nothing for a count of %i, as WordPress hides its count-0 bubble', async (value) => {
+	await renderRows(
+		'/profile',
+		<NavigationList items={[{ label: 'Posts', to: '/posts', count: { value, label: `${value} posts waiting` } }]} />,
+	)
+
+	const row = screen.getByRole('link', { name: 'Posts' })
+	expect(row.className).toBe('godmin-navigation-item')
+	expect(partsOf(row)).toEqual(['godmin-navigation-item__label'])
+	expect(row.textContent).toBe('Posts')
+})
+
+test(
+	'draws the count of a row that opens a sub menu before its chevron, as the WordPress Plugins row does',
+	async () => {
+		const thing: MenuItem = { label: 'Thing one', to: '/things/one', count: { value: 2, label: '2 things waiting' } }
+		await renderRows('/posts', <NavigationList items={[thing]} />, holdsEvery)
+
+		const row = screen.getByRole('link', { name: 'Thing one 2 things waiting' })
+		expect(row.className).toBe('godmin-navigation-item')
+		expect(partsOf(row)).toEqual([
+			'godmin-navigation-item__label',
+			'godmin-navigation-item__suffix',
+			'godmin-navigation-item__drilldown-indicator',
+		])
+		expect(row.querySelector('.godmin-navigation-item__suffix .godmin-menu-count__badge')?.textContent).toBe('2')
+	},
+)
+
 test('draws the rows the app draws itself after the rows of items, in the same list', async () => {
 	await renderRows(
 		'/things/one',

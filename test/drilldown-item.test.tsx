@@ -7,6 +7,7 @@ import type { ReactElement } from 'react'
 import { afterEach, expect, test } from 'vitest'
 
 import { DrilldownItem } from '../src/drilldown-item.js'
+import { MenuCount } from '../src/menu-count.js'
 import { NavigationStateContext, createNavigationState } from '../src/navigation-state.js'
 import type { Move, NavigationState } from '../src/navigation-state.js'
 import { installTestEnvironment } from '../src/testing.js'
@@ -84,6 +85,28 @@ test('draws a list item holding a link with the classes and parts of a navigatio
 		'godmin-navigation-item__label',
 		'godmin-navigation-item__drilldown-indicator',
 	])
+})
+
+test('draws its suffix between the label and the chevron, the chevron still ending the row', async () => {
+	await renderRows(
+		'/posts',
+		<ul>
+			<DrilldownItem to="/things" icon={post} suffix={<MenuCount count={4} label="4 things waiting" />}>
+				Things
+			</DrilldownItem>
+		</ul>,
+		holdsEvery,
+	)
+
+	const link = screen.getByRole('link', { name: 'Things 4 things waiting' })
+	expect(link.className).toBe('godmin-navigation-item')
+	expect([...link.children].map((part) => part.getAttribute('class'))).toEqual([
+		'godmin-navigation-item__icon',
+		'godmin-navigation-item__label',
+		'godmin-navigation-item__suffix',
+		'godmin-navigation-item__drilldown-indicator',
+	])
+	expect(link.querySelector('.godmin-navigation-item__suffix .godmin-menu-count__badge')?.textContent).toBe('4')
 })
 
 test('takes its id from its address, the same however the address is written and another for another', async () => {

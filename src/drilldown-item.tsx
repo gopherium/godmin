@@ -7,7 +7,7 @@ import { Icon, chevronLeftSmall, chevronRightSmall } from '@wordpress/icons'
 import { useContext } from 'react'
 import type { MouseEvent, ReactElement, ReactNode } from 'react'
 
-import { ROW_CLASS, Row } from './navigation-item.js'
+import { ROW_CLASS, Row, RowSuffix } from './navigation-item.js'
 import { NavigationStateContext, isPlainClick, recordDrilldown } from './navigation-state.js'
 import { findMoveTarget, findRowRoutes } from './path-matching.js'
 
@@ -26,13 +26,15 @@ export type DrilldownItemProps<
 	id?: never
 	/** A glyph from `@wordpress/icons`, drawn at 24px. */
 	icon?: ReactElement
+	/** Drawn before the chevron, such as a MenuCount. */
+	suffix?: ReactNode
 	children: ReactNode
 }
 
 /**
- * Renders a sidebar row that opens a sub menu: its icon, its label and the chevron, with an id taken from its address.
+ * Renders a sidebar row that opens a sub menu: its icon, label, suffix and chevron, with an id taken from its address.
  * A plain click inside a frame records a forward move from this row to its address.
- * @param props - The TanStack Link props, the icon and the label.
+ * @param props - The TanStack Link props, the icon, the suffix and the label.
  * @returns The row element, or null when its address opens a route the reader may not open.
  */
 export function DrilldownItem<
@@ -41,7 +43,7 @@ export function DrilldownItem<
 	const TTo extends string | undefined = undefined,
 	const TMaskFrom extends string = TFrom,
 	const TMaskTo extends string = '',
->({ icon, children, ...link }: DrilldownItemProps<TRouter, TFrom, TTo, TMaskFrom, TMaskTo>) {
+>({ icon, suffix, children, ...link }: DrilldownItemProps<TRouter, TFrom, TTo, TMaskFrom, TMaskTo>) {
 	const router = useRouter()
 	const state = useContext(NavigationStateContext)
 	const address = link as LinkComponentProps
@@ -61,11 +63,14 @@ export function DrilldownItem<
 			className={ROW_CLASS}
 			id={id}
 			end={
-				<Icon
-					icon={isRTL() ? chevronLeftSmall : chevronRightSmall}
-					size={24}
-					className="godmin-navigation-item__drilldown-indicator"
-				/>
+				<>
+					{suffix === undefined ? null : <RowSuffix>{suffix}</RowSuffix>}
+					<Icon
+						icon={isRTL() ? chevronLeftSmall : chevronRightSmall}
+						size={24}
+						className="godmin-navigation-item__drilldown-indicator"
+					/>
+				</>
 			}
 		>
 			{children}
