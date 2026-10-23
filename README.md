@@ -56,7 +56,7 @@ two lines do for you.
 | `@gopherium/godmin/base.css` | Cascade layer order, design tokens, host rules, frame and screen styles |
 | `@gopherium/godmin/dates` | `startListDates`, `listDate`, the only entry that loads `@wordpress/date` |
 | `@gopherium/godmin/dialogs` | `ConfirmDialog`, `FormDialog`, the only entry that loads `@wordpress/components`. Load `@wordpress/components/build-style/style.css` once in your app, as DataViews asks |
-| `@gopherium/godmin/router` | `Navigation`, `NavigationList`, `NavigationItem`, `DrilldownItem`, `useCanAccess` and the `MenuItem` type, `useListView`, `listSearch`, `openOnTap`, `useCanvas`, `useFrameLocation`, `routerDefaults`, the `canvas`, `Sidebar` and `capability` route static data |
+| `@gopherium/godmin/router` | `Navigation`, `NavigationList`, `NavigationItem`, `DrilldownItem`, `useCanAccess` and the `MenuItem` type with its optional `count`, `useListView`, `listSearch`, `openOnTap`, `useCanvas`, `useFrameLocation`, `routerDefaults`, the `canvas`, `Sidebar` and `capability` route static data |
 | `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport` and its `TestViewport` type, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR`, `textClasses`, `badgeClasses`, `buttonClasses`, `stubLayout` |
 | `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `godminStylesheetFirst`, `duplicateCopies`, `hoistStylesheet` |
 | `@gopherium/godmin/stylelint` | The design system stylelint rules |
