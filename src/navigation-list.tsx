@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRouter, useRouterState } from '@tanstack/react-router'
-import { useContext } from 'react'
-import type { ReactNode } from 'react'
+import type { AnyRouter } from '@tanstack/react-router'
+import { Children, isValidElement, useContext } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 
 import { DrilldownItem } from './drilldown-item.js'
-import { useCanAccess } from './menu-item.js'
+import { canOpenRoutes, useCanAccess } from './menu-item.js'
 import type { MenuItem } from './menu-item.js'
 import { NavigationItem } from './navigation-item.js'
 import { IconPlaceholderContext, ScreenContext } from './navigation-state.js'
-import { findDrilldownParent, findSidebarMatch } from './path-matching.js'
+import type { Can } from './navigation-state.js'
+import { findDrilldownParent, findRouteCapabilities, findSidebarMatch } from './path-matching.js'
+import type { RowAddress } from './path-matching.js'
 
 export interface NavigationListProps {
 	/** The rows as data, checked against the can of the Navigation the list sits in. */
@@ -29,6 +32,20 @@ function shownRow(item: MenuItem | undefined, canAccess: (row: MenuItem) => bool
 		return item
 	}
 	return shownRow(item.fallback, canAccess)
+}
+
+/**
+ * Tells whether a row the app draws shows with an icon.
+ * @param child - The row element.
+ * @param router - The router its address resolves on.
+ * @param can - Tells whether the reader holds a capability.
+ * @returns Whether the row has an icon and the reader may open every route its address opens.
+ */
+function showsIcon(child: ReactNode, router: AnyRouter, can: Can | undefined): boolean {
+	if (!isValidElement<RowAddress & { icon?: ReactElement }>(child) || child.props.icon === undefined) {
+		return false
+	}
+	return canOpenRoutes(findRouteCapabilities(router, child.props), can)
 }
 
 /**
@@ -59,12 +76,16 @@ function DataRow({ item, shown }: { item: MenuItem; shown: string | undefined })
  * @returns The list element.
  */
 export function NavigationList({ items = [], children }: NavigationListProps) {
+	const router = useRouter()
 	const { can } = useContext(ScreenContext)
 	const canAccess = useCanAccess(can)
 	const shown = useRouterState({ select: (state): string | undefined => findSidebarMatch(state.matches)?.routeId })
 	const rows = items.map((item) => shownRow(item, canAccess))
+	const placeholder =
+		rows.some((row) => row?.icon !== undefined) ||
+		Children.toArray(children).some((child) => showsIcon(child, router, can))
 	return (
-		<IconPlaceholderContext.Provider value={rows.some((row) => row?.icon !== undefined)}>
+		<IconPlaceholderContext.Provider value={placeholder}>
 			<ul role="list" className="godmin-navigation-list">
 				{rows.map((row) => (row === undefined ? null : <DataRow key={row.to} item={row} shown={shown} />))}
 				{children}

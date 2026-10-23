@@ -223,6 +223,49 @@ test('gives a row the app draws the same placeholder when the rows of items have
 	expect(row.firstElementChild?.className).toBe('godmin-navigation-item__icon')
 })
 
+test('gives a row the app draws the placeholder when another row it draws has an icon', async () => {
+	await renderRows(
+		'/posts',
+		<NavigationList>
+			<NavigationItem to="/posts" icon={post}>
+				Posts
+			</NavigationItem>
+			<NavigationItem to="/profile">Profile</NavigationItem>
+		</NavigationList>,
+	)
+
+	const row = screen.getByRole('link', { name: 'Profile' })
+	expect(row.firstElementChild?.className).toBe('godmin-navigation-item__icon')
+})
+
+test('gives the rows of items the placeholder when a row the app draws has an icon', async () => {
+	await renderRows(
+		'/posts',
+		<NavigationList items={[{ label: 'Profile', to: '/profile' }]}>
+			<NavigationItem to="/posts" icon={people}>
+				Posts
+			</NavigationItem>
+		</NavigationList>,
+	)
+
+	const row = screen.getByRole('link', { name: 'Profile' })
+	expect(row.firstElementChild?.className).toBe('godmin-navigation-item__icon')
+})
+
+test('draws no placeholder when the only row the app draws with an icon is hidden', async () => {
+	await renderRows(
+		'/posts',
+		<NavigationList items={[{ label: 'Profile', to: '/profile' }]}>
+			<NavigationItem to="/users" icon={people}>
+				Users
+			</NavigationItem>
+		</NavigationList>,
+	)
+
+	expect(screen.queryByRole('link', { name: 'Users' })).toBeNull()
+	expect(screen.getByRole('list').querySelector('.godmin-navigation-item__icon')).toBeNull()
+})
+
 test('draws no placeholder when no row has an icon', async () => {
 	const list = await drawList([
 		{ label: 'Posts', to: '/posts' },
