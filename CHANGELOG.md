@@ -4,6 +4,47 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `HUGE_BREAKPOINT`, 1440, the WordPress huge breakpoint.
+- `routerDefaults()` in `@gopherium/godmin/router` returns the options a router spreads into `createRouter`: preload on intent and no pending screen, as WordPress's new admin sets them.
+- The route static data takes `Sidebar`, the sidebar screen every page under the route shows, and `capability`, the capability a reader must hold to open the route.
+- `NavigationList`, `NavigationItem` and `DrilldownItem` in `@gopherium/godmin/router` draw the rows of a sidebar menu as the Site Editor draws them: a list of links, each with an icon, a label and a count or a chevron.
+- `MenuItem` in `@gopherium/godmin/router` is a row of a sidebar menu as data, with an optional capability and a fallback row shown in its place.
+- `useCanAccess(can)` in `@gopherium/godmin/router` tells whether a reader may open a row: its own capability and the capability of every route its address opens. A row that names a capability is hidden when no `can` is given.
+- `Navigation` in `@gopherium/godmin/router` is the sidebar menu: the root screen from its `title` and `items`, or the `Sidebar` screen of the deepest matched route, which slides in from the end after a `DrilldownItem` and from the start after Back. It moves focus to Back going in and to the row coming out, hands every row its `can`, sends Back on a sub screen to the app's `home` and needs a `Frame.Root` above it.
+- `Frame.Sidebar` takes `footer` and `footerNote`, drawn under the menu in the column and in the drawer, the note in 12px text on a 16px line in both.
+- The sidebar screen scrolls with WordPress's scrollbar look, its thumb shown on hover, on focus and on touch screens.
+- The phone drawer ends in a close button named "Close navigation panel", the name WordPress gives its phone backdrop, hidden from sight and the tab order so only a screen reader meets it.
+- godmin translates "Back", "Navigation", "Open navigation panel" and "Close navigation panel" in the `default` text domain, as `@wordpress/ui` translates its own words, with Spanish and French in the catalogues `listChromeCatalogFor` returns.
+- Back on a `NavigationScreen` draws the right chevron when the locale reads right to left, as WordPress picks it with `isRTL()`.
+- `Page` takes `headingLevel`, 1 by default as in admin-ui's `Page`, and `PageTitle` takes the same `level`. A screen beside the sidebar passes 2, and a `SectionTitle` inside it renders one level deeper at the same size.
+
+### Changed
+
+- `useFrameLocation` returns the pathname followed by the search, so a phone drawer closes when only the search changes.
+- The phone drawer stays open when a `DrilldownItem` or Back moves the sidebar, and closes on any other page change.
+- The phone drawer takes the fill of the sidebar column, so the sticky title row and footer of a screen match it.
+- The phone drawer is drawn as WordPress's new admin draws its phone sidebar: from the top of the screen, as wide as the sidebar column (300px, at most 85% of the screen), square, with no border and with its shadow.
+- The phone drawer dims the page under it black at 0.5 with the pointer cursor, as WordPress's new admin dims it under its phone sidebar.
+- The phone menu button draws WordPress's `menu` icon in the full chrome text colour, as the new admin's toggle does.
+- The sidebar column is one region named "Navigation", its menu and footer inside, as the Site Editor's sidebar is. `Frame.Sidebar` takes `label` to name it, and `Navigation` draws no landmark of its own.
+- `ListEmpty` draws its title one level under the title of the `Page` around it, an h3 inside a level 2 `Page`, at the same size.
+- List titles are bold, as DataViews and the WordPress lists draw them, in a DataViews table and in a hand table on a list page.
+- **Breaking.** `NavigationScreen` draws the Site Editor's screen: its `title`, now any node, in a 20px h1 at the 56px mark, Back as a 32px chevron box going to the app's `home` inside a `Navigation`, and no focus on mount.
+- **Breaking.** The sidebar column and the drawer lose their 16px padding. The screen pads its rows instead.
+- **Breaking.** The `@tanstack/react-router` peer starts at 1.170.44, whose route matching runs no route `context`.
+- **Breaking.** `@wordpress/i18n` is a required peer, since the main entry translates godmin's own words.
+- **Breaking.** `Frame.Sidebar` names its menu button "Open navigation panel" by default, WordPress's words, in place of "Open navigation", and names its drawer "Navigation" whatever the button is called.
+- **Breaking.** `PageTabs` draws its tabs in a `ul role="list"`, each `PageTab` in its own `li`, and the `.godmin-page-tabs` class and its fade classes move from the `nav` to that list.
+- **Breaking.** `Frame.Rail` is `Frame.Sidebar` and `FrameRailProps` is `FrameSidebarProps`, the names WordPress gives the part.
+- **Breaking.** The sidebar slot class `.godmin-layout__rail` is `.godmin-layout__sidebar`.
+- **Breaking.** The width custom property `--godmin-rail-width` is `--godmin-nav-sidebar-width`, as the Site Editor names it.
+- **Breaking.** `RAIL_BREAKPOINT` is `SIDEBAR_BREAKPOINT`, still 1024.
+- **Breaking.** `NavScreen` is `NavigationScreen`, `NavScreenProps` is `NavigationScreenProps` and the `.godmin-nav-screen` classes are `.godmin-navigation-screen`.
+
 ## [0.24.0] - 2026-10-22
 
 ### Added
