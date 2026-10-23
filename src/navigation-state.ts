@@ -58,16 +58,20 @@ export function createNavigationState(): NavigationState {
 	return {}
 }
 
+/** The link targets that open in the same tab, as TanStack's Link reads them. */
+const SAME_TAB = ['', '_self']
+
 /**
  * Tells whether a click follows its link in the same tab, as the router follows it.
  * @param event - The click.
- * @returns Whether it is a main button click with no modifier key that nothing stopped.
+ * @returns Whether it is a main button click with no modifier key, not stopped, on a link that opens in this tab.
  */
 export function isPlainClick(event: MouseEvent): boolean {
 	return (
 		event.button === 0 &&
 		!event.defaultPrevented &&
-		!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey)
+		!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) &&
+		SAME_TAB.includes(event.currentTarget.getAttribute('target') ?? '')
 	)
 }
 

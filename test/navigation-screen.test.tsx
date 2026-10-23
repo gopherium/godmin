@@ -272,6 +272,14 @@ test('records nothing when Back is clicked with a modifier key, which opens a ne
 	expect(state).toEqual(createNavigationState())
 })
 
+test('records nothing when the link Back renders through opens in a new tab', () => {
+	const state = renderInNavigation(<a href="#sections" target="_blank" />)
+
+	fireEvent.click(screen.getByRole('link', { name: 'Back' }))
+
+	expect(state).toEqual(createNavigationState())
+})
+
 test('records nothing when the element Back renders through stops the move itself', () => {
 	const stop = vi.fn((event: MouseEvent) => event.preventDefault())
 	const state = renderInNavigation(<a href="#stopped" onClick={stop} />)
