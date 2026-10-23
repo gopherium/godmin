@@ -3,11 +3,12 @@
 import { act, fireEvent, screen } from '@testing-library/react'
 import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
 import { post } from '@wordpress/icons'
+import type { ReactElement } from 'react'
 import { afterEach, expect, test } from 'vitest'
 
 import { DrilldownItem } from '../src/drilldown-item.js'
 import { NavigationStateContext, createNavigationState } from '../src/navigation-state.js'
-import type { NavigationState } from '../src/navigation-state.js'
+import type { Move, NavigationState } from '../src/navigation-state.js'
 import { installTestEnvironment } from '../src/testing.js'
 import { holdsEvery, renderRows } from './sidebar-routes.js'
 
@@ -122,18 +123,21 @@ test('hides a row whose address opens a route asking for a capability the reader
 })
 
 /**
- * Renders a drilldown row to the things section inside a frame's shared state.
+ * Renders a drilldown row inside a frame's shared state, the row to the things section unless one is given.
  * @param path - The address to start at.
+ * @param row - The drilldown row to draw.
+ * @param state - The state of the frame.
  * @returns The state the row records its moves in.
  */
-async function renderInFrame(path = '/posts'): Promise<NavigationState> {
-	const state = createNavigationState()
+async function renderInFrame(
+	path = '/posts',
+	row: ReactElement = <DrilldownItem to="/things">Things</DrilldownItem>,
+	state = createNavigationState(),
+): Promise<NavigationState> {
 	await renderRows(
 		path,
 		<NavigationStateContext.Provider value={state}>
-			<ul>
-				<DrilldownItem to="/things">Things</DrilldownItem>
-			</ul>
+			<ul>{row}</ul>
 		</NavigationStateContext.Provider>,
 		holdsEvery,
 	)
@@ -173,12 +177,54 @@ test.each([['ctrlKey'], ['metaKey'], ['shiftKey'], ['altKey']])(
 	},
 )
 
+test.each([
+	[
+		'that opens in a new tab',
+		<DrilldownItem key="new-tab" to="/things" target="_blank">
+			Things
+		</DrilldownItem>,
+	],
+	[
+		"whose app's click prevents the move",
+		<DrilldownItem key="prevented" to="/things" onClick={(event) => event.preventDefault()}>
+			Things
+		</DrilldownItem>,
+	],
+])('records nothing on a click on a row %s', async (_name, row) => {
+	const state = await renderInFrame('/posts', row)
+
+	fireEvent.click(screen.getByRole('link', { name: 'Things' }))
+
+	expect(state).toEqual(createNavigationState())
+})
+
 test('records nothing on a click with another button than the main one', async () => {
 	const state = await renderInFrame()
 
 	fireEvent.click(screen.getByRole('link', { name: 'Things' }), { button: 1 })
 
 	expect(state).toEqual(createNavigationState())
+})
+
+test("keeps the class its app gives and runs the app's click before recording the move", async () => {
+	const state = createNavigationState()
+	const seen: (Move | undefined)[] = []
+	await renderInFrame(
+		'/posts',
+		<DrilldownItem to="/things" className="mine" onClick={() => seen.push(state.move)}>
+			Things
+		</DrilldownItem>,
+		state,
+	)
+	const row = screen.getByRole('link', { name: 'Things' })
+	expect(row.className).toBe('godmin-navigation-item mine')
+
+	await act(async () => {
+		fireEvent.click(row)
+	})
+
+	expect(seen).toEqual([undefined])
+	expect(state.move).toEqual({ direction: 'forward', address: '/things', rowId: row.id })
 })
 
 test('opens its address outside a frame', async () => {

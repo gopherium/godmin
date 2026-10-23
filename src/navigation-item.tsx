@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { Link, useRouter } from '@tanstack/react-router'
-import type { AnyRouter, LinkComponentProps, LinkProps, RegisteredRouter } from '@tanstack/react-router'
+import type { AnyRouter, LinkComponentProps, RegisteredRouter } from '@tanstack/react-router'
 import { Icon } from '@wordpress/icons'
 import { useContext } from 'react'
 import type { ReactElement, ReactNode } from 'react'
@@ -18,7 +18,7 @@ export const ROW_CLASS = 'godmin-navigation-item'
 const ICON_CLASS = 'godmin-navigation-item__icon'
 
 /**
- * A row that goes to a page. Takes the TanStack Link props, such as to, params and search.
+ * A row that goes to a page. Takes the TanStack Link props, such as to, params, search, className and onClick.
  * An address with a scheme draws a plain link. Sits inside a NavigationList.
  */
 export type NavigationItemProps<
@@ -27,7 +27,7 @@ export type NavigationItemProps<
 	TTo extends string | undefined = undefined,
 	TMaskFrom extends string = TFrom,
 	TMaskTo extends string = '',
-> = LinkProps<'a', TRouter, TFrom, TTo, TMaskFrom, TMaskTo> & {
+> = LinkComponentProps<'a', TRouter, TFrom, TTo, TMaskFrom, TMaskTo> & {
 	/** A glyph from `@wordpress/icons`, drawn at 24px. */
 	icon?: ReactElement
 	/** Drawn at the end of the row, such as a MenuCount. */
@@ -43,9 +43,9 @@ interface RowProps {
 	routes: RowRoutes
 	/** A glyph from `@wordpress/icons`, drawn at 24px. */
 	icon: ReactElement | undefined
-	/** The classes of the row link. */
+	/** The classes of the row link, before the class the app gives. */
 	className: string
-	/** The id of the row link, when the row needs one. */
+	/** The id of the row link, in place of the one the app gives, when the row needs one. */
 	id?: string
 	/** What ends the row, such as a suffix or a chevron. */
 	end?: ReactNode
@@ -77,7 +77,11 @@ export function Row({ link, routes, icon, className, id, end, children }: RowPro
 	}
 	return (
 		<li>
-			<Link {...link} id={id} className={className}>
+			<Link
+				{...link}
+				id={id ?? link.id}
+				className={link.className === undefined ? className : `${className} ${link.className}`}
+			>
 				<RowIcon icon={icon} />
 				<div className="godmin-navigation-item__label">{children}</div>
 				{end}

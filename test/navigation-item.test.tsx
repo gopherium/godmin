@@ -119,6 +119,21 @@ test('draws the icon, the label and the suffix in order, the suffix marked on th
 	expect(link.querySelector('.godmin-navigation-item__suffix .godmin-menu-count')).not.toBeNull()
 })
 
+test('keeps the class and the id its app gives, after its own class, as WordPress merges className', async () => {
+	await renderRows(
+		'/posts',
+		<ul>
+			<NavigationItem to="/profile" className="mine" id="mine">
+				Profile
+			</NavigationItem>
+		</ul>,
+	)
+
+	const link = screen.getByRole('link', { name: 'Profile' })
+	expect(link.className).toBe('godmin-navigation-item mine')
+	expect(link.id).toBe('mine')
+})
+
 test('draws no chevron, so a row that goes to a page never reads as one that opens a sub menu', async () => {
 	await renderRows(
 		'/posts',

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useRouter } from '@tanstack/react-router'
-import type { AnyRouter, LinkComponentProps, LinkProps, RegisteredRouter } from '@tanstack/react-router'
+import type { AnyRouter, LinkComponentProps, RegisteredRouter } from '@tanstack/react-router'
 import { isRTL } from '@wordpress/i18n'
 import { Icon, chevronLeftSmall, chevronRightSmall } from '@wordpress/icons'
 import { useContext } from 'react'
@@ -21,7 +21,9 @@ export type DrilldownItemProps<
 	TTo extends string | undefined = undefined,
 	TMaskFrom extends string = TFrom,
 	TMaskTo extends string = '',
-> = LinkProps<'a', TRouter, TFrom, TTo, TMaskFrom, TMaskTo> & {
+> = LinkComponentProps<'a', TRouter, TFrom, TTo, TMaskFrom, TMaskTo> & {
+	/** None, since the row takes its id from its address. */
+	id?: never
 	/** A glyph from `@wordpress/icons`, drawn at 24px. */
 	icon?: ReactElement
 	children: ReactNode
@@ -45,7 +47,8 @@ export function DrilldownItem<
 	const address = link as LinkComponentProps
 	const routes = findRowRoutes(router, address)
 	const id = ID_PREFIX + routes.href
-	const onClick = (event: MouseEvent) => {
+	const onClick = (event: MouseEvent<HTMLAnchorElement>) => {
+		address.onClick?.(event)
 		if (state !== undefined && isPlainClick(event)) {
 			recordDrilldown(state, id, findMoveTarget(router, address))
 		}
