@@ -6,6 +6,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import { AVATAR_COLORS, InitialsAvatar } from '../src/avatar.js'
 import * as entry from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
+import { contrastRatio } from './colors.js'
 
 installTestEnvironment()
 
@@ -27,19 +28,6 @@ const OTHER_PICTURE = 'https://example.com/other-avatar.png'
 function avatarFor(name: string): HTMLElement {
 	const { container } = renderAdmin(<InitialsAvatar name={name} />)
 	return container.querySelector('.godmin-avatar') as HTMLElement
-}
-
-/**
- * Returns the relative luminance of a colour written as #rrggbb.
- * @param hex - The colour.
- * @returns The luminance, from 0 for black to 1 for white.
- */
-function luminance(hex: string): number {
-	const [red, green, blue] = [1, 3, 5].map((at) => {
-		const channel = Number.parseInt(hex.slice(at, at + 2), 16) / 255
-		return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4
-	})
-	return 0.2126 * red + 0.7152 * green + 0.0722 * blue
 }
 
 /**
@@ -122,9 +110,9 @@ test('spreads different names over every colour of the palette', () => {
 
 test('keeps every colour of the palette at 4.5 to 1 or more against its letter', () => {
 	for (const { background, letter } of AVATAR_COLORS) {
-		const contrast = (luminance(letter) + 0.05) / (luminance(background) + 0.05)
+		const tooLight = `${background} is too light for its ${letter} letter`
 
-		expect(contrast, `${background} is too light for its ${letter} letter`).toBeGreaterThanOrEqual(4.5)
+		expect(contrastRatio(letter, background), tooLight).toBeGreaterThanOrEqual(4.5)
 	}
 })
 
