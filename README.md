@@ -52,14 +52,39 @@ two lines do for you.
 
 | Entry point | Contents |
 | --- | --- |
-| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `PageTabs`, `PageTab`, `SectionTitle`, `InitialsAvatar`, `NavScreen`, `MenuCount`, `ErrorNotice`, `LoadMore`, `LogList`, `LogItem`, `LogTime`, `LoadingScreen`, `LoadingRows`, `Toaster`, `useToaster`, `RepeatRows`, `RowControls`, `useRowKeys`, `keyFromLabel`, `listChromeCatalogFor`, `LIST_CHROME_DOMAIN`, `ListEmpty`, `ConfirmBody`, `RenameBody`, `FormBody`, `FileButton`, `useServerPaging`, `pageWindow`, `paginationOf`, `runEach`, `bulkNotes`, `useListRun`, `useBulkRun`, `RunConfirm`, `viewNarrows`, `offeredView`, `offeredSize`, `sizedView`, `useMediaQuery`, `useTokenDocument`, the breakpoints `RAIL_BREAKPOINT`, `EDGE_BREAKPOINT`, `DENSE_BREAKPOINT`, `SHEET_BREAKPOINT`, `TITLE_BREAKPOINT` and `SMALL_VIEWPORT`, `SUPPORTED_WPDS` |
+| `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `PageTabs`, `PageTab`, `SectionTitle`, `InitialsAvatar`, `NavigationScreen`, `MenuCount`, `ErrorNotice`, `LoadMore`, `LogList`, `LogItem`, `LogTime`, `LoadingScreen`, `LoadingRows`, `Toaster`, `useToaster`, `RepeatRows`, `RowControls`, `useRowKeys`, `keyFromLabel`, `listChromeCatalogFor`, `LIST_CHROME_DOMAIN`, `ListEmpty`, `ConfirmBody`, `RenameBody`, `FormBody`, `FileButton`, `useServerPaging`, `pageWindow`, `paginationOf`, `runEach`, `bulkNotes`, `useListRun`, `useBulkRun`, `RunConfirm`, `viewNarrows`, `offeredView`, `offeredSize`, `sizedView`, `useMediaQuery`, `useTokenDocument`, the breakpoints `HUGE_BREAKPOINT`, `SIDEBAR_BREAKPOINT`, `EDGE_BREAKPOINT`, `DENSE_BREAKPOINT`, `SHEET_BREAKPOINT`, `TITLE_BREAKPOINT` and `SMALL_VIEWPORT`, `SUPPORTED_WPDS` |
 | `@gopherium/godmin/base.css` | Cascade layer order, design tokens, host rules, frame and screen styles |
 | `@gopherium/godmin/dates` | `startListDates`, `listDate`, the only entry that loads `@wordpress/date` |
 | `@gopherium/godmin/dialogs` | `ConfirmDialog`, `FormDialog`, the only entry that loads `@wordpress/components`. Load `@wordpress/components/build-style/style.css` once in your app, as DataViews asks |
-| `@gopherium/godmin/router` | `useListView`, `listSearch`, `openOnTap`, `useCanvas`, `useFrameLocation`, the `canvas` route static data |
+| `@gopherium/godmin/router` | `Navigation`, `NavigationList`, `NavigationItem`, `DrilldownItem`, `useCanAccess` and the `MenuItem` type, `useListView`, `listSearch`, `openOnTap`, `useCanvas`, `useFrameLocation`, `routerDefaults`, the `canvas`, `Sidebar` and `capability` route static data |
 | `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport` and its `TestViewport` type, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR`, `textClasses`, `badgeClasses`, `buttonClasses`, `stubLayout` |
 | `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `godminStylesheetFirst`, `duplicateCopies`, `hoistStylesheet` |
 | `@gopherium/godmin/stylelint` | The design system stylelint rules |
+
+## Translations
+
+GodMin speaks a few words of its own: Back on a sidebar screen, the name of
+the sidebar column and its phone drawer, and the phone menu button and the
+drawer's close button, which only a screen reader meets. It
+translates them in the WordPress `default` text domain, as `@wordpress/ui`
+translates its own, so `@wordpress/i18n` is a required peer. Every app
+already has it, since
+`@wordpress/ui` depends on it.
+
+`listChromeCatalogFor` returns the catalogue GodMin ships for a language,
+Spanish and French today. Both hold these words and the list dates, and the
+Spanish one also holds the list chrome. Load it into `LIST_CHROME_DOMAIN`, the
+`default` domain:
+
+```ts
+import { setLocaleData } from '@wordpress/i18n'
+import { LIST_CHROME_DOMAIN, listChromeCatalogFor } from '@gopherium/godmin'
+
+const catalogue = await listChromeCatalogFor('es-ES')
+if (catalogue !== undefined) {
+    setLocaleData(catalogue, LIST_CHROME_DOMAIN)
+}
+```
 
 ## Before your first build
 
