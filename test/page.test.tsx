@@ -66,6 +66,54 @@ test('renders the title as the page heading', () => {
 	expect(screen.getByText('body')).not.toBeNull()
 })
 
+test('renders the title as a level 2 heading on a screen beside the sidebar, as admin-ui takes headingLevel', () => {
+	renderAdmin(
+		<Page title="Reports" headingLevel={2}>
+			body
+		</Page>,
+	)
+
+	expect(screen.getByRole('heading', { level: 2, name: 'Reports' })).not.toBeNull()
+	expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
+})
+
+test('renders a page title on its own at the level given', () => {
+	renderAdmin(<PageTitle level={2}>Maria Perez</PageTitle>)
+
+	expect(screen.getByRole('heading', { level: 2, name: 'Maria Perez' })).not.toBeNull()
+})
+
+test('renders a section title one level deeper inside a level 2 page, keeping the size of the level given', () => {
+	renderAdmin(
+		<>
+			<SectionTitle>Large outside</SectionTitle>
+			<SectionTitle level={3}>Medium outside</SectionTitle>
+			<Page title="Reports" headingLevel={2} aside={<SectionTitle>Details</SectionTitle>}>
+				<SectionTitle>Identities</SectionTitle>
+				<SectionTitle level={3}>Sub fields</SectionTitle>
+			</Page>
+		</>,
+	)
+
+	const classesOf = (level: number, name: string) => [...screen.getByRole('heading', { level, name }).classList]
+	expect(classesOf(3, 'Identities')).toEqual(classesOf(2, 'Large outside'))
+	expect(classesOf(4, 'Sub fields')).toEqual(classesOf(3, 'Medium outside'))
+	expect(screen.getByRole('heading', { level: 3, name: 'Details' })).not.toBeNull()
+})
+
+test('renders a section title at the level given inside a level 1 page, as outside any page', () => {
+	renderAdmin(
+		<Page title="Reports">
+			<SectionTitle>Identities</SectionTitle>
+			<SectionTitle level={3}>Sub fields</SectionTitle>
+		</Page>,
+	)
+
+	expect(screen.getByRole('heading', { level: 1, name: 'Reports' })).not.toBeNull()
+	expect(screen.getByRole('heading', { level: 2, name: 'Identities' })).not.toBeNull()
+	expect(screen.getByRole('heading', { level: 3, name: 'Sub fields' })).not.toBeNull()
+})
+
 test('renders the subtitle under the title', () => {
 	renderAdmin(
 		<Page title="Reports" subtitle="Friday, Aug 1">

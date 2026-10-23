@@ -1,32 +1,63 @@
 /* oxlint-disable react/only-export-components -- the page kit ships its parts
    beside the type they share. */
 import { Button, Notice, Stack, Text } from '@wordpress/ui'
+import { createContext, useContext } from 'react'
 import type { ComponentProps, HTMLAttributes, ReactNode, Ref } from 'react'
 
 type TextVariant = ComponentProps<typeof Text>['variant']
 
+/** The level of a page title, 1 as in WordPress's admin-ui Page, 2 on a screen beside the sidebar. */
+type PageLevel = 1 | 2
+
+/** The heading element a level renders as. */
+type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4'
+
+/** The level of the title of the Page around a section title, 1 outside any Page. */
+const PageLevelContext = createContext<PageLevel>(1)
+
+/**
+ * Returns the heading element of a level.
+ * @param level - The heading level, 1 to 4.
+ * @returns The element name.
+ */
+function headingTag(level: number): HeadingTag {
+	return `h${level}` as HeadingTag
+}
+
+/**
+ * Returns the heading element one level under the title of the Page around it, an h2 outside any Page.
+ * @returns The element name.
+ */
+export function useHeadingUnderPage(): HeadingTag {
+	return headingTag(useContext(PageLevelContext) + 1)
+}
+
 /**
  * Renders a screen's title as the page heading.
- * @param props - The title text and the type scale to render it at.
+ * @param props - The title text, the type scale to render it at and its heading level, 1 when absent.
  * @returns The page title element.
  */
 export function PageTitle({
 	children,
 	variant = 'heading-lg',
+	level = 1,
 }: {
 	children: ReactNode
 	variant?: TextVariant
+	level?: PageLevel
 }) {
+	const Heading = headingTag(level)
 	return (
-		<Text variant={variant} render={<h1 />}>
+		<Text variant={variant} render={<Heading />}>
 			{children}
 		</Text>
 	)
 }
 
 /**
- * Renders a section heading one size step above the field labels.
- * @param props - The heading text, its level, and the id and tab index a screen moves focus with.
+ * Renders a section heading one size step above the field labels, one level deeper inside a level 2 Page.
+ * @param props - The heading text, its rank under a level 1 page title, and the id and tab index a screen moves
+ * focus with.
  * @returns The section heading element.
  */
 export function SectionTitle({
@@ -40,14 +71,10 @@ export function SectionTitle({
 	id?: string
 	tabIndex?: number
 }) {
-	const second = level === 2
+	const pageLevel = useContext(PageLevelContext)
+	const Heading = headingTag(level + pageLevel - 1)
 	return (
-		<Text
-			variant={second ? 'heading-lg' : 'heading-md'}
-			render={second ? <h2 /> : <h3 />}
-			id={id}
-			tabIndex={tabIndex}
-		>
+		<Text variant={level === 2 ? 'heading-lg' : 'heading-md'} render={<Heading />} id={id} tabIndex={tabIndex}>
 			{children}
 		</Text>
 	)
@@ -65,6 +92,8 @@ export interface PageProps {
 	/** The ref to the list region. */
 	listRef?: Ref<HTMLDivElement>
 	className?: string
+	/** The level of the page title, 1 as in WordPress's admin-ui Page. A screen beside the sidebar passes 2. */
+	headingLevel?: PageLevel
 	children: ReactNode
 }
 
@@ -81,7 +110,8 @@ function regionOf(label: string | undefined, reached: boolean): HTMLAttributes<H
 
 /**
  * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content.
- * @param props - The title, subtitle, actions, tabs, aside, list flag, list name and ref, extra class and content.
+ * @param props - The title, subtitle, actions, tabs, aside, list flag, list name and ref, extra class, title level
+ * and content.
  * @returns The page element.
  */
 export function Page({
@@ -94,44 +124,47 @@ export function Page({
 	listLabel,
 	listRef,
 	className,
+	headingLevel = 1,
 	children,
 }: PageProps) {
 	const classes = className === undefined ? 'godmin-page' : `godmin-page ${className}`
 	return (
-		<Stack direction="column" gap="lg" className={classes}>
-			<Stack direction="column" render={<header />} className="godmin-page__header">
-				<Stack
-					direction="row"
-					wrap="wrap"
-					gap="md"
-					align="center"
-					justify="space-between"
-					className="godmin-page__head"
-				>
-					<PageTitle>{title}</PageTitle>
-					{actions !== undefined && (
-						<Stack direction="row" gap="sm" align="center">
-							{actions}
-						</Stack>
+		<PageLevelContext.Provider value={headingLevel}>
+			<Stack direction="column" gap="lg" className={classes}>
+				<Stack direction="column" render={<header />} className="godmin-page__header">
+					<Stack
+						direction="row"
+						wrap="wrap"
+						gap="md"
+						align="center"
+						justify="space-between"
+						className="godmin-page__head"
+					>
+						<PageTitle level={headingLevel}>{title}</PageTitle>
+						{actions !== undefined && (
+							<Stack direction="row" gap="sm" align="center">
+								{actions}
+							</Stack>
+						)}
+					</Stack>
+					{subtitle !== undefined && (
+						<Text variant="body-md" render={<p />} className="godmin-page__subtitle">
+							{subtitle}
+						</Text>
 					)}
 				</Stack>
-				{subtitle !== undefined && (
-					<Text variant="body-md" render={<p />} className="godmin-page__subtitle">
-						{subtitle}
-					</Text>
-				)}
+				{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
+				<PageBody aside={aside}>
+					{list ? (
+						<div className="godmin-page__list" ref={listRef} {...regionOf(listLabel, listRef !== undefined)}>
+							{children}
+						</div>
+					) : (
+						children
+					)}
+				</PageBody>
 			</Stack>
-			{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
-			<PageBody aside={aside}>
-				{list ? (
-					<div className="godmin-page__list" ref={listRef} {...regionOf(listLabel, listRef !== undefined)}>
-						{children}
-					</div>
-				) : (
-					children
-				)}
-			</PageBody>
-		</Stack>
+		</PageLevelContext.Provider>
 	)
 }
 

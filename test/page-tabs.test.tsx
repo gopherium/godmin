@@ -9,7 +9,7 @@ import {
 	createRoute,
 	createRouter,
 } from '@tanstack/react-router'
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { forwardRef } from 'react'
 import type { AnchorHTMLAttributes } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -171,11 +171,42 @@ function fades(row: Element): { start: boolean; end: boolean } {
 }
 
 /**
- * Returns the tab row on screen.
- * @returns The navigation element of the user tabs.
+ * Scrolls a tab row to an offset and returns which of its edges fade.
+ * @param row - The tab row element.
+ * @param offset - The scroll offset the reader leaves the row at.
+ * @returns Whether the start edge and the end edge fade.
+ */
+function fadesAt(row: HTMLElement, offset: number): { start: boolean; end: boolean } {
+	row.scrollLeft = offset
+	fireEvent.scroll(row)
+	return fades(row)
+}
+
+/**
+ * Returns the tab row on screen, the list inside the navigation region.
+ * @returns The list element of the user tabs.
  */
 function tabRow(): HTMLElement {
-	return screen.getByRole('navigation', { name: 'User sections' })
+	return within(screen.getByRole('navigation', { name: 'User sections' })).getByRole('list')
+}
+
+/**
+ * Draws the users tab, current, and the tokens tab as plain links.
+ * @returns The users tab and the tokens tab.
+ */
+function renderTwoTabs(): { users: HTMLElement; tokens: HTMLElement } {
+	renderAdmin(
+		<PageTabs label="User sections">
+			<PageTab href="/users" current>
+				Users
+			</PageTab>
+			<PageTab href="/users/tokens">API tokens</PageTab>
+		</PageTabs>,
+	)
+	return {
+		users: screen.getByRole('link', { name: 'Users' }),
+		tokens: screen.getByRole('link', { name: 'API tokens' }),
+	}
 }
 
 /**
@@ -221,45 +252,46 @@ function renderRoutedTabs(path: string, exact: boolean) {
 }
 
 test('renders the tabs as links in a navigation region named by its label', () => {
-	renderAdmin(
-		<PageTabs label="User sections">
-			<PageTab href="/users" current>
-				Users
-			</PageTab>
-			<PageTab href="/users/tokens">API tokens</PageTab>
-		</PageTabs>,
-	)
+	renderTwoTabs()
 
 	const nav = screen.getByRole('navigation', { name: 'User sections' })
 	expect([...nav.querySelectorAll('a')].map((link) => link.textContent)).toEqual(['Users', 'API tokens'])
 })
 
-test('marks the current tab as the page on screen and leaves the others unmarked', () => {
-	renderAdmin(
-		<PageTabs label="User sections">
-			<PageTab href="/users" current>
-				Users
-			</PageTab>
-			<PageTab href="/users/tokens">API tokens</PageTab>
-		</PageTabs>,
-	)
+test('draws the tabs as a list of links inside the navigation region, as admin-ui draws its page navigation', () => {
+	renderAdmin(<UserTabs current="Users" />)
 
-	expect(screen.getByRole('link', { name: 'Users' }).getAttribute('aria-current')).toBe('page')
-	expect(screen.getByRole('link', { name: 'API tokens' }).hasAttribute('aria-current')).toBe(false)
+	const nav = screen.getByRole('navigation', { name: 'User sections' })
+	const list = within(nav).getByRole('list')
+	const items = within(list).getAllByRole('listitem')
+	expect(list.tagName).toBe('UL')
+	expect(list.getAttribute('role')).toBe('list')
+	expect(list.parentElement).toBe(nav)
+	expect(items.map((item) => item.tagName)).toEqual(['LI', 'LI', 'LI', 'LI'])
+	expect(items.map((item) => within(item).getByRole('link').textContent)).toEqual(LABELS)
+	expect(items.map((item) => item.childElementCount)).toEqual([1, 1, 1, 1])
+})
+
+test('gives the list the tab row class that scrolls and fades, and leaves the navigation region unclassed', () => {
+	measure(LEFT_TO_RIGHT)
+	renderAdmin(<UserTabs />)
+
+	expect(tabRow().className).toBe('godmin-page-tabs godmin-page-tabs--overflowing-last')
+	expect(screen.getByRole('navigation', { name: 'User sections' }).hasAttribute('class')).toBe(false)
+})
+
+test('marks the current tab as the page on screen and leaves the others unmarked', () => {
+	const { users, tokens } = renderTwoTabs()
+
+	expect(users.getAttribute('aria-current')).toBe('page')
+	expect(tokens.hasAttribute('aria-current')).toBe(false)
 })
 
 test('gives the current tab the class that underlines it and leaves the others without', () => {
-	renderAdmin(
-		<PageTabs label="User sections">
-			<PageTab href="/users" current>
-				Users
-			</PageTab>
-			<PageTab href="/users/tokens">API tokens</PageTab>
-		</PageTabs>,
-	)
+	const { users, tokens } = renderTwoTabs()
 
-	expect(screen.getByRole('link', { name: 'Users' }).classList.contains(CURRENT)).toBe(true)
-	expect(screen.getByRole('link', { name: 'API tokens' }).classList.contains(CURRENT)).toBe(false)
+	expect(users.classList.contains(CURRENT)).toBe(true)
+	expect(tokens.classList.contains(CURRENT)).toBe(false)
 })
 
 test('underlines only the tab the screen marks current, even where a router link counts itself active', async () => {
@@ -369,23 +401,15 @@ test('fades the end edge of a tab row cut at its end, as the WordPress tabs do',
 test('fades both edges once the reader scrolls the row between its ends', () => {
 	measure(LEFT_TO_RIGHT)
 	renderAdmin(<UserTabs />)
-	const row = tabRow()
 
-	row.scrollLeft = 50
-	fireEvent.scroll(row)
-
-	expect(fades(row)).toEqual({ start: true, end: true })
+	expect(fadesAt(tabRow(), 50)).toEqual({ start: true, end: true })
 })
 
 test('fades only the start edge once the reader scrolls the row to its end', () => {
 	measure(LEFT_TO_RIGHT)
 	renderAdmin(<UserTabs />)
-	const row = tabRow()
 
-	row.scrollLeft = 178
-	fireEvent.scroll(row)
-
-	expect(fades(row)).toEqual({ start: true, end: false })
+	expect(fadesAt(tabRow(), 178)).toEqual({ start: true, end: false })
 })
 
 test('counts a row a pixel off an edge as resting on it, for sub-pixel rounding', () => {
@@ -393,13 +417,8 @@ test('counts a row a pixel off an edge as resting on it, for sub-pixel rounding'
 	renderAdmin(<UserTabs />)
 	const row = tabRow()
 
-	row.scrollLeft = 1
-	fireEvent.scroll(row)
-	expect(fades(row)).toEqual({ start: false, end: true })
-
-	row.scrollLeft = 177
-	fireEvent.scroll(row)
-	expect(fades(row)).toEqual({ start: true, end: false })
+	expect(fadesAt(row, 1)).toEqual({ start: false, end: true })
+	expect(fadesAt(row, 177)).toEqual({ start: true, end: false })
 })
 
 test('reads a right to left row from its start edge, where the scroll runs negative', () => {
@@ -407,13 +426,8 @@ test('reads a right to left row from its start edge, where the scroll runs negat
 	renderAdmin(<UserTabs />)
 	const row = tabRow()
 
-	row.scrollLeft = -50
-	fireEvent.scroll(row)
-	expect(fades(row)).toEqual({ start: true, end: true })
-
-	row.scrollLeft = -178
-	fireEvent.scroll(row)
-	expect(fades(row)).toEqual({ start: true, end: false })
+	expect(fadesAt(row, -50)).toEqual({ start: true, end: true })
+	expect(fadesAt(row, -178)).toEqual({ start: true, end: false })
 })
 
 test('measures the row again when it or one of its tabs changes size', () => {
@@ -423,7 +437,7 @@ test('measures the row again when it or one of its tabs changes size', () => {
 	renderAdmin(<UserTabs />)
 	const row = tabRow()
 
-	expect(watched).toEqual(new Set([row, ...screen.getAllByRole('link')]))
+	expect(watched).toEqual(new Set([row, ...screen.getAllByRole('listitem')]))
 
 	layout.shown = 418
 	resize()
@@ -443,7 +457,7 @@ test('watches and measures a tab added after the row drew', async () => {
 	rerender(<UserTabs />)
 
 	await waitFor(() => expect(fades(row)).toEqual({ start: false, end: true }))
-	expect(watched).toEqual(new Set([row, ...screen.getAllByRole('link')]))
+	expect(watched).toEqual(new Set([row, ...screen.getAllByRole('listitem')]))
 })
 
 test('lets go of the row once the tabs leave', () => {

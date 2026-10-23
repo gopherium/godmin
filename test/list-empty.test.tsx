@@ -6,7 +6,7 @@ import { Icon } from '@wordpress/ui'
 import type { ComponentProps } from 'react'
 import { expect, test } from 'vitest'
 
-import { ListEmpty } from '../src/index'
+import { ListEmpty, Page } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -36,6 +36,36 @@ test('names an empty list in a heading', () => {
 	renderAdmin(<ListEmpty icon={people} title="No users yet." />)
 
 	expect(screen.getByRole('heading', { name: 'No users yet.' })).not.toBeNull()
+})
+
+test('names an empty list one level under the title of a level 2 page, at the size it has outside any page', () => {
+	renderAdmin(
+		<>
+			<ListEmpty icon={people} title="No users yet." />
+			<Page title="Users" headingLevel={2} list>
+				<ListEmpty icon={people} title="No users found." />
+			</Page>
+		</>,
+	)
+
+	const outside = screen.getByRole('heading', { level: 2, name: 'No users yet.' })
+	const inside = screen.getByRole('heading', { level: 3, name: 'No users found.' })
+	expect([...inside.classList]).toEqual([...outside.classList])
+	expect(screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent)).toEqual([
+		'No users yet.',
+		'Users',
+	])
+})
+
+test('names an empty list in an h2 inside a level 1 page, one level under its title', () => {
+	renderAdmin(
+		<Page title="Users" list>
+			<ListEmpty icon={people} title="No users found." />
+		</Page>,
+	)
+
+	expect(screen.getByRole('heading', { level: 1, name: 'Users' })).not.toBeNull()
+	expect(screen.getByRole('heading', { level: 2, name: 'No users found.' })).not.toBeNull()
 })
 
 test.each([

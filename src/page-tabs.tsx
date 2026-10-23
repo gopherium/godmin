@@ -123,17 +123,20 @@ function useRevealCurrent(ref: RefObject<HTMLElement | null>): void {
 }
 
 /**
- * Renders the tabs of a page as a navigation region of links that scrolls to the current tab and fades a cut edge.
+ * Renders the tabs of a page as a navigation region holding a list of links, as admin-ui draws its page navigation.
+ * The list scrolls to the current tab and fades a cut edge.
  * @param props - The navigation name and the tabs.
  * @returns The tab navigation element.
  */
 export function PageTabs({ label, children }: PageTabsProps) {
-	const ref = useRef<HTMLElement>(null)
+	const ref = useRef<HTMLUListElement>(null)
 	useRevealCurrent(ref)
 	const className = useRowClass(ref)
 	return (
-		<nav ref={ref} className={className} aria-label={label}>
-			{children}
+		<nav aria-label={label}>
+			<ul ref={ref} className={className} role="list">
+				{children}
+			</ul>
 		</nav>
 	)
 }
@@ -154,7 +157,7 @@ export interface PageTabProps {
  * @param props - The address or the link element, whether it is current, and the label.
  * @returns The tab link element.
  */
-export function PageTab({ href, render, current = false, children }: PageTabProps) {
+function TabLink({ href, render, current = false, children }: PageTabProps) {
 	const ariaCurrent = current ? 'page' : undefined
 	const tabClass = current ? `${TAB_CLASS} ${CURRENT_CLASS}` : TAB_CLASS
 	if (render === undefined) {
@@ -170,4 +173,17 @@ export function PageTab({ href, render, current = false, children }: PageTabProp
 		'aria-current': ariaCurrent,
 		children,
 	} as Record<string, unknown>)
+}
+
+/**
+ * Renders one page tab as a list item of the tab row holding its link.
+ * @param props - The address or the link element, whether it is current, and the label.
+ * @returns The tab list item element.
+ */
+export function PageTab(props: PageTabProps) {
+	return (
+		<li>
+			<TabLink {...props} />
+		</li>
+	)
 }
