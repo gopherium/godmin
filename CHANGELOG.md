@@ -4,6 +4,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `MenuItem` takes an optional `count`, a number and the sentence a screen reader reads in its place, drawn as a `MenuCount` after the label.
+- `DrilldownItem` takes a `suffix`, drawn before its chevron, as `NavigationItem` takes one, so a row that opens a sub menu shows its count there.
+
+### Fixed
+
+- `MenuCount` draws its pill in the brand blue of the scheme with a contrasting digit, at least 3:1 against the sidebar, the current row and the phone drawer, and centres it on the line so the label no longer moves.
+
 ## [0.25.0] - 2026-10-23
 
 ### Added
