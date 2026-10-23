@@ -1,7 +1,12 @@
 /**
- * The viewport width below which the rail becomes a drawer.
+ * The viewport width from which a screen counts as huge, the WordPress huge breakpoint.
  */
-export const RAIL_BREAKPOINT = 1024
+export const HUGE_BREAKPOINT = 1440
+
+/**
+ * The viewport width below which the sidebar becomes a drawer.
+ */
+export const SIDEBAR_BREAKPOINT = 1024
 
 /**
  * The viewport width below which the canvas meets the screen edges, the WordPress medium breakpoint.
@@ -24,6 +29,6 @@ export const SHEET_BREAKPOINT = 600
 export const TITLE_BREAKPOINT = 404
 
 /**
- * The media query the frame folds its rail at.
+ * The media query the frame folds its sidebar at.
  */
-export const SMALL_VIEWPORT = `(max-width: ${RAIL_BREAKPOINT - 1}px)`
+export const SMALL_VIEWPORT = `(max-width: ${SIDEBAR_BREAKPOINT - 1}px)`
