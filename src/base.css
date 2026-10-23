@@ -206,15 +206,16 @@ body {
 	.godmin-menu-count__badge {
 		--godmin-menu-count-size: 18px;
 		display: inline-block;
-		vertical-align: top;
+		vertical-align: middle;
 		box-sizing: border-box;
 		min-inline-size: var(--godmin-menu-count-size);
 		block-size: var(--godmin-menu-count-size);
-		margin-block: 1px -1px;
 		margin-inline-start: 2px;
 		padding-block: 0;
 		padding-inline: 5px;
 		border-radius: calc(var(--godmin-menu-count-size) / 2);
+		background-color: var(--wpds-color-background-thumb-brand);
+		color: var(--wpds-color-foreground-interactive-neutral-strong);
 		font-size: var(--wpds-typography-font-size-xs);
 		font-weight: inherit;
 		line-height: 1.6;
