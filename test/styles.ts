@@ -2,7 +2,7 @@
 
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 
 import { SHEET_BREAKPOINT } from '../src/breakpoints.js'
 
@@ -10,7 +10,16 @@ import { SHEET_BREAKPOINT } from '../src/breakpoints.js'
 const packageFile = createRequire(import.meta.url).resolve
 
 /** The stylesheet godmin ships. */
-const base = readFileSync(resolve(import.meta.dirname, '../src/base.css'), 'utf8')
+export const base = readFileSync(resolve(import.meta.dirname, '../src/base.css'), 'utf8')
+
+/** The module the @wordpress/ui drawer draws its backdrop and popup from, its stylesheet inside. */
+export const drawerModule = readFileSync(
+	join(dirname(packageFile('@wordpress/ui/package.json')), 'build-module/drawer/popup.mjs'),
+	'utf8',
+)
+
+/** The selector godmin paints the backdrop of its phone drawer with: the layer just before the drawer's viewport. */
+export const DRAWER_BACKDROP = "[role='presentation']:has(+ * > .godmin-layout__drawer)"
 
 /** The design tokens the stylesheet imports. */
 const tokens = readFileSync(packageFile('@wordpress/theme/design-tokens.css'), 'utf8')

@@ -196,9 +196,36 @@ const WORDPRESS_DATE_WORDS: Record<string, string> = {
 	'start of week\u00041': '1',
 }
 
+/** The words of the sidebar parts as the WordPress Spanish and French catalogues give them, by language and key. */
+const WORDPRESS_SIDEBAR_WORDS: Record<string, Record<string, string>> = {
+	'es-ES': {
+		Back: 'Volver',
+		'Close navigation panel': 'Cerrar el panel de navegación',
+		Navigation: 'Navegación',
+		'Open navigation panel': 'Abrir el panel de navegación',
+	},
+	'fr-FR': {
+		Back: 'Retour',
+		'Close navigation panel': 'Fermer le panneau de navigation',
+		Navigation: 'Navigation',
+		'Open navigation panel': 'Ouvrir le panneau de navigation',
+	},
+}
+
+/** The messages each godmin source file asks gettext for, by its path inside the source folder. */
+const SOURCE_MESSAGES = new Map(
+	readdirSync(resolve('src'), { recursive: true, encoding: 'utf8' })
+		.filter((path) => /\.tsx?$/.test(path))
+		.map((path) => [path, [...readFileSync(resolve('src', path), 'utf8').matchAll(CALL)].map(callOf)] as const),
+)
+
 const SPANISH = shipped('es-ES', spanish)
 const CATALOGUES = [SPANISH, shipped('fr-FR', french)]
-const LIST_DATE_MESSAGES = [...readFileSync(resolve('src/list-dates.ts'), 'utf8').matchAll(CALL)].map(callOf)
+const LIST_DATE_MESSAGES = SOURCE_MESSAGES.get('list-dates.ts') ?? []
+const SIDEBAR_MESSAGES = ['frame.tsx', 'navigation.tsx', 'navigation-screen.tsx'].flatMap(
+	(path) => SOURCE_MESSAGES.get(path) ?? [],
+)
+const OWN_MESSAGES = [...SOURCE_MESSAGES.values()].flat()
 
 /**
  * Returns a catalogue the package ships, read from its PO source beside the module compiled from it.
@@ -459,14 +486,14 @@ test('compiles each catalogue from the PO source beside it', () => {
 	}
 })
 
-test('ships only messages the DataViews build, the components it renders with or the list dates ask for', () => {
+test('ships only messages the DataViews build, the components it renders with or the godmin parts ask for', () => {
 	const asked = new Set(
 		[
 			...messagesIn(dataviewsBuild, () => true),
 			...messagesIn(componentsBuild, rendersInList),
 			...messagesIn(uiBuild, drawsCalendar),
 			...messagesIn(uiBuild, drawsButton),
-			...LIST_DATE_MESSAGES,
+			...OWN_MESSAGES,
 		].map(signatureOf),
 	)
 
@@ -490,6 +517,20 @@ test('ships the words the WordPress button and modal speak inside a dialog, in e
 		const ships = new Set(catalogue.messages.map(keyOf))
 		for (const spoken of ['Loading', 'Scrollable section']) {
 			expect(ships.has(spoken), `${catalogue.locale} ships no ${spoken}`).toBe(true)
+		}
+	}
+})
+
+test('reads Back, Navigation and the open and close panel words from the sidebar parts that speak them', () => {
+	expect(new Set(SIDEBAR_MESSAGES.map(keyOf))).toEqual(
+		new Set(['Back', 'Close navigation panel', 'Navigation', 'Open navigation panel']),
+	)
+})
+
+test('words the sidebar parts as the WordPress Spanish and French catalogues do', () => {
+	for (const catalogue of CATALOGUES) {
+		for (const [key, words] of Object.entries(WORDPRESS_SIDEBAR_WORDS[catalogue.locale])) {
+			expect(catalogue.module[key], `${catalogue.locale} ${key}`).toEqual([words])
 		}
 	}
 })

@@ -7,8 +7,9 @@ export type { InitialsAvatarProps } from './avatar.js'
 export {
 	DENSE_BREAKPOINT,
 	EDGE_BREAKPOINT,
-	RAIL_BREAKPOINT,
+	HUGE_BREAKPOINT,
 	SHEET_BREAKPOINT,
+	SIDEBAR_BREAKPOINT,
 	SMALL_VIEWPORT,
 	TITLE_BREAKPOINT,
 } from './breakpoints.js'
@@ -26,8 +27,8 @@ export { Frame } from './frame.js'
 export type {
 	CanvasMode,
 	FrameCanvasProps,
-	FrameRailProps,
 	FrameRootProps,
+	FrameSidebarProps,
 } from './frame.js'
 export { keyFromLabel } from './keys.js'
 export type { KeyOptions, KeyStyle } from './keys.js'
@@ -42,8 +43,8 @@ export { LogItem, LogList, LogTime } from './log-list.js'
 export type { LogItemProps, LogListProps, LogTimeProps } from './log-list.js'
 export { MenuCount } from './menu-count.js'
 export type { MenuCountProps } from './menu-count.js'
-export { NavScreen } from './nav-screen.js'
-export type { NavScreenProps } from './nav-screen.js'
+export { NavigationScreen } from './navigation-screen.js'
+export type { NavigationScreenProps } from './navigation-screen.js'
 export { ErrorNotice, LoadMore, Page, PageTitle, SectionTitle } from './page.js'
 export type { LoadMoreQuery, PageProps } from './page.js'
 export { PageTab, PageTabs } from './page-tabs.js'

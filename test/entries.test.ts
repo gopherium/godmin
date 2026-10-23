@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 
@@ -12,8 +13,11 @@ import * as dialogs from '../src/dialogs.js'
 /** The source folder the entries are built from. */
 const source = resolve(import.meta.dirname, '../src')
 
-/** The packages that bring the date engine, moment and its time zone data. */
-const datePackages = ['@wordpress/date', '@wordpress/i18n']
+/** The package that brings the date engine, moment and its time zone data. */
+const datePackage = '@wordpress/date'
+
+/** The package godmin translates its own words with, as the design system translates its own. */
+const i18nPackage = '@wordpress/i18n'
 
 /** The package that brings the WordPress components. */
 const componentsPackage = '@wordpress/components'
@@ -90,9 +94,20 @@ test('the walk names a package reached through a subpath by the package itself',
 })
 
 test('the main entry reaches no date package, so importing it never loads moment', () => {
-	const reached = packagesReachedFrom(join(source, 'index.ts'))
+	expect(packagesReachedFrom(join(source, 'index.ts')).has(datePackage)).toBe(false)
+})
 
-	expect(datePackages.filter((name) => reached.has(name))).toEqual([])
+test('the main entry translates its own words through the i18n package', () => {
+	expect(packagesReachedFrom(join(source, 'index.ts')).has(i18nPackage)).toBe(true)
+})
+
+test('the i18n package brings no moment, so translating the main entry loads none', () => {
+	const i18nManifest = JSON.parse(
+		readFileSync(createRequire(import.meta.url).resolve(`${i18nPackage}/package.json`), 'utf8'),
+	) as { dependencies?: Record<string, string> }
+
+	expect(Object.keys(i18nManifest.dependencies ?? {}).filter((name) => name.includes('moment'))).toEqual([])
+	expect(Object.keys(i18nManifest.dependencies ?? {})).not.toContain(datePackage)
 })
 
 test('the dates entry hands out the list date functions', async () => {
@@ -106,10 +121,17 @@ test('the package publishes the dates entry beside the main one', () => {
 	expect(manifest.exports['./dates']).toEqual({ types: './dist/dates.d.ts', default: './dist/dates.js' })
 })
 
-test('the date packages are optional peers, needed only by the dates entry', () => {
+test('the date package is an optional peer, needed only by the dates entry', () => {
 	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
 
-	expect(datePackages.map((name) => meta[name]?.optional)).toEqual([true, true])
+	expect(meta[datePackage]?.optional).toBe(true)
+})
+
+test('the i18n package is a required peer, which every app already has through the design system', () => {
+	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
+
+	expect(manifest.peerDependencies[i18nPackage]).toBe('>=6.30.0 <7.0.0')
+	expect(meta[i18nPackage]).toBeUndefined()
 })
 
 test('the main entry reaches no components package, so importing it never loads the WordPress components', () => {
@@ -145,6 +167,28 @@ test('the package publishes the dialogs entry beside the main one', () => {
 	const exported = manifest.exports as Record<string, unknown>
 
 	expect(exported['./dialogs']).toEqual({ types: './dist/dialogs.d.ts', default: './dist/dialogs.js' })
+})
+
+test('the router entry hands out the sidebar rows, their list and the access check', async () => {
+	const router = (await import(join(source, 'router.ts'))) as Record<string, unknown>
+	const parts = ['NavigationList', 'NavigationItem', 'DrilldownItem', 'useCanAccess']
+
+	expect(parts.map((name) => typeof router[name])).toEqual(['function', 'function', 'function', 'function'])
+})
+
+test('the router entry hands out the menu, which reads the matched routes', async () => {
+	const router = (await import(join(source, 'router.ts'))) as Record<string, unknown>
+
+	expect(typeof router.Navigation).toBe('function')
+	expect(packagesReachedFrom(join(source, 'navigation.tsx')).has('@tanstack/react-router')).toBe(true)
+})
+
+test('the state the sidebar parts share reaches React alone, so the main entry may read it without the router', () => {
+	expect([...packagesReachedFrom(join(source, 'navigation-state.ts'))]).toEqual(['react'])
+})
+
+test('the router peer starts at a release whose route matching runs no route context', () => {
+	expect(manifest.peerDependencies['@tanstack/react-router']).toBe('^1.170.44')
 })
 
 test('the components package is an optional peer, needed only by the dialogs entry', () => {

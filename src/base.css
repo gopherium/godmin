@@ -85,7 +85,6 @@ body {
 
 .godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content > .dataviews-title-field {
 	min-block-size: 0;
-	font-weight: var(--wpds-typography-font-weight-default);
 	line-height: var(--wpds-typography-line-height-sm);
 }
 
@@ -100,8 +99,10 @@ body {
 
 @layer godmin {
 	:root {
-		--godmin-rail-width: 300px;
+		--godmin-nav-sidebar-width: 300px;
 		--godmin-canvas-margin: 16px;
+		--godmin-navigation-slide-distance: 50px;
+		--godmin-navigation-slide-duration: 140ms;
 	}
 
 	.godmin-layout {
@@ -116,14 +117,14 @@ body {
 		flex-direction: column;
 	}
 
-	.godmin-layout__rail {
+	.godmin-layout__sidebar {
+		z-index: 1;
 		display: flex;
 		flex-direction: column;
 		flex-shrink: 0;
-		width: var(--godmin-rail-width);
-		padding: 16px;
+		width: var(--godmin-nav-sidebar-width);
+		padding: 0;
 		box-sizing: border-box;
-		overflow-y: auto;
 	}
 
 	.godmin-layout__topbar {
@@ -138,10 +139,14 @@ body {
 	.godmin-layout__menu {
 		display: flex;
 		flex: none;
+		align-items: center;
+		justify-content: center;
+		inline-size: 52px;
+		block-size: 46px;
 		padding: 0;
 		border: 0;
 		background: none;
-		color: color-mix(in srgb, var(--wpds-color-foreground-content-neutral) 60%, transparent);
+		color: var(--wpds-color-foreground-content-neutral);
 		cursor: var(--wpds-cursor-control);
 	}
 
@@ -156,11 +161,46 @@ body {
 	}
 
 	.godmin-layout__drawer {
+		top: 0;
 		display: flex;
 		flex-direction: column;
-		padding: 16px;
+		width: var(--godmin-nav-sidebar-width);
+		max-width: 85vw;
+		padding: 0;
 		box-sizing: border-box;
+		border: 0;
+		border-radius: 0;
+		background: var(--wpds-color-background-surface-neutral-weak);
+		box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+	}
+
+	[role='presentation']:has(+ * > .godmin-layout__drawer) {
+		--backdrop-opacity: 0.5;
+		background-color: #000;
+		cursor: var(--wpds-cursor-control);
+	}
+
+	.godmin-sidebar__content {
+		flex: 1 1 0;
+		min-height: 0;
+		overflow-x: hidden;
 		overflow-y: auto;
+		contain: content;
+	}
+
+	.godmin-sidebar__footer {
+		display: flex;
+		flex-direction: column;
+		flex-shrink: 0;
+		gap: 8px;
+		padding: 16px;
+		border-top: 1px solid var(--wpds-color-stroke-surface-neutral);
+	}
+
+	.godmin-sidebar__footer-note {
+		color: var(--wpds-color-foreground-content-neutral-weak);
+		font-size: var(--wpds-typography-font-size-sm);
+		line-height: var(--wpds-typography-line-height-xs);
 	}
 
 	.godmin-menu-count__badge {
@@ -206,7 +246,7 @@ body {
 		overflow: hidden;
 	}
 
-	.godmin-layout:has(> .godmin-layout__rail) .godmin-layout__canvas {
+	.godmin-layout:has(> .godmin-layout__sidebar) .godmin-layout__canvas {
 		margin-inline-start: 0;
 	}
 
@@ -249,8 +289,8 @@ body {
 		pointer-events: none;
 	}
 
-	:root:has(.godmin-layout__rail) .godmin-toasts {
-		inset-inline-start: var(--godmin-rail-width);
+	:root:has(.godmin-layout__sidebar) .godmin-toasts {
+		inset-inline-start: var(--godmin-nav-sidebar-width);
 		inset-inline-end: var(--godmin-canvas-margin);
 	}
 
@@ -338,28 +378,247 @@ body {
 		text-decoration: none;
 	}
 
-	.godmin-nav-screen__title {
+	.godmin-navigation {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+	}
+
+	.godmin-navigation__screen-wrapper {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		max-height: 100%;
+		padding: 0 12px;
+		overflow-x: auto;
+		scrollbar-width: thin;
+		scrollbar-gutter: stable;
+		scrollbar-color: transparent transparent;
+		animation-duration: var(--godmin-navigation-slide-duration);
+		animation-timing-function: ease-in-out;
+		will-change: transform, opacity;
+	}
+
+	.godmin-navigation__screen-wrapper:is(:hover, :focus, :focus-within) {
+		scrollbar-color: var(--wpds-color-stroke-surface-neutral-strong) transparent;
+	}
+
+	.godmin-navigation__screen-wrapper::-webkit-scrollbar {
+		width: 12px;
+		height: 12px;
+	}
+
+	.godmin-navigation__screen-wrapper::-webkit-scrollbar-track {
+		background-color: transparent;
+	}
+
+	.godmin-navigation__screen-wrapper::-webkit-scrollbar-thumb {
+		border: 3px solid transparent;
+		border-radius: 8px;
+		background-color: transparent;
+		background-clip: padding-box;
+	}
+
+	.godmin-navigation__screen-wrapper:hover::-webkit-scrollbar-thumb,
+	.godmin-navigation__screen-wrapper:focus::-webkit-scrollbar-thumb,
+	.godmin-navigation__screen-wrapper:focus-within::-webkit-scrollbar-thumb {
+		background-color: var(--wpds-color-stroke-surface-neutral-strong);
+	}
+
+	@media (hover: none) {
+		.godmin-navigation__screen-wrapper {
+			scrollbar-color: var(--wpds-color-stroke-surface-neutral-strong) transparent;
+		}
+	}
+
+	.godmin-navigation__screen-wrapper--forward {
+		animation-name: godmin-slide-from-end;
+	}
+
+	.godmin-navigation__screen-wrapper--backward {
+		animation-name: godmin-slide-from-start;
+	}
+
+	.godmin-navigation__screen-wrapper--forward:dir(rtl) {
+		animation-name: godmin-slide-from-start;
+	}
+
+	.godmin-navigation__screen-wrapper--backward:dir(rtl) {
+		animation-name: godmin-slide-from-end;
+	}
+
+	@keyframes godmin-slide-from-end {
+		0% {
+			opacity: 0;
+			transform: translateX(var(--godmin-navigation-slide-distance));
+		}
+
+		100% {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	@keyframes godmin-slide-from-start {
+		0% {
+			opacity: 0;
+			transform: translateX(calc(-1 * var(--godmin-navigation-slide-distance)));
+		}
+
+		100% {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.godmin-navigation-screen {
+		display: flex;
+		flex-direction: column;
+		flex-grow: 1;
+	}
+
+	.godmin-navigation-screen__main {
+		flex-grow: 1;
+		margin-bottom: 16px;
+	}
+
+	.godmin-navigation-screen__main--has-footer {
+		margin-bottom: 0;
+	}
+
+	.godmin-navigation-screen__title-icon {
+		position: sticky;
+		top: 0;
+		z-index: 1;
+		display: flex;
+		align-items: flex-start;
+		gap: 12px;
+		margin-bottom: 8px;
+		padding-top: 32px;
+		padding-bottom: 8px;
+		background: var(--wpds-color-background-surface-neutral-weak);
+	}
+
+	.godmin-navigation-screen__title-icon--root {
+		padding-inline-start: 44px;
+	}
+
+	.godmin-navigation-screen__back {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		inline-size: 32px;
+		block-size: 32px;
+		border-radius: var(--wpds-border-radius-sm);
+		color: var(--wpds-color-foreground-interactive-neutral);
+	}
+
+	.godmin-navigation-screen__back:is(:hover, :focus) {
+		color: var(--wpds-color-foreground-interactive-neutral-active);
+	}
+
+	.godmin-navigation-screen__back:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: var(--wpds-border-width-focus);
+	}
+
+	.godmin-navigation-screen__back:focus:not(:focus-visible) {
+		outline: none;
+	}
+
+	.godmin-navigation-screen__title {
+		flex-grow: 1;
+		min-width: 0;
+		margin: 0;
+		color: var(--wpds-color-foreground-content-neutral);
+		font-size: var(--wpds-typography-font-size-xl);
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+		line-height: var(--wpds-typography-line-height-xl);
+		overflow-wrap: break-word;
+	}
+
+	.godmin-navigation-screen__actions {
+		display: flex;
+		flex-shrink: 0;
+	}
+
+	.godmin-navigation-screen__content {
+		padding: 0 16px;
+		color: var(--wpds-color-foreground-content-neutral);
+	}
+
+	.godmin-navigation-screen__description {
+		margin: 0 0 32px;
+		color: var(--wpds-color-foreground-content-neutral);
+	}
+
+	.godmin-navigation-screen__footer {
+		position: sticky;
+		bottom: 0;
+		margin-top: 16px;
+		padding: 8px 16px;
+		border-top: 1px solid var(--wpds-color-stroke-surface-neutral);
+		background: var(--wpds-color-background-surface-neutral-weak);
+	}
+
+	.godmin-navigation-list {
+		margin-block: 0;
+		margin-inline: -16px;
+		padding: 0;
+		list-style: none;
+	}
+
+	.godmin-navigation-item {
+		display: flex;
+		align-items: center;
+		gap: var(--wpds-dimension-gap-sm);
+		box-sizing: border-box;
+		min-height: 40px;
+		padding: calc((36px - 13px * 1.4 - 2px) / 2) 12px;
+		border: 1px solid transparent;
+		border-radius: var(--wpds-border-radius-sm);
+		color: var(--wpds-color-foreground-interactive-neutral-weak);
+		font-size: var(--wpds-typography-font-size-md);
+		font-weight: var(--wpds-typography-font-weight-default);
+		line-height: normal;
+		text-decoration: none;
+	}
+
+	.godmin-navigation-item--with-suffix {
+		padding-inline-end: 16px;
+	}
+
+	.godmin-navigation-item:is(:hover, :focus) {
+		color: var(--wpds-color-foreground-interactive-neutral-weak-active);
+	}
+
+	.godmin-navigation-item[aria-current='page'] {
+		background: var(--wpds-color-background-interactive-neutral-weak-active);
+		color: var(--wpds-color-foreground-interactive-neutral-weak-active);
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+	}
+
+	.godmin-navigation-item:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: var(--wpds-border-width-focus);
+		transform: translateZ(0);
+	}
+
+	.godmin-navigation-item__icon,
+	.godmin-navigation-item__drilldown-indicator {
+		flex: none;
+		inline-size: 24px;
+		block-size: 24px;
+	}
+
+	.godmin-navigation-item__label {
 		flex: 1;
 		min-width: 0;
 	}
 
-	.godmin-nav-screen__title:focus {
-		outline: none;
-	}
-
-	.godmin-nav-screen__back {
-		display: inline-flex;
-		color: inherit;
-		border-radius: var(--wpds-border-radius-md);
-	}
-
-	.godmin-nav-screen__back:focus-visible {
-		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
-		outline-offset: 2px;
-	}
-
-	.godmin-nav-screen__description {
-		color: var(--wpds-color-foreground-content-neutral-weak);
+	.godmin-navigation-item__suffix {
+		flex: none;
 	}
 
 	.godmin-page__head {
@@ -464,6 +723,9 @@ body {
 		display: flex;
 		position: relative;
 		gap: var(--wpds-dimension-gap-lg);
+		margin: 0;
+		padding: 0;
+		list-style: none;
 		overflow-x: auto;
 		overscroll-behavior-inline: none;
 	}
@@ -640,10 +902,6 @@ body {
 		color: var(--wpds-color-foreground-content-neutral);
 	}
 
-	.godmin-page__list .godmin-table__title {
-		font-weight: var(--wpds-typography-font-weight-default);
-	}
-
 	.godmin-table__title a {
 		color: var(--wpds-color-foreground-interactive-neutral);
 		text-decoration: none;
@@ -738,6 +996,10 @@ body {
 		.godmin-arrival,
 		.godmin-toast {
 			animation-duration: 1ms;
+		}
+
+		.godmin-navigation__screen-wrapper {
+			animation-duration: 0s;
 		}
 	}
 

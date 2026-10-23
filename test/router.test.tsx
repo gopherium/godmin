@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import {
+	Link,
+	Outlet,
 	RouterProvider,
 	createMemoryHistory,
 	createRootRoute,
 	createRoute,
 	createRouter,
 } from '@tanstack/react-router'
-import { screen } from '@testing-library/react'
-import { expect, test } from 'vitest'
+import { act, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { expect, test, vi } from 'vitest'
 
-import { useCanvas, useFrameLocation } from '../src/router.js'
+import { routerDefaults, useCanvas, useFrameLocation } from '../src/router.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -66,6 +69,60 @@ test('reports the current pathname for the frame to close its drawer on', async 
 	renderAt('bleed', '/threads')
 
 	expect((await screen.findByTestId('location')).textContent).toBe('/threads')
+})
+
+test('reports the search beside the pathname, as a status list keeps its status there', async () => {
+	renderAt('bleed', '/threads?status=trash')
+
+	expect((await screen.findByTestId('location')).textContent).toBe('/threads?status=trash')
+})
+
+test('follows a move that changes only the search, so the drawer closes on it', async () => {
+	function Probe() {
+		return <span data-testid="location">{useFrameLocation()}</span>
+	}
+	const rootRoute = createRootRoute({ component: Probe })
+	const threads = createRoute({ getParentRoute: () => rootRoute, path: '/threads' })
+	const router = createRouter({
+		routeTree: rootRoute.addChildren([threads]),
+		history: createMemoryHistory({ initialEntries: ['/threads'] }),
+	})
+	renderAdmin(<RouterProvider router={router} />)
+	await screen.findByText('/threads')
+
+	await act(() => router.navigate({ to: '/threads', search: { status: 'trash' } }))
+
+	expect(screen.getByTestId('location').textContent).toBe('/threads?status=trash')
+})
+
+test('routerDefaults asks for preload on intent and nothing else, so no pending screen shows', () => {
+	expect(routerDefaults()).toStrictEqual({ defaultPreload: 'intent' })
+})
+
+test('a router spread with the defaults loads a hovered link before the click, as WordPress does', async () => {
+	const loader = vi.fn()
+	function Shell() {
+		return (
+			<>
+				<Link to="/threads">Threads</Link>
+				<Outlet />
+			</>
+		)
+	}
+	const rootRoute = createRootRoute({ component: Shell })
+	const index = createRoute({ getParentRoute: () => rootRoute, path: '/' })
+	const threads = createRoute({ getParentRoute: () => rootRoute, path: '/threads', loader })
+	const router = createRouter({
+		routeTree: rootRoute.addChildren([index, threads]),
+		history: createMemoryHistory({ initialEntries: ['/'] }),
+		...routerDefaults(),
+	})
+	renderAdmin(<RouterProvider router={router} />)
+
+	await userEvent.hover(await screen.findByRole('link', { name: 'Threads' }))
+
+	await waitFor(() => expect(loader).toHaveBeenCalled())
+	expect(router.state.location.pathname).toBe('/')
 })
 
 /**

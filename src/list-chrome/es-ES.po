@@ -183,6 +183,10 @@ msgid "Automatically load more content as you scroll, instead of showing paginat
 msgstr "Carga automáticamente más contenido a medida que navegas, en lugar de mostrar enlaces de paginación."
 
 #, fuzzy
+msgid "Back"
+msgstr "Volver"
+
+#, fuzzy
 msgctxt "Density option for DataView layout"
 msgid "Balanced"
 msgstr "Equilibrado"
@@ -206,6 +210,10 @@ msgstr "Cancelar"
 #, fuzzy
 msgid "Close"
 msgstr "Cerrar"
+
+#, fuzzy
+msgid "Close navigation panel"
+msgstr "Cerrar el panel de navegación"
 
 #, fuzzy
 msgctxt "Density option for DataView layout"
@@ -450,6 +458,10 @@ msgid "Navigate to item"
 msgstr "Navegar hasta el elemento"
 
 #, fuzzy
+msgid "Navigation"
+msgstr "Navegación"
+
+#, fuzzy
 msgid "Navigation bar"
 msgstr "Barra de navegación"
 
@@ -498,6 +510,10 @@ msgstr "octubre"
 #, fuzzy
 msgid "On"
 msgstr "El"
+
+#, fuzzy
+msgid "Open navigation panel"
+msgstr "Abrir el panel de navegación"
 
 #, fuzzy
 msgid "Optional"

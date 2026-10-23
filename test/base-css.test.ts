@@ -2,13 +2,14 @@
 
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
-import { dirname, join, resolve } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
+import { atRuleBodies, blockOf, ruleOf } from './css-rules.js'
+import { base } from './styles.js'
 
-const base = readFileSync(resolve('src/base.css'), 'utf8')
 const dataviewsManifest = createRequire(import.meta.url).resolve('@wordpress/dataviews/package.json')
 
 /** The selector of the sticky DataViews toolbar and filters inside a list page body. */
@@ -67,59 +68,6 @@ function reducedMotionGuard(): string {
 	return base.slice(start)
 }
 
-/**
- * Returns the declarations of the rule a selector opens.
- * @param selector - The exact selector the rule starts with.
- * @param css - The stylesheet source to search, the whole sheet by default.
- * @returns The text between the rule's braces.
- */
-function ruleOf(selector: string, css = base): string {
-	const start = css.indexOf(`${selector} {`)
-
-	expect(start, `the stylesheet has no ${selector} rule`).toBeGreaterThan(-1)
-
-	return css.slice(start + selector.length + 2, css.indexOf('}', start))
-}
-
-/**
- * Returns the text of a block up to the brace that closes it.
- * @param open - The index just after the block's opening brace.
- * @returns The text between the block's braces.
- */
-function bodyFrom(open: number): string {
-	let depth = 1
-	let at = open
-	while (depth > 0 && at < base.length) {
-		depth += base[at] === '{' ? 1 : base[at] === '}' ? -1 : 0
-		at++
-	}
-	return base.slice(open, at - 1)
-}
-
-/**
- * Returns the body of the block a prelude opens, matching its braces.
- * @param prelude - The exact text before the block's opening brace.
- * @returns The text between the block's braces.
- */
-function blockOf(prelude: string): string {
-	const start = base.indexOf(`${prelude} {`)
-
-	expect(start, `the stylesheet has no ${prelude} block`).toBeGreaterThan(-1)
-
-	return bodyFrom(start + prelude.length + 2)
-}
-
-/**
- * Returns the body of every at-rule of the given kinds, matching its braces.
- * @param kinds - The at-rule names to collect, such as media.
- * @returns The bodies in source order.
- */
-function atRuleBodies(kinds: string[]): string[] {
-	return [...base.matchAll(new RegExp(`@(?:${kinds.join('|')})\\b[^{]*\\{`, 'g'))].map((found) =>
-		bodyFrom(found.index + found[0].length),
-	)
-}
-
 test('lays the aside beside the content and wraps it under on a narrow page', () => {
 	const split = ruleOf('.godmin-page__split')
 
@@ -154,27 +102,15 @@ test('hides an aside that renders nothing', () => {
 	expect(ruleOf('.godmin-page__aside:empty')).toMatch(/display:\s*none/)
 })
 
-test('names the rail width once and sizes the rail with it', () => {
-	expect(ruleOf(':root')).toMatch(/--godmin-rail-width:\s*300px/)
-	expect(ruleOf('.godmin-layout__rail')).toMatch(/(?:^|\s)width:\s*var\(--godmin-rail-width\)/)
-})
-
 test('names the canvas margin once, 16px, and frames the canvas with it', () => {
 	expect(ruleOf(':root')).toMatch(/--godmin-canvas-margin:\s*16px/)
 	expect(ruleOf('.godmin-layout__canvas')).toMatch(/(?:^|\s)margin:\s*var\(--godmin-canvas-margin\);/)
 })
 
-test('sets the canvas against the rail, so the 16px rail padding alone parts them like the other edges', () => {
-	expect(ruleOf('.godmin-layout:has(> .godmin-layout__rail) .godmin-layout__canvas')).toMatch(
-		/margin-inline-start:\s*0;/,
-	)
-	expect(ruleOf('.godmin-layout__rail')).toMatch(/padding:\s*16px/)
-})
+test('centres the toasts on the canvas beside a sidebar rather than on the whole window', () => {
+	const region = ruleOf(':root:has(.godmin-layout__sidebar) .godmin-toasts')
 
-test('centres the toasts on the canvas beside a rail rather than on the whole window', () => {
-	const region = ruleOf(':root:has(.godmin-layout__rail) .godmin-toasts')
-
-	expect(region).toMatch(/inset-inline-start:\s*var\(--godmin-rail-width\)/)
+	expect(region).toMatch(/inset-inline-start:\s*var\(--godmin-nav-sidebar-width\)/)
 	expect(region, 'the region ends where the canvas ends').toMatch(/inset-inline-end:\s*var\(--godmin-canvas-margin\)/)
 })
 
@@ -214,7 +150,7 @@ test('draws the top bar 46px tall, as the WordPress admin bar is on a narrow scr
 	expect(bar, 'the menu control fills the bar height').not.toMatch(/(?:^|\s)padding:/)
 })
 
-test('draws the menu control bare like the admin bar menu toggle, its bars the chrome text colour at 60%', () => {
+test('draws the menu control bare like the new admin menu toggle, its glyph the full chrome text colour', () => {
 	const menu = ruleOf('.godmin-layout__menu')
 
 	expect(menu).toMatch(/display:\s*flex/)
@@ -222,7 +158,7 @@ test('draws the menu control bare like the admin bar menu toggle, its bars the c
 	expect(menu).toMatch(/padding:\s*0/)
 	expect(menu).toMatch(/border:\s*0/)
 	expect(menu).toMatch(/background:\s*none/)
-	expect(menu).toMatch(/color:\s*color-mix\(in srgb, var\(--wpds-color-foreground-content-neutral\) 60%, transparent\);/)
+	expect(menu).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-content-neutral\);/)
 	expect(menu).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
 })
 
@@ -318,6 +254,14 @@ test('lays the page tabs out in a row 16px apart, as the minimal WordPress tabs 
 	expect(tabs).toMatch(/overflow-x:\s*auto/)
 })
 
+test('draws the page tab row as a bare list, no bullets, margin or padding, as admin-ui draws its page links', () => {
+	const tabs = ruleOf('.godmin-page-tabs')
+
+	expect(tabs).toMatch(/list-style:\s*none/)
+	expect(tabs).toMatch(/margin:\s*0;/)
+	expect(tabs).toMatch(/padding:\s*0;/)
+})
+
 test('keeps a page tab row from scrolling the page on past its ends, as the WordPress tabs do', () => {
 	expect(ruleOf('.godmin-page-tabs')).toMatch(/overscroll-behavior-inline:\s*none/)
 })
@@ -394,7 +338,11 @@ test('underlines the current page tab with a 2px strong neutral line as wide as 
 })
 
 test('underlines the tab godmin marks current, not every link a router marks active', () => {
-	expect(base).not.toMatch(/aria-current/)
+	const readers = [...base.matchAll(/^\s*([^\n{}]*aria-current[^\n{}]*)\{/gm)].map((found) => found[1].trim())
+
+	expect(readers, 'only the sidebar row reads the current page a router marks').toEqual([
+		".godmin-navigation-item[aria-current='page']",
+	])
 })
 
 test('rings a focused page tab around its label, as the WordPress tabs do', () => {
@@ -531,7 +479,7 @@ test('drops the 32px floor of a list title, so a title with a description makes 
 	expect(unlayered(`${primaryColumn} > .dataviews-title-field`)).toBe(true)
 })
 
-test('sets a list description in 12px lines 4px under a regular 13px title, as the WordPress list does', () => {
+test('sets a list description in 12px lines 4px under a 13px title, as the WordPress list does', () => {
 	const column = ruleOf(primaryColumn)
 	const title = ruleOf(`${primaryColumn} > .dataviews-title-field`)
 
@@ -539,7 +487,15 @@ test('sets a list description in 12px lines 4px under a regular 13px title, as t
 	expect(column).toMatch(/font-size:\s*var\(--wpds-typography-font-size-sm\)/)
 	expect(column).toMatch(/line-height:\s*var\(--wpds-typography-line-height-xs\)/)
 	expect(title).toMatch(/line-height:\s*var\(--wpds-typography-line-height-sm\)/)
-	expect(title).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-default\)/)
+})
+
+test('leaves a list title at the emphasis weight DataViews draws it at, bold as the WordPress lists are', () => {
+	const dataviews = readFileSync(join(dirname(dataviewsManifest), 'build-style', 'style.css'), 'utf8')
+
+	expect(ruleOf('.dataviews-title-field', dataviews)).toMatch(
+		/font-weight:\s*var\(--wpds-typography-font-weight-emphasis/,
+	)
+	expect(ruleOf(`${primaryColumn} > .dataviews-title-field`)).not.toMatch(/font-weight/)
 })
 
 test('keeps a list beside an aside inside its column', () => {
@@ -974,11 +930,9 @@ test('sets a table in 13px text on 20px lines, as the DataViews table is', () =>
 	expect(table).toMatch(/line-height:\s*var\(--wpds-typography-line-height-sm\)/)
 })
 
-test('draws the title cell of a table on a list page in the regular weight, as the list titles there are', () => {
-	const title = '.godmin-page__list .godmin-table__title'
-
-	expect(ruleOf(title)).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-default\)/)
-	expect(base.indexOf(`${title} {`)).toBeGreaterThan(base.indexOf('.godmin-table__title {'))
+test('keeps the title cell of a table on a list page at the emphasis weight, bold as the list titles there are', () => {
+	expect(base).not.toMatch(/\.godmin-page__list \.godmin-table__title\s*\{/)
+	expect(ruleOf('.godmin-table__title')).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\)/)
 })
 
 test('draws the title link with no underline, in the brand colour under the pointer', () => {
@@ -1042,7 +996,7 @@ test('draws the edge of the pinned actions column beside the scrolling cells in 
 test('keeps the actions column in the flow of a table at 640px and wider', () => {
 	const wide = base.replace(blockOf('@media (max-width: 639px)'), '')
 
-	expect(wide).not.toMatch(/position:\s*sticky/)
+	expect(wide).not.toMatch(/\.godmin-table__actions[^{]*\{[^}]*position:\s*sticky/)
 })
 
 test('spans the toast region across the window, so each toast sizes to its own message', () => {
