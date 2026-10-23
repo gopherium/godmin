@@ -3,7 +3,7 @@
 /** A compiled catalogue as the i18n runtime reads it, the metadata entry first. */
 export type ListChromeCatalog = Record<string, string[] | Record<string, string>>
 
-/** The text domain the WordPress list chrome and list dates read their strings from. */
+/** The text domain the WordPress list chrome, the list dates and godmin's sidebar words read their strings from. */
 export const LIST_CHROME_DOMAIN = 'default'
 
 /** The list chrome and list dates catalogue this package ships for each language it has one for. */

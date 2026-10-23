@@ -2,7 +2,7 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The Spanish list chrome and list dates, compiled from the es-ES.po source beside it. */
+/** The Spanish list chrome, list dates and sidebar words, compiled from the es-ES.po source beside it. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' },
 	'%1$d of %2$d Item': ['%1$d de %2$d elemento', '%1$d de %2$d elementos'],
@@ -84,11 +84,13 @@ const catalog: ListChromeCatalog = {
 	'Automatically load more content as you scroll, instead of showing pagination links.': [
 		'Carga automáticamente más contenido a medida que navegas, en lugar de mostrar enlaces de paginación.',
 	],
+	Back: ['Volver'],
 	Before: ['Antes'],
 	'Before (inc)': ['Antes (incl.)'],
 	'Between (inc)': ['Entre (incl.)'],
 	Cancel: ['Cancelar'],
 	Close: ['Cerrar'],
+	'Close navigation panel': ['Cerrar el panel de navegación'],
 	Conditions: ['Condiciones'],
 	Contains: ['Contiene'],
 	'Coordinated Universal Time': ['Hora universal coordinada'],
@@ -147,6 +149,7 @@ const catalog: ListChromeCatalog = {
 	'Move left': ['Mover a la izquierda'],
 	'Move right': ['Mover a la derecha'],
 	'Navigate to item': ['Navegar hasta el elemento'],
+	Navigation: ['Navegación'],
 	'Navigation bar': ['Barra de navegación'],
 	'Next month': ['Mes siguiente'],
 	'Next page': ['Página siguiente'],
@@ -159,6 +162,7 @@ const catalog: ListChromeCatalog = {
 	October: ['octubre'],
 	'October abbreviation\u0004Oct': ['Oct'],
 	On: ['El'],
+	'Open navigation panel': ['Abrir el panel de navegación'],
 	Optional: ['Opcional'],
 	Order: ['Orden'],
 	'Original aspect ratio': ['Proporción original'],

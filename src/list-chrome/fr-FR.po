@@ -36,6 +36,14 @@ msgid "August"
 msgstr "août"
 
 #, fuzzy
+msgid "Back"
+msgstr "Retour"
+
+#, fuzzy
+msgid "Close navigation panel"
+msgstr "Fermer le panneau de navigation"
+
+#, fuzzy
 msgctxt "December abbreviation"
 msgid "Dec"
 msgstr "Déc"
@@ -127,6 +135,10 @@ msgid "Monday"
 msgstr "lundi"
 
 #, fuzzy
+msgid "Navigation"
+msgstr "Navigation"
+
+#, fuzzy
 msgctxt "November abbreviation"
 msgid "Nov"
 msgstr "Nov"
@@ -143,6 +155,10 @@ msgstr "Oct"
 #, fuzzy
 msgid "October"
 msgstr "octobre"
+
+#, fuzzy
+msgid "Open navigation panel"
+msgstr "Ouvrir le panneau de navigation"
 
 #, fuzzy
 msgid "PM"

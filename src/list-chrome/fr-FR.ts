@@ -2,7 +2,7 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The French list dates, compiled from the fr-FR.po source beside it. */
+/** The French list dates, dialog words and sidebar words, compiled from the fr-FR.po source beside it. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'fr-FR', 'plural-forms': 'nplurals=2; plural=(n > 1);' },
 	AM: ['AM'],
@@ -10,6 +10,8 @@ const catalog: ListChromeCatalog = {
 	'April abbreviation\u0004Apr': ['Avr'],
 	August: ['août'],
 	'August abbreviation\u0004Aug': ['Août'],
+	Back: ['Retour'],
+	'Close navigation panel': ['Fermer le panneau de navigation'],
 	December: ['décembre'],
 	'December abbreviation\u0004Dec': ['Déc'],
 	'F j, Y g:i a': ['d F Y G\\hi'],
@@ -31,10 +33,12 @@ const catalog: ListChromeCatalog = {
 	'May abbreviation\u0004May': ['Mai'],
 	Mon: ['Lun'],
 	Monday: ['lundi'],
+	Navigation: ['Navigation'],
 	November: ['novembre'],
 	'November abbreviation\u0004Nov': ['Nov'],
 	October: ['octobre'],
 	'October abbreviation\u0004Oct': ['Oct'],
+	'Open navigation panel': ['Ouvrir le panneau de navigation'],
 	PM: ['PM'],
 	Sat: ['Sam'],
 	Saturday: ['samedi'],
