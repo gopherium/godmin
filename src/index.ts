@@ -61,6 +61,8 @@ export { offeredSize, pageWindow, paginationOf, sizedView, useServerPaging } fro
 export type { PagedView, PageWindow, PaginationInfo, ServedPage, ServedSize, ServerPaging } from './server-page.js'
 export { Toaster, useToaster } from './toaster.js'
 export type { ToastAction, ToasterHandle, ToasterProps } from './toaster.js'
+export { markLatest, useUnsavedText } from './unsaved-text.js'
+export type { UnsavedText } from './unsaved-text.js'
 export { useMediaQuery } from './use-media-query.js'
 export { useTokenDocument } from './use-token-document.js'
 export { offeredView, viewNarrows } from './view-guard.js'
