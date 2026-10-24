@@ -19,6 +19,13 @@ export interface MenuItem {
 	capability?: string
 	/** The row shown in this one's place when the reader cannot open it. */
 	fallback?: MenuItem
+	/** The count drawn after the label and before the chevron of a row that opens a sub menu, none at zero or below. */
+	count?: {
+		/** The number the row shows. */
+		value: number
+		/** The sentence a screen reader reads in place of the number, such as "1 update available". */
+		label: string
+	}
 }
 
 /**

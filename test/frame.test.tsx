@@ -12,6 +12,7 @@ import type { CanvasMode } from '../src/frame.js'
 import { EDGE_BREAKPOINT } from '../src/index'
 import spanish from '../src/list-chrome/es-ES.js'
 import { installTestEnvironment, renderAdmin, setViewport } from '../src/testing.js'
+import { tokenAround } from './colors.js'
 import { clickLink, renderSidebarApp, screenWrapper } from './sidebar-app.js'
 import { DRAWER_BACKDROP, declaredValue, gapInPixels, ruleValue } from './styles.js'
 
@@ -227,16 +228,6 @@ test('leaves a padded canvas unmarked', () => {
 
 	expect(screen.getByRole('main').className).not.toContain('--bleed')
 })
-
-/**
- * Returns the value one design token takes on the nearest theme around an element.
- * @param element - The element the theme wraps.
- * @param token - The custom property name.
- * @returns The value the nearest theme sets.
- */
-function tokenAround(element: Element, token: string): string {
-	return (element.closest(`[style*="${token}:"]`) as HTMLElement).style.getPropertyValue(token)
-}
 
 test('paints the canvas from the default WordPress palette when no colour is given, its greys as wp-admin', () => {
 	renderFrame()

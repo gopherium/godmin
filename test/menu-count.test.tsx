@@ -3,10 +3,12 @@
 import { screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
 
+import { Frame } from '../src/frame.js'
 import * as entry from '../src/index'
 import { MenuCount } from '../src/menu-count.js'
 import { badgeClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
-import { declaredValue } from './styles.js'
+import { contrastRatio, tokenColor } from './colors.js'
+import { declaredValue, ruleValue } from './styles.js'
 
 installTestEnvironment()
 
@@ -128,11 +130,12 @@ test('sets the number in 11px text centred on a 1.6 line, as WordPress does', ()
 	expect(declaredValue(badge, 'text-align')).toBe('center')
 })
 
-test('sets the count 2px after its label at the top of the line and 1px down, as WordPress does', () => {
+test('sets the count 2px after its label and centred on the line, with no block margin to move the label', () => {
 	const badge = countBadge()
 
-	expect(declaredValue(badge, 'vertical-align')).toBe('top')
-	expect(declaredValue(badge, 'margin-block')).toBe('1px -1px')
+	expect(declaredValue(badge, 'vertical-align')).toBe('middle')
+	expect(declaredValue(badge, 'margin-block')).toBeUndefined()
+	expect(declaredValue(badge, 'margin')).toBeUndefined()
 	expect(declaredValue(badge, 'margin-inline-start')).toBe('2px')
 })
 
@@ -140,10 +143,68 @@ test('gives the number the weight of its label, as WordPress sets none on its co
 	expect(declaredValue(countBadge(), 'font-weight')).toBe('inherit')
 })
 
-test('leaves the count colours to the badge intent, so they follow the frame theme', () => {
-	const badge = countBadge()
+test(
+	'fills the count with the brand thumb of the scheme and draws the digit in the neutral strong text over it',
+	() => {
+		const badge = countBadge()
 
-	for (const property of ['color', 'background', 'background-color']) {
-		expect(declaredValue(badge, property), property).toBeUndefined()
+		expect(declaredValue(badge, 'background-color')).toBe('var(--wpds-color-background-thumb-brand)')
+		expect(declaredValue(badge, 'color')).toBe('var(--wpds-color-foreground-interactive-neutral-strong)')
+		expect(declaredValue(badge, 'background')).toBeUndefined()
+	},
+)
+
+/**
+ * Renders a count in the sidebar and another in the canvas of a frame on its default colours.
+ * @returns The badge drawn in the sidebar and the badge drawn in the canvas.
+ */
+function framedBadges(): Record<'sidebar' | 'canvas', Element> {
+	const { container } = renderAdmin(
+		<Frame.Root>
+			<Frame.Sidebar>
+				<MenuCount count={3} label="3 updates available" />
+			</Frame.Sidebar>
+			<Frame.Canvas>
+				<MenuCount count={4} label="4 items waiting" />
+			</Frame.Canvas>
+		</Frame.Root>,
+	)
+	return {
+		sidebar: container.querySelector('.godmin-layout__sidebar .godmin-menu-count__badge') as Element,
+		canvas: container.querySelector('.godmin-layout__canvas .godmin-menu-count__badge') as Element,
 	}
+}
+
+/**
+ * Returns the fill and the digit colour of a count badge on the theme around it.
+ * @param badge - The badge element.
+ * @returns The two colours the stylesheet reads from the theme.
+ */
+function pillColors(badge: Element): { fill: string; digit: string } {
+	return {
+		fill: tokenColor(badge, declaredValue(badge, 'background-color')),
+		digit: tokenColor(badge, declaredValue(badge, 'color')),
+	}
+}
+
+test.each(['sidebar', 'canvas'] as const)(
+	'keeps the digit at 4.5 to 1 or more on the pill in the %s of the default frame',
+	(region) => {
+		const { fill, digit } = pillColors(framedBadges()[region])
+
+		expect(contrastRatio(digit, fill), `${digit} on ${fill}`).toBeGreaterThanOrEqual(4.5)
+	},
+)
+
+test.each([
+	['sidebar', '.godmin-layout', 'sidebar'],
+	['phone drawer', '.godmin-layout__drawer', 'sidebar'],
+	['current row', ".godmin-navigation-item[aria-current='page']", 'sidebar'],
+	['canvas', '.godmin-layout__canvas', 'canvas'],
+] as const)('keeps the pill at 3 to 1 or more on the %s of the default frame', (_, selector, region) => {
+	const badge = framedBadges()[region]
+	const { fill } = pillColors(badge)
+	const surface = tokenColor(badge, ruleValue(selector, 'background'))
+
+	expect(contrastRatio(fill, surface), `${fill} on ${surface}`).toBeGreaterThanOrEqual(3)
 })

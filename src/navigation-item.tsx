@@ -66,6 +66,15 @@ function RowIcon({ icon }: { icon: ReactElement | undefined }) {
 }
 
 /**
+ * Renders what a row draws after its label, such as a MenuCount.
+ * @param props - What the row draws.
+ * @returns The suffix element.
+ */
+export function RowSuffix({ children }: { children: ReactNode }) {
+	return <span className="godmin-navigation-item__suffix">{children}</span>
+}
+
+/**
  * Renders a sidebar row as a list item holding its link, or nothing when the reader may not open its routes.
  * @param props - The link props, where the row goes, the icon, the classes, the id, the end of the row and its label.
  * @returns The list item element, or null.
@@ -118,7 +127,7 @@ export function NavigationItem<
 			routes={routes}
 			icon={icon}
 			className={`${ROW_CLASS} ${ROW_CLASS}--with-suffix`}
-			end={<span className="godmin-navigation-item__suffix">{suffix}</span>}
+			end={<RowSuffix>{suffix}</RowSuffix>}
 		>
 			{children}
 		</Row>
