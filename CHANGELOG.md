@@ -4,6 +4,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `Toaster` takes `actionDismissAfter`, how long a toast with an action stays, 10000 milliseconds by default, as the next `@wordpress/components` release keeps a snackbar with an action 10 seconds.
+- `docs/design-system/toasts.md` gives where a toast sits, how it looks, how long it stays, how a reader clears it and what a keyboard or a screen reader meets.
+
+### Changed
+
+- Toasts centre on the whole window, the sidebar included, as WordPress's new admin centres its snackbars.
+- The toast region sits `--wpds-dimension-size-md` above the bottom edge, still 32px, as WordPress writes it.
+- The toast action shows the design system focus ring in white in place of a dotted line, as the WordPress snackbar action does.
+- Toasts move as the WordPress snackbar does. Each toast's space grows as it arrives and closes after it fades out, so the toasts above slide instead of jumping, and under a reduced motion preference a toast shows and goes at once.
+- A toast keeps 4px corners and its action ring 2px corners at every `cornerRadius` preset, as WordPress fixes them on its snackbar.
+- **Breaking.** `dismissLabel` defaults to "Dismiss this notice", WordPress's words, in place of "Dismiss", and is only the hint a screen reader hears on a toast with no action.
+- **Breaking.** `dismissAfter` times only a toast with no action. A toast with an action stays `actionDismissAfter`.
+- **Breaking.** A click anywhere on a toast clears it, with or without an action, and a toast with an action has no close button, so the `.godmin-toast__dismiss` class is gone. Only its action takes keyboard focus.
+- **Breaking.** A toast now sits in `.godmin-toasts__item`, not directly in `.godmin-toasts`, so a selector such as `.godmin-toasts > .godmin-toast` no longer matches it.
+
+### Removed
+
+- **Breaking.** `useToaster().name` and the `nameLength` prop of `Toaster`. A toast shows a whole name and wraps it, as WordPress does, so put the name in the message as it is.
+- The README browser note, since godmin no longer needs `Intl.Segmenter`.
+
 ## [0.27.0] - 2026-10-25
 
 ### Added
