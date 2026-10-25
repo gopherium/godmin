@@ -194,6 +194,13 @@ test('the main entry hands out the store of unsaved text, which reaches React al
 	expect([...packagesReachedFrom(join(source, 'unsaved-text.ts'))]).toEqual(['react'])
 })
 
+test('the main entry hands out the tap handler of a phone list, which reaches no package, so no router', async () => {
+	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
+
+	expect(typeof main.openOnTap).toBe('function')
+	expect([...packagesReachedFrom(join(source, 'open-on-tap.ts'))]).toEqual([])
+})
+
 test.each([
 	{ file: 'close-while-open.ts', hooks: ['useCloseWhileOpen'] },
 	{ file: 'list-run.ts', hooks: ['useListRun', 'focusInDialog'] },
