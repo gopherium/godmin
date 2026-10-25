@@ -13,10 +13,12 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - Design System pages under `docs/design-system/` write down the color, layout, radius and elevation, typography, motion and accessibility rules of a godmin admin, checked against the code by tests.
 - `--godmin-navigation-slide-distance` and `--godmin-navigation-slide-duration` are public custom properties, so an app may change the sidebar slide.
 - `useCloseWhileOpen` returns a dialog's close that acts only while that dialog is on screen, so a row dialog an app writes never shuts a dialog opened on the row since.
+- `focusInDialog` reports whether a dialog or an alert dialog holds the focus, for a write an app finishes outside a list run.
 
 ### Fixed
 
 - `RunConfirm` closes only itself once its run ends, never a dialog opened on the row after the confirm was dismissed while busy.
+- `useListRun` focuses the list after a run moved an item only while the focus sits on the page, in the list or in the dialog the run started in, or in no dialog once that dialog closed, so a dialog opened during any list run keeps the focus.
 
 ## [0.26.0] - 2026-10-24
 

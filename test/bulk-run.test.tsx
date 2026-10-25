@@ -44,7 +44,7 @@ interface Bench {
 }
 
 /**
- * Renders the rows of a list with a Trash button that runs one call per item.
+ * Renders a list with a Trash button inside it, where DataViews draws its bulk bar, that runs one call per item.
  * @param props - The bench the test set up.
  * @returns The page with its list.
  */
@@ -52,18 +52,11 @@ function TrashScreen({ bench }: { bench: Bench }) {
 	const { run, region } = useListRun('post publish', () => {})
 	const bulk = useBulkRun<Post>(run, bench.refresh)
 	return (
-		<Page
-			title="Posts"
-			list
-			listLabel="Posts"
-			listRef={region}
-			actions={
-				<button type="button" onClick={() => bench.runs.push(bulk(bench.items, bench.call, bench.words))}>
-					Trash
-				</button>
-			}
-		>
+		<Page title="Posts" list listLabel="Posts" listRef={region}>
 			<p>Hello</p>
+			<button type="button" onClick={() => bench.runs.push(bulk(bench.items, bench.call, bench.words))}>
+				Trash
+			</button>
 		</Page>
 	)
 }

@@ -196,6 +196,7 @@ test('the main entry hands out the store of unsaved text, which reaches React al
 
 test.each([
 	{ file: 'close-while-open.ts', hooks: ['useCloseWhileOpen'] },
+	{ file: 'list-run.ts', hooks: ['useListRun', 'focusInDialog'] },
 ])('the main entry hands out the dialog and focus hooks of $file, which reach React alone', async ({ file, hooks }) => {
 	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
 	const own = (await import(join(source, file))) as Record<string, unknown>
