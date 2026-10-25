@@ -87,10 +87,10 @@ function tookOff(records: MutationRecord[], element: Element): boolean {
 }
 
 /**
- * Puts the focus on the trigger a dialog on an item opened from, and again each time the list draws it anew.
+ * Puts the focus on the trigger a dialog on an item opened from, again on each redraw, on the list once the item left.
  * @param list - The list region.
  * @param asked - The item and the trigger.
- * @returns What stops it, which also stops once the reader moves the focus or presses elsewhere, or the item leaves.
+ * @returns What stops it, which also stops once the reader moves the focus or presses elsewhere, or the list takes it.
  */
 function keepFocusOn(list: HTMLElement, asked: FocusBack): () => void {
 	let held = triggerOf(list, asked)
@@ -102,12 +102,11 @@ function keepFocusOn(list: HTMLElement, asked: FocusBack): () => void {
 		if (!tookOff(records, held)) {
 			return
 		}
-		if (holderOf(list, asked.id) === null) {
-			stop()
-			return
-		}
 		held = triggerOf(list, asked)
 		held.focus()
+		if (held === list) {
+			stop()
+		}
 	})
 	const moved = (event: Event) => {
 		if (!held.contains(event.target as Node)) {

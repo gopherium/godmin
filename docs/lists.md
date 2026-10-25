@@ -1106,9 +1106,11 @@ The grid does this as it measures how many cards fit side by side,
 since a card that moves to another row of cards is drawn anew. The
 focus then falls to the page. The hook watches the list for this and
 puts the focus on the same trigger of that row again, each time the
-list draws it anew. It stops once the reader moves the focus or
-presses somewhere else, the focus is asked back again, the item leaves
-the list or the screen goes away. This needs godmin 0.27.0 or later.
+list draws it anew. When the item leaves the list instead, the list
+region takes the focus and the hook stops watching. It also stops
+once the reader moves the focus or presses somewhere else, the focus
+is asked back again or the screen goes away, so a control the reader
+moved to keeps the focus. This needs godmin 0.27.0 or later.
 
 ## A failure from a dialog
 

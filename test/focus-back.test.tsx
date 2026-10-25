@@ -584,8 +584,40 @@ test('stops putting the focus back once the item left the list, even when it com
 	rerender({ posts: [...POSTS].reverse() })
 	await settle()
 
-	expect(document.activeElement).toBe(document.body)
+	expect(document.activeElement).toBe(region())
 	expect(left).toEqual([0, 0])
+})
+
+test.each([
+	{ layout: 'grid' as const, trigger: 'title' as const },
+	{ layout: 'list' as const, trigger: 'row' as const },
+	{ layout: 'table' as const, trigger: 'title' as const },
+])('puts the focus on the list once the item left the $layout while its $trigger kept the focus', async (each) => {
+	const { handle, rerender } = renderList(each.layout)
+	const live = liveWatches(region())
+	dropFocus()
+	act(() => handle.focusBack('1', each.trigger))
+	const kept = live()
+
+	rerender({ posts: POSTS.slice(1) })
+	await settle()
+
+	expect(document.activeElement).toBe(region())
+	expect([kept, live()]).toEqual([
+		[1, 2],
+		[0, 0],
+	])
+})
+
+test('leaves the focus on a control the reader moved to when the item then left the list', async () => {
+	const { rerender } = await focusBackInGrid('title')
+	const other = partOf('Harbor at dawn', TITLE)
+	act(() => other.focus())
+
+	rerender({ posts: POSTS.slice(1) })
+	await settle()
+
+	expect(document.activeElement).toBe(other)
 })
 
 test('stops watching the list and the focus once the screen leaves', async () => {
