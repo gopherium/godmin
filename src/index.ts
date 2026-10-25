@@ -41,6 +41,15 @@ export { ListEmpty } from './list-empty.js'
 export type { ListEmptyProps } from './list-empty.js'
 export { focusInDialog, useListRun } from './list-run.js'
 export type { ListRun, ListRunState, RunSettled } from './list-run.js'
+export type {
+	LayoutDefaults,
+	ListDefaults,
+	ListFilter,
+	ListSearch,
+	ListSortDirection,
+	ListView,
+	ListViewShape,
+} from './list-view.js'
 export { LoadingRows, LoadingScreen } from './loading.js'
 export { LogItem, LogList, LogTime } from './log-list.js'
 export type { LogItemProps, LogListProps, LogTimeProps } from './log-list.js'

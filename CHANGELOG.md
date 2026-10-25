@@ -16,6 +16,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `focusInDialog` reports whether a dialog or an alert dialog holds the focus, for a write an app finishes outside a list run.
 - `useFocusBack` puts a lost focus back on the title, media, phone row or actions menu a list dialog opened from, else on the list, in every layout, found through a `data-item-id` mark on the title cell. `focusedTrigger` reads which one, or the bulk bar, opened the dialog.
 - `openOnTap` is in the main entry too, so a list drawn without TanStack Router opens the record a phone tap lands on. The router entry still hands it out.
+- The list view types, such as `ListView` and `ListDefaults`, are in the main entry too, so a package without TanStack Router can type the list an app hands it.
 
 ### Fixed
 

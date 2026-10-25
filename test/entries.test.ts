@@ -5,10 +5,12 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 
-import { expect, test } from 'vitest'
+import { expect, expectTypeOf, test } from 'vitest'
 
 import manifest from '../package.json'
 import * as dialogs from '../src/dialogs.js'
+import type * as MainEntry from '../src/index'
+import type * as RouterEntry from '../src/router'
 
 /** The source folder the entries are built from. */
 const source = resolve(import.meta.dirname, '../src')
@@ -212,6 +214,14 @@ test.each([
 	expect(hooks.map((name) => typeof main[name])).toEqual(hooks.map(() => 'function'))
 	expect(hooks.filter((name) => main[name] !== own[name])).toEqual([])
 	expect([...packagesReachedFrom(join(source, file))]).toEqual(['react'])
+})
+
+test('the main entry hands out the list view types of the router entry, to type a list without the router', () => {
+	type Shape = RouterEntry.ListViewShape
+
+	expectTypeOf<MainEntry.ListViewShape>().toEqualTypeOf<Shape>()
+	expectTypeOf<MainEntry.ListView<Shape>>().toEqualTypeOf<RouterEntry.ListView<Shape>>()
+	expectTypeOf<MainEntry.ListDefaults>().toEqualTypeOf<RouterEntry.ListDefaults>()
 })
 
 test('the router peer starts at a release whose route matching runs no route context', () => {
