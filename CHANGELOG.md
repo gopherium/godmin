@@ -4,6 +4,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [0.24.1] - 2026-10-25
+
+### Added
+
+- `useUnsavedText` keeps what failed row writes left unsaved, by item id, for as long as the screen stays, and `markLatest` lets only the latest write to an item keep its text, so a row form opens again on what the reader typed.
+
 ## [0.24.0] - 2026-10-22
 
 ### Added
