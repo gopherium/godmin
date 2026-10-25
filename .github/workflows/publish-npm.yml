@@ -30,4 +30,4 @@ jobs:
           fi
       - run: pnpm install --frozen-lockfile
       - run: pnpm run cover
-      - run: npm publish
+      - run: npm publish --tag release-0.24
