@@ -54,6 +54,16 @@ function declaredIn(sheet: string, prefix: string): Set<string> {
 	return new Set([...sheet.matchAll(new RegExp(`(${prefix}[a-z0-9-]+)\\s*:`, 'g'))].map((found) => found[1]))
 }
 
+/**
+ * Returns the hex colours a text names, short or long, leaving out heading links such as `#bad-add`.
+ * @param text - The text to search.
+ * @returns The colours in lower case, each once.
+ */
+function coloursIn(text: string): string[] {
+	const found = text.match(/(?<![\w(])#(?:[0-9a-f]{6}|[0-9a-f]{3})\b(?!-)/gi) ?? []
+	return [...new Set(found.map((colour) => colour.toLowerCase()))]
+}
+
 test.each([
 	'overview.md',
 	'color.md',
@@ -89,8 +99,12 @@ test.each(Object.entries(breakpoints))('the layout page gives %s its value', (na
 	expect(pages.get('layout.md') ?? '').toContain(`| \`${name}\` | \`${value}\` |`)
 })
 
-test('every colour a page names is set in the source', () => {
-	const colours = new Set((allPages.match(/#[0-9a-f]{6}\b/gi) ?? []).map((colour) => colour.toLowerCase()))
+test('the colour reader finds short and long hex colours but no heading link', () => {
+	const text = 'Text is `#fff` on `#26292b`, see [the canvas](#the-canvas), [a bad add](#bad-add) and [face](#face).'
 
-	expect([...colours].filter((colour) => !source.includes(colour))).toEqual([])
+	expect(coloursIn(text)).toEqual(['#fff', '#26292b'])
+})
+
+test('every colour a page names is set in the source', () => {
+	expect(coloursIn(allPages).filter((colour) => !source.includes(colour))).toEqual([])
 })
