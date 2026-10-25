@@ -23,8 +23,8 @@ presets.
 | --- | --- | --- |
 | `--wpds-border-radius-xl` (12px) | Page and app shell surfaces | The canvas, the panel that shows the active screen |
 | `--wpds-border-radius-lg` (8px) | Cards, dialogs, notices and other larger containers | A `LogList`, the box of items shown one under the other |
-| `--wpds-border-radius-md` (4px) | Menus, popovers and other small overlays | A toast, the short message near the bottom of the screen |
-| `--wpds-border-radius-sm` (2px) | Buttons, inputs and compact controls | A sidebar row, the Back button of a sidebar screen, the grey bars of a loading ghost, and the focus rings of a page tab and of a toast action |
+| `--wpds-border-radius-md` (4px) | Menus, popovers and other small overlays | A toast, which keeps its corners at every preset, as [toasts](./toasts.md#colors-corners-and-shadow) shows |
+| `--wpds-border-radius-sm` (2px) | Buttons, inputs and compact controls | A sidebar row, the Back button of a sidebar screen, the grey bars of a loading ghost, the focus ring of a page tab, and the focus ring of a toast action, which keeps its corners at every preset |
 | `--wpds-border-radius-xs` (1px) | Elements nested inside controls | Nothing of godmin's own |
 
 A surface inside another takes a smaller step than the one around
@@ -88,6 +88,11 @@ notices take the same preset as the canvas around them.
 application](../framing-an-application.md#notices-for-the-whole-application)
 shows how to pass them.
 
+The toast region keeps the corners of the WordPress snackbar at every
+preset `AdminRoot` sets.
+[Colors, corners and shadow](./toasts.md#colors-corners-and-shadow)
+gives them.
+
 `renderAdmin` from `@gopherium/godmin/testing` takes the same
 `cornerRadius`, so a test can draw a screen under any preset.
 
@@ -101,7 +106,7 @@ show depth:
 | Surface | Shadow |
 | --- | --- |
 | The canvas | `0 1px 2px rgb(0 0 0 / 0.08)`. None below `EDGE_BREAKPOINT` |
-| A toast | The WordPress small elevation, the one the snackbar uses. The snackbar is WordPress's own toast. Four layers: `0 1px 2px rgb(0 0 0 / 0.05)`, `0 2px 3px rgb(0 0 0 / 0.04)`, `0 6px 6px rgb(0 0 0 / 0.03)`, `0 8px 8px rgb(0 0 0 / 0.02)` |
+| A toast | The WordPress small elevation, the one the snackbar uses. [Colors, corners and shadow](./toasts.md#colors-corners-and-shadow) writes out its four layers |
 | The navigation drawer | `2px 0 8px rgba(0, 0, 0, 0.2)`, the shadow of the phone sidebar in WordPress's new admin |
 
 A bleed canvas keeps the canvas shadow. The sidebar has no shadow.
@@ -119,7 +124,8 @@ Two more shadows draw a line, not depth:
   merges the borders of its cells, and a merged border paints badly
   on a pinned cell. [Stylesheet helpers](../screens.md#stylesheet-helpers)
   shows the table markup.
-- A focused toast with no action draws its focus ring as a shadow.
+- A focused toast with no action draws its focus ring as a shadow, as
+  [keyboard](./toasts.md#keyboard) on the toasts page shows.
   [The focus ring](./accessibility.md#the-focus-ring) covers the
   other focus rings.
 

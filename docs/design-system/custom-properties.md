@@ -30,10 +30,7 @@ values. This table says where each one is set and what it changes.
 
 ## Where each one is set
 
-A value set on `:root` reaches every element on the page. So the
-toast region reads the sidebar width and the canvas margin too. When
-the sidebar is on screen, the region starts after it and ends where
-the canvas ends, so the toasts stay centered on the canvas.
+A value set on `:root` reaches every element on the page.
 
 To change one of the four on `:root`, write a plain rule in your own
 stylesheet. For example, a wider sidebar:
@@ -44,7 +41,7 @@ stylesheet. For example, a wider sidebar:
 
 Your rule wins over godmin's, as
 [changing the page appearance](../overview.md#changing-the-page-appearance)
-explains. The sidebar, the drawer and the toast region all follow it.
+explains. The sidebar and the drawer both follow it.
 
 The canvas sets its two gutters on itself. So a gutter set on `:root`
 changes nothing inside the canvas. Read them inside the canvas, for

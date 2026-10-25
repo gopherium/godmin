@@ -213,7 +213,8 @@ The next line is the footer's own, at the bottom.
 When the list is longer than the screen, only the rows scroll. The
 title, the tabs, the search box and the column headers stay where
 they are, and the footer stays on the bottom edge. A toast floats
-over the footer, as it does in WordPress.
+over the footer, as
+[where a toast sits](./design-system/toasts.md#where-a-toast-sits) shows.
 
 A list that is not DataViews, such as a `godmin-table`, grows the
 page instead, and the canvas scrolls as it does for any other page.
@@ -889,7 +890,7 @@ function DuplicateModal({ items: [post], closeModal }: RenderModalProps<Post>) {
 	const duplicate = () => {
 		setBusy(true)
 		duplicatePost(post.id, title)
-			.then(() => toaster.show(`"${toaster.name(title)}" created.`))
+			.then(() => toaster.show(`"${title}" created.`))
 			.catch((failure) => toaster.show(failure.message))
 			.finally(close)
 	}
@@ -972,7 +973,7 @@ function AddProjectDialog({ onClose }: { onClose: () => void }) {
 	const [name, setName] = useState('')
 	const add = async () => {
 		await addProject(name)
-		toaster.show(`"${toaster.name(name)}" added.`)
+		toaster.show(`"${name}" added.`)
 		onClose()
 	}
 	return (
@@ -1215,23 +1216,6 @@ every other one is an outline compact button:
 	<DataViews {...props} />
 </Page>
 ```
-
-## Naming an item in a toast
-
-A toast that names an item, such as `"Hello" moved to the trash.`,
-can get long. `name` on the toaster handle cuts a long name and ends
-it with an ellipsis:
-
-```tsx
-const toaster = useToaster()
-
-toaster.show(`"${toaster.name(post.title)}" moved to the trash.`)
-```
-
-A name of 45 characters or fewer shows in full. A longer one keeps
-its first 45, drops the spaces left at its end, and gets `…`. An
-emoji counts as one character and is never split. `Toaster` takes
-`nameLength` to change the 45.
 
 ## The canvas colour
 

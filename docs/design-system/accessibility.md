@@ -44,13 +44,14 @@ Except on a toast, every ring godmin draws is the same line,
 | The menu button of the top bar | Inside the button |
 | The title link of a `godmin-table`, a `godmin-table-scroll` box and a row of `RepeatRows` | 2px outside the part |
 | A page tab | Around its label, not around the whole height of the tab |
-| A toast | Its own rings, as [toasts](../loading-and-feedback.md#toasts) lists. A plain toast and its close button keep the browser's ring too |
+| A toast | Its own rings, as [keyboard](./toasts.md#keyboard) on the toasts page shows. A plain toast keeps the browser's ring too |
 
 godmin turns the browser's own ring off in three places only. A page
 tab draws its own ring around the label instead. Back draws none on a
-mouse focus. The toast region draws none, because only code ever
-focuses it. Draw a ring of your own with the same line, on
-`:focus-visible`, so it matches.
+mouse focus. The toast region draws none. Tab never stops on it, and
+only a toast that leaves or a click on a toast focuses it. Draw a
+ring of your own with the same line, on `:focus-visible`, so it
+matches.
 
 ## Where focus goes
 
@@ -70,9 +71,8 @@ The title of a sidebar screen never takes focus.
 Some parts go away while they hold focus. godmin then moves focus to
 a part that stays, so the keyboard reader keeps their place:
 
-- A toast that leaves, as
-  [how a toast behaves](../loading-and-feedback.md#how-a-toast-behaves)
-  says.
+- A toast that leaves, as [keyboard](./toasts.md#keyboard) on the
+  toasts page says.
 - A list row that a run moved, as
   [running an action over the picked rows](../lists.md#running-an-action-over-the-picked-rows)
   says.
@@ -108,13 +108,11 @@ no region. So a screen reader meets the sidebar under one name only.
 pass `label`.
 
 Every control godmin draws is named in words. A glyph, a small
-picture such as an icon or a cross, is never the name:
+picture such as an icon, is never the name:
 
 - Every icon godmin draws itself, such as a row icon, a chevron, the
   Back glyph or the menu glyph, is hidden from screen readers. The
   control around it carries the name.
-- The cross on a toast is named by `dismissLabel`, never read as a
-  cross.
 - The initials avatar is hidden, because the name beside it already
   says who it is.
 
@@ -140,7 +138,7 @@ aloud when it changes.
 
 | Part | What a screen reader hears | Set up in |
 | --- | --- | --- |
-| A toast | Its message, politely. Never its buttons | [How a toast behaves](../loading-and-feedback.md#how-a-toast-behaves) |
+| A toast | Its message, politely. Never its action | [What a screen reader hears](./toasts.md#what-a-screen-reader-hears) |
 | A loading ghost | The `label` sentence, from a visually hidden status. The grey shapes are hidden | [The ghosts](../loading-and-feedback.md#the-ghosts) |
 | A count beside a row | The `label` sentence, in place of the bare number | [A count beside a row](../framing-an-application.md#a-count-beside-a-row) |
 | An `ErrorNotice` | Its message, at once, as an alert | [ErrorNotice](../screens.md#errornotice) |
@@ -174,9 +172,9 @@ translates them.
 [godmin's own words](../framing-an-application.md#godmins-own-words)
 lists them and the languages they ship in. The props `label`,
 `menuLabel` and `backLabel` put your own words in their place. One
-default stays in English: the close button of a toast is named
-Dismiss until you pass `dismissLabel`, as
-[how a toast behaves](../loading-and-feedback.md#how-a-toast-behaves)
+default stays in English: the hint a toast with no action gives a
+screen reader, until you pass `dismissLabel`, as
+[what a screen reader hears](./toasts.md#what-a-screen-reader-hears)
 says. Every other word comes from your app, such as the `label` of a
 loading ghost or a count. Pass each one through your translations.
 
@@ -187,18 +185,14 @@ gives no label a fixed width:
   leave. A longer label wraps, and the row grows, since the row sets
   only a smallest height.
 - A long title on a sidebar screen breaks onto the next line.
-- A toast grows with its message up to its widest, then wraps, even
-  inside a long word. The aside of a page and a log list break a long
-  word the same way.
+- A toast grows with its message, then wraps, as
+  [size](./toasts.md#size) on the toasts page shows. The aside of a
+  page and a log list break a long word the same way.
 - The actions of a page header move under the title once they no
   longer fit beside it. A form row and the header line of a log list
   wrap the same way.
 - The page tabs keep each label on one line. A tab row too long for
   its page scrolls and fades the edge it cuts.
-- Where a toast cuts a name, it counts the characters a reader sees,
-  so an emoji is never split.
-  [Naming an item in a toast](../lists.md#naming-an-item-in-a-toast)
-  shows it.
 
 In a right-to-left language the chevrons, the sub menu slide and the
 fade of the tab row turn around, as

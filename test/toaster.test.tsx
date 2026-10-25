@@ -4,12 +4,12 @@ import { speak } from '@wordpress/a11y'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { Modal } from '@wordpress/components'
 import { StrictMode, useEffect } from 'react'
-import { afterEach, beforeEach, expect, onTestFinished, test, vi } from 'vitest'
+import { afterEach, beforeEach, expect, expectTypeOf, onTestFinished, test, vi } from 'vitest'
 
 import manifest from '../package.json'
 import { getAnnouncement, installTestEnvironment, renderAdmin } from '../src/testing.js'
 import { Toaster, useToaster } from '../src/toaster.js'
-import type { ToastAction, ToasterHandle } from '../src/toaster.js'
+import type { ToastAction, ToasterHandle, ToasterProps } from '../src/toaster.js'
 
 vi.mock('@wordpress/a11y', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('@wordpress/a11y')>()
@@ -43,6 +43,20 @@ function Raise({ message, action }: { message: string; action?: ToastAction }) {
 	return (
 		<button type="button" onClick={() => toaster.show(message, action)}>
 			Raise
+		</button>
+	)
+}
+
+/**
+ * Renders a button that raises several toasts at once when pressed, in one render.
+ * @param props - The messages of the toasts, oldest first.
+ * @returns The trigger element.
+ */
+function RaiseAll({ messages }: { messages: string[] }) {
+	const toaster = useToaster()
+	return (
+		<button type="button" onClick={() => messages.forEach((message) => toaster.show(message))}>
+			Raise all
 		</button>
 	)
 }
@@ -83,6 +97,18 @@ function Keep({ onHandle }: { onHandle: (handle: ToasterHandle) => void }) {
 }
 
 /**
+ * Settles a held animation, then waits for the region to catch up.
+ * @param end - The call that settles the animation.
+ * @returns The wait.
+ */
+function settle(end: () => void): Promise<void> {
+	return act(async () => {
+		end()
+		await new Promise((wait) => setTimeout(wait, 0))
+	})
+}
+
+/**
  * Makes every element report one running fade until a returned call settles it.
  * @returns The calls that finish the fade or cut it short, each waiting for the region to catch up.
  */
@@ -98,24 +124,34 @@ function holdFade(): { finish: () => Promise<void>, cutShort: () => Promise<void
 		configurable: true,
 		value: () => [{ finished }],
 	})
-	const settle = (end: () => void) =>
-		act(async () => {
-			end()
-			await new Promise((wait) => setTimeout(wait, 0))
-		})
 	return { finish: () => settle(resolve), cutShort: () => settle(reject) }
 }
 
-test('loads where the platform offers no grapheme splitter', async () => {
-	const held = Object.getOwnPropertyDescriptor(Intl, 'Segmenter') as PropertyDescriptor
-	Reflect.deleteProperty(Intl, 'Segmenter')
-	onTestFinished(() => {
-		Object.defineProperty(Intl, 'Segmenter', held)
+/**
+ * Makes the item of a toast report the fade of its toast and its own closing when asked for every animation in it.
+ * @returns The calls that end the fade and the closing, each waiting for the region to catch up.
+ */
+function holdMotion(): { endFade: () => Promise<void>, endClosing: () => Promise<void> } {
+	const ends: (() => void)[] = []
+	const [fade, closing] = [0, 1].map(() => new Promise<void>((done) => ends.push(done)))
+	Object.defineProperty(HTMLElement.prototype, 'getAnimations', {
+		configurable: true,
+		value(this: HTMLElement, options?: GetAnimationsOptions) {
+			const asked = this.classList.contains('godmin-toasts__item') && options?.subtree === true
+			return asked ? [{ finished: fade }, { finished: closing }] : []
+		},
 	})
-	vi.resetModules()
+	return { endFade: () => settle(ends[0]), endClosing: () => settle(ends[1]) }
+}
 
-	await expect(import('../src/toaster.js')).resolves.toHaveProperty('Toaster')
-})
+/**
+ * Returns the item that holds a toast in the toast region.
+ * @param message - The message of the toast.
+ * @returns The item element.
+ */
+function itemOf(message: string): HTMLElement {
+	return screen.getByText(message).closest('.godmin-toasts__item') as HTMLElement
+}
 
 test('shows a message once a screen raises one', () => {
 	renderAdmin(
@@ -129,7 +165,7 @@ test('shows a message once a screen raises one', () => {
 	expect(screen.getByText('Post moved to trash')).not.toBeNull()
 })
 
-test('announces the message rather than the buttons beside it', () => {
+test('announces the message rather than the action beside it', () => {
 	renderAdmin(
 		<Toaster>
 			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
@@ -150,7 +186,7 @@ test('announces each message once, politely, when a screen raises it', () => {
 	)
 
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
-	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+	fireEvent.click(screen.getByText('Post moved to trash'))
 
 	expect(speak).toHaveBeenCalledOnce()
 	expect(speak).toHaveBeenCalledWith('Post moved to trash', 'polite')
@@ -188,7 +224,7 @@ test('draws a plain toast as one snackbar button inside the toast region', () =>
 	const toast = screen.getByRole('button', { name: 'Saved' })
 	expect(toast.classList.contains('godmin-toast')).toBe(true)
 	expect(toast.classList.contains('godmin-toast--plain')).toBe(true)
-	expect(toast.parentElement?.classList.contains('godmin-toasts')).toBe(true)
+	expect(toast.closest('.godmin-toasts')).toBe(region())
 })
 
 test('clears a plain toast on a click anywhere on it', () => {
@@ -230,7 +266,7 @@ test('offers no close button on a plain toast', () => {
 
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 
-	expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull()
+	expect(screen.queryByRole('button', { name: 'Dismiss this notice' })).toBeNull()
 	expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull()
 })
 
@@ -243,7 +279,7 @@ test('tells the reader a click clears a plain toast', () => {
 
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 
-	expect(screen.getByRole('button', { name: 'Saved', description: 'Dismiss' })).not.toBeNull()
+	expect(screen.getByRole('button', { name: 'Saved', description: 'Dismiss this notice' })).not.toBeNull()
 })
 
 test('tells the reader a click clears a plain toast in the words the application gives', () => {
@@ -258,7 +294,7 @@ test('tells the reader a click clears a plain toast in the words the application
 	expect(screen.getByRole('button', { name: 'Saved', description: 'Close' })).not.toBeNull()
 })
 
-test('draws a toast with an action as the message, the action and a close button, in that order', () => {
+test('draws a toast with an action as the message and the action, in that order', () => {
 	renderAdmin(
 		<Toaster>
 			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
@@ -269,12 +305,22 @@ test('draws a toast with an action as the message, the action and a close button
 
 	const toast = screen.getByText('Post moved to trash').parentElement
 	expect(toast?.classList.contains('godmin-toast')).toBe(true)
-	expect(toast?.parentElement?.classList.contains('godmin-toasts')).toBe(true)
+	expect(toast?.closest('.godmin-toasts')).toBe(region())
 	expect([...(toast?.children ?? [])].map((part) => part.className)).toEqual([
 		'godmin-toast__message',
 		'godmin-toast__action',
-		'godmin-toast__dismiss',
 	])
+})
+
+test('leaves the action the only control of a toast with an action, with no tab stop on its body', () => {
+	raiseUndo()
+	const toast = screen.getByText('Post moved to trash').parentElement as HTMLElement
+	const controls = [...toast.querySelectorAll('button, [tabindex], [role]')]
+
+	expect(controls.map((control) => control.textContent)).toEqual(['Undo'])
+	expect(toast.hasAttribute('role')).toBe(false)
+	expect(toast.hasAttribute('tabindex')).toBe(false)
+	expect(region().textContent).not.toContain('✕')
 })
 
 test('keeps a toast with an action from being a button itself, so no button sits inside another', () => {
@@ -288,20 +334,6 @@ test('keeps a toast with an action from being a button itself, so no button sits
 
 	expect(screen.queryByRole('button', { name: /Post moved to trash/ })).toBeNull()
 	expect(region().querySelector('button button, [role="button"] button')).toBeNull()
-})
-
-test('draws the close button as the cross the snackbar shows, named by its label rather than the cross', () => {
-	renderAdmin(
-		<Toaster>
-			<Raise message="Saved" action={{ label: 'Undo', onAct: vi.fn() }} />
-		</Toaster>,
-	)
-
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
-
-	const close = screen.getByRole('button', { name: 'Dismiss' })
-	expect(close.textContent).toBe('✕')
-	expect(close.querySelector('svg')).toBeNull()
 })
 
 test('shows no tooltip on a plain toast, as the snackbar shows none', () => {
@@ -326,7 +358,7 @@ test('keeps the hint of a plain toast out of the toast region, so the region hol
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 
 	expect([...region().children].map((toast) => toast.textContent)).toEqual(['Saved'])
-	expect(screen.getByText('Dismiss').hidden).toBe(true)
+	expect(screen.getByText('Dismiss this notice').hidden).toBe(true)
 })
 
 test('runs the action and clears the toast that offered it', () => {
@@ -339,27 +371,37 @@ test('runs the action and clears the toast that offered it', () => {
 	expect(screen.queryByText('Post moved to trash')).toBeNull()
 })
 
-test('clears a toast with an action through its close button without running the action', () => {
+test('clears a toast before its action runs, so a toast the action raises pushes out no other', () => {
+	let kept: ToasterHandle | undefined
+	renderAdmin(
+		<Toaster>
+			<Keep onHandle={(handle) => (kept = handle)} />
+		</Toaster>,
+	)
+	const toaster = kept as ToasterHandle
+	act(() => {
+		toaster.show('First')
+		toaster.show('Second')
+		toaster.show('Post moved to trash', { label: 'Undo', onAct: () => toaster.show('Post restored') })
+	})
+
+	fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+	expect([...region().children].map((toast) => toast.textContent)).toEqual(['First', 'Second', 'Post restored'])
+})
+
+test.each([
+	['its message', (toast: HTMLElement) => toast.querySelector('.godmin-toast__message') as HTMLElement],
+	['its padding', (toast: HTMLElement) => toast],
+])('clears a toast with an action on a click on %s, without running the action', (_case, clicked) => {
 	const onAct = vi.fn()
 	raiseUndo(onAct)
+	const toast = screen.getByText('Post moved to trash').parentElement as HTMLElement
 
-	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+	fireEvent.click(clicked(toast))
 
 	expect(onAct).not.toHaveBeenCalled()
 	expect(screen.queryByText('Post moved to trash')).toBeNull()
-})
-
-test('names the close button as the application asks', () => {
-	renderAdmin(
-		<Toaster dismissLabel="Close">
-			<Raise message="Saved" action={{ label: 'Undo', onAct: vi.fn() }} />
-		</Toaster>,
-	)
-
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
-
-	expect(screen.getByRole('button', { name: 'Close' })).not.toBeNull()
-	expect(screen.queryByRole('button', { name: 'Dismiss' })).toBeNull()
 })
 
 test('keeps a leaving toast on screen until its fade ends, and lets nobody press it meanwhile', async () => {
@@ -390,11 +432,64 @@ test('clears a leaving toast whose fade was cut short', async () => {
 		</Toaster>,
 	)
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
-	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+	fireEvent.click(screen.getByText('Saved'))
 	expect(screen.getByText('Saved')).not.toBeNull()
 
 	await fade.cutShort()
 
+	expect(screen.queryByText('Saved')).toBeNull()
+})
+
+test('gives each toast an item of its own in the toast region, so the space it takes can grow and close', () => {
+	renderAdmin(
+		<Toaster>
+			<Raise message="Saved" />
+			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
+		</Toaster>,
+	)
+	for (const raise of screen.getAllByRole('button', { name: 'Raise' })) {
+		fireEvent.click(raise)
+	}
+
+	const items = [...region().children]
+	expect(items.map((item) => item.className)).toEqual(['godmin-toasts__item', 'godmin-toasts__item'])
+	expect(items.map((item) => [...item.children].map((inner) => inner.className))).toEqual([
+		['godmin-toasts__item-inner'],
+		['godmin-toasts__item-inner'],
+	])
+	expect(items.map((item) => item.firstElementChild?.firstElementChild?.className)).toEqual([
+		'godmin-toast godmin-toast--plain',
+		'godmin-toast',
+	])
+})
+
+test('closes the item of a leaving toast and keeps the other items open', () => {
+	holdFade()
+	renderAdmin(
+		<Toaster>
+			<Raise message="First" />
+			<Raise message="Second" />
+		</Toaster>,
+	)
+	for (const raise of screen.getAllByRole('button', { name: 'Raise' })) {
+		fireEvent.click(raise)
+	}
+
+	fireEvent.click(screen.getByRole('button', { name: 'First' }))
+
+	expect(itemOf('First').className).toBe('godmin-toasts__item godmin-toasts__item--leaving')
+	expect(itemOf('Second').className).toBe('godmin-toasts__item')
+})
+
+test('keeps a leaving toast on the page until its fade and the closing of its item both end', async () => {
+	const motion = holdMotion()
+	raiseToast('Saved')
+
+	fireEvent.click(screen.getByRole('button', { name: 'Saved' }))
+	await motion.endFade()
+
+	expect(itemOf('Saved')).not.toBeNull()
+	await motion.endClosing()
 	expect(screen.queryByText('Saved')).toBeNull()
 })
 
@@ -407,7 +502,7 @@ test('lets nobody press a toast with an action while it fades out', () => {
 	)
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 
-	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+	fireEvent.click(screen.getByText('Saved'))
 
 	const leaving = screen.getByText('Saved').parentElement
 	expect(leaving?.classList.contains('godmin-toast--leaving')).toBe(true)
@@ -465,6 +560,65 @@ test('clears a toast nobody touched after six seconds when the application sets 
 	expect(screen.queryByText('Saved')).toBeNull()
 })
 
+test('keeps a toast with an action ten seconds when the application sets no time', () => {
+	vi.useFakeTimers()
+	raiseUndo()
+
+	act(() => {
+		vi.advanceTimersByTime(9999)
+	})
+	expect(screen.getByText('Post moved to trash')).not.toBeNull()
+
+	act(() => {
+		vi.advanceTimersByTime(1)
+	})
+	expect(screen.queryByText('Post moved to trash')).toBeNull()
+})
+
+test('keeps a toast with an action as long as the application asks', () => {
+	vi.useFakeTimers()
+	renderAdmin(
+		<Toaster actionDismissAfter={8000}>
+			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
+		</Toaster>,
+	)
+	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+
+	act(() => {
+		vi.advanceTimersByTime(7999)
+	})
+	expect(screen.getByText('Post moved to trash')).not.toBeNull()
+
+	act(() => {
+		vi.advanceTimersByTime(1)
+	})
+	expect(screen.queryByText('Post moved to trash')).toBeNull()
+})
+
+test('times a toast with no action and one with an action apart', () => {
+	vi.useFakeTimers()
+	renderAdmin(
+		<Toaster dismissAfter={2000} actionDismissAfter={4000}>
+			<Raise message="Saved" />
+			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
+		</Toaster>,
+	)
+	for (const raise of screen.getAllByRole('button', { name: 'Raise' })) {
+		fireEvent.click(raise)
+	}
+
+	act(() => {
+		vi.advanceTimersByTime(2000)
+	})
+	expect(screen.queryByText('Saved')).toBeNull()
+	expect(screen.getByText('Post moved to trash')).not.toBeNull()
+
+	act(() => {
+		vi.advanceTimersByTime(2000)
+	})
+	expect(screen.queryByText('Post moved to trash')).toBeNull()
+})
+
 test('keeps three toasts at most when the application sets no limit, dropping the oldest', () => {
 	renderAdmin(
 		<Toaster>
@@ -480,8 +634,21 @@ test('keeps three toasts at most when the application sets no limit, dropping th
 	}
 
 	expect(screen.queryByText('First')).toBeNull()
-	const shown = screen.getByText('Second').parentElement?.children ?? []
-	expect([...shown].map((toast) => toast.textContent)).toEqual(['Second', 'Third', 'Fourth'])
+	expect([...region().children].map((item) => item.textContent)).toEqual(['Second', 'Third', 'Fourth'])
+})
+
+test('drops at once a toast already past the limit as it first shows, so it never flashes or holds its space', () => {
+	holdFade()
+	renderAdmin(
+		<Toaster>
+			<RaiseAll messages={['First', 'Second', 'Third', 'Fourth']} />
+		</Toaster>,
+	)
+
+	fireEvent.click(screen.getByRole('button', { name: 'Raise all' }))
+
+	expect(screen.queryByText('First')).toBeNull()
+	expect([...region().children].map((item) => item.textContent)).toEqual(['Second', 'Third', 'Fourth'])
 })
 
 test('keeps as many toasts as the application asks', () => {
@@ -566,7 +733,7 @@ test('forgets the timer of a toast the reader dismissed', () => {
 	raiseUndo()
 	const running = vi.getTimerCount()
 
-	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+	fireEvent.click(screen.getByText('Post moved to trash'))
 
 	expect(vi.getTimerCount()).toBe(running - 1)
 })
@@ -577,7 +744,7 @@ test('forgets the timer of a dismissed toast as soon as it starts fading out', (
 	raiseUndo()
 	const running = vi.getTimerCount()
 
-	fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }))
+	fireEvent.click(screen.getByText('Post moved to trash'))
 
 	expect(screen.getByText('Post moved to trash')).not.toBeNull()
 	expect(vi.getTimerCount()).toBe(running - 1)
@@ -719,8 +886,7 @@ test('holds every message raised, the newest at the bottom', () => {
 	fireEvent.click(first)
 	fireEvent.click(second)
 
-	const shown = screen.getByText('First').parentElement?.children ?? []
-	expect([...shown].map((toast) => toast.textContent)).toEqual(['First', 'Second'])
+	expect([...region().children].map((item) => item.textContent)).toEqual(['First', 'Second'])
 })
 
 test('lets the toast region take focus from script but not from the tab key', () => {
@@ -735,13 +901,12 @@ test('lets the toast region take focus from script but not from the tab key', ()
 
 test.each([
 	['a focused toast leaves through its action', 'Undo'],
-	['a focused toast leaves through its close button', 'Dismiss'],
-])('hands focus to the toast region when %s', (_case, name) => {
+	['a toast holding focus is clicked away on its body', 'Post moved to trash'],
+])('hands focus to the toast region when %s', (_case, clicked) => {
 	raiseUndo()
-	const pressed = screen.getByRole('button', { name })
-	pressed.focus()
+	screen.getByRole('button', { name: 'Undo' }).focus()
 
-	fireEvent.click(pressed)
+	fireEvent.click(screen.getByText(clicked))
 
 	expect(document.activeElement).toBe(region())
 })
@@ -762,7 +927,7 @@ test('hands focus to the toast region when a focused toast runs out of time', ()
 	screen.getByRole('button', { name: 'Undo' }).focus()
 
 	act(() => {
-		vi.advanceTimersByTime(6000)
+		vi.advanceTimersByTime(10000)
 	})
 
 	expect(screen.queryByText('Post moved to trash')).toBeNull()
@@ -771,7 +936,7 @@ test('hands focus to the toast region when a focused toast runs out of time', ()
 
 test('moves focus out of a toast running out of time before the toast turns inert, as a browser renders', async () => {
 	renderAdmin(
-		<Toaster dismissAfter={1}>
+		<Toaster actionDismissAfter={1}>
 			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
 		</Toaster>,
 	)
@@ -838,6 +1003,27 @@ test('keeps the toast region inside the application, under an open dialog, as Wo
 	expect(container.contains(region())).toBe(true)
 })
 
+test.each(['none', 'moderate', 'pronounced'] as const)(
+	'keeps the snackbar corners on the toasts under the %s preset, and the preset on the rest of the app',
+	(preset) => {
+		renderAdmin(
+			<Toaster>
+				<Raise message="Saved" />
+			</Toaster>,
+			{ cornerRadius: preset },
+		)
+		const raise = screen.getByRole('button', { name: 'Raise' })
+
+		fireEvent.click(raise)
+
+		const corners = (element: Element) =>
+			element.closest('[data-wpds-corner-radius]')?.getAttribute('data-wpds-corner-radius')
+		expect(corners(screen.getByRole('button', { name: 'Saved' }))).toBe('subtle')
+		expect(corners(region())).toBe('subtle')
+		expect(corners(raise)).toBe(preset)
+	},
+)
+
 test('leaves focus where it was when a toast it is not in leaves', () => {
 	renderAdmin(
 		<Toaster>
@@ -853,44 +1039,20 @@ test('leaves focus where it was when a toast it is not in leaves', () => {
 	expect(document.activeElement).toBe(raise)
 })
 
-/**
- * Returns the name a toaster gives a title, rendering the toaster with the given name length.
- * @param title - The title to name.
- * @param nameLength - How many characters the toaster keeps, its default when absent.
- * @returns The name the toaster handle answers.
- */
-function nameFrom(title: string, nameLength?: number): string {
+test('hands out a toaster handle that only shows messages', () => {
 	let kept: ToasterHandle | undefined
 	renderAdmin(
-		<Toaster nameLength={nameLength}>
+		<Toaster>
 			<Keep onHandle={(handle) => (kept = handle)} />
 		</Toaster>,
 	)
-	return (kept as ToasterHandle).name(title)
-}
 
-test('names an item in full when its name fits the toast', () => {
-	expect(nameFrom('Hello world')).toBe('Hello world')
-	expect(nameFrom('a'.repeat(45))).toBe('a'.repeat(45))
+	expect(Object.keys(kept as ToasterHandle)).toEqual(['show'])
 })
 
-test('cuts a name longer than 45 characters to 45 and ends it with an ellipsis', () => {
-	expect(nameFrom('a'.repeat(46))).toBe(`${'a'.repeat(45)}…`)
-})
-
-test('cuts a name at the length the toaster is given', () => {
-	expect(nameFrom('Maria Perez wrote this', 10)).toBe('Maria Pere…')
-})
-
-test('counts an emoji as one character, so a cut never splits it', () => {
-	const family = '\u{1F469}\u{200D}\u{1F469}\u{200D}\u{1F467}\u{200D}\u{1F466}'
-
-	expect(nameFrom(`${'a'.repeat(44)}${family}tail`)).toBe(`${'a'.repeat(44)}${family}…`)
-	expect(nameFrom(family.repeat(45))).toBe(family.repeat(45))
-})
-
-test('trims the spaces a cut leaves before the ellipsis', () => {
-	expect(nameFrom('Maria   Perez', 8)).toBe('Maria…')
+test('takes no name length', () => {
+	expectTypeOf<ToasterProps>().not.toHaveProperty('nameLength')
+	expectTypeOf<ToasterHandle>().not.toHaveProperty('name')
 })
 
 test('tells a screen it forgot the region rather than failing silently', () => {

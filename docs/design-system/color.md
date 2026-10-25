@@ -61,7 +61,7 @@ The theme provider also checks contrast when it works out colors from a seed. It
 
 A raw color is a value written out, such as `#fff`, in place of a token. It stays the same whatever the seeds. `base.css` writes a few on purpose:
 
-- The toast box is `rgb(0 0 0 / 0.85)`, a black that lets a blur of the page show through. Its text and its focus lines are `#fff`. These are the colors of the WordPress snackbar. [Toasts](../loading-and-feedback.md#toasts) describes the rest of the toast.
+- A toast paints raw colors too: a see-through black box, white text and a white focus line, the colors of the WordPress snackbar. [Colors, corners and shadow](./toasts.md#colors-corners-and-shadow) gives each value.
 - The backdrop is the dark layer behind the open drawer. It is `#000` at 0.5 opacity, as in the new WordPress admin. godmin sets the opacity through `--backdrop-opacity`. The `@wordpress/ui` drawer fades its black backdrop to that value, so the fade in and out still run.
 - Shadows are black at a low opacity. [Elevation](./radius-and-elevation.md#elevation) lists them.
 - The `#000` in `--godmin-page-tabs-fade` and `--godmin-page-tabs-fade-both` is a mask. The mask fades the ends of a long row of tabs. It paints nothing.

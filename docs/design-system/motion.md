@@ -1,10 +1,11 @@
 ---
 title: Motion
-description: The sidebar slide and the fades of a godmin admin, the design tokens that time them, and what changes when a reader asks for less motion.
+description: The sidebar slide, the toast motion and the fades of a godmin admin, the design tokens that time them, and what changes when a reader asks for less motion.
 ---
 
 godmin's own motion is short and small. The sidebar slides a new
-menu screen in. Toasts fade in and out. Ghosts, the grey shapes shown
+menu screen in. Toasts grow in and fade, and the toasts around them
+slide along. Ghosts, the grey shapes shown
 while data loads, fade in, and so does the content that replaces
 them. godmin's stylesheet animates nothing else. It sets no
 transitions, so its own hover and focus looks change at once.
@@ -18,17 +19,20 @@ and the bars inside a ghost.
 A design token is a value the WordPress Design System names, written
 as a CSS custom property. A custom property is a CSS variable. A
 duration is how long an animation takes. An easing is the curve its
-speed follows from start to end. godmin times its fades with three
+speed follows from start to end. godmin times its motion with five
 design tokens:
 
 | Token | Value | What it times |
 | --- | --- | --- |
-| `--wpds-motion-duration-md` | 200ms | A toast, a ghost or new content fading in |
-| `--wpds-motion-duration-sm` | 100ms | A toast fading out |
-| `--wpds-motion-easing-balanced` | `cubic-bezier(0.4, 0, 0.2, 1)` | Every fade |
+| `--wpds-motion-duration-lg` | 300ms | Toast motion, see [Motion](./toasts.md#motion) |
+| `--wpds-motion-duration-md` | 200ms | A ghost or new content fading in |
+| `--wpds-motion-duration-sm` | 100ms | Toast motion, see [Motion](./toasts.md#motion) |
+| `--wpds-motion-duration-xs` | 50ms | Toast motion, see [Motion](./toasts.md#motion) |
+| `--wpds-motion-easing-balanced` | `cubic-bezier(0.4, 0, 0.2, 1)` | The fades of ghosts and new content |
 
-Two lengths have no token: the sidebar slide and the wait before a
-ghost shows. The sections below cover both.
+Some values have no token: the sidebar slide, the wait before a ghost
+shows, and the rest of the toast motion. The sections below cover
+them.
 
 ## The sidebar slide
 
@@ -69,12 +73,11 @@ shows how.
 
 ## Toasts
 
-A toast fades in when it arrives. When it leaves, it fades out and
-stays hidden at the end. A leaving toast stays on the page until its
-fade ends. Nobody can press it in that time. If the browser cuts the
-fade short, the toast still goes.
-[How a toast behaves](../loading-and-feedback.md#how-a-toast-behaves)
-says how long a toast stays before it leaves.
+Toasts move as the WordPress snackbar does. An arriving toast grows
+its space in the column and fades in. A leaving toast fades out, then
+its space closes. So the other toasts slide instead of jumping.
+[Motion](./toasts.md#motion) on the toasts page gives every duration
+and curve, and says what a leaving toast does.
 
 ## Loading
 
@@ -100,17 +103,19 @@ A reader can ask their system for less motion. The browser then
 reports `prefers-reduced-motion: reduce` to CSS, and godmin changes
 two things:
 
-- The fades of toasts, ghosts and new content last 1ms. They still
-  run and still end. So a leaving toast still goes, and a ghost
-  still waits its delay and then stays visible.
+- The fades of ghosts and new content last 1ms. They still run and
+  still end. So a ghost still waits its delay and then stays visible.
+- Every toast animation lasts 1ms and starts at once, with no wait.
+  It still runs and still ends, so a leaving toast still goes. A toast
+  shows in its place at once and goes at once, and the toasts above
+  move in one step, as in WordPress.
 - The sidebar slide lasts 0s, as in the WordPress Site Editor, even
   when you set your own slide duration. It does not play, and the new
   screen shows at once in its place.
 
-These rules change only how long each animation lasts. They keep
-the delay, the animation itself, and the setting that holds a ghost
-visible after its fade. Turning the animation off would leave a
-ghost transparent for good.
+These rules keep each animation itself and the setting that holds a
+ghost visible after its fade. They keep the delay of a ghost too.
+Turning an animation off would leave a ghost transparent for good.
 
 The bars inside a ghost stop their pulse too. Their WordPress
 package does that on its own.
