@@ -7,6 +7,8 @@ import type { Dispatch, SetStateAction } from 'react'
 import { DENSE_BREAKPOINT } from './breakpoints.js'
 import { useMediaQuery } from './use-media-query.js'
 
+export { openOnTap } from './open-on-tap.js'
+
 /** The direction the rows of a list are sorted in. */
 export type ListSortDirection = 'asc' | 'desc'
 
@@ -361,25 +363,5 @@ export function useListView<V extends ListViewShape>(defaults: ListDefaults): Li
 		defaultLayouts: { [layout]: settingsOf(defaults, layout) },
 		phone,
 		...selection,
-	}
-}
-
-/**
- * Returns the selection handler a list hands DataViews, opening the record a tap lands on in the phone layout.
- * @param list - The list view the screen holds.
- * @param open - Opens the record with the given id.
- * @returns The handler.
- */
-export function openOnTap<V extends ListViewShape>(
-	list: ListView<V>,
-	open: (id: string) => void,
-): (selection: string[]) => void {
-	if (!list.phone) {
-		return list.onChangeSelection
-	}
-	return ([id]) => {
-		if (id !== undefined) {
-			open(id)
-		}
 	}
 }

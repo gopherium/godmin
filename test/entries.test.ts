@@ -5,10 +5,12 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 
-import { expect, test } from 'vitest'
+import { expect, expectTypeOf, test } from 'vitest'
 
 import manifest from '../package.json'
 import * as dialogs from '../src/dialogs.js'
+import type * as MainEntry from '../src/index'
+import type * as RouterEntry from '../src/router'
 
 /** The source folder the entries are built from. */
 const source = resolve(import.meta.dirname, '../src')
@@ -192,6 +194,34 @@ test('the main entry hands out the store of unsaved text, which reaches React al
 
 	expect([typeof main.useUnsavedText, typeof main.markLatest]).toEqual(['function', 'function'])
 	expect([...packagesReachedFrom(join(source, 'unsaved-text.ts'))]).toEqual(['react'])
+})
+
+test('the main entry hands out the tap handler of a phone list, which reaches no package, so no router', async () => {
+	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
+
+	expect(typeof main.openOnTap).toBe('function')
+	expect([...packagesReachedFrom(join(source, 'open-on-tap.ts'))]).toEqual([])
+})
+
+test.each([
+	{ file: 'close-while-open.ts', hooks: ['useCloseWhileOpen'] },
+	{ file: 'list-run.ts', hooks: ['useListRun', 'focusInDialog'] },
+	{ file: 'focus-back.ts', hooks: ['useFocusBack', 'focusedTrigger'] },
+])('the main entry hands out the dialog and focus hooks of $file, which reach React alone', async ({ file, hooks }) => {
+	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
+	const own = (await import(join(source, file))) as Record<string, unknown>
+
+	expect(hooks.map((name) => typeof main[name])).toEqual(hooks.map(() => 'function'))
+	expect(hooks.filter((name) => main[name] !== own[name])).toEqual([])
+	expect([...packagesReachedFrom(join(source, file))]).toEqual(['react'])
+})
+
+test('the main entry hands out the list view types of the router entry, to type a list without the router', () => {
+	type Shape = RouterEntry.ListViewShape
+
+	expectTypeOf<MainEntry.ListViewShape>().toEqualTypeOf<Shape>()
+	expectTypeOf<MainEntry.ListView<Shape>>().toEqualTypeOf<RouterEntry.ListView<Shape>>()
+	expectTypeOf<MainEntry.ListDefaults>().toEqualTypeOf<RouterEntry.ListDefaults>()
 })
 
 test('the router peer starts at a release whose route matching runs no route context', () => {

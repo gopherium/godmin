@@ -17,10 +17,13 @@ export { useBulkRun } from './bulk-run.js'
 export type { BulkRun } from './bulk-run.js'
 export { bulkNotes, runEach } from './bulk.js'
 export type { BulkFailure, BulkNotes, BulkOutcome, BulkWords } from './bulk.js'
+export { useCloseWhileOpen } from './close-while-open.js'
 export { ConfirmBody } from './confirm.js'
 export type { ConfirmBodyProps } from './confirm.js'
 export { FileButton } from './file-button.js'
 export type { FileButtonProps } from './file-button.js'
+export { focusedTrigger, useFocusBack } from './focus-back.js'
+export type { Trigger } from './focus-back.js'
 export { FormBody } from './form.js'
 export type { FormBodyProps, FormKind } from './form.js'
 export { Frame } from './frame.js'
@@ -36,8 +39,17 @@ export { LIST_CHROME_DOMAIN, listChromeCatalogFor } from './list-chrome.js'
 export type { ListChromeCatalog } from './list-chrome.js'
 export { ListEmpty } from './list-empty.js'
 export type { ListEmptyProps } from './list-empty.js'
-export { useListRun } from './list-run.js'
+export { focusInDialog, useListRun } from './list-run.js'
 export type { ListRun, ListRunState, RunSettled } from './list-run.js'
+export type {
+	LayoutDefaults,
+	ListDefaults,
+	ListFilter,
+	ListSearch,
+	ListSortDirection,
+	ListView,
+	ListViewShape,
+} from './list-view.js'
 export { LoadingRows, LoadingScreen } from './loading.js'
 export { LogItem, LogList, LogTime } from './log-list.js'
 export type { LogItemProps, LogListProps, LogTimeProps } from './log-list.js'
@@ -45,6 +57,8 @@ export { MenuCount } from './menu-count.js'
 export type { MenuCountProps } from './menu-count.js'
 export { NavigationScreen } from './navigation-screen.js'
 export type { NavigationScreenProps } from './navigation-screen.js'
+export { openOnTap } from './open-on-tap.js'
+export type { TapList } from './open-on-tap.js'
 export { ErrorNotice, LoadMore, Page, PageTitle, SectionTitle } from './page.js'
 export type { LoadMoreQuery, PageProps } from './page.js'
 export { PageTab, PageTabs } from './page-tabs.js'

@@ -12,6 +12,16 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - The docs ship in the package under `docs/`, the pages docs.gopherium.org shows, so an app reads the ones for the version it installs.
 - Design System pages under `docs/design-system/` write down the color, layout, radius and elevation, typography, motion and accessibility rules of a godmin admin, checked against the code by tests.
 - `--godmin-navigation-slide-distance` and `--godmin-navigation-slide-duration` are public custom properties, so an app may change the sidebar slide.
+- `useCloseWhileOpen` returns a dialog's close that acts only while that dialog is on screen, so a row dialog an app writes never shuts a dialog opened on the row since.
+- `focusInDialog` reports whether a dialog or an alert dialog holds the focus, for a write an app finishes outside a list run.
+- `useFocusBack` puts a lost focus back on the title, media, phone row or actions menu a list dialog opened from, else on the list, in every layout, found through a `data-item-id` mark on the title cell. `focusedTrigger` reads which one, or the bulk bar, opened the dialog.
+- `openOnTap` is in the main entry too, so a list drawn without TanStack Router opens the record a phone tap lands on. The router entry still hands it out.
+- The list view types, such as `ListView` and `ListDefaults`, are in the main entry too, so a package without TanStack Router can type the list an app hands it.
+
+### Fixed
+
+- `RunConfirm` closes only itself once its run ends, never a dialog opened on the row after the confirm was dismissed while busy.
+- `useListRun` focuses the list after a run moved an item only while the focus sits on the page, in the list, in the dialog the run started in, or, once that dialog closed, still where the focus first went outside it while it was open, so a dialog opened during a run and a control the reader moved to after that dialog closed keep the focus.
 
 ## [0.26.0] - 2026-10-24
 

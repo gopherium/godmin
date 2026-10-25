@@ -2,6 +2,7 @@
 
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import type { ActionModal } from '@wordpress/dataviews'
+import { useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { RunConfirm } from '../src/index'
@@ -199,6 +200,41 @@ test('runs the action when it was handed no way to close, as a body drawn outsid
 	await press('Trash')
 
 	expect(run).toHaveBeenCalledExactlyOnceWith([HELLO])
+})
+
+/** The dialog a row holds open, as DataViews keeps one dialog per row. */
+type RowDialog = 'confirm' | 'edit' | undefined
+
+/**
+ * Renders a row that holds one dialog at a time and closes it with the one handler DataViews hands every dialog.
+ * @param props - The run the confirm starts and the handle the test opens a dialog through.
+ * @returns The dialog the row holds.
+ */
+function Row({ run, opener }: { run: () => Promise<void>, opener: { open: (dialog: RowDialog) => void } }) {
+	const [open, setOpen] = useState<RowDialog>('confirm')
+	opener.open = setOpen
+	const closeModal = () => setOpen(undefined)
+	if (open === 'confirm') {
+		return (
+			<RunConfirm items={[HELLO]} closeModal={closeModal} confirmLabel="Trash" cancelLabel="Cancel" run={run}>
+				Move "Hello" to the trash?
+			</RunConfirm>
+		)
+	}
+	return open === 'edit' ? <div role="dialog" aria-label="Edit" /> : null
+}
+
+test('closes only itself once its run ends, leaving open a dialog opened on the row after its dismissal', async () => {
+	const held = heldRun()
+	const opener = { open: (_dialog: RowDialog) => {} }
+	renderAdmin(<Row run={held.run} opener={opener} />)
+	await press('Trash')
+
+	act(() => opener.open(undefined))
+	act(() => opener.open('edit'))
+	await act(async () => held.settle())
+
+	expect(screen.getByRole('dialog', { name: 'Edit' })).not.toBeNull()
 })
 
 test('takes the props a DataViews action modal hands over', async () => {

@@ -1,6 +1,6 @@
 ---
 title: Lists with DataViews
-description: Hosting a WordPress DataViews list in a godmin page, its view in the address, paging it on the server, empty states, runs over the picked rows, confirmations, confirms outside a list, renames, forms in a dialog, bulk messages, uploads, its Spanish chrome, its dates, and the table look for lists that stay custom.
+description: Hosting a WordPress DataViews list in a godmin page, its view in the address, paging it on the server, empty states, runs over the picked rows, confirmations, confirms outside a list, renames, forms in a dialog, the focus back on a row, bulk messages, uploads, its Spanish chrome, its dates, and the table look for lists that stay custom.
 ---
 
 DataViews is the WordPress list component. It draws the search box,
@@ -132,7 +132,13 @@ the next, the list forgets the picked columns and the ticked rows.
 A tap on a phone list selects nothing. `openOnTap(list, open)` gives
 you a handler that opens the record instead. Pass it as
 `onChangeSelection`. `list.phone` tells you which side of 640px the
-screen is on.
+screen is on. `openOnTap` comes from `@gopherium/godmin/router`, like
+`useListView`, and from the main entry too, so a package that draws a
+list without TanStack Router can call it with the `list` an app hands
+it. It reads only `phone` and `onChangeSelection`. The list view
+types, such as `ListView` and `ListDefaults`, come from the main entry
+too, so such a package can type that `list` and its defaults without
+the router. This needs godmin 0.27.0 or later.
 
 Leave `perPage` out while you do not know it yet, for example while
 your settings load. The list then shows every row.
@@ -448,8 +454,8 @@ example does, so the reader sees one toast.
 
 Every list action that changes rows does the same things around the
 calls: the list reloaded, one toast, and the focus moved back to the
-list once a row moved. `useListRun` and `useBulkRun` hold those
-things for you:
+list once a row moved, while the reader is still with the run.
+`useListRun` and `useBulkRun` hold those things for you:
 
 ```tsx
 import { Page, RunConfirm, useBulkRun, useListRun } from '@gopherium/godmin'
@@ -498,6 +504,37 @@ left on a button that went away with its row. When two runs overlap,
 only the latest one moves the focus. The list holds no failure. A run
 shows how it went in its toast.
 
+A run can end while the reader works somewhere else, such as in a
+dialog they opened on another row. So the list takes the focus only
+while the reader is still with the run:
+
+- the focus fell to the page,
+- the focus sits inside the list,
+- the focus sits in the dialog the run started in,
+- or that dialog closed before the run ended, the focus still sits
+  where it first went outside that dialog while the dialog was open,
+  and no dialog holds the focus. A confirm that closes at once gives
+  the focus back to the button that opened it, and the list then
+  takes the focus from that button.
+
+A dialog opened since keeps the focus, so typing still lands in it
+and Escape still closes it. A reader who moved on to another control
+outside the list keeps their place: during a run started outside
+every dialog, while the dialog the run started in is still open, and
+after that dialog gave the focus back or closed with nowhere to give
+it. One move is the exception. A dialog that lets the focus out,
+unlike a WordPress modal, can be left for another control while it
+is still open. That control then counts as where the dialog gave the
+focus back, since the focus moves the same way in both cases. So when
+the dialog closes and the run ends with the focus still there, the
+list takes the focus from it. Every list run does this, with nothing
+to add to your screen. This needs godmin 0.27.0 or later. Before it,
+the list took the focus wherever the focus sat.
+
+`focusInDialog()` tells whether a dialog holds the focus, for a write
+you finish yourself outside a run. It also needs godmin 0.27.0 or
+later.
+
 `useListRun` hands the same `run` for as long as the screen stays,
 whichever list it shows. So when the reader moves to another tab, the
 handler `useBulkRun` builds from it stays the same too, as long as
@@ -525,6 +562,11 @@ when the reader confirms, shows the confirm button busy and keeps
 Cancel inert while the run goes, and closes once the run settles. A
 failure shows in the run's toast, never inside the modal. It also
 closes when the run rejects, and the error still reaches your app.
+It closes only itself. DataViews keeps one dialog for a row's actions
+menu and another for its primary action buttons. A reader can dismiss
+a busy confirm by clicking the dimmed page and open another dialog in
+its place, from the same menu or the same buttons. When the run then
+ends, that other dialog stays open, with what the reader typed in it.
 
 `listLabel` and `listRef` make the list a region with a name, which
 a screen reader announces, and give the focus its target. The region
@@ -535,6 +577,17 @@ A button outside the list, such as one in the page header, can share
 the same run. Call `run.onStart()` as its write starts. It answers a
 function, typed `RunSettled`. Call that function once the write ends,
 with whether a row moved, and show how it went in a toast.
+
+Such a run starts outside every dialog. So when it ends, the list
+takes the focus only if the focus fell to the page or sits inside the
+list. While the focus is still on your button, or on another control
+the reader moved to, it stays there. When your button opens a
+`ConfirmDialog` first, as Empty Trash does, call `run.onStart()`
+inside `onConfirm`, as [a confirm outside a list](#a-confirm-outside-a-list)
+explains. The list then takes the focus once the run moved a row,
+even after the dialog closed, while the focus is still on the button
+the dialog gave it back to. A reader who moved to another control by
+then keeps their place. This needs godmin 0.27.0 or later.
 
 ## Confirming an action
 
@@ -575,17 +628,18 @@ For a run you write yourself, `ConfirmBody` is the same body without
 the run:
 
 ```tsx
-import { ConfirmBody, runEach, useToaster } from '@gopherium/godmin'
+import { ConfirmBody, runEach, useCloseWhileOpen, useToaster } from '@gopherium/godmin'
 
 function TrashModal({ items, closeModal }: RenderModalProps<Post>) {
 	const toaster = useToaster()
+	const close = useCloseWhileOpen(closeModal)
 	const [busy, setBusy] = useState(false)
 	const confirm = async () => {
 		setBusy(true)
 		const outcome = await runEach(items, (post) => trashPost(post.id))
 		const moved = outcome.failures.length === 0
 		toaster.show(moved ? 'Post moved to the trash.' : 'The post could not be moved to the trash.')
-		closeModal?.()
+		close()
 	}
 	return (
 		<ConfirmBody
@@ -610,11 +664,23 @@ The body never shows a failure. Close the modal once the write ends,
 whether it worked or not, and say how it went in a toast, as the
 WordPress list confirms do.
 
+Close it through `useCloseWhileOpen(closeModal)`, as the example
+does. DataViews keeps one dialog for a row's actions menu and another
+for its primary action buttons. Every dialog that opens in one of
+them gets the same `closeModal`, so a write that ends after the reader
+dismissed your modal and opened another one in its place would shut
+the new one. The close `useCloseWhileOpen` returns does nothing once
+your modal left the screen. `RunConfirm` closes this way already.
+This needs godmin 0.27.0 or later.
+
 ## A confirm outside a list
 
 Some confirms open from a button outside any list, such as Move to
 trash in an editor or Empty Trash above a list. `ConfirmDialog` asks
-those, as WordPress dialogs do:
+those, as WordPress dialogs do. A confirm above a list can also start
+a [list run](#running-an-action-over-the-picked-rows), as Empty Trash
+does. This section says where the focus goes once that run ends.
+Here the dialog asks before Move to trash in an editor:
 
 ```tsx
 import { useToaster } from '@gopherium/godmin'
@@ -662,11 +728,17 @@ What `onConfirm` returns decides when the dialog goes:
 
 - Return nothing, and the dialog closes at once while your write
   runs. WordPress does this for a confirm that opens from a button or
-  a screen menu, such as Move to trash in its editor. Show the write
-  as busy on the button that opened the dialog, as the example does
-  with `loading`. Make `onConfirm` a plain function, as `trash` is.
-  An `async` function always returns a promise, so the dialog would
-  stay open until the write ends.
+  a screen menu, such as Move to trash in its editor or Empty Trash
+  above a list. Show the write as busy on the button that opened the
+  dialog, as the example does with `loading`. Make `onConfirm` a
+  plain function, as `trash` is. An `async` function always returns
+  a promise, so the dialog would stay open until the write ends. When
+  the write is a list run, call `run.onStart()` inside `onConfirm`,
+  while the dialog still holds the focus. The dialog gives the focus
+  back to its button as it closes, and the list takes the focus once
+  the run moved a row, while the focus is still on that button. A
+  reader who moved to another control or opened another dialog by
+  then keeps their place.
 - Return the write's promise, and the dialog stays open while it
   runs. The confirm button shows a spinner and Cancel greys out. When
   the promise ends, worked or failed, the dialog closes. WordPress
@@ -694,8 +766,16 @@ the close button of a titled confirm, or a confirm that finished.
 Escape, a click outside it and its close button work at any time,
 even while the write runs. The write then goes on, and `onClose`
 still runs only once. When the dialog goes away, the focus goes back
-to the button that opened it, unless your action moved it, as a
-finished run over a list does.
+to the button that opened it, unless your action already moved it.
+
+A list run started in `onConfirm` moves the focus to the list once it
+moved a row, whether the dialog stayed open until then or closed
+before. A dialog that stayed open lets the list keep the focus as it
+closes. A dialog that closed before has given the focus back to its
+button, and the list then takes the focus from that button, while
+the focus is still there. Either way, a reader who moved to another
+control or opened another dialog since keeps their place. This needs
+godmin 0.27.0 or later.
 
 Render the dialog only while you ask, as the example does. Each new
 ask then starts fresh.
@@ -797,12 +877,13 @@ body of that modal: the fields you give it, an accent text Cancel and
 the submit button. It is a real form, so Enter in a field sends it:
 
 ```tsx
-import { FormBody, useToaster } from '@gopherium/godmin'
+import { FormBody, useCloseWhileOpen, useToaster } from '@gopherium/godmin'
 import type { Action, RenderModalProps } from '@wordpress/dataviews'
 import { InputControl } from '@wordpress/ui'
 
 function DuplicateModal({ items: [post], closeModal }: RenderModalProps<Post>) {
 	const toaster = useToaster()
+	const close = useCloseWhileOpen(closeModal)
 	const [title, setTitle] = useState(`${post.title} (Copy)`)
 	const [busy, setBusy] = useState(false)
 	const duplicate = () => {
@@ -810,7 +891,7 @@ function DuplicateModal({ items: [post], closeModal }: RenderModalProps<Post>) {
 		duplicatePost(post.id, title)
 			.then(() => toaster.show(`"${toaster.name(title)}" created.`))
 			.catch((failure) => toaster.show(failure.message))
-			.finally(() => closeModal?.())
+			.finally(close)
 	}
 	return (
 		<FormBody
@@ -860,7 +941,10 @@ When the modal closes depends on the action, as in WordPress:
   first, then write.
 - A copy, something new, or a change to several items stays open with
   its button busy, then closes when the write ends, worked or failed.
-  Set `busy` while it runs, as the example does.
+  Set `busy` while it runs, and close it through
+  `useCloseWhileOpen(closeModal)`, as the example does.
+  [Confirming an action](#confirming-an-action) says why. This needs
+  godmin 0.27.0 or later.
 
 Either way, a failure goes in a toast. `FormBody` never shows one. To
 give the reader back what they typed after a failure, keep it in a
@@ -955,6 +1039,78 @@ the focus goes back to the button that opened it.
 `FormDialog` comes from `@gopherium/godmin/dialogs`, like
 `ConfirmDialog`, so it needs `@wordpress/components` and its
 stylesheet the same way.
+
+## Putting the focus back on a row
+
+A dialog your screen holds open on one row, such as Change role on a
+user, goes away once the reader is done. WordPress then gives the
+focus back to what opened it. When the list drew that row again in
+the meantime, for example because the write moved it to another
+place, the button that opened the dialog is gone and the focus falls
+to the page. `useFocusBack` finds the row again and puts the focus
+back:
+
+```tsx
+import { focusedTrigger, useFocusBack, useListRun } from '@gopherium/godmin'
+import type { Trigger } from '@gopherium/godmin'
+
+const { run, region } = useListRun('users', list.onChangeSelection)
+const focusBack = useFocusBack(users.isFetching, region)
+const [opened, setOpened] = useState<{ user: User, trigger: Trigger }>()
+
+const close = (shown: { user: User, trigger: Trigger }) => {
+	setOpened(undefined)
+	focusBack(shown.user.id, shown.trigger)
+}
+```
+
+Mark the title cell of each row with the id DataViews keys the row
+by, as `data-item-id`. That mark is how the hook finds the row in any
+layout:
+
+```tsx
+render: ({ item }) => <span data-item-id={item.id}>{item.name}</span>
+```
+
+Then note the trigger each dialog opened from. `focusedTrigger()`
+reads it from the focus the click, tap or key left:
+
+```tsx
+onClickItem={(user) => setOpened({ user, trigger: focusedTrigger() })}
+callback: ([user]) => setOpened({ user, trigger: focusedTrigger() })
+```
+
+The hook knows four triggers on a row: the title and the media a
+click opens from, the phone row a tap opens from and the actions
+menu. It finds the grid card, the phone list row or the table row
+that holds the item now and focuses the same trigger there. When that
+layout has no such trigger, such as a title in the phone list, it
+focuses the row's actions menu. When the item left the list, or its
+row has no actions menu, the list region takes the focus.
+
+An action chosen in the bulk bar reads `bulk` from `focusedTrigger()`.
+The bar goes away once the selection clears, so the list region
+takes the focus.
+
+The hook only moves a focus the page lost. When WordPress already put
+the focus back, or the reader moved it, it stays where it is. While
+the first argument is `true`, for example while the list reads its
+rows again, the hook waits, since a busy list is out of reach of the
+focus. Pass the same `region` you hand `Page` as `listRef`. The hook
+looks for the region when the focus is asked back. When the list is
+busy then, it looks once the wait ends. A screen that draws no region
+at that point gets no focus moved, even when it draws one later.
+
+A list can draw the row again just after the focus went back to it.
+The grid does this as it measures how many cards fit side by side,
+since a card that moves to another row of cards is drawn anew. The
+focus then falls to the page. The hook watches the list for this and
+puts the focus on the same trigger of that row again, each time the
+list draws it anew. When the item leaves the list instead, the list
+region takes the focus and the hook stops watching. It also stops
+once the reader moves the focus or presses somewhere else, the focus
+is asked back again or the screen goes away, so a control the reader
+moved to keeps the focus. This needs godmin 0.27.0 or later.
 
 ## A failure from a dialog
 

@@ -81,7 +81,12 @@ a part that stays, so the keyboard reader keeps their place:
 
 Dialogs move focus as they open and close, as
 [a confirm outside a list](../lists.md#a-confirm-outside-a-list) and
-[a form dialog](../lists.md#a-form-dialog) explain.
+[a form dialog](../lists.md#a-form-dialog) explain. When the list
+drew the row a dialog opened from anew while the dialog was open,
+`useFocusBack` puts the focus back on that row, or on the list once
+the row left it, as
+[putting the focus back on a row](../lists.md#putting-the-focus-back-on-a-row)
+explains.
 
 ## Landmarks and names
 
