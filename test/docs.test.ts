@@ -10,11 +10,19 @@ import { fromMarkdown } from 'mdast-util-from-markdown'
 import { toString } from 'mdast-util-to-string'
 import { expect, test } from 'vitest'
 
+/** A Markdown file, read once. */
+interface Page {
+	/** The file text. */
+	text: string
+	/** Every node of the text, read as the docs site reads Markdown, its frontmatter left out, in document order. */
+	nodes: Nodes[]
+}
+
 /** The folder of pages the package ships. */
 const root = resolve(import.meta.dirname, '../docs')
 
 /** The README npm shows beside the package. */
-const readme = readFileSync(resolve(import.meta.dirname, '../README.md'), 'utf8')
+const readme = pageAt(resolve(import.meta.dirname, '../README.md'))
 
 /** The files the package publishes. */
 const published = (
@@ -25,7 +33,7 @@ const published = (
 const pages = new Map(
 	readdirSync(root, { recursive: true, encoding: 'utf8' })
 		.filter((name) => name.endsWith('.md'))
-		.map((name) => [name, readFileSync(resolve(root, name), 'utf8')]),
+		.map((name) => [name, pageAt(resolve(root, name))]),
 )
 
 /**
@@ -39,32 +47,33 @@ function flatten(node: Nodes): Nodes[] {
 }
 
 /**
- * Returns every node of a page, read as the docs site reads Markdown, its frontmatter left out.
- * @param page - The page text.
- * @returns The nodes in document order.
+ * Reads a Markdown file as the docs site reads it.
+ * @param path - The file path.
+ * @returns The page.
  */
-function nodesOf(page: string): Nodes[] {
-	return flatten(fromMarkdown(page.replace(/^---\n[\s\S]*?\n---\n/, '')))
+function pageAt(path: string): Page {
+	const text = readFileSync(path, 'utf8')
+	return { text, nodes: flatten(fromMarkdown(text.replace(/^---\n[\s\S]*?\n---\n/, ''))) }
 }
 
 /**
  * Returns the anchors the headings of a page get, made as GitHub and the docs site make them.
- * @param page - The page text.
+ * @param page - The page.
  * @returns The anchors.
  */
-function anchorsOf(page: string): Set<string> {
+function anchorsOf(page: Page): Set<string> {
 	const slugger = new GithubSlugger()
-	const headings = nodesOf(page).filter((node) => node.type === 'heading')
+	const headings = page.nodes.filter((node) => node.type === 'heading')
 	return new Set(headings.map((heading) => slugger.slug(toString(heading))))
 }
 
 /**
  * Returns the targets of the links and link definitions in a page.
- * @param page - The page text.
+ * @param page - The page.
  * @returns The targets, such as `./lists.md#avatars`.
  */
-function linksOf(page: string): string[] {
-	return nodesOf(page).flatMap((node) => (node.type === 'link' || node.type === 'definition' ? [node.url] : []))
+function linksOf(page: Page): string[] {
+	return page.nodes.flatMap((node) => (node.type === 'link' || node.type === 'definition' ? [node.url] : []))
 }
 
 /**
@@ -105,29 +114,28 @@ test('the docs folder holds the overview page', () => {
 	expect([...pages.keys()]).toContain('overview.md')
 })
 
-test.each([...pages.keys()])('%s opens with a title and a description', (path) => {
-	const page = pages.get(path) ?? ''
-	const end = page.indexOf('\n---\n', 4)
-	const front = page.slice(4, Math.max(end, 0))
+test.each([...pages])('%s opens with a title and a description', (_path, { text }) => {
+	const end = text.indexOf('\n---\n', 4)
+	const front = text.slice(4, Math.max(end, 0))
 
-	expect(page.startsWith('---\n')).toBe(true)
+	expect(text.startsWith('---\n')).toBe(true)
 	expect(end, 'the frontmatter never closes').toBeGreaterThan(0)
 	expect(front).toMatch(/^title: \S/m)
 	expect(front).toMatch(/^description: \S/m)
 })
 
-test.each([...pages.keys()])('%s links to no page by a site address', (path) => {
-	expect(linksOf(pages.get(path) ?? '').filter(siteAddress)).toEqual([])
+test.each([...pages])('%s links to no page by a site address', (_path, page) => {
+	expect(linksOf(page).filter(siteAddress)).toEqual([])
 })
 
-test.each([...pages.keys()])('%s holds no HTML link', (path) => {
-	const html = nodesOf(pages.get(path) ?? '').filter((node) => node.type === 'html' && /href=|src=/.test(node.value))
+test.each([...pages])('%s holds no HTML link', (_path, page) => {
+	const html = page.nodes.filter((node) => node.type === 'html' && /\b(?:href|srcset|src)\s*=/i.test(node.value))
 
 	expect(html).toEqual([])
 })
 
-test.each([...pages.keys()])('every link of %s between pages reaches its page and heading', (path) => {
-	const links = linksOf(pages.get(path) ?? '').filter(local)
+test.each([...pages])('every link of %s between pages reaches its page and heading', (path, page) => {
+	const links = linksOf(page).filter(local)
 
 	expect(links.filter((link) => !reaches(path, link))).toEqual([])
 })
