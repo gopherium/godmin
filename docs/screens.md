@@ -152,10 +152,9 @@ it.
 
 ## Heading levels
 
-Without a sidebar menu, the page title is the `h1`. With
-[the sidebar menu](./framing-an-application.md#the-sidebar-menu),
-the title of the sidebar screen is the `h1`, as in the WordPress Site
-Editor. Then pass `headingLevel={2}` to every `Page` beside it:
+With [the sidebar menu](./framing-an-application.md#the-sidebar-menu),
+the title of the sidebar screen is the `h1`. Then pass
+`headingLevel={2}` to every `Page` beside it:
 
 ```tsx
 <Page title="Posts" headingLevel={2} list>
@@ -163,13 +162,11 @@ Editor. Then pass `headingLevel={2}` to every `Page` beside it:
 </Page>
 ```
 
-The title keeps its size, only its level changes. A `SectionTitle`
-inside that page renders one level deeper at the same size, an `h3`,
-and so does the title of a `ListEmpty`. Pass `level={2}` to a
-`PageTitle` you draw yourself beside the sidebar.
-
-On a phone the sidebar lives in the drawer, so while the drawer is
-shut the page has no `h1`. WordPress's new admin works the same way.
+Every title inside that `Page`, such as a `SectionTitle`, then moves
+down one level. Pass `level={2}` to a `PageTitle` you draw yourself
+beside the sidebar.
+[The heading outline](./design-system/typography.md#the-heading-outline)
+gives the level each title takes, with and without the sidebar.
 
 ## NavigationScreen
 
@@ -345,8 +342,8 @@ becomes `birthDate2`.
 
 ## Stylesheet helpers
 
-`base.css` ships a few classes and four variables for layout jobs
-every admin screen runs into:
+`base.css` ships a few classes for layout jobs every admin screen
+runs into:
 
 | Name | For |
 | --- | --- |
@@ -361,15 +358,11 @@ every admin screen runs into:
 | `godmin-table-scroll` | The box a wide table scrolls inside |
 | `godmin-list` | The box around a DataViews list inside a page section, lining its search and cells up with the text around it |
 | `godmin-list-overlay` | An element laid over a list region, such as a drop zone, set after the list |
-| `--godmin-canvas-gutter` | The canvas padding left and right: 24px, 16px below 640px, none on a full bleed canvas |
-| `--godmin-canvas-gutter-block` | The canvas padding above and below: 16px, none on a full bleed canvas |
-| `--godmin-nav-sidebar-width` | The width of the sidebar, 300px, set on `:root` |
-| `--godmin-canvas-margin` | The space around the canvas, 16px, set on `:root`. Beside the sidebar the canvas leaves it out on that side, and below 782px it has none |
 
-The canvas sets its two gutters on itself, so read them inside the
-canvas. The sidebar width and the canvas margin are set on `:root`, so
-they reach the toast region too, which sits outside the frame and
-uses them to stay centred on the canvas.
+`base.css` also sets a few custom properties, named values such as
+the canvas gutter and the sidebar width.
+[Custom properties](./design-system/custom-properties.md) lists them
+and says which ones your app may read or change.
 
 A form row puts short fields and a button on one line:
 
