@@ -37,9 +37,10 @@ props fill the bottom of the sidebar:
 - `footerNote` is one short line of small grey text under the footer,
   such as the version.
 
-The sidebar is one region named "Navigation", as in the WordPress
-Site Editor, so a screen reader can jump to it. Pass `label` to give
-it another name.
+On a wide screen the sidebar is one region named "Navigation", as in
+the WordPress Site Editor, so a screen reader can jump to it. Pass
+`label` to give it another name. On a small screen the drawer is
+named "Navigation" whatever `label` says.
 
 ## The sidebar menu
 
@@ -146,7 +147,7 @@ Nothing else is needed. The Chats row of `menu` opens that route, so
 it draws as a `DrilldownItem`, with a chevron. A click on it slides
 the sub menu in and moves the focus to Back. Back goes to `home`,
 slides the root screen in and puts the focus back on the Chats row.
-In a right to left language the chevrons and the slide turn around.
+In a right-to-left language the chevrons and the slide turn around.
 The slide does not play when the system asks for reduced motion.
 
 `NavigationList` draws the rows of `items` first, then the rows you
@@ -318,7 +319,7 @@ values:
 
 - `padded`, the default, gives your screen comfortable padding.
 - `bleed` removes it, for a screen that manages its own edges, such
-  as a full height table or a two pane chat view.
+  as a full-height table or a two-pane chat view.
 
 ## Notices for the whole application
 
@@ -387,7 +388,7 @@ keyboard reaches it.
 [Moving between pages](./loading-and-feedback.md#moving-between-pages)
 says what the reader sees while it loads.
 
-`@tanstack/react-router` is an optional peer dependency, from
-1.170.44, needed only for this entry point. The main entry point
+`@tanstack/react-router` is an optional peer dependency, any 1.x
+release from 1.170.44, needed only for this entry point. The main entry point
 never imports it, so an application on another router just passes
 `location` itself.

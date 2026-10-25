@@ -127,11 +127,17 @@ supplied with styles, which is what an embedded editor canvas
 needs:
 
 ```tsx
-useTokenDocument(iframeRef.current?.contentDocument)
+const [canvas, setCanvas] = useState<Document | null>(null)
+useTokenDocument(canvas)
+
+return <iframe src="/canvas" onLoad={(event) => setCanvas(event.currentTarget.contentDocument)} />
 ```
 
-It accepts `null` and `undefined`, so you can call it before the
-iframe exists.
+Keep the document in state, not in a ref. React fills a ref after it
+renders and does not render again for it. So a ref read during render
+hands the hook nothing. The load handler stores the document once the
+iframe has one, and again each time the iframe loads a new page. The
+hook accepts `null`, so the state can start empty.
 
 ## Where it sits
 

@@ -63,7 +63,7 @@ export default { extends: ['@gopherium/godmin/stylelint'] }
 ```
 
 They catch design tokens that do not exist (a typo renders nothing,
-with no error), redefined `--wpds-` properties, and hand typed
+with no error), redefined `--wpds-` properties, and hand-typed
 fallback values.
 
 ## Design system versions
@@ -108,7 +108,7 @@ TypeScript points at each old name, and
 lists every new one. Change your code in these places too:
 
 - Install `@wordpress/i18n` next to godmin, and take
-  `@tanstack/react-router` 1.170.44 or newer.
+  `@tanstack/react-router` 1.170.44 or a newer 1.x release.
 - `NavigationScreen` draws its title as an `h1` and no longer moves
   the focus to it. Pass `headingLevel={2}` to every `Page` beside it,
   as [heading levels](./screens.md#heading-levels) explains.
@@ -133,8 +133,8 @@ lists every new one. Change your code in these places too:
 
 godmin 0.23.0 shows every failed write in a toast, never inside a
 dialog or above the list, as WordPress does. Take 0.23.1 or later,
-which lets a dialog take a write's promise whatever it ends with.
-Change your code in these places:
+which lets a dialog take a write's promise whether the write
+succeeds or fails. Change your code in these places:
 
 - `ConfirmDialog`'s `onConfirm` no longer answers a failure to show.
   To close the dialog at once, make it a plain function that returns

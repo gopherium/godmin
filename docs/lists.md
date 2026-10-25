@@ -124,7 +124,7 @@ A list shows one layout at a time and no Layout menu: the table from
 names others, and `layoutSettings` says what a layout opens on, such
 as `{ grid: { layout: { previewSize: 230 } } }`. `phoneFields` names
 the fields the phone list shows. The columns a reader picks stay in
-memory while the list is open, apart for each layout. When the screen
+memory while the list is open, one set for each layout. When the screen
 moves to another list address, for example from one content type to
 the next, the list forgets the picked columns and the ticked rows.
 

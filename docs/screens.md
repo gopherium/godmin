@@ -66,9 +66,10 @@ column. [Lists with DataViews](./lists.md) shows it in full.
 </Page>
 ```
 
-`listLabel` names the list region, so a screen reader announces it,
-and `listRef` reaches it. With either one, code can focus the list,
-which stays out of the Tab order.
+`listLabel` names the list region, so a screen reader announces it.
+`listRef` hands your code the list, so it can move the focus there.
+With either one, the list can take the focus but stays out of the
+Tab order.
 [Running an action over the picked rows](./lists.md#running-an-action-over-the-picked-rows)
 uses both to move the focus back to the list.
 
@@ -266,7 +267,7 @@ anything else you add:
 a screen reader names the list after that heading.
 
 `LogTime` shows a date or time as small muted text inside a `time`
-element. Give it the value in machine readable form as `dateTime`,
+element. Give it the value in machine-readable form as `dateTime`,
 and the words your reader sees as children. godmin formats nothing.
 
 The list keeps your order and never sorts, so pass the newest item
