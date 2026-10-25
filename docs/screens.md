@@ -71,7 +71,11 @@ column. [Lists with DataViews](./lists.md) shows it in full.
 With either one, the list can take the focus but stays out of the
 Tab order.
 [Running an action over the picked rows](./lists.md#running-an-action-over-the-picked-rows)
-uses both to move the focus back to the list.
+uses both to move the focus back to the list once a row moved,
+while the reader is still with the run.
+[Putting the focus back on a row](./lists.md#putting-the-focus-back-on-a-row)
+hands the same ref to `useFocusBack`, which puts the focus back on
+the row a dialog opened from.
 
 A screen that fills the canvas edge to edge builds its own layout
 and uses `PageTitle` directly, so the page still gets its heading:
