@@ -58,7 +58,12 @@ whatever seeds you pick.
 
 - The box is `rgb(0 0 0 / 0.85)`, a black that lets the page show
   through. The page behind it is blurred 16px and saturated to 180%.
-- The text, the action and the focus lines on the toast are `#fff`.
+- The text and the action are `#fff`, and so is the ring around a
+  focused action.
+- A focused toast with no action has a `#fff` line
+  `--wpds-border-width-xs` (1px) wide inside its edge. Outside it sits
+  the usual focus ring, `--wpds-border-width-focus` (2px) of
+  `--wpds-color-stroke-focus`.
 - The corners take `--wpds-border-radius-md` under the `subtle`
   preset, so they are 4px. The toast region keeps `subtle` whatever
   [corner radius setting](./radius-and-elevation.md#the-corner-radius-setting)
