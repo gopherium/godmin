@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 
+import { useCloseWhileOpen } from './close-while-open.js'
 import { ConfirmBody } from './confirm.js'
 
 /** The props of a run confirm, the first two as a DataViews modal hands them. */
@@ -22,7 +23,7 @@ export interface RunConfirmProps<Item> {
 }
 
 /**
- * Renders a confirmation that runs the action, keeps Cancel inert while it runs and closes once it settles.
+ * Renders a confirmation that runs the action, keeps Cancel inert while it runs and closes only itself once it settles.
  * @param props - The items, the close handler, the question, the labels and the run.
  * @returns The confirmation body.
  */
@@ -35,6 +36,7 @@ export function RunConfirm<Item>({
 	run,
 }: RunConfirmProps<Item>) {
 	const [busy, setBusy] = useState(false)
+	const close = useCloseWhileOpen(closeModal)
 	return (
 		<ConfirmBody
 			confirmLabel={confirmLabel}
@@ -47,7 +49,7 @@ export function RunConfirm<Item>({
 					.then(() => run(items))
 					.finally(() => {
 						setBusy(false)
-						closeModal?.()
+						close()
 					})
 			}}
 		>
