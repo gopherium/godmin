@@ -14,6 +14,9 @@ up hand-writing that glue. GodMin is the glue as a package, and nothing more.
 
 **[Documentation](https://docs.gopherium.org/admin-ui/overview/)**
 
+The same pages ship in this package under [`docs/`](docs/overview.md), so
+you can read the ones that match the version you install.
+
 ## Install
 
 ```sh
@@ -44,9 +47,8 @@ createRoot(document.getElementById('app')!).render(
 )
 ```
 
-That is the whole host setup. See
-[the overview](https://docs.gopherium.org/admin-ui/overview/) for what those
-two lines do for you.
+That is the whole host setup. See [the overview](docs/overview.md) for what
+those two lines do for you.
 
 ## What is in it
 
@@ -89,19 +91,11 @@ if (catalogue !== undefined) {
 ## Before your first build
 
 Duplicate packages break the application, and nothing points at the cause.
-[Build configuration](https://docs.gopherium.org/admin-ui/build-and-versioning/)
-covers it.
-
 Two copies of React throw on the first hook. Two copies of `@wordpress/theme`
 render unthemed components with no error. Spread `godminDedupe` into
 `resolve.dedupe` and add the `godminSingleCopy()` plugin.
-
-## Design system versions
-
-Peer ranges are longhand and single window, for example `>=0.23.0 <0.24.0`.
-The window moves with each design system release train and never widens, so no
-release accepts two breaking generations at once. `SUPPORTED_WPDS` exports the
-window this build was tested against.
+[Build configuration](docs/build-and-versioning.md) covers both, and lists the
+design system versions each release supports.
 
 ## Status
 
