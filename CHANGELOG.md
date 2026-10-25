@@ -14,6 +14,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `--godmin-navigation-slide-distance` and `--godmin-navigation-slide-duration` are public custom properties, so an app may change the sidebar slide.
 - `useCloseWhileOpen` returns a dialog's close that acts only while that dialog is on screen, so a row dialog an app writes never shuts a dialog opened on the row since.
 - `focusInDialog` reports whether a dialog or an alert dialog holds the focus, for a write an app finishes outside a list run.
+- `useFocusBack` puts a lost focus back on the title, media, phone row or actions menu a list dialog opened from, else on the list, in every layout, found through a `data-item-id` mark on the title cell. `focusedTrigger` reads which one, or the bulk bar, opened the dialog.
 
 ### Fixed
 
