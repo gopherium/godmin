@@ -100,6 +100,35 @@ the same peer ranges.
 follows the filter rules of that DataViews release. A list built on
 another release gets a peer warning when it installs godmin.
 
+## Upgrading from godmin 0.27.0
+
+godmin 0.28.0 draws toasts as WordPress's new admin draws its
+snackbars. Change your code in these places:
+
+- `useToaster().name` and the `nameLength` prop of `Toaster` are gone.
+  Put the name in the message as it is. A long name wraps.
+- `dismissAfter` now times only a toast with no action. Pass
+  `actionDismissAfter` to time a toast with an action. It stays 10
+  seconds when you pass nothing.
+- A toast with an action has no close button. A click anywhere on it
+  clears it, so a test that pressed the close button clicks the toast
+  instead. A stylesheet that styles `.godmin-toast__dismiss` styles
+  nothing now.
+- `dismissLabel` is now only the hint of a toast with no action, and
+  its default is `Dismiss this notice`, WordPress's words. A test that
+  reads the old hint, `Dismiss`, reads the new one.
+- A toast now sits in a `.godmin-toasts__item` element inside
+  `.godmin-toasts`. A selector such as `.godmin-toasts > .godmin-toast`,
+  or code that reads the children of the region as toasts, reaches the
+  toast through that element.
+- A toast now rises into place as it arrives, as
+  [Motion](./design-system/toasts.md#motion) shows. A browser test that
+  measures where a toast sits waits for that motion to end, or runs
+  with a reduced motion preference.
+
+TypeScript points at each call to `name` and at `nameLength`. The rest
+changes only what the reader sees.
+
 ## Upgrading from godmin 0.24.0
 
 godmin 0.25.0 gives the sidebar parts the names WordPress gives them.

@@ -8,10 +8,10 @@ godmin looks. It says where each part of the screen sits, how big
 things are, how they move and which colors they take. A new product
 can follow these pages without reading any godmin code.
 
-These pages hold the values the whole admin shares. A value that
-belongs to one part, such as the size of a
-[toast](../loading-and-feedback.md#toasts), sits on the page that
-shows how to use that part.
+These pages hold the values the whole admin shares. A part with a
+page of its own, such as [toasts](./toasts.md), keeps its values
+there. Every other part keeps its values on the page that shows how
+to use it.
 
 godmin builds on the WordPress Design System, WPDS for short. For
 layout, sizes and motion it follows WordPress's new admin and the
@@ -99,3 +99,9 @@ layer.
   landmarks, what a screen reader hears, and text length.
 - [Custom properties](./custom-properties.md): every godmin custom
   property, where it is set and what it changes.
+
+One more page covers a single part, how it looks and how it behaves:
+
+- [Toasts](./toasts.md): where a toast sits, how it looks, how long it
+  stays, how a reader clears it, and what a keyboard or a screen reader
+  meets.
