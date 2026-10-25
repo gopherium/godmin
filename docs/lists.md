@@ -58,10 +58,11 @@ with the list.
 A page with an `aside` keeps its list inside the main column, because
 the aside needs its own room.
 
-The canvas names its side padding `--godmin-canvas-gutter`: 24px,
-16px below 640px, and none on a full bleed canvas. Its top and bottom
-padding is `--godmin-canvas-gutter-block`, 16px. Read them for
+The canvas names its side padding `--godmin-canvas-gutter` and its
+top and bottom padding `--godmin-canvas-gutter-block`. Read them for
 anything else that has to line up with the canvas edge.
+[The canvas](./design-system/layout.md#the-canvas) gives their
+values.
 
 ## The view in the address
 
@@ -1079,8 +1080,9 @@ emoji counts as one character and is never split. `Toaster` takes
 ## The canvas colour
 
 The frame seeds the canvas with the design system default background,
-`#fcfcfc`. The canvas then paints white, the row lines are `#f0f0f0`
-and the muted text `#707070`, as in WordPress. The canvas also sets
+which [the three seeds](./design-system/color.md#the-three-seeds)
+gives. The canvas then paints white, the row lines are `#f0f0f0` and
+the muted text `#707070`, as in WordPress. The canvas also sets
 `--wp-dataviews-color-background`, so the list, its sticky header and
 its footer stay the same white as the page around them. You do
 nothing.

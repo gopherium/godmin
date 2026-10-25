@@ -96,7 +96,10 @@ and `as` for when the host element should be something other than a
 tokens. It does so inside the `godmin` CSS layer, and a rule inside
 a layer loses to any plain rule outside one. So to change how the
 page looks, write an ordinary rule in your own stylesheet and it
-wins. No `!important`, no specificity tricks.
+wins. No `!important`, no specificity tricks. Colors are the one
+exception. Change them through the seed props that
+[Color](./design-system/color.md#the-three-seeds) lists, not with a
+rule of your own.
 
 Two notes:
 
@@ -107,9 +110,11 @@ Two notes:
   the avatar box. The DataViews stylesheet sits in no layer, so a
   rule inside one would lose to it. Leave them in place.
 - The documented class names on the [screens
-  page](./screens.md#stylesheet-helpers) are the stable
-  styling seam. The stylesheet's other class names, such as the
-  frame internals, are not, and can change in any release.
+  page](./screens.md#stylesheet-helpers) and the public
+  [custom properties](./design-system/custom-properties.md#public-custom-properties)
+  are the stable names to style with. The stylesheet's other class
+  names, such as those of the frame, and its other custom properties
+  are not, and can change in any release.
 
 If you declare CSS layers of your own, include godmin's in your
 order:

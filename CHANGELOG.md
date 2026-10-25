@@ -10,6 +10,8 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 - `useUnsavedText` keeps what failed row writes left unsaved, by item id, for as long as the screen stays, and `markLatest` lets only the latest write to an item keep its text, so a row form opens again on what the reader typed.
 - The docs ship in the package under `docs/`, the pages docs.gopherium.org shows, so an app reads the ones for the version it installs.
+- Design System pages under `docs/design-system/` write down the color, layout, radius and elevation, typography, motion and accessibility rules of a godmin admin, checked against the code by tests.
+- `--godmin-navigation-slide-distance` and `--godmin-navigation-slide-duration` are public custom properties, so an app may change the sidebar slide.
 
 ## [0.26.0] - 2026-10-24
 

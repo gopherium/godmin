@@ -28,9 +28,10 @@ you wrap one in a component of your own.
 
 ## The sidebar
 
-`Frame.Sidebar` is 300px wide and holds your menu.
-[The sidebar menu](#the-sidebar-menu) below builds one for you. Two
-props fill the bottom of the sidebar:
+`Frame.Sidebar` holds your menu.
+[The sidebar menu](#the-sidebar-menu) below builds one for you.
+[The frame](./design-system/layout.md#the-frame) gives the sidebar's
+width. Two props fill the bottom of the sidebar:
 
 - `footer` sits under the menu and never moves, such as the account
   panel.
@@ -219,28 +220,32 @@ const updates: MenuItem = {
 
 ## The canvas on a wide screen
 
-On a wide screen the canvas is a panel 16px from the top, right and
-bottom of the window. On the sidebar side it has no margin of its
-own, because the sidebar keeps a gap at its edge. The WordPress Site
-Editor frames its canvas the same way. When no sidebar is on screen,
-the panel keeps its 16px on that side too.
+On a wide screen the canvas is a panel with a margin around it, the
+way the WordPress Site Editor frames its canvas.
+[The canvas](./design-system/layout.md#the-canvas) gives the size of
+that margin and when the canvas leaves it out.
 
 ## What happens on a small screen
 
-- Below 1024px the sidebar goes away. In its place you get a top bar
-  46px tall, like the WordPress admin bar on a phone. Its menu button
-  opens the same sidebar, menu and footer, in a drawer.
-- Below 782px the canvas stretches to the screen edges, with no
-  margin, no rounded corners and no shadow, the way a WordPress
-  admin page meets the screen at that width.
-- Below 640px the canvas also uses tighter padding, 16px instead of
-  24px on each side.
+As the screen gets narrower, the frame changes three times, at the
+widths [Breakpoints](./design-system/layout.md#breakpoints) lists:
 
-The drawer looks like the phone sidebar of WordPress's new admin. It
-opens from the top of the screen, as wide as the sidebar but never
-more than 85% of the screen, and dims the page under it. It closes when
-the reader opens another page. It stays open when a sub menu opens or
-Back closes one, so the reader can pick a row in it.
+- The sidebar goes away. In its place you get a top bar, like the
+  WordPress admin bar on a phone. Its menu button opens the same
+  sidebar, menu and footer, in a drawer.
+- The canvas stretches to the screen edges, with no margin, no
+  rounded corners and no shadow, the way a WordPress admin page meets
+  a small screen.
+- The canvas also uses tighter padding.
+
+[The frame](./design-system/layout.md#the-frame) gives the sizes of
+the top bar and the drawer, and
+[the canvas](./design-system/layout.md#the-canvas) gives its padding.
+
+The drawer looks like the phone sidebar of WordPress's new admin and
+dims the page under it. It closes when the reader opens another page.
+It stays open when a sub menu opens or Back closes one, so the reader
+can pick a row in it.
 
 Two `Frame.Sidebar` props exist for the top bar:
 
@@ -253,22 +258,10 @@ Two `Frame.Sidebar` props exist for the top bar:
   navigation panel", WordPress's words.
 
 The widths are exported, so your own rules can change at the same
-points as the frame and as WordPress:
-
-| Export | Value | What changes below it |
-| --- | --- | --- |
-| `HUGE_BREAKPOINT` | `1440` | Nothing in the frame. It is the WordPress huge breakpoint, for rules of your own |
-| `SIDEBAR_BREAKPOINT` | `1024` | The sidebar becomes the top bar and the drawer |
-| `EDGE_BREAKPOINT` | `782` | The canvas meets the screen edges |
-| `DENSE_BREAKPOINT` | `640` | The canvas padding narrows to 16px |
-| `SHEET_BREAKPOINT` | `600` | Dialogs rise as sheets along the bottom of the screen and toasts widen to the screen, less a 16px gap on each side, as in WordPress |
-| `TITLE_BREAKPOINT` | `404` | An editor header has no room for its document title, which the WordPress editor drops there |
-| `SMALL_VIEWPORT` | `(max-width: 1023px)` | The query the frame folds its sidebar at |
-
-Each value is the first width that counts as wide, so a rule for
-the screens below it asks for one pixel less, as `SMALL_VIEWPORT`
-does. `useMediaQuery` answers any media query and re-renders your
-component when the answer changes:
+points as the frame and as WordPress.
+[Breakpoints](./design-system/layout.md#breakpoints) lists each one
+and what changes below it. `useMediaQuery` answers any media query
+and re-renders your component when the answer changes:
 
 ```tsx
 const small = useMediaQuery(SMALL_VIEWPORT)
@@ -291,21 +284,20 @@ shows.
 `chromeColor` sets the theme color of the frame, and `canvasColor`
 the one of the canvas. Each accepts the same color values as the
 design system theme provider. Pass neither and the frame takes
-godmin's dark chrome, `{ background: '#26292b' }`, and the design
-system's default light canvas, `{ background: '#fcfcfc' }`. Up to
-godmin 0.15.0 the frame
-set no colour of its own, so an application that passes none sees
-its frame change.
+godmin's defaults.
+[The three seeds](./design-system/color.md#the-three-seeds) gives
+them, and
+[which token paints each part](./design-system/color.md#which-token-paints-each-part)
+gives the token each region paints with.
 
 The theme provider works out every grey from the background you
-give it. The frame paints its chrome with the weak surface of that
-theme, so `#26292b` draws the sidebar and the top bar in `#1d2428`,
-one step from the WordPress admin bar, `#1d2327`.
+give it. With the default chrome color, the sidebar and the top bar
+come out `#1d2428`, one step from the WordPress admin bar, `#1d2327`.
 
-The canvas paints the strong surface of its theme, which is white,
-like a WordPress page. `#fcfcfc` gives the exact WordPress greys, row
-lines `#f0f0f0` and muted text `#707070`. A white background moves
-every grey a step lighter.
+With the default canvas color, the canvas comes out white, like a
+WordPress page, with the exact WordPress greys, row lines `#f0f0f0`
+and muted text `#707070`. A white canvas `background` moves every
+grey a step lighter.
 
 Dialogs, drawers, menus, popovers and selects you open inside the
 frame do not take these colors. They use the `AdminRoot` color
