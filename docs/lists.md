@@ -1099,8 +1099,16 @@ rows again, the hook waits, since a busy list is out of reach of the
 focus. Pass the same `region` you hand `Page` as `listRef`. The hook
 looks for the region when the focus is asked back. When the list is
 busy then, it looks once the wait ends. A screen that draws no region
-at that point gets no focus moved, even when it draws one later. This
-needs godmin 0.27.0 or later.
+at that point gets no focus moved, even when it draws one later.
+
+A list can draw the row again just after the focus went back to it.
+The grid does this as it measures how many cards fit side by side,
+since a card that moves to another row of cards is drawn anew. The
+focus then falls to the page. The hook watches the list for this and
+puts the focus on the same trigger of that row again, each time the
+list draws it anew. It stops once the reader moves the focus or
+presses somewhere else, the focus is asked back again, the item leaves
+the list or the screen goes away. This needs godmin 0.27.0 or later.
 
 ## A failure from a dialog
 

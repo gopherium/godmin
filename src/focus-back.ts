@@ -73,6 +73,58 @@ function triggerOf(list: HTMLElement, { id, trigger }: FocusBack): HTMLElement {
 	return found ?? holder.querySelector<HTMLElement>(TRIGGERS.actions) ?? list
 }
 
+/** Stops nothing, for a focus put on the list region, which no layout of the list takes off the page. */
+function stopNothing(): void {}
+
+/**
+ * Reports whether a batch of changes to the list took an element off the page, to draw it anew or to move it.
+ * @param records - The changes to the list.
+ * @param element - The element.
+ * @returns Whether a change removed the element or a node holding it.
+ */
+function tookOff(records: MutationRecord[], element: Element): boolean {
+	return records.some((record) => [...record.removedNodes].some((node) => node.contains(element)))
+}
+
+/**
+ * Puts the focus on the trigger a dialog on an item opened from, and again each time the list draws it anew.
+ * @param list - The list region.
+ * @param asked - The item and the trigger.
+ * @returns What stops it, which also stops once the reader moves the focus or presses elsewhere, or the item leaves.
+ */
+function keepFocusOn(list: HTMLElement, asked: FocusBack): () => void {
+	let held = triggerOf(list, asked)
+	held.focus()
+	if (held === list) {
+		return stopNothing
+	}
+	const redrawn = new MutationObserver((records) => {
+		if (!tookOff(records, held)) {
+			return
+		}
+		if (holderOf(list, asked.id) === null) {
+			stop()
+			return
+		}
+		held = triggerOf(list, asked)
+		held.focus()
+	})
+	const moved = (event: Event) => {
+		if (!held.contains(event.target as Node)) {
+			stop()
+		}
+	}
+	const stop = () => {
+		redrawn.disconnect()
+		document.removeEventListener('focusin', moved, true)
+		document.removeEventListener('pointerdown', moved, true)
+	}
+	redrawn.observe(list, { childList: true, subtree: true })
+	document.addEventListener('focusin', moved, true)
+	document.addEventListener('pointerdown', moved, true)
+	return stop
+}
+
 /**
  * Returns the handler putting a focus the page lost back on the trigger a list dialog opened from, once drawn again.
  * @param busy - Whether the list reads its items again, its cards and rows then out of reach of the focus.
@@ -85,6 +137,8 @@ export function useFocusBack(
 ): (id: string, trigger: Trigger) => void {
 	const [asked, setAsked] = useState<FocusBack>()
 	const handled = useRef<FocusBack>(undefined)
+	const keeping = useRef(stopNothing)
+	useEffect(() => () => keeping.current(), [])
 	useEffect(() => {
 		if (busy || asked === handled.current) {
 			return
@@ -92,8 +146,11 @@ export function useFocusBack(
 		handled.current = asked
 		const list = region.current
 		if (list !== null && document.activeElement === document.body) {
-			triggerOf(list, asked as FocusBack).focus()
+			keeping.current = keepFocusOn(list, asked as FocusBack)
 		}
 	}, [asked, busy, region])
-	return useCallback((id: string, trigger: Trigger) => setAsked({ id, trigger }), [])
+	return useCallback((id: string, trigger: Trigger) => {
+		keeping.current()
+		setAsked({ id, trigger })
+	}, [])
 }
