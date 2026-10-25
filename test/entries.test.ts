@@ -152,3 +152,10 @@ test('the components package is an optional peer, needed only by the dialogs ent
 
 	expect(meta[componentsPackage]?.optional).toBe(true)
 })
+
+test('the main entry hands out the store of unsaved text, which reaches React alone', async () => {
+	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
+
+	expect([typeof main.useUnsavedText, typeof main.markLatest]).toEqual(['function', 'function'])
+	expect([...packagesReachedFrom(join(source, 'unsaved-text.ts'))]).toEqual(['react'])
+})
