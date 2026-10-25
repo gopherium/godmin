@@ -11,36 +11,52 @@ import * as routerEntry from '../src/router'
 /** The README npm shows beside the package. */
 const readme = readFileSync(resolve(import.meta.dirname, '../README.md'), 'utf8')
 
+/** The overview page the package ships in its docs folder. */
+const overview = readFileSync(resolve(import.meta.dirname, '../docs/overview.md'), 'utf8')
+
+/** The two pages that hold the table of entry points. */
+const tables = [
+	['the README', readme],
+	['the docs overview', overview],
+]
+
 /**
- * Returns the README export row of one entry.
+ * Returns the export row of one entry in a page's table of entry points.
+ * @param page - The page text.
  * @param name - The entry as an app imports it, such as `@gopherium/godmin/router`.
- * @returns The row, or an empty string when the README has none.
+ * @returns The row, or an empty string when the page has none.
  */
-function exportRow(name: string): string {
-	return readme.split('\n').find((line) => line.startsWith(`| \`${name}\` |`)) ?? ''
+function exportRow(page: string, name: string): string {
+	return page.split('\n').find((line) => line.startsWith(`| \`${name}\` |`)) ?? ''
 }
 
-test('the README names every value the main entry hands out', () => {
-	const row = readme.split('\n').find((line) => line.startsWith('| `@gopherium/godmin` |'))
+test.each(tables)('%s names every value the main entry hands out', (_, page) => {
+	const row = exportRow(page, '@gopherium/godmin')
 
-	expect(Object.keys(entry).filter((name) => !row?.includes(`\`${name}\``))).toEqual([])
+	expect(Object.keys(entry).filter((name) => !row.includes(`\`${name}\``))).toEqual([])
 })
 
-test('the README names no value the main entry does not hand out', () => {
-	const row = readme.split('\n').find((line) => line.startsWith('| `@gopherium/godmin` |')) ?? ''
+test.each(tables)('%s names no value the main entry does not hand out', (_, page) => {
+	const row = exportRow(page, '@gopherium/godmin')
 	const named = [...row.matchAll(/`([^`]+)`/g)].map((found) => found[1])
 
 	expect(named.filter((name) => name !== '@gopherium/godmin' && !(name in entry))).toEqual([])
 })
 
-test('the README names the MenuItem type the router entry hands out', () => {
-	expect(exportRow('@gopherium/godmin/router')).toContain('`MenuItem`')
+test.each(tables)('%s names the MenuItem type the router entry hands out', (_, page) => {
+	expect(exportRow(page, '@gopherium/godmin/router')).toContain('`MenuItem`')
 })
 
-test('the README names every value the router entry hands out', () => {
-	const row = exportRow('@gopherium/godmin/router')
+test.each(tables)('%s names every value the router entry hands out', (_, page) => {
+	const row = exportRow(page, '@gopherium/godmin/router')
 
 	expect(Object.keys(routerEntry).filter((name) => !row.includes(`\`${name}\``))).toEqual([])
+})
+
+test('the README and the docs overview hold the same table of entry points', () => {
+	const rows = (page: string) => page.split('\n').filter((line) => line.startsWith('| `@gopherium/godmin'))
+
+	expect(rows(overview)).toEqual(rows(readme))
 })
 
 test('the README says godmin translates its own words in the default domain through a required i18n peer', () => {
