@@ -25,17 +25,19 @@ interface Seen {
 
 /**
  * Renders a list screen whose runs start in the list, a confirm or an alert dialog, beside Add Post and an Edit form.
- * @param props - The list on show, whether it draws its region, the spy on the selection setter and what to record.
+ * @param props - The list on show, whether it draws its region and the confirm, the selection spy and what to record.
  * @returns The page with its list region and the dialogs.
  */
 function ListScreen({
 	scope,
 	region = true,
+	asking = true,
 	onTicks,
 	seen,
 }: {
 	scope: string
 	region?: boolean
+	asking?: boolean
 	onTicks: (selection: string[]) => void
 	seen: Seen
 }) {
@@ -62,11 +64,14 @@ function ListScreen({
 					Trash
 				</button>
 			</Page>
-			<div role="dialog" aria-label="Trash posts">
-				<button type="button" onClick={startRun}>
-					Move to trash
-				</button>
-			</div>
+			{asking ? (
+				<div role="dialog" aria-label="Trash posts">
+					<button type="button">Cancel</button>
+					<button type="button" onClick={startRun}>
+						Move to trash
+					</button>
+				</div>
+			) : null}
 			<div role="dialog" aria-label="Edit">
 				<input aria-label="Title" />
 			</div>
@@ -83,7 +88,7 @@ function ListScreen({
  * Renders the list screen on the given list.
  * @param scope - The list on show.
  * @param region - Whether the screen draws its list region.
- * @returns What the screen recorded, the selection spy and a rerender onto another list.
+ * @returns What the screen recorded, the selection spy, a rerender onto another list and one that closes the confirm.
  */
 function renderList(scope: string, region = true) {
 	const seen: Seen = { settles: [], runs: [], states: [], ticked: [] }
@@ -94,7 +99,26 @@ function renderList(scope: string, region = true) {
 		onTicks,
 		unmount,
 		show: (next: string) => rerender(<ListScreen scope={next} region={region} onTicks={onTicks} seen={seen} />),
+		closeConfirm: () =>
+			rerender(<ListScreen scope={scope} region={region} asking={false} onTicks={onTicks} seen={seen} />),
 	}
+}
+
+/**
+ * Spies on the focusin listeners the document gains from here on.
+ * @returns What counts those listeners the document still holds.
+ */
+function focusinListeners(): () => number {
+	const added = vi.spyOn(document, 'addEventListener')
+	const removed = vi.spyOn(document, 'removeEventListener')
+	onTestFinished(() => {
+		added.mockRestore()
+		removed.mockRestore()
+	})
+	const focusin = (calls: unknown[][]) => calls.filter(([type]) => type === 'focusin')
+	const gone = (listener: unknown, options: unknown) =>
+		focusin(removed.mock.calls).some(([, each, eachOptions]) => each === listener && eachOptions === options)
+	return () => focusin(added.mock.calls).filter(([, listener, options]) => !gone(listener, options)).length
 }
 
 /**
@@ -248,7 +272,7 @@ test('leaves the focus on a control outside the list the reader moved to while t
 const keepTicks = () => {}
 
 /**
- * Renders a trash list whose Empty Trash opens a confirm that starts a run and closes at once, beside an Edit form.
+ * Renders a trash list whose Empty Trash opens a confirm that starts a run and closes at once, by Add Post and Edit.
  * @param props - Whether Empty Trash is on the page and where to record the settle of each run started.
  * @returns The page with its list region, the confirm while asked and the Edit form.
  */
@@ -266,11 +290,14 @@ function TrashScreen({ opener, settles }: { opener: boolean; settles: RunSettled
 				listLabel="Posts"
 				listRef={region}
 				actions={
-					opener ? (
-						<button type="button" onClick={() => setAsking(true)}>
-							Empty Trash
-						</button>
-					) : null
+					<>
+						{opener ? (
+							<button type="button" onClick={() => setAsking(true)}>
+								Empty Trash
+							</button>
+						) : null}
+						<button type="button">Add Post</button>
+					</>
 				}
 			>
 				<button type="button">Restore</button>
@@ -293,17 +320,22 @@ function TrashScreen({ opener, settles }: { opener: boolean; settles: RunSettled
 }
 
 /**
- * Empties the trash through a confirm that closes at once and gives the focus back to Empty Trash.
+ * Empties the trash through a confirm that closes at once and gives the focus back to Empty Trash while it stays.
+ * @param openerLeaves - Whether Empty Trash leaves the page while the confirm is open, so the focus falls to the body.
  * @returns The settle of each run started and a rerender that takes Empty Trash off the page.
  */
-async function emptyTrash() {
+async function emptyTrash(openerLeaves = false) {
 	const settles: RunSettled[] = []
 	const { rerender } = renderAdmin(<TrashScreen opener settles={settles} />)
+	const dropOpener = () => rerender(<TrashScreen opener={false} settles={settles} />)
 	start('Empty Trash')
 	await screen.findByRole('button', { name: 'Empty trash' })
+	if (openerLeaves) {
+		dropOpener()
+	}
 	start('Empty trash')
 	await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Empty the trash?' })).toBeNull())
-	return { settles, dropOpener: () => rerender(<TrashScreen opener={false} settles={settles} />) }
+	return { settles, dropOpener }
 }
 
 test('focuses the list region once a run moved an item after its confirm closed at once', async () => {
@@ -324,6 +356,97 @@ test('leaves the focus in a dialog opened after the confirm the run started in c
 	settle(settles[0], true)
 
 	expect(document.activeElement).toBe(control('Title'))
+})
+
+test('leaves the focus on a control outside the list the reader moved to after a confirm closed at once', async () => {
+	const { settles } = await emptyTrash()
+	expect(document.activeElement).toBe(control('Empty Trash'))
+	focusOn('Add Post')
+
+	settle(settles[0], true)
+
+	expect(document.activeElement).toBe(control('Add Post'))
+})
+
+test('leaves the focus on a control the reader moved to after a confirm closed with its opener gone', async () => {
+	const { settles } = await emptyTrash(true)
+	expect(document.activeElement).toBe(document.body)
+	focusOn('Add Post')
+
+	settle(settles[0], true)
+
+	expect(document.activeElement).toBe(control('Add Post'))
+})
+
+test('focuses the list region once the dialog a run started in gave the focus back, after a move inside it', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	start('Move to trash')
+	focusOn('Cancel')
+	focusOn('Add Post')
+	closeConfirm()
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('leaves the focus in a dialog the reader moved to before the dialog the run started in closed', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	start('Move to trash')
+	focusOn('Title')
+	closeConfirm()
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Title'))
+})
+
+test('watches the focus only for a run started in a dialog, and only until that run settles', () => {
+	const { seen } = renderList('post publish')
+	const live = focusinListeners()
+	start()
+	const outside = live()
+	settle(seen.settles[0], true)
+	start('Move to trash')
+	const inDialog = live()
+
+	settle(seen.settles[1], true)
+
+	expect([outside, inDialog, live()]).toEqual([0, 1, 0])
+})
+
+test('stops watching the focus for a run once a newer run starts', () => {
+	const { seen } = renderList('post publish')
+	const live = focusinListeners()
+	start('Move to trash')
+	start('Move to trash')
+	const both = live()
+
+	settle(seen.settles[1], false)
+
+	expect([both, live()]).toEqual([1, 0])
+})
+
+test('stops watching the focus for a run once another list is shown', () => {
+	const { show } = renderList('post publish')
+	const live = focusinListeners()
+	start('Move to trash')
+	const during = live()
+
+	show('post trash')
+
+	expect([during, live()]).toEqual([1, 0])
+})
+
+test('stops watching the focus for a run once the screen goes', () => {
+	const { unmount } = renderList('post publish')
+	const live = focusinListeners()
+	start('Move to trash')
+	const during = live()
+
+	unmount()
+
+	expect([during, live()]).toEqual([1, 0])
 })
 
 test('leaves the focus alone when a run moved nothing', () => {

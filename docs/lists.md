@@ -511,17 +511,25 @@ while the reader is still with the run:
 - the focus fell to the page,
 - the focus sits inside the list,
 - the focus sits in the dialog the run started in,
-- or that dialog closed before the run ended, and no dialog holds the
-  focus now. A confirm that closes at once gives the focus back to
-  the button that opened it, and the list then takes the focus from
-  that button.
+- or that dialog closed before the run ended, the focus still sits
+  where it first went outside that dialog while the dialog was open,
+  and no dialog holds the focus. A confirm that closes at once gives
+  the focus back to the button that opened it, and the list then
+  takes the focus from that button.
 
 A dialog opened since keeps the focus, so typing still lands in it
-and Escape still closes it. A reader who moved to a control outside
-the list during a run started outside every dialog keeps their place.
-Every list run does this, with nothing to add to your screen. This
-needs godmin 0.27.0 or later. Before it, the list took the focus
-wherever the focus sat.
+and Escape still closes it. A reader who moved on to another control
+outside the list keeps their place: during a run started outside
+every dialog, while the dialog the run started in is still open, and
+after that dialog gave the focus back or closed with nowhere to give
+it. One move is the exception. A dialog that lets the focus out,
+unlike a WordPress modal, can be left for another control while it
+is still open. That control then counts as where the dialog gave the
+focus back, since the focus moves the same way in both cases. So when
+the dialog closes and the run ends with the focus still there, the
+list takes the focus from it. Every list run does this, with nothing
+to add to your screen. This needs godmin 0.27.0 or later. Before it,
+the list took the focus wherever the focus sat.
 
 `focusInDialog()` tells whether a dialog holds the focus, for a write
 you finish yourself outside a run. It also needs godmin 0.27.0 or
@@ -577,7 +585,9 @@ the reader moved to, it stays there. When your button opens a
 `ConfirmDialog` first, as Empty Trash does, call `run.onStart()`
 inside `onConfirm`, as [a confirm outside a list](#a-confirm-outside-a-list)
 explains. The list then takes the focus once the run moved a row,
-even after the dialog closed. This needs godmin 0.27.0 or later.
+even after the dialog closed, while the focus is still on the button
+the dialog gave it back to. A reader who moved to another control by
+then keeps their place. This needs godmin 0.27.0 or later.
 
 ## Confirming an action
 
@@ -726,8 +736,9 @@ What `onConfirm` returns decides when the dialog goes:
   the write is a list run, call `run.onStart()` inside `onConfirm`,
   while the dialog still holds the focus. The dialog gives the focus
   back to its button as it closes, and the list takes the focus once
-  the run moved a row, unless the reader opened another dialog by
-  then.
+  the run moved a row, while the focus is still on that button. A
+  reader who moved to another control or opened another dialog by
+  then keeps their place.
 - Return the write's promise, and the dialog stays open while it
   runs. The confirm button shows a spinner and Cancel greys out. When
   the promise ends, worked or failed, the dialog closes. WordPress
@@ -761,8 +772,9 @@ A list run started in `onConfirm` moves the focus to the list once it
 moved a row, whether the dialog stayed open until then or closed
 before. A dialog that stayed open lets the list keep the focus as it
 closes. A dialog that closed before has given the focus back to its
-button, and the list then takes the focus from that button. Either
-way, a dialog the reader opened since keeps the focus. This needs
+button, and the list then takes the focus from that button, while
+the focus is still there. Either way, a reader who moved to another
+control or opened another dialog since keeps their place. This needs
 godmin 0.27.0 or later.
 
 Render the dialog only while you ask, as the example does. Each new

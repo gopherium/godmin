@@ -21,7 +21,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 ### Fixed
 
 - `RunConfirm` closes only itself once its run ends, never a dialog opened on the row after the confirm was dismissed while busy.
-- `useListRun` focuses the list after a run moved an item only while the focus sits on the page, in the list or in the dialog the run started in, or in no dialog once that dialog closed, so a dialog opened during any list run keeps the focus.
+- `useListRun` focuses the list after a run moved an item only while the focus sits on the page, in the list, in the dialog the run started in, or, once that dialog closed, still where the focus first went outside it while it was open, so a dialog opened during a run and a control the reader moved to after that dialog closed keep the focus.
 
 ## [0.26.0] - 2026-10-24
 
