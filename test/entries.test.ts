@@ -187,6 +187,13 @@ test('the state the sidebar parts share reaches React alone, so the main entry m
 	expect([...packagesReachedFrom(join(source, 'navigation-state.ts'))]).toEqual(['react'])
 })
 
+test('the main entry hands out the store of unsaved text, which reaches React alone', async () => {
+	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
+
+	expect([typeof main.useUnsavedText, typeof main.markLatest]).toEqual(['function', 'function'])
+	expect([...packagesReachedFrom(join(source, 'unsaved-text.ts'))]).toEqual(['react'])
+})
+
 test('the router peer starts at a release whose route matching runs no route context', () => {
 	expect(manifest.peerDependencies['@tanstack/react-router']).toBe('^1.170.44')
 })
