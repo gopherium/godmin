@@ -1,6 +1,7 @@
 /* oxlint-disable react/only-export-components -- the region ships beside the
    hook that reaches it. */
 import { speak } from '@wordpress/a11y'
+import { ThemeProvider } from '@wordpress/theme'
 import {
 	createContext,
 	useCallback,
@@ -15,49 +16,24 @@ import {
 import type { ReactNode, RefObject } from 'react'
 
 /**
- * How long a toast nobody touches stays on screen.
+ * How long a toast with no action stays on screen when nobody touches it.
  */
 const DISMISS_AFTER = 6000
 
 /**
- * The name of the control clearing a toast.
+ * How long a toast with an action stays on screen when nobody touches it, time to read it and then act.
  */
-const DISMISS_LABEL = 'Dismiss'
+const ACTION_DISMISS_AFTER = 10000
 
 /**
- * The cross the WordPress snackbar draws in its close button.
+ * The hint telling a screen reader that a click clears a plain toast.
  */
-const DISMISS_GLYPH = '✕'
+const DISMISS_LABEL = 'Dismiss this notice'
 
 /**
  * How many toasts stay on screen at once.
  */
 const LIMIT = 3
-
-/**
- * How many characters of a name a toast shows before the ellipsis.
- */
-const NAME_LENGTH = 45
-
-/**
- * The mark that ends a name a toast cut short.
- */
-const ELLIPSIS = '…'
-
-/**
- * Returns a title cut to the given number of characters, its trailing spaces trimmed and an ellipsis added.
- * @param title - The title to name.
- * @param length - How many characters to keep.
- * @returns The title whole when it fits, the cut title otherwise.
- */
-function cutName(title: string, length: number): string {
-	const characters = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
-	const parts = Array.from(characters.segment(title), (part) => part.segment)
-	if (parts.length <= length) {
-		return title
-	}
-	return `${parts.slice(0, length).join('').trimEnd()}${ELLIPSIS}`
-}
 
 export interface ToastAction {
 	label: string
@@ -73,8 +49,6 @@ interface Toast {
 
 export interface ToasterHandle {
 	show: (message: string, action?: ToastAction) => void
-	/** The title cut to the toaster's name length, with an ellipsis when cut. */
-	name: (title: string) => string
 }
 
 const ToasterContext = createContext<ToasterHandle | null>(null)
@@ -105,43 +79,45 @@ function admit(held: Toast[], arriving: Toast, limit: number): Toast[] {
 }
 
 /**
- * Returns the fades running on an element, none where the browser cannot report them.
+ * Returns the animations running on an element and inside it, none where the browser cannot report them.
  * @param element - The element to ask.
  * @returns The running animations.
  */
-function runningFades(element: Element): Animation[] {
-	return typeof element.getAnimations === 'function' ? element.getAnimations() : []
+function runningMotion(element: Element): Animation[] {
+	return typeof element.getAnimations === 'function' ? element.getAnimations({ subtree: true }) : []
 }
 
 /**
- * Returns the ref of a toast element that gives up focus as the toast leaves and drops the toast once faded.
- * @param toast - The toast the element draws.
+ * Returns the ref of a toast item that gives up focus as the toast leaves and drops the toast once its motion ends,
+ * or at once when the toast was already leaving as it first showed.
+ * @param toast - The toast the item holds.
  * @param region - The toast region taking the focus a leaving toast held.
  * @param onGone - The handler dropping a toast that finished leaving.
- * @returns The ref to attach to the toast element.
+ * @returns The ref to attach to the item element.
  */
-function useDeparture<T extends HTMLElement>(
+function useDeparture(
 	toast: Toast,
 	region: RefObject<HTMLDivElement | null>,
 	onGone: (id: number) => void,
-): RefObject<T | null> {
-	const ref = useRef<T>(null)
+): RefObject<HTMLDivElement | null> {
+	const ref = useRef<HTMLDivElement>(null)
 	const { id, leaving } = toast
+	const leavingAtMount = useRef(leaving)
 	useLayoutEffect(() => {
 		if (!leaving) {
 			return
 		}
-		const element = ref.current as T
+		const element = ref.current as HTMLDivElement
 		const holder = region.current as HTMLDivElement
 		if (element.contains(document.activeElement)) {
 			holder.focus()
 		}
-		const fades = runningFades(element)
-		if (fades.length === 0) {
+		const motion = leavingAtMount.current ? [] : runningMotion(element)
+		if (motion.length === 0) {
 			onGone(id)
 			return
 		}
-		Promise.allSettled(fades.map((fade) => fade.finished)).then(() => onGone(id))
+		Promise.allSettled(motion.map((animation) => animation.finished)).then(() => onGone(id))
 	}, [id, leaving, region, onGone])
 	return ref
 }
@@ -173,33 +149,43 @@ function toastClass(base: string, leaving: boolean): string {
 	return leaving ? `${base} godmin-toast--leaving` : base
 }
 
+interface ToastItemProps {
+	toast: Toast
+	region: RefObject<HTMLDivElement | null>
+	onGone: (id: number) => void
+	children: ReactNode
+}
+
+/**
+ * Renders the item that holds a toast in the region, its space growing as the toast arrives and closing once it left.
+ * @param props - The toast, the region, the handler dropping a toast that finished leaving, and the toast element.
+ * @returns The item element.
+ */
+function ToastItem({ toast, region, onGone, children }: ToastItemProps) {
+	const ref = useDeparture(toast, region, onGone)
+	const item = toast.leaving ? 'godmin-toasts__item godmin-toasts__item--leaving' : 'godmin-toasts__item'
+	return (
+		<div ref={ref} className={item}>
+			<div className="godmin-toasts__item-inner">{children}</div>
+		</div>
+	)
+}
+
 interface ToastProps {
 	toast: Toast
 	dismissAfter: number
-	dismissLabel: string
-	region: RefObject<HTMLDivElement | null>
 	onLeave: (id: number) => void
-	onGone: (id: number) => void
 }
 
 /**
  * Renders a toast with no action as one button that clears it, described by the dismiss hint.
- * @param props - The toast, how long it stays, the id of the dismiss hint, the region and the handlers clearing it.
+ * @param props - The toast, how long it stays, the id of the dismiss hint and the handler clearing it.
  * @returns The toast element.
  */
-function PlainToast({
-	toast,
-	dismissAfter,
-	hint,
-	region,
-	onLeave,
-	onGone,
-}: Omit<ToastProps, 'dismissLabel'> & { hint: string }) {
+function PlainToast({ toast, dismissAfter, hint, onLeave }: ToastProps & { hint: string }) {
 	useExpiry(toast, dismissAfter, onLeave)
-	const ref = useDeparture<HTMLButtonElement>(toast, region, onGone)
 	return (
 		<button
-			ref={ref}
 			type="button"
 			className={toastClass('godmin-toast godmin-toast--plain', toast.leaving)}
 			aria-describedby={hint}
@@ -212,41 +198,28 @@ function PlainToast({
 }
 
 /**
- * Renders a toast with its action and a close button beside it.
- * @param props - The toast, its action, its time, the close button name, the region and the handlers clearing it.
+ * Renders a toast with its action, cleared by a click anywhere on it, the action its only control.
+ * @param props - The toast, its action, its time and the handler clearing it.
  * @returns The toast element.
  */
-function ActionToast({
-	toast,
-	action,
-	dismissAfter,
-	dismissLabel,
-	region,
-	onLeave,
-	onGone,
-}: ToastProps & { action: ToastAction }) {
+function ActionToast({ toast, action, dismissAfter, onLeave }: ToastProps & { action: ToastAction }) {
 	useExpiry(toast, dismissAfter, onLeave)
-	const ref = useDeparture<HTMLDivElement>(toast, region, onGone)
 	return (
-		<div ref={ref} className={toastClass('godmin-toast', toast.leaving)} inert={toast.leaving}>
+		<div
+			className={toastClass('godmin-toast', toast.leaving)}
+			inert={toast.leaving}
+			onClick={() => onLeave(toast.id)}
+		>
 			<span className="godmin-toast__message">{toast.message}</span>
 			<button
 				type="button"
 				className="godmin-toast__action"
 				onClick={() => {
-					action.onAct()
 					onLeave(toast.id)
+					action.onAct()
 				}}
 			>
 				{action.label}
-			</button>
-			<button
-				type="button"
-				className="godmin-toast__dismiss"
-				aria-label={dismissLabel}
-				onClick={() => onLeave(toast.id)}
-			>
-				{DISMISS_GLYPH}
 			</button>
 		</div>
 	)
@@ -255,27 +228,27 @@ function ActionToast({
 export interface ToasterProps {
 	/** The tree the toast region wraps. */
 	children: ReactNode
-	/** How many milliseconds a toast nobody touches stays on screen. */
+	/** How many milliseconds a toast with no action stays on screen when nobody touches it. */
 	dismissAfter?: number
-	/** The name of the close button, also the hint screen readers hear that a click clears a plain toast. */
+	/** How many milliseconds a toast with an action stays on screen when nobody touches it. */
+	actionDismissAfter?: number
+	/** The hint screen readers hear after the message of a plain toast, that a click clears it. */
 	dismissLabel?: string
 	/** How many toasts stay on screen at once, the oldest leaving first. */
 	limit?: number
-	/** How many characters of a name a toast shows before the ellipsis. */
-	nameLength?: number
 }
 
 /**
- * Renders the region holding raised messages around the given tree.
- * @param props - The tree the region wraps, the toast time, the close button name, how many stay and the name length.
+ * Renders the region holding raised messages around the given tree, under the snackbar corners at every preset.
+ * @param props - The tree the region wraps, the time of each kind of toast, the plain toast hint and how many stay.
  * @returns The wrapped tree with its region.
  */
 export function Toaster({
 	children,
 	dismissAfter = DISMISS_AFTER,
+	actionDismissAfter = ACTION_DISMISS_AFTER,
 	dismissLabel = DISMISS_LABEL,
 	limit = LIMIT,
-	nameLength = NAME_LENGTH,
 }: ToasterProps) {
 	const [toasts, setToasts] = useState<Toast[]>([])
 	const nextId = useRef(0)
@@ -305,38 +278,29 @@ export function Toaster({
 		},
 		[limit],
 	)
-	const name = useCallback((title: string) => cutName(title, nameLength), [nameLength])
-	const handle = useMemo(() => ({ show, name }), [show, name])
+	const handle = useMemo(() => ({ show }), [show])
 	const hint = useId()
 	return (
 		<ToasterContext.Provider value={handle}>
 			{children}
-			<div ref={region} className="godmin-toasts" tabIndex={-1}>
-				{toasts.map((toast) =>
-					toast.action === undefined ? (
-						<PlainToast
-							key={toast.id}
-							toast={toast}
-							dismissAfter={dismissAfter}
-							hint={hint}
-							region={region}
-							onLeave={leave}
-							onGone={gone}
-						/>
-					) : (
-						<ActionToast
-							key={toast.id}
-							toast={toast}
-							action={toast.action}
-							dismissAfter={dismissAfter}
-							dismissLabel={dismissLabel}
-							region={region}
-							onLeave={leave}
-							onGone={gone}
-						/>
-					),
-				)}
-			</div>
+			<ThemeProvider cornerRadius="subtle">
+				<div ref={region} className="godmin-toasts" tabIndex={-1}>
+					{toasts.map((toast) => (
+						<ToastItem key={toast.id} toast={toast} region={region} onGone={gone}>
+							{toast.action === undefined ? (
+								<PlainToast toast={toast} dismissAfter={dismissAfter} hint={hint} onLeave={leave} />
+							) : (
+								<ActionToast
+									toast={toast}
+									action={toast.action}
+									dismissAfter={actionDismissAfter}
+									onLeave={leave}
+								/>
+							)}
+						</ToastItem>
+					))}
+				</div>
+			</ThemeProvider>
 			<span id={hint} hidden>
 				{dismissLabel}
 			</span>

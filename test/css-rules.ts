@@ -47,6 +47,17 @@ export function blockOf(prelude: string): string {
 }
 
 /**
+ * Returns the selectors of the reduced motion guard whose rule sets a declaration.
+ * @param declaration - The pattern the declaration matches, such as `animation-delay:`.
+ * @returns The selectors in source order.
+ */
+export function guardedBy(declaration: RegExp): string[] {
+	return [...blockOf('@media (prefers-reduced-motion: reduce)').matchAll(/([^{}]+)\{([^}]*)\}/g)]
+		.filter((found) => declaration.test(found[2]))
+		.flatMap((found) => found[1].split(',').map((selector) => selector.trim()))
+}
+
+/**
  * Returns the body of every at-rule of the given kinds, matching its braces.
  * @param kinds - The at-rule names to collect, such as media.
  * @returns The bodies in source order.

@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path'
 import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
-import { atRuleBodies, blockOf, ruleOf } from './css-rules.js'
+import { atRuleBodies, blockOf, guardedBy, ruleOf } from './css-rules.js'
 import { base } from './styles.js'
 
 const dataviewsManifest = createRequire(import.meta.url).resolve('@wordpress/dataviews/package.json')
@@ -107,11 +107,19 @@ test('names the canvas margin once, 16px, and frames the canvas with it', () => 
 	expect(ruleOf('.godmin-layout__canvas')).toMatch(/(?:^|\s)margin:\s*var\(--godmin-canvas-margin\);/)
 })
 
-test('centres the toasts on the canvas beside a sidebar rather than on the whole window', () => {
-	const region = ruleOf(':root:has(.godmin-layout__sidebar) .godmin-toasts')
+test('centres the toasts on the whole window, the sidebar included, as the WordPress new admin does', () => {
+	const css = base.replace(/\/\*[\s\S]*?\*\//g, '')
+	const selectors = [...css.matchAll(/([^{};]*)\{/g)]
+		.map((found) => found[1])
+		.filter((prelude) => /\.godmin-toasts(?![\w-])/.test(prelude))
+		.flatMap((prelude) => prelude.split(',').map((selector) => selector.trim()))
+	const across = ruleOf('.godmin-toasts')
+		.split(';')
+		.map((declaration) => declaration.trim())
+		.filter((declaration) => /^(?:inset|left|right|margin|padding|translate|transform)\b/.test(declaration))
 
-	expect(region).toMatch(/inset-inline-start:\s*var\(--godmin-nav-sidebar-width\)/)
-	expect(region, 'the region ends where the canvas ends').toMatch(/inset-inline-end:\s*var\(--godmin-canvas-margin\)/)
+	expect(selectors, 'no rule moves the region beside the sidebar').toEqual(['.godmin-toasts', '.godmin-toasts:focus'])
+	expect(across, 'the region moves no toast off the window centre').toEqual(['inset-inline: 0', 'padding-inline: 16px'])
 })
 
 test('names the canvas gutter once and pads the canvas sides with it', () => {
@@ -1007,14 +1015,12 @@ test('spans the toast region across the window, so each toast sizes to its own m
 	expect(region, 'a fixed width stops a toast growing with its message').not.toMatch(/(?:^|[^-])width:/m)
 })
 
-test('stacks the toasts in a column at the bottom center, 32px up', () => {
+test('stacks the toasts in a column at the bottom, the medium size token up', () => {
 	const region = ruleOf('.godmin-toasts')
 
-	expect(region).toMatch(/bottom:\s*32px/)
+	expect(region).toMatch(/bottom:\s*var\(--wpds-dimension-size-md\)/)
 	expect(region).toMatch(/display:\s*flex/)
 	expect(region).toMatch(/flex-direction:\s*column/)
-	expect(region).toMatch(/align-items:\s*center/)
-	expect(region).toMatch(/gap:\s*var\(--wpds-dimension-gap-sm\)/)
 })
 
 test('keeps a 16px gutter between a toast and the window edge', () => {
@@ -1062,17 +1068,17 @@ test('lifts a toast off the page with the small elevation the WordPress snackbar
 	expect(shadow.split(',').map((layer) => layer.trim())).toEqual(layers)
 })
 
-test('sets the action and the close button of a toast on the first line of its message, as the snackbar does', () => {
+test('sets the action of a toast on the first line of its message, as the snackbar does', () => {
 	const toast = ruleOf('.godmin-toast')
 
 	expect(toast).toMatch(/display:\s*flex/)
 	expect(toast).toMatch(/align-items:\s*baseline/)
-	expect(toast, 'the snackbar spaces its action and close button with margins').not.toMatch(/(?:^|\s)gap:/)
+	expect(toast, 'the snackbar spaces its action with a margin').not.toMatch(/(?:^|\s)gap:/)
 })
 
-test('shows the arrow pointer over a toast with an action, as the snackbar does', () => {
-	expect(ruleOf('.godmin-toast')).toMatch(/cursor:\s*default/)
-	expect(base.indexOf('.godmin-toast--plain {')).toBeGreaterThan(base.indexOf('.godmin-toast {'))
+test('shows the pointer over every toast, since a click anywhere clears it, as the snackbar does', () => {
+	expect(ruleOf('.godmin-toast')).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
+	expect(ruleOf('.godmin-toast--plain'), 'a plain toast takes the pointer of every toast').not.toMatch(/cursor:/)
 })
 
 test('spreads the parts of a toast wider than its message apart, as the snackbar content does', () => {
@@ -1080,18 +1086,12 @@ test('spreads the parts of a toast wider than its message apart, as the snackbar
 	expect(base, 'the snackbar message takes no free room of its own').not.toMatch(/\.godmin-toast__message\s*\{/)
 })
 
-test('sets the action 32px after the message and the close button 24px after the action, as the snackbar does', () => {
+test('sets the action 32px after the message, as the snackbar does', () => {
 	expect(ruleOf('.godmin-toast__action')).toMatch(/margin-inline-start:\s*var\(--wpds-dimension-gap-2xl\)/)
-	expect(ruleOf('.godmin-toast__dismiss')).toMatch(/margin-inline-start:\s*var\(--wpds-dimension-gap-xl\)/)
 })
 
-test('sets the close button as a line of text, so a toast with an action is as tall as a plain one', () => {
-	const dismiss = ruleOf('.godmin-toast__dismiss')
-
-	expect(dismiss).toMatch(/font:\s*inherit/)
-	expect(dismiss).not.toMatch(/display:/)
-	expect(dismiss).not.toMatch(/block-size:/)
-	expect(dismiss).not.toMatch(/align-items:/)
+test('draws no close button, as the snackbar draws its cross only on a toast with no timer', () => {
+	expect(base).not.toMatch(/godmin-toast__dismiss/)
 })
 
 test('caps a toast at the large surface width, padding included', () => {
@@ -1121,13 +1121,12 @@ test('leaves the toast width alone between 600px and 640px', () => {
 	expect(blockOf('@media (max-width: 639px)')).not.toMatch(/godmin-toast/)
 })
 
-test('draws the plain toast button like the rest of the snackbar, under a pointer', () => {
+test('draws the plain toast button like the rest of the snackbar', () => {
 	const plain = ruleOf('.godmin-toast--plain')
 
 	expect(plain).toMatch(/margin:\s*0/)
 	expect(plain).toMatch(/border:\s*0/)
 	expect(plain).toMatch(/text-align:\s*start/)
-	expect(plain).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
 })
 
 test('draws the action as a white link that keeps its width', () => {
@@ -1161,18 +1160,6 @@ test('drops the action underline under the pointer, as the snackbar does', () =>
 	expect(ruleOf('.godmin-toast__action:hover')).toMatch(/text-decoration:\s*none/)
 })
 
-test('draws the close button as a bare white cross', () => {
-	const dismiss = ruleOf('.godmin-toast__dismiss')
-
-	expect(dismiss).toMatch(/flex:\s*none/)
-	expect(dismiss).toMatch(/padding:\s*0/)
-	expect(dismiss).toMatch(/border:\s*0/)
-	expect(dismiss).toMatch(/background:\s*none/)
-	expect(dismiss).toMatch(/color:\s*inherit/)
-	expect(dismiss).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
-	expect(base, 'the cross is a text glyph, not an icon').not.toMatch(/\.godmin-toast__dismiss svg/)
-})
-
 test('rings a focused plain toast with a white inner line and the focus colour, as the snackbar does', () => {
 	const ring = ruleOf('.godmin-toast--plain:focus-visible')
 
@@ -1185,47 +1172,18 @@ test('rings a focused plain toast with a white inner line and the focus colour, 
 	expect(ring, 'the snackbar keeps the browser outline as well').not.toMatch(/outline/)
 })
 
-test('outlines a focused action with a dotted white line and drops its underline, as the snackbar does', () => {
+test('rings a focused action with the design system ring in white, as the snackbar action does', () => {
 	const ring = ruleOf('.godmin-toast__action:focus-visible')
 
-	expect(ring).toMatch(/outline:\s*var\(--wpds-border-width-xs\) dotted #fff/)
-	expect(ring).toMatch(/outline-offset:\s*2px/)
+	expect(ring).toMatch(/outline:\s*var\(--wpds-border-width-focus\) solid #fff;/)
+	expect(ring).toMatch(/outline-offset:\s*var\(--wpds-border-width-focus\);/)
 	expect(ring).toMatch(/border-radius:\s*var\(--wpds-border-radius-sm\)/)
 	expect(ring).toMatch(/text-decoration:\s*none/)
+	expect(ring, 'the snackbar dropped its dotted outline').not.toMatch(/dotted/)
 })
 
-test('leaves the browser focus ring on the close button, as the snackbar cross keeps it', () => {
-	expect(base).not.toMatch(/\.godmin-toast__dismiss:focus/)
-})
-
-test('draws no ring on the toast region, which takes focus only from a leaving toast', () => {
+test('draws no ring on the toast region, which takes focus only from a leaving or clicked toast', () => {
 	expect(ruleOf('.godmin-toasts:focus')).toMatch(/outline:\s*none/)
-})
-
-test('fades a toast in as it arrives', () => {
-	expect(ruleOf('.godmin-toast')).toMatch(
-		/animation:\s*godmin-fade-in var\(--wpds-motion-duration-md\) var\(--wpds-motion-easing-balanced\)/,
-	)
-})
-
-test('fades a leaving toast out and holds it hidden until it goes', () => {
-	const leaving = ruleOf('.godmin-toast--leaving')
-
-	expect(leaving).toMatch(/animation:[^;]*godmin-fade-out/)
-	expect(leaving).toMatch(/animation:[^;]*var\(--wpds-motion-duration-sm\)/)
-	expect(leaving).toMatch(/animation:[^;]*forwards/)
-	expect(base).toMatch(/@keyframes godmin-fade-out\s*\{\s*0%\s*\{\s*opacity:\s*1;?\s*\}\s*100%\s*\{\s*opacity:\s*0/)
-})
-
-test('lets the leaving look outrank the arriving fade', () => {
-	expect(base.indexOf('.godmin-toast--leaving {')).toBeGreaterThan(base.indexOf('.godmin-toast {'))
-})
-
-test('stops fading toasts for a reduced motion preference', () => {
-	const guard = blockOf('@media (prefers-reduced-motion: reduce)')
-
-	expect(guard).toMatch(/\.godmin-toast\s*[,{]/)
-	expect(guard).toMatch(/animation-duration:\s*1ms/)
 })
 
 test('raises the drawer above the toast region', () => {
@@ -1271,15 +1229,17 @@ test('stops fading for a reduced motion preference', () => {
 	expect(guard).toMatch(/animation-duration:\s*1ms/)
 })
 
-test('keeps the reveal and the delay that a reduced motion preference must not undo', () => {
+test('keeps the reveal and the ghost delay that a reduced motion preference must not undo', () => {
 	const guard = reducedMotionGuard()
+	const delayed = guardedBy(/animation-delay:/)
+	const ghosts = ['.godmin-loading-screen', '.godmin-loading-rows', '.godmin-arrival']
 
 	expect(guard, 'the shorthand resets the delay and the fill').not.toMatch(/animation:\s/)
 	expect(guard, 'a named animation of none leaves the ghost at opacity zero').not.toMatch(
 		/animation-name:/,
 	)
-	expect(guard, 'the ghost must stay hidden for its first 150ms').not.toMatch(/animation-delay:/)
 	expect(guard, 'forwards is what holds the revealed state').not.toMatch(/animation-fill-mode:/)
+	expect(ghosts.filter((ghost) => delayed.includes(ghost)), 'the ghost must stay hidden for its first 150ms').toEqual([])
 })
 
 test('pads the screen ghost, which can render with no frame around it', () => {
