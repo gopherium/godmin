@@ -3,6 +3,9 @@ import { expect, test } from 'vitest'
 
 const eslint = new ESLint()
 
+/** Paths of the code held to the complexity ceilings: the source, the stories and the Storybook config. */
+const CODE_PATHS = ['src/probe.ts', 'src/probe.tsx', 'stories/probe.stories.tsx', '.storybook/probe.ts']
+
 /**
  * Returns the rules ESLint reports for a source linted at the given path.
  * @param source - The code to lint.
@@ -34,13 +37,13 @@ function documented(body: string): string {
 	].join('\n')
 }
 
-test.each(['src/probe.ts', 'src/probe.tsx'])('reports a function over the complexity ceiling in %s', async (path) => {
+test.each(CODE_PATHS)('reports a function over the complexity ceiling in %s', async (path) => {
 	const branches = Array.from({ length: 11 }, (_, index) => `\tif (value === ${index}) {\n\t\treturn ${index}\n\t}`)
 
 	expect(await reported(documented(branches.join('\n')), path)).toContain('complexity')
 })
 
-test.each(['src/probe.ts', 'src/probe.tsx'])('reports a function over the cognitive ceiling in %s', async (path) => {
+test.each(CODE_PATHS)('reports a function over the cognitive ceiling in %s', async (path) => {
 	const opening = Array.from({ length: 6 }, (_, index) => `if (value > ${index}) {`).join(' ')
 
 	expect(await reported(documented(`\t${opening} return value ${'}'.repeat(6)}`), path))
@@ -63,7 +66,7 @@ test.each(['src/probe.ts', 'src/probe.tsx'])('accepts a well formed docblock in 
 	expect(await reported(documented(''), path)).not.toContain('tsdoc/syntax')
 })
 
-test.each(['src/probe.ts', 'src/probe.tsx', 'test/probe.test.ts', 'test/probe.test.tsx'])(
+test.each([...CODE_PATHS, 'test/probe.test.ts', 'test/probe.test.tsx'])(
 	'reports a line over the length limit in %s',
 	async (path) => {
 		const source = `export const probe = '${'x'.repeat(120)}'\n`
@@ -71,3 +74,9 @@ test.each(['src/probe.ts', 'src/probe.tsx', 'test/probe.test.ts', 'test/probe.te
 		expect(await reported(source, path)).toContain('max-len')
 	},
 )
+
+test('reports a story file with no default export', async () => {
+	const source = 'export const Plain = {}\n'
+
+	expect(await reported(source, 'stories/probe.stories.tsx')).toContain('storybook/default-exports')
+})
