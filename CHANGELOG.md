@@ -4,6 +4,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- The README says how to run the unit tests, the stories in Storybook and the browser tests.
+
+### Fixed
+
+- `docs/design-system/toasts.md` says that in Chrome the browser's own dark ring mostly covers the focus ring of a toast with no action.
+
 ## [0.28.0] - 2026-10-25
 
 ### Added
