@@ -92,6 +92,16 @@ render unthemed components with no error. Spread `godminDedupe` into
 [Build configuration](docs/build-and-versioning.md) covers both, and lists the
 design system versions each release supports.
 
+## Development
+
+`pnpm run cover` runs the unit tests in jsdom with the coverage gate.
+The stories in `stories/` show the components in Storybook, opened
+with `pnpm run storybook:dev`. `pnpm run storybook:test` runs every
+story in headless Chromium with its accessibility check, and
+`pnpm run test:browser` runs the browser tests in `test/browser/`.
+Both need Chromium once:
+`pnpm exec playwright install --only-shell chromium`.
+
 ## Status
 
 Still 0.x, so minor releases may break. See the CHANGELOG for what each release
