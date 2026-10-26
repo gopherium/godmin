@@ -1,5 +1,6 @@
 import jsdoc from 'eslint-plugin-jsdoc'
 import sonarjs from 'eslint-plugin-sonarjs'
+import storybook from 'eslint-plugin-storybook'
 import tsdoc from 'eslint-plugin-tsdoc'
 import tseslint from 'typescript-eslint'
 
@@ -7,8 +8,9 @@ export default [
 	{
 		ignores: ['dist/**', 'coverage/**'],
 	},
+	...storybook.configs['flat/recommended'],
 	{
-		files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}'],
+		files: ['src/**/*.{ts,tsx}', 'test/**/*.{ts,tsx}', 'stories/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
 		languageOptions: {
 			parser: tseslint.parser,
 			parserOptions: { ecmaFeatures: { jsx: true } },
@@ -18,7 +20,7 @@ export default [
 		},
 	},
 	{
-		files: ['src/**/*.{ts,tsx}'],
+		files: ['src/**/*.{ts,tsx}', 'stories/**/*.{ts,tsx}', '.storybook/**/*.{ts,tsx}'],
 		languageOptions: {
 			parser: tseslint.parser,
 			parserOptions: { ecmaFeatures: { jsx: true } },

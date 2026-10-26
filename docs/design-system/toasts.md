@@ -146,7 +146,9 @@ closes after it leaves, so the toasts above slide instead of jumping.
   Space clears it. Its focus ring is a white line
   `--wpds-border-width-xs` wide inside the toast and a ring of
   `--wpds-color-stroke-focus` `--wpds-border-width-focus` wide around
-  it, both drawn as a shadow. The browser's own ring shows too.
+  it, both drawn as a shadow. The browser's own ring shows too. In
+  Chrome it is a dark ring that mostly covers the white line and the
+  focus ring, as it does on the WordPress snackbar.
 - In a toast with an action, only the action takes focus. The rest of
   the toast is no tab stop and no button. A keyboard reader runs the
   action, or lets the toast leave on its own when its time is up. So

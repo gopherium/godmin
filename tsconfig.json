@@ -18,5 +18,5 @@
 		"erasableSyntaxOnly": true,
 		"noFallthroughCasesInSwitch": true
 	},
-	"include": ["src", "test", "vitest.config.ts"]
+	"include": ["src", "test", "stories", ".storybook/*.ts", ".storybook/*.tsx", "vitest.config.ts"]
 }
