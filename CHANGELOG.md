@@ -9,6 +9,19 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 ### Added
 
 - The README says how to run the unit tests, the stories in Storybook and the browser tests.
+- `docs/design-system/loading.md` gives what a list, a screen and a preview show while they load, how long each waits and what a screen reader hears.
+- `docs/lists.md` says which loading state to pass to DataViews as `isLoading`, what a route loader should wait for, and why DataViews keeps one key.
+
+### Changed
+
+- **Breaking.** `LoadingScreen` draws the design system `Spinner` in place of grey bars, as WordPress shows a screen that loads, and still announces its `label`. The classes `godmin-loading-screen__ghost`, `godmin-loading-screen__title` and `godmin-loading-screen__stroke` are gone.
+- **Breaking.** Inside a `Page`, a sidebar screen or a dialog, `LoadingScreen` shows at once with no wait and no fade, as a WordPress screen shows the spinner under its title. Inside a `Page` it sits at the top of the content under the title.
+- **Breaking.** Anywhere else, `LoadingScreen` stays hidden for 200ms, then fades in over 500ms, as the WordPress Site Editor shows its canvas loader, and shows at once after the wait for a reader who asks for less motion. It fills the space it gets and centres the spinner, and outside the frame it is at least as tall as the window.
+
+### Removed
+
+- **Breaking.** `LoadingRows` and its classes `godmin-loading-rows`, `godmin-loading-rows__ghost` and `godmin-loading-rows__row`. Pass the loading state of a DataViews list to `isLoading`, and show `LoadingScreen` in place of any other list while it loads.
+- **Breaking.** The `godmin-arrival` class.
 
 ### Fixed
 
