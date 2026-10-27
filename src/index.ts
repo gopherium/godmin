@@ -50,7 +50,7 @@ export type {
 	ListView,
 	ListViewShape,
 } from './list-view.js'
-export { LoadingRows, LoadingScreen } from './loading.js'
+export { LoadingScreen } from './loading.js'
 export { LogItem, LogList, LogTime } from './log-list.js'
 export type { LogItemProps, LogListProps, LogTimeProps } from './log-list.js'
 export { MenuCount } from './menu-count.js'

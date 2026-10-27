@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path'
 import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
-import { atRuleBodies, blockOf, guardedBy, ruleOf } from './css-rules.js'
+import { atRuleBodies, blockOf, ruleOf } from './css-rules.js'
 import { base } from './styles.js'
 
 const dataviewsManifest = createRequire(import.meta.url).resolve('@wordpress/dataviews/package.json')
@@ -54,18 +54,6 @@ function significantLines(css: string): string[] {
 		.split('\n')
 		.map((line) => line.trim())
 		.filter((line) => line !== '' && !line.startsWith('/*') && !line.startsWith('*'))
-}
-
-/**
- * Returns the stylesheet from the reduced motion guard onwards.
- * @returns The guard source.
- */
-function reducedMotionGuard(): string {
-	const start = base.indexOf('@media (prefers-reduced-motion: reduce)')
-
-	expect(start, 'the stylesheet declares no reduced motion guard').toBeGreaterThan(-1)
-
-	return base.slice(start)
 }
 
 test('lays the aside beside the content and wraps it under on a narrow page', () => {
@@ -1204,50 +1192,60 @@ test('paints the chrome the frame is themed with', () => {
 	expect(layout).toMatch(/color:\s*var\(--wpds-color-foreground-content-neutral\)/)
 })
 
-test('fades the ghosts in after a delay, so a fast load shows none', () => {
-	const region = base.slice(base.indexOf('.godmin-loading-screen,'))
-	const rule = region.slice(0, region.indexOf('}'))
+test('hides a loading screen for 200ms, then fades it in over 500ms on ease', () => {
+	const rule = ruleOf('.godmin-loading-screen')
 
-	expect(rule).toContain('.godmin-loading-rows')
-	expect(rule).toMatch(/opacity:\s*0/)
-	expect(rule).toMatch(/animation:[^;]*godmin-fade-in/)
-	expect(rule).toMatch(/animation:[^;]*150ms/)
-	expect(rule).toMatch(/animation:[^;]*forwards/)
+	expect(rule).toMatch(/(?:^|\s)opacity:\s*0;/)
+	expect(rule).toMatch(/(?:^|\s)animation:\s*godmin-fade-in 500ms ease 200ms forwards;/)
 })
 
-test('fades arriving content in, so a ghost never snaps away', () => {
-	expect(base).toMatch(/\.godmin-arrival\s*\{[^}]*animation:[^;]*godmin-fade-in/)
-	expect(base).toMatch(/@keyframes godmin-fade-in\s*\{\s*0%\s*\{\s*opacity:\s*0/)
-})
-
-test('stops fading for a reduced motion preference', () => {
-	const guard = reducedMotionGuard()
-
-	for (const faded of ['.godmin-loading-screen', '.godmin-loading-rows', '.godmin-arrival']) {
-		expect(guard, `${faded} still fades`).toContain(faded)
-	}
-	expect(guard).toMatch(/animation-duration:\s*1ms/)
-})
-
-test('keeps the reveal and the ghost delay that a reduced motion preference must not undo', () => {
-	const guard = reducedMotionGuard()
-	const delayed = guardedBy(/animation-delay:/)
-	const ghosts = ['.godmin-loading-screen', '.godmin-loading-rows', '.godmin-arrival']
-
-	expect(guard, 'the shorthand resets the delay and the fill').not.toMatch(/animation:\s/)
-	expect(guard, 'a named animation of none leaves the ghost at opacity zero').not.toMatch(
-		/animation-name:/,
+test('shows a loading screen at once inside a page, a sidebar screen or a dialog', () => {
+	const rule = ruleOf(
+		":is(.godmin-page, .godmin-navigation-screen, [role='dialog'], [role='alertdialog']) .godmin-loading-screen",
 	)
-	expect(guard, 'forwards is what holds the revealed state').not.toMatch(/animation-fill-mode:/)
-	expect(ghosts.filter((ghost) => delayed.includes(ghost)), 'the ghost must stay hidden for its first 150ms').toEqual([])
+
+	expect(rule).toMatch(/(?:^|\s)animation:\s*none;/)
+	expect(rule).toMatch(/(?:^|\s)opacity:\s*1;/)
+	expect(rule).toMatch(/(?:^|\s)min-block-size:\s*auto;/)
 })
 
-test('pads the screen ghost, which can render with no frame around it', () => {
-	expect(base).toMatch(/\.godmin-loading-screen\s*\{[^}]*padding/)
+test('centres a loading screen in the space its parent leaves', () => {
+	const rule = ruleOf('.godmin-loading-screen')
+
+	expect(rule).toMatch(/(?:^|\s)display:\s*flex;/)
+	expect(rule).toMatch(/(?:^|\s)flex:\s*1 0 auto;/)
+	expect(rule).toMatch(/(?:^|\s)align-items:\s*center;/)
+	expect(rule).toMatch(/(?:^|\s)justify-content:\s*center;/)
+	expect(rule).toMatch(/(?:^|\s)padding:\s*var\(--wpds-dimension-padding-3xl\);/)
 })
 
-test('shapes every ghost bar with a height of its own', () => {
-	expect(base).toMatch(/\.godmin-loading-screen__title\s*\{[^}]*height/)
-	expect(base).toMatch(/\.godmin-loading-screen__stroke\s*\{[^}]*height/)
-	expect(base).toMatch(/\.godmin-loading-rows__row\s*\{[^}]*height/)
+test('gives a loading screen outside the frame the height of the window', () => {
+	expect(ruleOf('.godmin-loading-screen')).toMatch(/(?:^|\s)min-block-size:\s*100vh;/)
+	expect(ruleOf('.godmin-layout .godmin-loading-screen')).toMatch(/(?:^|\s)min-block-size:\s*auto;/)
+})
+
+test('sets a loading screen at the top of a page, centred across', () => {
+	const rule = ruleOf('.godmin-page .godmin-loading-screen')
+
+	expect(rule).toMatch(/(?:^|\s)flex:\s*none;/)
+	expect(rule).toMatch(/(?:^|\s)padding:\s*0;/)
+})
+
+test('drops the fade of a loading screen under reduced motion and keeps its wait', () => {
+	const rule = ruleOf('.godmin-loading-screen', blockOf('@media (prefers-reduced-motion: reduce)'))
+
+	expect(rule.replace(/\s+/g, ' ').trim()).toBe('animation-duration: 0s;')
+})
+
+test('draws no skeleton bars and no arrival fade', () => {
+	const gone = [
+		'.godmin-loading-screen__ghost',
+		'.godmin-loading-screen__title',
+		'.godmin-loading-screen__stroke',
+		'.godmin-loading-rows',
+		'.godmin-arrival',
+	]
+
+	expect(gone.filter((selector) => base.includes(selector))).toEqual([])
+	expect(base).toMatch(/@keyframes godmin-fade-in\s*\{\s*0%\s*\{\s*opacity:\s*0/)
 })

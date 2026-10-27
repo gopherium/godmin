@@ -977,16 +977,31 @@ body {
 		outline-offset: 2px;
 	}
 
-	.godmin-loading-screen,
-	.godmin-loading-rows {
+	.godmin-loading-screen {
+		display: flex;
+		flex: 1 0 auto;
+		align-items: center;
+		justify-content: center;
+		box-sizing: border-box;
+		min-block-size: 100vh;
+		padding: var(--wpds-dimension-padding-3xl);
 		opacity: 0;
-		animation: godmin-fade-in var(--wpds-motion-duration-md)
-			var(--wpds-motion-easing-balanced) 150ms forwards;
+		animation: godmin-fade-in 500ms ease 200ms forwards;
 	}
 
-	.godmin-arrival {
-		animation: godmin-fade-in var(--wpds-motion-duration-md)
-			var(--wpds-motion-easing-balanced);
+	.godmin-layout .godmin-loading-screen {
+		min-block-size: auto;
+	}
+
+	:is(.godmin-page, .godmin-navigation-screen, [role='dialog'], [role='alertdialog']) .godmin-loading-screen {
+		min-block-size: auto;
+		opacity: 1;
+		animation: none;
+	}
+
+	.godmin-page .godmin-loading-screen {
+		flex: none;
+		padding: 0;
 	}
 
 	@keyframes godmin-fade-in {
@@ -1006,10 +1021,8 @@ body {
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.godmin-loading-screen,
-		.godmin-loading-rows,
-		.godmin-arrival {
-			animation-duration: 1ms;
+		.godmin-loading-screen {
+			animation-duration: 0s;
 		}
 
 		.godmin-toasts__item,
@@ -1021,43 +1034,6 @@ body {
 		.godmin-navigation__screen-wrapper {
 			animation-duration: 0s;
 		}
-	}
-
-	.godmin-loading-screen {
-		padding: var(--wpds-dimension-padding-xl);
-	}
-
-	.godmin-loading-screen__ghost {
-		display: flex;
-		flex-direction: column;
-		gap: var(--wpds-dimension-gap-lg);
-		max-width: var(--wpds-dimension-surface-width-sm);
-	}
-
-	.godmin-loading-screen__title {
-		height: 32px;
-		width: 40%;
-		border-radius: var(--wpds-border-radius-sm);
-	}
-
-	.godmin-loading-screen__stroke {
-		height: 14px;
-		border-radius: var(--wpds-border-radius-sm);
-	}
-
-	.godmin-loading-screen__stroke:last-child {
-		width: 70%;
-	}
-
-	.godmin-loading-rows__ghost {
-		display: flex;
-		flex-direction: column;
-		gap: var(--wpds-dimension-gap-sm);
-	}
-
-	.godmin-loading-rows__row {
-		height: var(--wpds-dimension-size-lg);
-		border-radius: var(--wpds-border-radius-sm);
 	}
 
 	.godmin-rows__row:focus-visible {
