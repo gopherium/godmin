@@ -27,6 +27,15 @@ const tokens = readFileSync(packageFile('@wordpress/theme/design-tokens.css'), '
 /** The stylesheet the WordPress modal draws with. */
 export const components = readFileSync(packageFile('@wordpress/components/build-style/style.css'), 'utf8')
 
+/** Returns the text of a file inside an installed scoped package, such as `@wordpress/ui/build-module/index.mjs`. */
+export function installedFile(file: string): string {
+	const [scope, name, ...path] = file.split('/')
+	return readFileSync(join(dirname(packageFile(`${scope}/${name}/package.json`)), ...path), 'utf8')
+}
+
+/** The stylesheet DataViews draws its lists with. */
+export const dataviews = installedFile('@wordpress/dataviews/build-style/style.css')
+
 /**
  * Returns the pixels one design token holds.
  * @param name - The custom property name of the token.

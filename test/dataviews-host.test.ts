@@ -1,14 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { readFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
-import { resolve } from 'node:path'
-
 import { expect, test } from 'vitest'
 
-const require = createRequire(import.meta.url)
-const base = readFileSync(resolve('src/base.css'), 'utf8')
-const dataviews = readFileSync(require.resolve('@wordpress/dataviews/build-style/style.css'), 'utf8')
+import { base, dataviews } from './styles.js'
 
 /**
  * Returns the declarations of the first rule a selector list opens in a stylesheet.
@@ -44,6 +38,10 @@ test('bleeds a list by the 24px gutter DataViews pads its toolbar, table and foo
 
 test('leaves the title field link to DataViews, which draws it with no underline', () => {
 	expect(ruleIn(dataviews, '.dataviews-title-field a')).toMatch(/text-decoration:\s*none/)
+})
+
+test('leaves the loading look of a list to DataViews', () => {
+	expect(base).not.toMatch(/\.is-refreshing|\.dataviews-loading|\.dataviews-no-results/)
 })
 
 test('lets DataViews take its accents from the WordPress admin colour the root provider sets', () => {
