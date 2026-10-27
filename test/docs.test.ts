@@ -140,6 +140,13 @@ test.each([...pages])('every link of %s between pages reaches its page and headi
 	expect(links.filter((link) => !reaches(path, link))).toEqual([])
 })
 
+test.each([...pages, ['README.md', readme] as const])(
+	'%s calls a loading placeholder a skeleton, never a ghost',
+	(_path, page) => {
+		expect(page.text).not.toMatch(/ghost/i)
+	},
+)
+
 test('every local link of the README reaches a page and heading in the docs', () => {
 	const links = linksOf(readme).filter(local)
 

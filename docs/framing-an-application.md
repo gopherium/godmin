@@ -377,7 +377,7 @@ const router = createRouter({ routeTree, ...routerDefaults() })
 
 A page then starts to load when the pointer rests on its link or the
 keyboard reaches it.
-[Moving between pages](./loading-and-feedback.md#moving-between-pages)
+[Moving between pages](./design-system/loading.md#moving-between-pages)
 says what the reader sees while it loads.
 
 `@tanstack/react-router` is an optional peer dependency, any 1.x

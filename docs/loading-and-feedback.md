@@ -1,63 +1,119 @@
 ---
 title: Loading and feedback
-description: Ghost placeholders while data loads, a fade for the content that replaces them, and toasts for messages.
+description: What a list, a screen and a preview show while their data loads, and toasts for messages.
 ---
 
-While a screen waits for its data, show a ghost: grey shapes where
-the content is about to appear. When the data arrives, fade the
-real content in. godmin ships both halves, plus the toast region
-for short messages.
+While a screen waits for its data, it shows that it is loading, the
+way WordPress does. A list leaves that to DataViews. Any other screen
+shows `LoadingScreen`, a spinner. godmin also ships the toast region
+for short messages. [Loading](./design-system/loading.md) in the
+Design System gives how long each one waits, where it sits and what a
+reader sees.
 
-## The ghosts
+## A list that loads
 
-`LoadingScreen` stands in for a whole screen. `LoadingRows` stands
-in for a list inside a screen whose surroundings are already
-visible:
+Pass the loading state of a DataViews list to its `isLoading`.
+DataViews then shows the loading itself.
+[A list that loads](./lists.md#a-list-that-loads) says which flag to
+pass.
+
+A list that is not DataViews, such as a `godmin-table`, shows
+`LoadingScreen` in its place until its first rows arrive.
+
+## A screen that loads
+
+`LoadingScreen` stands in for a screen, or for the part of a screen
+whose data has not arrived:
 
 ```tsx
-if (reports.isPending) {
-	return <LoadingRows label="Loading reports." rows={8} />
+if (report.isPending) {
+	return (
+		<Page title="Report">
+			<LoadingScreen label="Loading the report." />
+		</Page>
+	)
 }
-return <ReportTable className="godmin-arrival" />
 ```
 
-`label` is required on both. Write the sentence you would have
-shown as text, like `Loading reports.` Sighted users see the
-shapes, and screen reader users hear the label, announced from a
-visually hidden status region. The shapes themselves are hidden
-from assistive technology.
+Render it from the pending flag of your request. Where you put it
+decides how it shows:
 
-`LoadingRows` takes `rows`, which defaults to 5. `LoadingScreen`
-draws a title bar and three text lines, with no count to set.
+- Inside the `Page`, when you know the title. The title stays while
+  the data loads, and the spinner shows at once at the top of the
+  page, under the title, as on a WordPress screen.
+- Inside a dialog, when nothing of the dialog body is known yet. It
+  shows at once there too.
+- Alone, when nothing of the screen is known yet, such as while the
+  session loads before the frame is drawn. It then waits a moment, so
+  a fast load shows nothing, and fades in, in the middle of the space
+  it gets. The wait lives in the stylesheet, so your code needs no
+  timer.
 
-## Why a ghost does not appear immediately
+Inside a `Page` a load that is often fast can show the spinner for a
+moment. To keep the old page on screen instead, let the route loader
+wait for the small data the screen needs, as
+[a list that loads](./lists.md#a-list-that-loads) shows. Data the
+page already holds can go to TanStack Query as `initialData`.
 
-A ghost stays invisible for its first 150ms. If the data arrives
-faster, which it usually does, the user never sees it. Without that
-delay every fast load would flash grey for a moment, and the flash
-reads as something being wrong.
+`label` is required. Write the sentence you would have shown as text,
+like `Loading the report.` A screen reader hears it, as
+[what a screen reader hears](./design-system/loading.md#what-a-screen-reader-hears)
+says. Pass it through your translations.
 
-The delay lives in the stylesheet, so there is nothing to manage in
-your code. Render the ghost from the pending flag and you are done.
-No timers, no extra state.
+Show the content as soon as it arrives. It replaces the spinner at
+once.
 
-If you are coming from 0.4.0: the `useLoadingGate` hook is gone as
-of 0.5.0. It held ghosts on screen for a minimum time after the
-data arrived, which made fast screens feel slow. Render from the
-pending flag and let the stylesheet do the rest.
+## A preview whose shape is known
 
-## Fading the content in
-
-Give the content that replaces a ghost the `godmin-arrival` class
-and it fades in instead of snapping in:
+When a part knows its size before its data arrives, such as an image
+whose width and height you hold, it may show the `Skeleton` of
+`@wordpress/ui` in its place until the image arrives:
 
 ```tsx
-return <ReportTable className="godmin-arrival" />
+const [loaded, setLoaded] = useState(false)
+
+return (
+	<figure className="cover" aria-busy={!loaded}>
+		{loaded ? null : <Skeleton style={{ inlineSize: 320, blockSize: 180 }} />}
+		<img
+			src={coverUrl}
+			alt=""
+			width={320}
+			height={180}
+			className={loaded ? undefined : 'is-loading'}
+			onLoad={() => setLoaded(true)}
+			onError={() => setLoaded(true)}
+		/>
+	</figure>
+)
 ```
 
-The fade is a short opacity ramp with no delay, so the content
-starts appearing the moment it is ready. Together with the ghost's
-own fade, the swap reads as one motion.
+The image is in the page from the start, so the browser loads it.
+Until then your own `is-loading` class lays it over the skeleton,
+out of the flow and transparent, as WordPress does:
+
+```css
+.cover {
+	position: relative;
+}
+
+.cover .is-loading {
+	position: absolute;
+	inset-block-start: 0;
+	inset-inline-start: 0;
+	opacity: 0;
+}
+```
+
+The skeleton goes when the image loads, or fails, so it never pulses
+for good.
+
+Keep it for such a preview. A list or a screen shows a spinner, as
+above. When the image arrives you may fade it in, the one fade
+WordPress gives loaded content.
+[A preview whose shape is known](./design-system/loading.md#a-preview-whose-shape-is-known)
+says how to size the skeleton, how to hide the image and fade it in,
+and what a screen reader needs.
 
 ## Moving between pages
 
@@ -65,13 +121,12 @@ A router can draw a loading screen while the next page loads.
 WordPress's new admin draws none. To do the same, spread
 [`routerDefaults()`](./framing-an-application.md#routes-and-the-frame)
 into your router, and give it no `defaultPendingComponent` and no
-route a `pendingComponent`. Then:
-
-- The page on screen stays until the next one has its code and data.
-- A page starts to load when the pointer rests on its link or the
-  keyboard reaches it, so the wait is often over before the click.
-- A page that fetches its own data after it opens draws its ghost, as
-  above.
+route a `pendingComponent`. The old page then stays until the route
+loader is done, so let the loader wait only for the small data the
+screen needs, as [a list that loads](./lists.md#a-list-that-loads)
+shows.
+[Moving between pages](./design-system/loading.md#moving-between-pages)
+says what the reader sees then.
 
 ## Toasts
 

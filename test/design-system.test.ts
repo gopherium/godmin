@@ -7,7 +7,8 @@ import { resolve } from 'node:path'
 import { expect, test } from 'vitest'
 
 import * as breakpoints from '../src/breakpoints'
-import { ruleValue } from './styles.js'
+import { ruleOf } from './css-rules.js'
+import { dataviews, installedFile, ruleValue } from './styles.js'
 
 /** The folder of Design System pages. */
 const folder = resolve(import.meta.dirname, '../docs/design-system')
@@ -38,19 +39,45 @@ const tokenSheet = readFileSync(createRequire(import.meta.url).resolve('@wordpre
 /** The toaster source, where each toast default is set. */
 const toaster = readFileSync(resolve(import.meta.dirname, '../src/toaster.tsx'), 'utf8')
 
-/** The usage page of the loading ghosts and the toasts. */
+/** The usage page of loading and the toasts. */
 const usage = readFileSync(resolve(import.meta.dirname, '../docs/loading-and-feedback.md'), 'utf8')
 
-/** A toast value the toasts page gives: its rule and property, then the section and words of its passage. */
-interface ToastValue {
+/** The usage page of lists. */
+const listsPage = readFileSync(resolve(import.meta.dirname, '../docs/lists.md'), 'utf8')
+
+/** The module of the installed DataViews that waits before the spinner of a first load. */
+const LAYOUT_MODULE = '@wordpress/dataviews/build-module/components/dataviews-layout/index.mjs'
+
+/** The module of the installed DataViews that waits before a later load pulses. */
+const DELAY_MODULE = '@wordpress/dataviews/build-module/hooks/use-delayed-loading.mjs'
+
+/** How the installed DataViews sheet opens a rule that runs only when the reader allows motion. */
+const MOTION_ALLOWED = '@media not (prefers-reduced-motion) {\n  '
+
+/** Finds the raw timings a stylesheet value holds, the CSS easing keywords among them. */
+const TIMINGS = /\b\d+ms\b|cubic-bezier\([^)]*\)|\bease(?:-in-out|-in|-out)?\b(?!-)/g
+
+/** A value a Design System page gives: its rule and property, then the section and words of its passage. */
+interface PageValue {
 	selector: string
 	property: string
 	heading: string
 	phrase: string
 }
 
+/** The values one Design System page gives, by the file name of the page. */
+interface ValueTable {
+	page: string
+	values: PageValue[]
+}
+
+/** Returns the values a page gives, each from its rule, property, section and words. */
+function valuesOf(rows: string[][]): PageValue[] {
+	return rows.map(([selector, property, heading, phrase]) => ({ selector, property, heading, phrase }))
+}
+
 /** Each toast value the toasts page gives. */
-const toastValues: ToastValue[] = [
+const TOASTS: ValueTable = { page: 'toasts.md', values: valuesOf([
 	['.godmin-toasts', 'bottom', 'Where a toast sits', 'above the bottom'],
 	['.godmin-toasts__item-inner > .godmin-toast', 'margin-block-start', 'Where a toast sits', 'apart'],
 	['.godmin-toasts', 'padding-inline', 'Where a toast sits', 'on each side'],
@@ -75,7 +102,32 @@ const toastValues: ToastValue[] = [
 	['.godmin-toast__action:focus-visible', 'outline', 'Keyboard', 'focus ring of the action'],
 	['.godmin-toast__action:focus-visible', 'outline-offset', 'Keyboard', 'focus ring of the action'],
 	['.godmin-toast__action:focus-visible', 'border-radius', 'Keyboard', 'focus ring of the action'],
-].map(([selector, property, heading, phrase]) => ({ selector, property, heading, phrase }))
+]) }
+
+/** Each loading value the loading page gives. */
+const LOADING: ValueTable = { page: 'loading.md', values: valuesOf([
+	['.godmin-loading-screen', 'animation', 'A screen', 'Directly in the canvas'],
+	['.godmin-loading-screen', 'padding', 'A screen', 'free on every side'],
+	['.godmin-loading-screen', 'min-block-size', 'A screen', 'Outside the frame'],
+]) }
+
+/** The values the loading page gives that no usage page or other section may repeat. */
+const LOADING_NUMBERS = [
+	/\b150ms\b/,
+	/\b200ms\b/,
+	/\b300ms\b/,
+	/\b400ms\b/,
+	/\b500ms\b/,
+	/\b0\.5\b/,
+	/\b1s\b/,
+	/\b100vh\b/,
+]
+
+/** The motion tokens of the fade WordPress gives an image after its skeleton. */
+const IMAGE_FADE = ['--wpds-motion-duration-lg', '--wpds-motion-easing-subtle']
+
+/** Finds a design token a page names with its value in brackets after it, such as `--wpds-border-width-xs` (1px). */
+const TOKEN_WITH_VALUE = /`(--wpds-[a-z0-9-]+)` \(([^()`\s]+)\)/g
 
 /**
  * Returns the value a constant of the toaster source holds, as written.
@@ -110,30 +162,51 @@ function toastCorners(): string {
 	return found[1]
 }
 
-/** A toast value with what the toasts page and the stylesheet give for it. */
-interface ToastGiven extends ToastValue {
+/** A value with what its page and the stylesheet give for it. */
+interface ValueGiven extends PageValue {
+	/** The file name of the page. */
+	page: string
 	/** The bullet or paragraph of the page that gives the value, its spaces made single, empty when missing. */
 	passage: string
 	/** The design tokens and raw timings the stylesheet sets for the value, or else each of its layers, spaces single. */
 	parts: string[]
 }
 
-/**
- * Returns each toast value with the passage of the toasts page that gives it and the parts the stylesheet sets.
- * @returns The values in table order.
- */
-function toastsGiven(): ToastGiven[] {
-	const sections = (pages.get('toasts.md') ?? '').split('\n## ')
-	return toastValues.map((value) => {
-		const section = sections.find((part) => part.startsWith(`${value.heading}\n`)) ?? ''
-		const passages = section.split(/\n(?:- |\n)/).map((passage) => passage.replace(/\s+/g, ' '))
+/** Each Design System page and the lists page split into sections, by file name and then by heading. */
+const sections = new Map(
+	[...pages, ['lists.md', listsPage]].map(([name, text]) => [
+		name,
+		new Map(text.split('\n## ').map((part) => [part.slice(0, part.indexOf('\n')), part])),
+	]),
+)
+
+/** The sections of the loading page, each by its heading, the heading line included. */
+const loading = sections.get('loading.md') ?? new Map<string, string>()
+
+/** Returns the first group of a match, failing when the pattern found nothing. */
+function groupOf(found: RegExpExecArray | null): string {
+	if (found === null) {
+		throw new Error('the pattern found nothing')
+	}
+	return found[1]
+}
+
+/** Returns the bullets and paragraphs of a section, spaces made single, none when the page has no such section. */
+function passagesOf(section: string | undefined): string[] {
+	return (section ?? '').split(/\n(?:- |\n)/).map((passage) => passage.replace(/\s+/g, ' '))
+}
+
+/** Returns each value of a page with the passage that gives it and the parts the stylesheet sets. */
+function valuesGiven({ page, values }: ValueTable): ValueGiven[] {
+	return values.map((value) => {
+		const passages = passagesOf(sections.get(page)?.get(value.heading))
 		const set = (ruleValue(value.selector, value.property) ?? '').replace(/\s+/g, ' ').trim()
-		const tokens = set.match(/--wpds-[a-z0-9-]*[a-z0-9]/g)
-		const timings = set.match(/\b\d+ms\b|cubic-bezier\([^)]*\)/g) ?? []
+		const held = [...(set.match(/--wpds-[a-z0-9-]*[a-z0-9]/g) ?? []), ...(set.match(TIMINGS) ?? [])]
 		return {
 			...value,
+			page,
 			passage: passages.find((passage) => passage.includes(value.phrase)) ?? '',
-			parts: tokens === null ? set.split(',').map((layer) => layer.trim()) : [...tokens, ...timings],
+			parts: held.length > 0 ? held : set.split(',').map((layer) => layer.trim()),
 		}
 	})
 }
@@ -178,6 +251,7 @@ test.each([
 	'accessibility.md',
 	'custom-properties.md',
 	'toasts.md',
+	'loading.md',
 ])('the Design System holds %s', (name) => {
 	expect([...pages.keys()]).toContain(name)
 })
@@ -186,6 +260,14 @@ test('every design token a page names exists in the design system', () => {
 	const tokens = declaredIn(tokenSheet, '--wpds-')
 
 	expect([...namesIn(allPages, '--wpds-')].filter((name) => !tokens.has(name))).toEqual([])
+})
+
+test('every value a page gives in brackets after a design token is the value the design system sets', () => {
+	const given = [...allPages.replace(/\s+/g, ' ').matchAll(TOKEN_WITH_VALUE)]
+	const set = (token: string) => groupOf(new RegExp(`${token}:\\s*([^;]+);`).exec(tokenSheet))
+
+	expect(given.length, 'the pages give values after design tokens').toBeGreaterThan(0)
+	expect(given.filter(([, token, value]) => set(token) !== value).map(([pair]) => pair)).toEqual([])
 })
 
 test('every godmin custom property a page names is declared in the stylesheet', () => {
@@ -221,26 +303,84 @@ test('the toasts page gives how long each kind of toast stays, as the toaster se
 	expect(page).toContain(`${Number(toasterValue('ACTION_DISMISS_AFTER')) / 1000} seconds`)
 })
 
-test.each(toastsGiven())('the toasts page gives the $selector $property as the stylesheet sets it', (given) => {
-	expect(ruleValue(given.selector, given.property), 'the stylesheet sets the value').toBeDefined()
-	expect(given.passage, `the ${given.heading} section says nothing with "${given.phrase}"`).not.toBe('')
-	expect(given.parts.filter((part) => !given.passage.includes(part))).toEqual([])
-})
+test.each([TOASTS, LOADING].flatMap(valuesGiven))(
+	'the $page page gives the $selector $property as the stylesheet sets it',
+	(given) => {
+		expect(ruleValue(given.selector, given.property), 'the stylesheet sets the value').toBeDefined()
+		expect(given.passage, `the ${given.heading} section says nothing with "${given.phrase}"`).not.toBe('')
+		expect(given.parts.filter((part) => !given.passage.includes(part))).toEqual([])
+	},
+)
 
-test('the toasts page names no design token beside a toast value that the stylesheet leaves out', () => {
+test.each([TOASTS, LOADING])('the $page page names no design token beside a value the stylesheet lacks', (table) => {
 	const used = new Map<string, string[]>()
-	for (const { passage, parts } of toastsGiven()) {
+	for (const { passage, parts } of valuesGiven(table)) {
 		used.set(passage, [...(used.get(passage) ?? []), ...parts])
 	}
 	const extra = [...used].flatMap(([passage, parts]) =>
-		[...namesIn(passage, '--wpds-')].filter((name) => !parts.includes(name)),
+		[...namesIn(passage, '--wpds-')].filter((token) => !parts.includes(token)),
 	)
 
 	expect(extra).toEqual([])
 })
 
+test('the loading page gives the waits and the pulse of a list as the installed DataViews sets them', () => {
+	const pulse = ruleOf(`${MOTION_ALLOWED}.dataviews-view-table.is-refreshing`, dataviews)
+	const footer = ruleOf(`${MOTION_ALLOWED}.dataviews-footer .is-refreshing`, dataviews)
+	const still = ruleOf('.dataviews-view-table.is-refreshing', dataviews)
+	const given = [
+		`${groupOf(/delay: (\d+)/.exec(installedFile(LAYOUT_MODULE)))}ms`,
+		`${groupOf(/options = \{ delay: (\d+) \}/.exec(installedFile(DELAY_MODULE)))}ms`,
+		groupOf(/animation: dataviews-pulse (\S+) /.exec(pulse)),
+		`\`${groupOf(/animation: dataviews-pulse \S+ (\S+) /.exec(pulse))}\``,
+		`\`${groupOf(/@keyframes dataviews-pulse \{[^@]*?50% \{\s*opacity: ([\d.]+)/.exec(dataviews))}\``,
+	]
+	const list = loading.get('A list') ?? ''
+
+	expect(footer, 'the footer pulses as the table does').toBe(pulse)
+	expect(given.filter((part) => !list.includes(part))).toEqual([])
+	expect(new Set(list.match(/\b\d+ms\b/g)), 'a wait DataViews does not set').toEqual(new Set(given.slice(0, 2)))
+	expect(loading.get('Reduced motion')).toContain(`\`${groupOf(/opacity: ([\d.]+)/.exec(still))}\``)
+})
+
+test('the loading page names the size and color the installed design system spinner draws with', () => {
+	const spinner = installedFile('@wordpress/ui/build-module/spinner/spinner.mjs')
+	const tokens = [/[{;]height:var\((--wpds-[\w-]+)/, /[{;]color:var\((--wpds-[\w-]+)/].map((found) =>
+		groupOf(found.exec(spinner)),
+	)
+
+	const screen = loading.get('A screen') ?? ''
+
+	expect(tokens.filter((token) => !screen.includes(token))).toEqual([])
+})
+
+test('the loading page gives the image fade after a skeleton with the motion tokens the installed theme sets', () => {
+	const section = loading.get('A preview whose shape is known') ?? ''
+	const given = IMAGE_FADE.flatMap((token) => [
+		`\`${token}\``,
+		groupOf(new RegExp(`${token}:\\s*([^;]+);`).exec(tokenSheet)),
+	])
+
+	expect(given.filter((part) => !section.includes(part))).toEqual([])
+})
+
+test('the usage pages leave every loading value to the loading page', () => {
+	const usageLoading = usage.slice(0, usage.indexOf('## Toasts\n'))
+	const lists = sections.get('lists.md')?.get('A list that loads') ?? ''
+
+	expect(lists, 'the lists page has a section on a list that loads').not.toBe('')
+	expect(LOADING_NUMBERS.filter((value) => value.test(usageLoading) || value.test(lists))).toEqual([])
+})
+
+test('the motion page leaves every loading value to the loading page', () => {
+	const section = sections.get('motion.md')?.get('Loading') ?? ''
+
+	expect(section, 'the motion page has a Loading section').not.toBe('')
+	expect(LOADING_NUMBERS.filter((value) => value.test(section))).toEqual([])
+})
+
 test('the toasts page gives the corner preset every toast corner keeps, as the toaster sets it', () => {
-	const corners = toastsGiven().filter((given) => given.property === 'border-radius')
+	const corners = valuesGiven(TOASTS).filter((given) => given.property === 'border-radius')
 
 	expect(corners.map((given) => given.selector)).toEqual(['.godmin-toast', '.godmin-toast__action:focus-visible'])
 	expect(corners.filter((given) => !given.passage.includes(`\`${toastCorners()}\``))).toEqual([])

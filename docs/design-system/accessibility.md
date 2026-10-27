@@ -130,16 +130,18 @@ So the sidebar rows, the page tabs and a log list keep
 ## What a screen reader hears
 
 godmin gives a sentence for the ear wherever the eye gets a shape, a
-glyph or a bare number. Visually hidden text is text on the page that
+glyph or a bare number. A list that loads is the one exception, as
+in WordPress. Visually hidden text is text on the page that
 only a screen reader meets. Some things appear without the reader
-moving to them, such as a toast or a loading ghost. A screen reader
+moving to them, such as a toast or a loading screen. A screen reader
 learns of those through a live region, a part of the page it reads
 aloud when it changes.
 
 | Part | What a screen reader hears | Set up in |
 | --- | --- | --- |
 | A toast | Its message, politely. Never its action | [What a screen reader hears](./toasts.md#what-a-screen-reader-hears) |
-| A loading ghost | The `label` sentence, from a visually hidden status. The grey shapes are hidden | [The ghosts](../loading-and-feedback.md#the-ghosts) |
+| A loading screen | The `label` sentence, from a visually hidden status. The spinner is hidden | [What a screen reader hears](./loading.md#what-a-screen-reader-hears) |
+| A list that loads | Nothing on its first load, as in WordPress. A table or a grid is marked busy on a later load | [What a screen reader hears](./loading.md#what-a-screen-reader-hears) |
 | A count beside a row | The `label` sentence, in place of the bare number | [A count beside a row](../framing-an-application.md#a-count-beside-a-row) |
 | An `ErrorNotice` | Its message, at once, as an alert | [ErrorNotice](../screens.md#errornotice) |
 
@@ -176,7 +178,7 @@ default stays in English: the hint a toast with no action gives a
 screen reader, until you pass `dismissLabel`, as
 [what a screen reader hears](./toasts.md#what-a-screen-reader-hears)
 says. Every other word comes from your app, such as the `label` of a
-loading ghost or a count. Pass each one through your translations.
+loading screen or a count. Pass each one through your translations.
 
 A translated label may be longer than the English one, so godmin
 gives no label a fixed width:

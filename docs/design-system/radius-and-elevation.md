@@ -24,7 +24,7 @@ presets.
 | `--wpds-border-radius-xl` (12px) | Page and app shell surfaces | The canvas, the panel that shows the active screen |
 | `--wpds-border-radius-lg` (8px) | Cards, dialogs, notices and other larger containers | A `LogList`, the box of items shown one under the other |
 | `--wpds-border-radius-md` (4px) | Menus, popovers and other small overlays | A toast, which keeps its corners at every preset, as [toasts](./toasts.md#colors-corners-and-shadow) shows |
-| `--wpds-border-radius-sm` (2px) | Buttons, inputs and compact controls | A sidebar row, the Back button of a sidebar screen, the grey bars of a loading ghost, the focus ring of a page tab, and the focus ring of a toast action, which keeps its corners at every preset |
+| `--wpds-border-radius-sm` (2px) | Buttons, inputs and compact controls | A sidebar row, the Back button of a sidebar screen, the focus ring of a page tab, and the focus ring of a toast action, which keeps its corners at every preset |
 | `--wpds-border-radius-xs` (1px) | Elements nested inside controls | Nothing of godmin's own |
 
 A surface inside another takes a smaller step than the one around

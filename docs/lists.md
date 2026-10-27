@@ -299,6 +299,63 @@ const empty = viewNarrows(view) ? (
 A filter with an empty pick, or one still waiting for its value,
 narrows nothing.
 
+## A list that loads
+
+Pass the loading state of the list to DataViews as `isLoading`.
+DataViews then shows what every WordPress list shows: nothing at
+first, a spinner while the first rows load, and the old rows, dimmed,
+while the next ones load. [A list](./design-system/loading.md#a-list)
+gives how long each step waits.
+
+Pass true while the list waits for rows it does not hold yet: from
+the first render until the first answer, even while the request still
+waits for something else, and while a new page, search or sort waits
+for its answer. With TanStack Query:
+
+```tsx
+<DataViews {...props} data={orders.data?.items ?? []} isLoading={orders.isPending || orders.isPlaceholderData} />
+```
+
+Do not pass `isFetching`. TanStack Query sets it on the very first
+render of a list whose stored rows are stale, and DataViews then hides
+those rows behind its spinner until the fetch ends.
+
+With urql, pass
+`result.fetching || (result.data === undefined && result.error === undefined)`.
+
+When the page already holds the first rows, such as data the server
+put in the page, give them to TanStack Query as `initialData`. The
+list then shows them at once, with no spinner, as WordPress does with
+the data it preloads.
+
+The flag has to be true on the very first render. DataViews decides
+on that render whether the list has loaded. A list that starts with
+`false` never shows the spinner. It shows its empty state, which dims
+after a moment until the rows arrive.
+
+Keep DataViews on screen while it loads, and never swap it for
+`LoadingScreen`. DataViews keeps the search box and the filters in
+place, and keeps the old rows during a later load.
+
+Never give DataViews a `key` that changes with the view, such as the
+layout, a status or a category. A new key mounts a new DataViews.
+When the new view then loads, it starts over as on a first load: the
+rows go, nothing shows for a moment, then the spinner, where a later
+load would keep the rows on screen.
+
+In a route, let the loader wait only for the small data the screen
+needs before it can draw, and start the rows without waiting. The old
+page then stays only that long, and the list shows its own loading.
+With TanStack Query, `ensureQueryData` waits and `prefetchQuery`
+with no `await` starts:
+
+```tsx
+loader: () => {
+	void queryClient.prefetchQuery(ordersQuery)
+	return queryClient.ensureQueryData(orderStatusesQuery)
+},
+```
+
 ## Paging on the server
 
 `filterSortAndPaginate` needs every row in the browser. A long list
@@ -312,7 +369,7 @@ import { Page, paginationOf, useServerPaging } from '@gopherium/godmin'
 export function OrdersScreen() {
 	const [view, setView] = useState<View>({ type: 'table', page: 1, perPage: 20, fields: ['total'] })
 	const paging = useServerPaging(view, 100)
-	const { page, asked } = useOrderPage(paging.window)
+	const { page, asked, loading } = useOrderPage(paging.window)
 	paging.record(page, asked)
 	return (
 		<Page title="Orders" list>
@@ -323,6 +380,7 @@ export function OrdersScreen() {
 				view={view}
 				onChangeView={setView}
 				defaultLayouts={{ table: {} }}
+				isLoading={loading}
 			/>
 		</Page>
 	)
@@ -342,7 +400,9 @@ not arrived. `paginationOf` turns it into the totals DataViews shows.
 `useOrderPage` also gives back `asked`, the limit of the request that
 got this page. With urql, that is `result.operation?.variables.limit`.
 Call `paging.record(page, asked)` in the same component, right after
-your request, as the example does.
+your request, as the example does. It also gives back `loading`, true
+until its first answer and while a new page waits for its answer, as
+[a list that loads](#a-list-that-loads) asks.
 
 `paging.record` remembers the page size the server used for that
 request. When the server used another size than you asked for, the
@@ -1348,6 +1408,10 @@ DataViews title field:
 Inside a `list` page the table reaches the canvas edges too, and its
 first and last cells pad by 24px, as DataViews does. A custom list
 and a DataViews list then line up with each other and with the title.
+
+While its first rows load, show `LoadingScreen` in place of the
+table, as
+[a list that loads](./loading-and-feedback.md#a-list-that-loads) says.
 
 ## The list chrome in Spanish
 
