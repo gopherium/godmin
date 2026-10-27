@@ -70,7 +70,8 @@ whose width and height you hold, it may show the `Skeleton` of
 `@wordpress/ui` in its place until the image arrives:
 
 ```tsx
-const [loaded, setLoaded] = useState(false)
+const [loadedUrl, setLoadedUrl] = useState<string>()
+const loaded = loadedUrl === coverUrl
 
 return (
 	<figure className="cover" aria-busy={!loaded}>
@@ -81,8 +82,8 @@ return (
 			width={320}
 			height={180}
 			className={loaded ? undefined : 'is-loading'}
-			onLoad={() => setLoaded(true)}
-			onError={() => setLoaded(true)}
+			onLoad={() => setLoadedUrl(coverUrl)}
+			onError={() => setLoadedUrl(coverUrl)}
 		/>
 	</figure>
 )
@@ -106,7 +107,7 @@ out of the flow and transparent, as WordPress does:
 ```
 
 The skeleton goes when the image loads, or fails, so it never pulses
-for good.
+for good. It comes back for a new `coverUrl` until that image loads.
 
 Keep it for such a preview. A list or a screen shows a spinner, as
 above. When the image arrives you may fade it in, the one fade
