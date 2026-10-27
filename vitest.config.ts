@@ -12,8 +12,14 @@ const reduceMotion: BrowserCommand<[on: boolean]> = async ({ page }, on) => {
 	await page.emulateMedia({ reducedMotion: on ? 'reduce' : 'no-preference' })
 }
 
-/** The style Argos adds while it takes a shot, with no toast animation and no element taking the pointer. */
-const SHOT_STYLE = '.godmin-toasts__item, .godmin-toast { animation: none; } * { pointer-events: none !important; }'
+/** The style Argos adds to a shot: no motion, spinners at rest, the list pulse dim, no pointer. */
+const SHOT_STYLE = [
+	'.godmin-toasts__item, .godmin-toast { animation: none; }',
+	'.godmin-loading-screen path, .components-spinner path { animation: none; }',
+	'.components-modal__frame { animation: none; transform: scale(1); }',
+	'.dataviews-wrapper .is-refreshing { animation: none !important; opacity: 0.5 !important; }',
+	'* { pointer-events: none !important; }',
+].join(' ')
 
 /** Returns a fresh headless Chromium setup with grayscale text and no font hinting. */
 function chromium() {
@@ -27,6 +33,7 @@ function chromium() {
 
 export default defineConfig({
 	plugins: [react()],
+	optimizeDeps: { include: ['@wordpress/components', '@wordpress/dataviews'] },
 	test: {
 		env: { TZ: 'UTC' },
 		coverage: {
