@@ -7,7 +7,7 @@ import type { Action, Field, View } from '@wordpress/dataviews'
 import { useRef, useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
-import { focusedTrigger, LoadingRows, useFocusBack } from '../src/index'
+import { focusedTrigger, useFocusBack } from '../src/index'
 import type { Trigger } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
@@ -67,8 +67,8 @@ interface ListProps {
 	posts: Post[]
 	/** Whether the list reads its items again. */
 	busy: boolean
-	/** Whether the list draws loading rows in place of DataViews while busy, so DataViews mounts again after. */
-	loadingRows: boolean
+	/** Whether the list takes DataViews off the page while busy. */
+	unmounts: boolean
 	/** Whether the list draws its region. */
 	region: boolean
 	/** Whether the rows offer the row action. */
@@ -82,14 +82,12 @@ interface ListProps {
  * @param props - The layout, the items, whether the list is busy, how it draws then, its region and what to record.
  * @returns The list.
  */
-function List({ layout, posts, busy, loadingRows, region, withActions, handle }: ListProps) {
+function List({ layout, posts, busy, unmounts, region, withActions, handle }: ListProps) {
 	const list = useRef<HTMLDivElement>(null)
 	const [selection, setSelection] = useState<string[]>([])
 	handle.focusBack = useFocusBack(busy, list)
 	const view: View = { type: layout, fields: [], titleField: 'title', mediaField: 'media', page: 1, perPage: 10 }
-	const views = busy && loadingRows ? (
-		<LoadingRows label="Loading posts." />
-	) : (
+	const views = busy && unmounts ? null : (
 		<DataViews
 			data={posts}
 			fields={FIELDS}
@@ -123,7 +121,7 @@ function List({ layout, posts, busy, loadingRows, region, withActions, handle }:
  */
 function renderList(layout: Layout, props: Partial<Omit<ListProps, 'layout' | 'handle'>> = {}) {
 	const handle: Handle = { focusBack: () => {}, clicked: [] }
-	const drawn = { posts: POSTS, busy: false, loadingRows: false, region: true, withActions: true, ...props }
+	const drawn = { posts: POSTS, busy: false, unmounts: false, region: true, withActions: true, ...props }
 	const { rerender, unmount } = renderAdmin(<List layout={layout} handle={handle} {...drawn} />)
 	return {
 		handle,
@@ -408,7 +406,7 @@ test('finds the item inside its own list, never a cell marked with its id elsewh
 	renderAdmin(
 		<>
 			<span data-item-id="1">Details</span>
-			<List layout="table" posts={POSTS} busy={false} loadingRows={false} region withActions handle={handle} />
+			<List layout="table" posts={POSTS} busy={false} unmounts={false} region withActions handle={handle} />
 		</>,
 	)
 	dropFocus()
@@ -488,7 +486,7 @@ test.each([
 	{ trigger: 'actions' as const, selector: MENU },
 ])('keeps the focus on the $trigger of a grid card the grid drew anew as it measured its columns', async (each) => {
 	measureGrids(ROW_OF_THREE)
-	const { handle, rerender } = renderList('grid', { posts: [...POSTS].reverse(), busy: true, loadingRows: true })
+	const { handle, rerender } = renderList('grid', { posts: [...POSTS].reverse(), busy: true, unmounts: true })
 	act(() => handle.focusBack('1', each.trigger))
 
 	rerender({ busy: false })

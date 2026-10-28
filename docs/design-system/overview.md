@@ -100,8 +100,12 @@ layer.
 - [Custom properties](./custom-properties.md): every godmin custom
   property, where it is set and what it changes.
 
-One more page covers a single part, how it looks and how it behaves:
+Two more pages cover a single part each, how it looks and how it
+behaves:
 
 - [Toasts](./toasts.md): where a toast sits, how it looks, how long it
   stays, how a reader clears it, and what a keyboard or a screen reader
   meets.
+- [Loading](./loading.md): what a list, a screen and a preview show
+  while their data loads, how long each waits and what a screen reader
+  hears.

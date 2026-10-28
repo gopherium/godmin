@@ -1,38 +1,36 @@
 ---
 title: Motion
-description: The sidebar slide, the toast motion and the fades of a godmin admin, the design tokens that time them, and what changes when a reader asks for less motion.
+description: The sidebar slide, the toast motion and the fade of a loading screen in a godmin admin, the design tokens that time them, and what changes when a reader asks for less motion.
 ---
 
 godmin's own motion is short and small. The sidebar slides a new
 menu screen in. Toasts grow in and fade, and the toasts around them
-slide along. Ghosts, the grey shapes shown
-while data loads, fade in, and so does the content that replaces
-them. godmin's stylesheet animates nothing else. It sets no
-transitions, so its own hover and focus looks change at once.
+slide along. A loading screen that fills the canvas or stands outside
+the frame waits a moment, then fades in. godmin's stylesheet animates
+nothing else. It sets no transitions, so its own hover and focus
+looks change at once.
 
 Parts that WordPress packages draw keep the motion those packages
-give them. These include the dialogs, the drawer on a small screen
-and the bars inside a ghost.
+give them. These include the dialogs, the drawer on a small screen,
+the spinners and the pulse of a list that loads.
 
 ## The tokens
 
 A design token is a value the WordPress Design System names, written
 as a CSS custom property. A custom property is a CSS variable. A
 duration is how long an animation takes. An easing is the curve its
-speed follows from start to end. godmin times its motion with five
+speed follows from start to end. godmin times its motion with three
 design tokens:
 
 | Token | Value | What it times |
 | --- | --- | --- |
 | `--wpds-motion-duration-lg` | 300ms | Toast motion, see [Motion](./toasts.md#motion) |
-| `--wpds-motion-duration-md` | 200ms | A ghost or new content fading in |
 | `--wpds-motion-duration-sm` | 100ms | Toast motion, see [Motion](./toasts.md#motion) |
 | `--wpds-motion-duration-xs` | 50ms | Toast motion, see [Motion](./toasts.md#motion) |
-| `--wpds-motion-easing-balanced` | `cubic-bezier(0.4, 0, 0.2, 1)` | The fades of ghosts and new content |
 
-Some values have no token: the sidebar slide, the wait before a ghost
-shows, and the rest of the toast motion. The sections below cover
-them.
+Some values have no token: the sidebar slide, the wait and the fade
+of a loading screen, and the rest of the toast motion. The sections
+below cover them.
 
 ## The sidebar slide
 
@@ -81,30 +79,21 @@ and curve, and says what a leaving toast does.
 
 ## Loading
 
-`LoadingScreen` and `LoadingRows` draw the ghosts, as
-[the ghosts](../loading-and-feedback.md#the-ghosts) shows.
-
-A ghost starts transparent. It waits a short delay, then fades in and
-stays visible. A load that ends within the delay shows no ghost at
-all.
-[Why a ghost does not appear immediately](../loading-and-feedback.md#why-a-ghost-does-not-appear-immediately)
-gives the delay and the reason for it. The bars inside a ghost are
-the `Skeleton` of `@wordpress/ui`, and they pulse the way that
-package pulses them.
-
-Content with the `godmin-arrival` class fades in the same way, with
-no delay.
-[Fading the content in](../loading-and-feedback.md#fading-the-content-in)
-shows where to put the class.
+A spinner turns while a list or a screen loads, and the old rows of a
+list pulse while the next ones load. Both come from WordPress
+packages. A loading screen that fills the canvas or stands outside
+the frame waits, then fades in. [Loading](./loading.md) gives how
+long each one waits and how it moves.
 
 ## Reduced motion
 
 A reader can ask their system for less motion. The browser then
 reports `prefers-reduced-motion: reduce` to CSS, and godmin changes
-two things:
+three things:
 
-- The fades of ghosts and new content last 1ms. They still run and
-  still end. So a ghost still waits its delay and then stays visible.
+- A loading screen that fills the canvas or stands outside the frame
+  shows at once when its wait ends, with no fade. Its wait stays, so
+  a fast load still shows nothing.
 - Every toast animation lasts 1ms and starts at once, with no wait.
   It still runs and still ends, so a leaving toast still goes. A toast
   shows in its place at once and goes at once, and the toasts above
@@ -113,9 +102,6 @@ two things:
   when you set your own slide duration. It does not play, and the new
   screen shows at once in its place.
 
-These rules keep each animation itself and the setting that holds a
-ghost visible after its fade. They keep the delay of a ghost too.
-Turning an animation off would leave a ghost transparent for good.
-
-The bars inside a ghost stop their pulse too. Their WordPress
-package does that on its own.
+Loading keeps its spinners turning, and a list holds its old rows
+still. [Reduced motion](./loading.md#reduced-motion) on the loading
+page says what loading does.
