@@ -4,6 +4,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `docs/design-system/loading.md` says what an app's `index.html` holds before its script runs: an empty root and no style of its own.
+
+### Fixed
+
+- `docs/framing-an-application.md` spells the capability of the Users row `manage_users`, with underscores as WordPress spells capabilities, in place of `users.manage`.
+
 ## [0.29.0] - 2026-10-28
 
 ### Added

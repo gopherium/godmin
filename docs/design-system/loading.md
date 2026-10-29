@@ -73,6 +73,15 @@ When it shows and where it sits depend on what is around it:
   height of the window, as the frame is. So the spinner sits in the
   middle of the window.
 
+## Before the script runs
+
+Until your script runs, the browser shows only what your `index.html`
+holds. Leave its root element empty and give the page no style of its
+own, as the WordPress Site Editor leaves its root empty until its
+script runs. The window stays blank. Then `LoadingScreen` outside the
+frame waits and fades in as above, so a fast start shows nothing at
+all.
+
 ## A preview whose shape is known
 
 Some parts know their size before their data arrives, such as an

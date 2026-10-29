@@ -147,6 +147,13 @@ test.each([...pages, ['README.md', readme] as const])(
 	},
 )
 
+test.each([...pages])('%s spells capabilities in its examples with underscores, as WordPress does', (_path, page) => {
+	const code = page.nodes.flatMap((node) => (node.type === 'code' ? [node.value] : []))
+	const misspelled = /\bcapability\s*:\s*(['"`])(?![a-z]+(?:_[a-z]+)*\1).*?\1/g
+
+	expect(code.flatMap((value) => value.match(misspelled) ?? [])).toEqual([])
+})
+
 test('every local link of the README reaches a page and heading in the docs', () => {
 	const links = linksOf(readme).filter(local)
 

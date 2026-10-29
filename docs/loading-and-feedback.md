@@ -49,6 +49,10 @@ decides how it shows:
   it gets. The wait lives in the stylesheet, so your code needs no
   timer.
 
+Before your script runs, the browser shows only your `index.html`.
+[Before the script runs](./design-system/loading.md#before-the-script-runs)
+says what it holds.
+
 Inside a `Page` a load that is often fast can show the spinner for a
 moment. To keep the old page on screen instead, let the route loader
 wait for the small data the screen needs, as
