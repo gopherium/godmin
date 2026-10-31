@@ -154,7 +154,7 @@ function keepOnList(list: HTMLElement | null): void {
  * @returns The place, none when the element is the list region itself or sits outside it.
  */
 function placeOf(list: HTMLElement | null, focused: EventTarget | null): Place | null {
-	if (list === null || focused === list || !list.contains(focused as Node | null)) {
+	if (focused === list || !list?.contains(focused as Node | null)) {
 		return null
 	}
 	const control = focused as HTMLElement
