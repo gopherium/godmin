@@ -4,6 +4,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `Page` freezes the checkbox and title columns of a list table wider than its space, above 782px.
+- `ListEmpty` takes `actions`, the buttons under its description.
+- `ListNoResults` shows what a list says when a search or a filter finds nothing, in Spanish and French too.
+- `useListRun` hands out `refreshing`, true while a run reloads its list, and moves a focus the reload makes inert to the list region.
+- The list region draws the WordPress region focus ring in place of the browser's when a run started from the keyboard hands it the focus.
+- `docs/design-system/lists.md` gives every value of a list page, a wide table, its rows and an empty list.
+
+### Changed
+
+- **Breaking.** `ListEmpty` takes `description` in place of `hint`.
+- **Breaking.** `ListRun` has `onRefresh` beside `onStart`.
+- **Breaking.** `useBulkRun` marks the list reloading as its first call works, shows its toast and resolves as the last call ends, then reloads the list, and a failed reload no longer rejects it.
+- After a run, `useListRun` puts the focus back on the pressed control, or on the first control of the row that took its place unless it is a primary action, in place of the list region.
+- Inside a DataViews list `ListEmpty` drops its 48px above and below.
+- `docs/lists.md` and `docs/screens.md` leave every list value to the new page.
+- The empty list titles in `docs/lists.md` end with no full stop.
+
 ## [0.29.1] - 2026-10-29
 
 ### Added
