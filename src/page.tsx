@@ -1,8 +1,10 @@
 /* oxlint-disable react/only-export-components -- the page kit ships its parts
    beside the type they share. */
 import { Button, Notice, Stack, Text } from '@wordpress/ui'
-import { createContext, useContext } from 'react'
+import { createContext, useCallback, useContext, useRef } from 'react'
 import type { ComponentProps, HTMLAttributes, ReactNode, Ref } from 'react'
+
+import { useWideList } from './wide-list.js'
 
 type TextVariant = ComponentProps<typeof Text>['variant']
 
@@ -109,6 +111,53 @@ function regionOf(label: string | undefined, reached: boolean): HTMLAttributes<H
 }
 
 /**
+ * Hands an element to a ref object or a ref function, and to nothing when no ref is given.
+ * @param ref - The ref the element goes to.
+ * @param element - The element, none once it leaves.
+ */
+function handTo(ref: Ref<HTMLDivElement> | undefined, element: HTMLDivElement | null): void {
+	if (typeof ref === 'function') {
+		ref(element)
+	} else if (ref) {
+		ref.current = element
+	}
+}
+
+/**
+ * Renders the list region of a page, marked wide while its DataViews table is wider than its space.
+ * @param props - The name of the region, the ref code holds to it, and the list.
+ * @returns The list region element.
+ */
+function ListRegion({
+	label,
+	listRef,
+	children,
+}: {
+	label?: string
+	listRef?: Ref<HTMLDivElement>
+	children: ReactNode
+}) {
+	const own = useRef<HTMLDivElement>(null)
+	const wide = useWideList(own)
+	const handOn = useCallback(
+		(element: HTMLDivElement | null) => {
+			own.current = element
+			handTo(listRef, element)
+		},
+		[listRef],
+	)
+	return (
+		<div
+			className={wide ? 'godmin-page__list godmin-page__list--wide' : 'godmin-page__list'}
+			ref={handOn}
+			{...regionOf(label, listRef !== undefined)}
+		>
+			{children}
+		</div>
+	)
+}
+
+/**
  * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content.
  * @param props - The title, subtitle, actions, tabs, aside, list flag, list name and ref, extra class, title level
  * and content.
@@ -156,9 +205,9 @@ export function Page({
 				{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
 				<PageBody aside={aside}>
 					{list ? (
-						<div className="godmin-page__list" ref={listRef} {...regionOf(listLabel, listRef !== undefined)}>
+						<ListRegion label={listLabel} listRef={listRef}>
 							{children}
-						</div>
+						</ListRegion>
 					) : (
 						children
 					)}

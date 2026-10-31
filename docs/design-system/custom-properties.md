@@ -58,3 +58,6 @@ do not read or set them in your app.
   `--godmin-page-tabs-fade-width`, `--godmin-page-tabs-fade` and
   `--godmin-page-tabs-fade-both` fade an end of a `PageTabs` row where
   more tabs sit out of view. They are set on the row itself.
+- `--godmin-list-frozen-start` holds the width of the checkbox column
+  of a wide list table, where its frozen title starts. It is set on
+  the table.

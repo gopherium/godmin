@@ -88,6 +88,55 @@ body {
 	line-height: var(--wpds-typography-line-height-sm);
 }
 
+/* Freezes the checkbox and title of a wide DataViews table on a list page wider than 782px, as Jetpack Forms does. */
+@media (width > 782px) {
+	/* Sets where the frozen title starts, the width of the checkbox column. */
+	.godmin-page__list--wide:has(td .dataviews-title-field) .dataviews-view-table.has-bulk-actions {
+		--godmin-list-frozen-start: calc(var(--wpds-dimension-padding-2xl) + var(--wpds-dimension-size-sm));
+	}
+
+	/* Sizes the checkbox column to the width where the frozen title starts. */
+	.godmin-page__list--wide:has(td .dataviews-title-field) .dataviews-view-table.has-bulk-actions col.dataviews-view-table__col-checkbox.dataviews-view-table__col-checkbox {
+		inline-size: var(--godmin-list-frozen-start);
+	}
+
+	/* Freezes the checkbox column at the start edge, on the list background. */
+	.godmin-page__list--wide:has(td .dataviews-title-field) .dataviews-view-table.has-bulk-actions .dataviews-view-table__checkbox-column {
+		position: sticky;
+		inset-inline-start: 0;
+		background-color: var(--wp-dataviews-color-background, var(--wpds-color-background-surface-neutral-strong));
+	}
+
+	/* Freezes the title column after the checkbox column, on the list background. */
+	.godmin-page__list--wide:has(td .dataviews-title-field) .dataviews-view-table.has-bulk-actions .dataviews-view-table__checkbox-column + * {
+		position: sticky;
+		inset-inline-start: var(--godmin-list-frozen-start);
+		padding-inline-end: var(--wpds-dimension-padding-2xl);
+		min-inline-size: 280px;
+		background-color: var(--wp-dataviews-color-background, var(--wpds-color-background-surface-neutral-strong));
+	}
+
+	/* Draws the line at the end of a frozen title, as DataViews draws the line beside its pinned actions. */
+	.godmin-page__list--wide:has(td .dataviews-title-field) .dataviews-view-table.has-bulk-actions .dataviews-view-table__checkbox-column + *::after {
+		content: '';
+		position: absolute;
+		inset-block: 0;
+		inset-inline-end: 0;
+		inline-size: var(--wpds-border-width-xs);
+		background-color: var(--wpds-color-stroke-surface-neutral-weak);
+	}
+
+	/* Repeats the tint of a selected row on its frozen cells, which paint over the row. */
+	.godmin-page__list--wide:has(td .dataviews-title-field) .dataviews-view-table.has-bulk-actions .dataviews-view-table__row.is-selected > :is(.dataviews-view-table__checkbox-column, .dataviews-view-table__checkbox-column + *) {
+		background-color: var(--wpds-color-background-interactive-brand-weak-active);
+	}
+
+	/* Keeps the frozen header cells over the rest of their row as it scrolls under them. */
+	.godmin-page__list--wide:has(td .dataviews-title-field) .dataviews-view-table.has-bulk-actions thead .dataviews-view-table__row > :is(.dataviews-view-table__checkbox-column, .dataviews-view-table__checkbox-column + *) {
+		z-index: 2;
+	}
+}
+
 @layer godmin {
 	body {
 		margin: 0;
