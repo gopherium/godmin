@@ -898,6 +898,10 @@ body {
 		padding-block: 48px;
 	}
 
+	.dataviews-wrapper .godmin-empty {
+		padding-block: 0;
+	}
+
 	.godmin-table {
 		width: 100%;
 		border-collapse: collapse;

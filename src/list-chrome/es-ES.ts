@@ -2,7 +2,7 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The Spanish list chrome, list dates and sidebar words, compiled from the es-ES.po source beside it. */
+/** The Spanish list chrome, list dates, sidebar and no results words, compiled from the es-ES.po source beside it. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' },
 	'%1$d of %2$d Item': ['%1$d de %2$d elemento', '%1$d de %2$d elementos'],
@@ -200,6 +200,9 @@ const catalog: ListChromeCatalog = {
 	'Today, %s': ['Hoy, %s'],
 	'Today, %s, selected': ['Hoy, %s, seleccionado'],
 	True: ['Verdadero'],
+	"Try adjusting your search or filters to find what you're looking for.": [
+		'Prueba a ajustar tu búsqueda o tus filtros para encontrar lo que buscas.',
+	],
 	Tue: ['Mar'],
 	Tuesday: ['martes'],
 	'Unknown status for %1$s': ['Estado desconocido para %1$s'],

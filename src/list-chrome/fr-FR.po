@@ -139,6 +139,10 @@ msgid "Navigation"
 msgstr "Navigation"
 
 #, fuzzy
+msgid "No results found"
+msgstr "Aucun résultat trouvé"
+
+#, fuzzy
 msgctxt "November abbreviation"
 msgid "Nov"
 msgstr "Nov"
@@ -200,6 +204,10 @@ msgstr "Jeu"
 #, fuzzy
 msgid "Thursday"
 msgstr "jeudi"
+
+#, fuzzy
+msgid "Try adjusting your search or filters to find what you're looking for."
+msgstr "Essayez d'ajuster votre recherche ou vos filtres pour trouver ce que vous cherchez."
 
 #, fuzzy
 msgid "Tue"

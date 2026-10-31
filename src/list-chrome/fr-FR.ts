@@ -2,7 +2,7 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The French list dates, dialog words and sidebar words, compiled from the fr-FR.po source beside it. */
+/** The French list dates, dialog, sidebar and no results words, compiled from the fr-FR.po source beside it. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'fr-FR', 'plural-forms': 'nplurals=2; plural=(n > 1);' },
 	AM: ['AM'],
@@ -34,6 +34,7 @@ const catalog: ListChromeCatalog = {
 	Mon: ['Lun'],
 	Monday: ['lundi'],
 	Navigation: ['Navigation'],
+	'No results found': ['Aucun résultat trouvé'],
 	November: ['novembre'],
 	'November abbreviation\u0004Nov': ['Nov'],
 	October: ['octobre'],
@@ -49,6 +50,9 @@ const catalog: ListChromeCatalog = {
 	Sunday: ['dimanche'],
 	Thu: ['Jeu'],
 	Thursday: ['jeudi'],
+	"Try adjusting your search or filters to find what you're looking for.": [
+		"Essayez d'ajuster votre recherche ou vos filtres pour trouver ce que vous cherchez.",
+	],
 	Tue: ['Mar'],
 	Tuesday: ['mardi'],
 	Wed: ['Mer'],

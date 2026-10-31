@@ -222,6 +222,7 @@ const SOURCE_MESSAGES = new Map(
 const SPANISH = shipped('es-ES', spanish)
 const CATALOGUES = [SPANISH, shipped('fr-FR', french)]
 const LIST_DATE_MESSAGES = SOURCE_MESSAGES.get('list-dates.ts') ?? []
+const NO_RESULTS_MESSAGES = SOURCE_MESSAGES.get('list-empty.tsx') ?? []
 const SIDEBAR_MESSAGES = ['frame.tsx', 'navigation.tsx', 'navigation-screen.tsx'].flatMap(
 	(path) => SOURCE_MESSAGES.get(path) ?? [],
 )
@@ -541,6 +542,20 @@ test('ships every message the list dates ask for, in each language', () => {
 		const ships = new Set(catalogue.messages.map(signatureOf))
 		for (const message of LIST_DATE_MESSAGES) {
 			expect(ships.has(signatureOf(message)), `${catalogue.locale} ships no ${keyOf(message)}`).toBe(true)
+		}
+	}
+})
+
+test('ships the words ListNoResults asks for, in each language, marked fuzzy', () => {
+	expect(NO_RESULTS_MESSAGES.map(keyOf)).toEqual([
+		'No results found',
+		"Try adjusting your search or filters to find what you're looking for.",
+	])
+	for (const catalogue of CATALOGUES) {
+		for (const message of NO_RESULTS_MESSAGES) {
+			const entry = catalogue.messages.find((shipped) => signatureOf(shipped) === signatureOf(message))
+			expect(entry?.fuzzy, `${catalogue.locale} ships no fuzzy ${keyOf(message)}`).toBe(true)
+			expect(entry?.msgstr, `${catalogue.locale} ${keyOf(message)}`).not.toEqual([message.msgid])
 		}
 	}
 })

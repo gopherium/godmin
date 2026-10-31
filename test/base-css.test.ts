@@ -8,7 +8,7 @@ import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
 import { atRuleBodies, blockOf, ruleOf } from './css-rules.js'
-import { base } from './styles.js'
+import { base, ruleValue } from './styles.js'
 
 const dataviewsManifest = createRequire(import.meta.url).resolve('@wordpress/dataviews/package.json')
 
@@ -836,6 +836,17 @@ test('leaves stacking context isolation to the host component', () => {
 
 test('centers the empty state, which the design system does not place itself', () => {
 	expect(base).toMatch(/\.godmin-empty\s*\{[^}]*margin-inline:\s*auto/)
+})
+
+test('drops the empty state padding inside a DataViews list and keeps 48px everywhere else', () => {
+	const inside = '.dataviews-wrapper .godmin-empty'
+
+	expect(ruleValue('.godmin-empty', 'padding-block')).toBe('48px')
+	expect(ruleValue(inside, 'padding-block')).toBe('0')
+	expect(base.indexOf(`${inside} {`), 'the inner rule comes after the outer one').toBeGreaterThan(
+		base.indexOf('\t.godmin-empty {'),
+	)
+	expect(unlayered(inside), 'the inner rule sits in the godmin layer').toBe(false)
 })
 
 test('gives the table region a containing block as well as its overflow', () => {
