@@ -82,7 +82,7 @@ as wide. A rule for the screens below it asks for one pixel less, as
 | --- | --- | --- |
 | `HUGE_BREAKPOINT` | `1440` | Nothing in the frame. It is the WordPress huge breakpoint, for rules of your own |
 | `SIDEBAR_BREAKPOINT` | `1024` | The sidebar becomes the top bar and the drawer |
-| `EDGE_BREAKPOINT` | `782` | The canvas meets the screen edges. It is the WordPress medium breakpoint |
+| `EDGE_BREAKPOINT` | `782` | The canvas meets the screen edges. It is the WordPress medium breakpoint. A wide list table freezes its checkbox and title only above this width, as [a wide table](./lists.md#a-wide-table) shows |
 | `DENSE_BREAKPOINT` | `640` | The canvas side gutter narrows to 16px. A list from `useListView` takes its phone layout, as [the view in the address](../lists.md#the-view-in-the-address) shows. A table inside `godmin-table-scroll` scrolls sideways, as [stylesheet helpers](../screens.md#stylesheet-helpers) shows |
 | `SHEET_BREAKPOINT` | `600` | Dialogs rise as sheets along the bottom of the screen and toasts widen to the screen, as [a form dialog](../lists.md#a-form-dialog) and [toasts](./toasts.md#size) show. It is the WordPress small breakpoint |
 | `TITLE_BREAKPOINT` | `404` | Nothing in the frame. The WordPress editor drops the document title from its header here, for an editor header of your own |

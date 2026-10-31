@@ -51,8 +51,8 @@ small labels such as the count beside a sidebar row.
 Some parts give the size of their text on their own page:
 [the page subtitle](../screens.md#page),
 [the page tabs](../screens.md#pagetabs),
-[the title and description of a list row](../lists.md#the-title-field),
-[a table that stays custom](../lists.md#lists-that-stay-custom),
+[the title and description of a list row](./lists.md#rows),
+[a table that stays custom](./lists.md#tables-that-stay-custom),
 [a toast](./toasts.md#text) and
 [the letter of an avatar](../lists.md#avatars).
 

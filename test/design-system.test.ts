@@ -45,6 +45,30 @@ const usage = readFileSync(resolve(import.meta.dirname, '../docs/loading-and-fee
 /** The usage page of lists. */
 const listsPage = readFileSync(resolve(import.meta.dirname, '../docs/lists.md'), 'utf8')
 
+/** The usage page of screens and the stylesheet helpers. */
+const screensPage = readFileSync(resolve(import.meta.dirname, '../docs/screens.md'), 'utf8')
+
+/** The module of the installed design system whose stylesheet draws the empty state. */
+const EMPTY_STATE_MODULE = '@wordpress/ui/build-module/empty-state/root.mjs'
+
+/** The rule of the installed DataViews sheet that draws the line beside the pinned actions of a header cell. */
+const STUCK_LINE = '.dataviews-view-table th.dataviews-view-table__actions-column--stuck::after'
+
+/** The selector every frozen column rule of a wide list table starts with. */
+const WIDE_TABLE = '.godmin-page__list--wide:has(td .dataviews-title-field) .dataviews-view-table.has-bulk-actions'
+
+/** The checkbox cell and the title cell after it, the two cells a wide list table freezes. */
+const FROZEN_CELLS = ':is(.dataviews-view-table__checkbox-column, .dataviews-view-table__checkbox-column + *)'
+
+/** The box godmin sets the title and description of a list row in. */
+const PRIMARY = '.godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content'
+
+/** The ring a list region draws while it holds a keyboard focus. */
+const REGION_RING = '.godmin-page__list:focus-visible::after'
+
+/** The list region itself while it holds a keyboard focus. */
+const REGION_FOCUS = '.godmin-page__list:focus-visible'
+
 /** The module of the installed DataViews that waits before the spinner of a first load. */
 const LAYOUT_MODULE = '@wordpress/dataviews/build-module/components/dataviews-layout/index.mjs'
 
@@ -111,6 +135,84 @@ const LOADING: ValueTable = { page: 'loading.md', values: valuesOf([
 	['.godmin-loading-screen', 'min-block-size', 'A screen', 'Outside the frame'],
 ]) }
 
+/** Each list value the lists page gives. */
+const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
+	['.godmin-page:has(> .godmin-page__list) > .godmin-page__header', 'padding-inline', 'A list page', 'title row'],
+	[
+		'.godmin-page > .godmin-page__list > :not(.dataviews-wrapper, .godmin-table-scroll, .godmin-table)',
+		'margin-inline',
+		'A list page',
+		'A notice',
+	],
+	['.godmin-page > .godmin-page__list,\n\t.godmin-page__main > .godmin-page__list', 'gap', 'A list page', 'between a'],
+	[
+		'.godmin-page > .godmin-page__tabs + .godmin-page__list:has(> .dataviews-wrapper:first-child)',
+		'margin-block-start',
+		'A list page',
+		'Under page tabs',
+	],
+	[WIDE_TABLE, '--godmin-list-frozen-start', 'A wide table', 'checkbox column'],
+	[`${WIDE_TABLE} .dataviews-view-table__checkbox-column`, 'background-color', 'A wide table', 'list background'],
+	[
+		`${WIDE_TABLE} .dataviews-view-table__row.is-selected > ${FROZEN_CELLS}`,
+		'background-color',
+		'A wide table',
+		'list background',
+	],
+	[`${WIDE_TABLE} .dataviews-view-table__checkbox-column + *`, 'min-inline-size', 'A wide table', 'at least'],
+	[`${WIDE_TABLE} .dataviews-view-table__checkbox-column + *`, 'padding-inline-end', 'A wide table', 'at least'],
+	[`${WIDE_TABLE} .dataviews-view-table__checkbox-column + *::after`, 'inline-size', 'A wide table', 'at least'],
+	[`${WIDE_TABLE} .dataviews-view-table__checkbox-column + *::after`, 'background-color', 'A wide table', 'at least'],
+	[`${PRIMARY} > .dataviews-title-field`, 'line-height', 'Rows', 'The title is'],
+	[PRIMARY, 'font-size', 'Rows', 'The description'],
+	[PRIMARY, 'line-height', 'Rows', 'The description'],
+	[PRIMARY, 'gap', 'Rows', 'The description'],
+	[PRIMARY, 'min-block-size', 'Rows', 'on its own'],
+	['.godmin-empty', 'padding-block', 'An empty list', '48px'],
+	[REGION_RING, 'outline', 'After a write of your own', 'draws the ring'],
+	[REGION_RING, 'outline-offset', 'After a write of your own', 'draws the ring'],
+	[REGION_RING, 'box-shadow', 'After a write of your own', 'draws the ring'],
+	[REGION_FOCUS, 'outline', 'After a write of your own', "browser's own ring"],
+	['.godmin-table', 'font-size', 'Tables that stay custom', 'Text in'],
+	['.godmin-table', 'line-height', 'Tables that stay custom', 'Text in'],
+	['.godmin-table th,\n\t.godmin-table td', 'padding', 'Tables that stay custom', 'Every cell'],
+	['.godmin-table thead th', 'padding-block', 'Tables that stay custom', 'A header cell'],
+	['.godmin-table thead th', 'font-size', 'Tables that stay custom', 'A header cell'],
+	['.godmin-table thead th', 'font-weight', 'Tables that stay custom', 'A header cell'],
+	['.godmin-table tbody td', 'height', 'Tables that stay custom', 'A body cell'],
+	['.godmin-table tbody tr', 'border-block-start', 'Tables that stay custom', 'runs above'],
+	['.godmin-table tbody tr:is(:hover, :has(:focus-visible)) > *', 'background', 'Tables that stay custom', 'under the'],
+	[
+		'.godmin-page > .godmin-page__list .godmin-table tr > :first-child',
+		'padding-inline-start',
+		'Tables that stay custom',
+		'first and last',
+	],
+	['.godmin-table-scroll .godmin-table__actions', 'box-shadow', 'Tables that stay custom', 'inset shadow'],
+]) }
+
+/** The value tables of the Design System pages that give values the stylesheet sets. */
+const VALUE_TABLES = [TOASTS, LOADING, LISTS]
+
+/** The pixel values the lists page gives that no usage section on how a list looks may repeat. */
+const LIST_NUMBERS = [24, 48, 16, 8, 13, 12, 20, 64, 32, 4, 640, 782, 783, 280].map(
+	(pixels) => new RegExp(`\\b${pixels}px\\b`),
+)
+
+/** The usage sections on how a list looks, each by its page and heading, that leave every value to the lists page. */
+const LIST_LOOKS = [
+	...[
+		'A list page',
+		'The view in the address',
+		'Columns',
+		'Tabs above a list',
+		'Notices above a list',
+		'The title field',
+		'Lists that stay custom',
+	].map((heading) => ['usage/lists.md', heading]),
+	['usage/screens.md', 'Stylesheet helpers'],
+]
+
 /** The values the loading page gives that no usage page or other section may repeat. */
 const LOADING_NUMBERS = [
 	/\b150ms\b/,
@@ -172,9 +274,9 @@ interface ValueGiven extends PageValue {
 	parts: string[]
 }
 
-/** Each Design System page and the lists page split into sections, by file name and then by heading. */
+/** Each Design System page by file name and each usage page by `usage/` and file name, split by heading. */
 const sections = new Map(
-	[...pages, ['lists.md', listsPage]].map(([name, text]) => [
+	[...pages, ['usage/lists.md', listsPage], ['usage/screens.md', screensPage]].map(([name, text]) => [
 		name,
 		new Map(text.split('\n## ').map((part) => [part.slice(0, part.indexOf('\n')), part])),
 	]),
@@ -252,6 +354,7 @@ test.each([
 	'custom-properties.md',
 	'toasts.md',
 	'loading.md',
+	'lists.md',
 ])('the Design System holds %s', (name) => {
 	expect([...pages.keys()]).toContain(name)
 })
@@ -303,7 +406,7 @@ test('the toasts page gives how long each kind of toast stays, as the toaster se
 	expect(page).toContain(`${Number(toasterValue('ACTION_DISMISS_AFTER')) / 1000} seconds`)
 })
 
-test.each([TOASTS, LOADING].flatMap(valuesGiven))(
+test.each(VALUE_TABLES.flatMap(valuesGiven))(
 	'the $page page gives the $selector $property as the stylesheet sets it',
 	(given) => {
 		expect(ruleValue(given.selector, given.property), 'the stylesheet sets the value').toBeDefined()
@@ -312,7 +415,7 @@ test.each([TOASTS, LOADING].flatMap(valuesGiven))(
 	},
 )
 
-test.each([TOASTS, LOADING])('the $page page names no design token beside a value the stylesheet lacks', (table) => {
+test.each(VALUE_TABLES)('the $page page names no design token beside a value the stylesheet lacks', (table) => {
 	const used = new Map<string, string[]>()
 	for (const { passage, parts } of valuesGiven(table)) {
 		used.set(passage, [...(used.get(passage) ?? []), ...parts])
@@ -366,7 +469,7 @@ test('the loading page gives the image fade after a skeleton with the motion tok
 
 test('the usage pages leave every loading value to the loading page', () => {
 	const usageLoading = usage.slice(0, usage.indexOf('## Toasts\n'))
-	const lists = sections.get('lists.md')?.get('A list that loads') ?? ''
+	const lists = sections.get('usage/lists.md')?.get('A list that loads') ?? ''
 
 	expect(lists, 'the lists page has a section on a list that loads').not.toBe('')
 	expect(LOADING_NUMBERS.filter((value) => value.test(usageLoading) || value.test(lists))).toEqual([])
@@ -406,4 +509,70 @@ test('the usage page leaves every toast value to the toasts page', () => {
 
 	expect(section, 'the usage page has a Toasts section').toMatch(/^## Toasts\n/)
 	expect(values.filter((value) => section.includes(value))).toEqual([])
+})
+
+test('the usage pages leave every list value to the lists page', () => {
+	const found = LIST_LOOKS.map(([page, heading]) => {
+		const section = sections.get(page)?.get(heading)
+		const values = section === undefined ? ['no such section'] : LIST_NUMBERS.filter((value) => value.test(section))
+		return `${page} ${heading}: ${values.map(String).join(' ')}`
+	})
+
+	expect(found.filter((line) => !line.endsWith(': '))).toEqual([])
+})
+
+test('the lists page names the line DataViews draws beside its pinned actions, as the installed sheet sets it', () => {
+	const line = ruleOf(STUCK_LINE, dataviews)
+	const given = [
+		groupOf(/^\s*width: (\d+px);/m.exec(line)),
+		`\`${groupOf(/^\s*background-color: var\((--wpds-[\w-]+)/m.exec(line))}\``,
+	]
+	const pinned = passagesOf(sections.get('lists.md')?.get('A wide table')).find((passage) =>
+		passage.includes('actions column stays pinned'),
+	)
+
+	expect(pinned, 'the A wide table section says the actions column stays pinned').toBeDefined()
+	expect(given.filter((part) => !(pinned ?? '').includes(part))).toEqual([])
+})
+
+test('the lists page gives the empty state values the installed design system sets', () => {
+	const sheet = installedFile(EMPTY_STATE_MODULE)
+	const tokens = [
+		/[{;]max-width:var\((--wpds-[\w-]+)/,
+		/__icon\{background-color:var\((--wpds-[\w-]+)/,
+		/__root\{[^}]*?;gap:var\((--wpds-[\w-]+)/,
+		/[{;]margin-block-start:var\((--wpds-[\w-]+)/,
+	].map((found) => `\`${groupOf(found.exec(sheet))}\``)
+	const side = `side by side from ${groupOf(/@media \(min-width:(\d+px)\)/.exec(sheet))} wide`
+	const section = (sections.get('lists.md')?.get('An empty list') ?? '').replace(/\s+/g, ' ')
+
+	expect([...tokens, side].filter((part) => !section.includes(part))).toEqual([])
+})
+
+test('the lists page names the breakpoint the frozen columns start above, as the stylesheet opens their block', () => {
+	const opens = stylesheet.lastIndexOf('@media (', stylesheet.indexOf('.godmin-page__list--wide'))
+	const width = Number(groupOf(/^@media \(width > (\d+)px\)/.exec(stylesheet.slice(opens))))
+	const edge = Object.entries(breakpoints).find(([, value]) => value === width)?.[0]
+	const section = (sections.get('lists.md')?.get('A wide table') ?? '').replace(/\s+/g, ' ')
+
+	expect(edge, `no breakpoint is ${width}, the widest window the block leaves out`).toBeDefined()
+	expect(section).toContain(`Wider than \`${edge}\``)
+})
+
+test('the radius page leaves the custom table line to the lists page', () => {
+	const line = [...namesIn(ruleValue('.godmin-table-scroll .godmin-table__actions', 'box-shadow') ?? '', '--wpds-')]
+	const passages = passagesOf(pages.get('radius-and-elevation.md')).filter((passage) =>
+		passage.includes('`godmin-table`'),
+	)
+
+	expect(line.length, 'the stylesheet draws the line with design tokens').toBeGreaterThan(0)
+	expect(passages.map((passage) => passage.includes('(./lists.md#tables-that-stay-custom)'))).toEqual([true])
+	expect(passages.flatMap((passage) => line.filter((token) => passage.includes(`\`${token}\``)))).toEqual([])
+})
+
+test('the lists page leaves the reload timing to the loading page', () => {
+	const section = sections.get('lists.md')?.get('After a write of your own') ?? ''
+
+	expect(section, 'the lists page has a section on a write of your own').not.toBe('')
+	expect(LOADING_NUMBERS.filter((value) => value.test(section))).toEqual([])
 })

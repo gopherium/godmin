@@ -25,11 +25,14 @@ letters.
 ## The focus ring
 
 Focus marks the control the keyboard acts on. The reader moves it
-with Tab, and Enter presses the control that holds it. godmin rings
-the focused control only when the reader uses the keyboard, the state
-CSS calls `:focus-visible`. A mouse click draws no ring.
+with Tab, and Enter presses the control that holds it. godmin draws
+its own rings only when the reader uses the keyboard, the state CSS
+calls `:focus-visible`. A mouse click draws none of them. A checkbox
+or a button from `@wordpress/components` draws WordPress's own focus
+style on any focus, a mouse click included.
 
-Except on a toast, every ring godmin draws is the same line,
+Except on a toast and a list region, every ring godmin draws is the
+same line,
 `outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus)`.
 
 - `--wpds-border-width-focus` (2px) sets the width. On a high density
@@ -45,13 +48,15 @@ Except on a toast, every ring godmin draws is the same line,
 | The title link of a `godmin-table`, a `godmin-table-scroll` box and a row of `RepeatRows` | 2px outside the part |
 | A page tab | Around its label, not around the whole height of the tab |
 | A toast | Its own rings, as [keyboard](./toasts.md#keyboard) on the toasts page shows. A plain toast keeps the browser's ring too |
+| A list region a run focuses | Inside its edge, twice as wide, the ring WordPress draws on a region it focuses, as [after a write of your own](./lists.md#after-a-write-of-your-own) shows. The browser's ring is off, as in wp-admin |
 
-godmin turns the browser's own ring off in three places only. A page
+godmin turns the browser's own ring off in four places only. A page
 tab draws its own ring around the label instead. Back draws none on a
 mouse focus. The toast region draws none. Tab never stops on it, and
-only a toast that leaves or a click on a toast focuses it. Draw a
-ring of your own with the same line, on `:focus-visible`, so it
-matches.
+only a toast that leaves or a click on a toast focuses it. A list
+region draws the WordPress region ring instead, as wp-admin turns the
+browser's ring off on every `div`. Draw a ring of your own with the
+same line, on `:focus-visible`, so it matches.
 
 ## Where focus goes
 
@@ -68,16 +73,55 @@ sidebar moves focus in these cases only:
 
 The title of a sidebar screen never takes focus.
 
-Some parts go away while they hold focus. godmin then moves focus to
-a part that stays, so the keyboard reader keeps their place:
+Some parts go away, or turn inert, while they hold focus. godmin then
+moves focus to a part that stays, so the keyboard reader keeps their
+place:
 
 - A toast that leaves, as [keyboard](./toasts.md#keyboard) on the
   toasts page says.
-- A list row that a run moved, as
+- A list row that a run moved. The list region takes the focus and
+  the screen does not scroll, as
   [running an action over the picked rows](../lists.md#running-an-action-over-the-picked-rows)
   says.
+- The table or the footer of a list, with its rows and the busy bulk
+  action button, which turn inert as a run reloads the list. The list
+  region takes the focus at once, where WordPress drops it to the
+  page, and the screen does not scroll either, as
+  [after a write of your own](./lists.md#after-a-write-of-your-own)
+  says. While the list reloads, the next Tab from the list region
+  goes to the first control of the list, such as its search field.
 - A row of `RepeatRows` that the reader removed, as
   [RepeatRows](../screens.md#repeatrows) says.
+
+Once a list reloaded after a run, while its region still holds the
+focus, the focus goes back to the control the reader pressed, or to
+the one that opened the confirm or the row's actions menu. When that
+control left with its row, the focus goes to the first control of the
+row now in its place, its checkbox in a list with bulk actions. It
+stays on the region when no such control is left, or when that control
+is a primary action from `actions`. DataViews names that checkbox after
+the view's `titleField`, so a screen reader says the title of the row
+now in that place, then checkbox and its state, checked or not
+checked, and a second Enter does nothing. The next Tab then goes on
+from that control, as
+[running an action over the picked rows](../lists.md#running-an-action-over-the-picked-rows)
+says.
+
+A list with no bulk actions draws no checkbox. Its title takes the
+focus when the title opens the item, and a screen reader says the
+title of that row. The row's actions menu button takes it when that
+comes first, since Enter there only opens a menu. The button of a
+primary action, such as a Trash, says the action and not the row,
+so a screen reader would say "Trash, button", and a second Enter
+would act on a row the reader never picked. So the region keeps the
+focus there. The focus does not move, so a screen reader has no new
+name to say. A second Enter writes nothing, and the next Tab goes to
+the first control of the list, such as its search field.
+
+WordPress leaves the focus on the page, where nothing shows and no
+control is named. godmin goes beyond it so a keyboard reader sees
+where they are and a screen reader has a control to name, or stays on
+the region when that control is a primary action.
 
 Dialogs move focus as they open and close, as
 [a confirm outside a list](../lists.md#a-confirm-outside-a-list) and
@@ -142,6 +186,7 @@ aloud when it changes.
 | A toast | Its message, politely. Never its action | [What a screen reader hears](./toasts.md#what-a-screen-reader-hears) |
 | A loading screen | The `label` sentence, from a visually hidden status. The spinner is hidden | [What a screen reader hears](./loading.md#what-a-screen-reader-hears) |
 | A list that loads | Nothing on its first load, as in WordPress. A table or a grid is marked busy on a later load | [What a screen reader hears](./loading.md#what-a-screen-reader-hears) |
+| A list after a run | The control the focus went back to. After the pressed row left, the checkbox of the row now in its place, by that row's title. With no checkbox, that row's title or actions menu button, and nothing new when the region keeps the focus | [Where focus goes](#where-focus-goes) |
 | A count beside a row | The `label` sentence, in place of the bare number | [A count beside a row](../framing-an-application.md#a-count-beside-a-row) |
 | An `ErrorNotice` | Its message, at once, as an alert | [ErrorNotice](../screens.md#errornotice) |
 
