@@ -356,7 +356,7 @@ runs into:
 | `godmin-form__row` | Short fields side by side inside a form |
 | `godmin-form__grow` | The field of a row that takes most of the free room |
 | `godmin-empty` | A centered empty state with breathing room |
-| `godmin-table` | A full width table with collapsed borders, 13px text on 20px lines |
+| `godmin-table` | A full width table with collapsed borders, drawn like the DataViews table |
 | `godmin-table__actions` | The narrow trailing cell holding row actions |
 | `godmin-table__title` | The cell naming the record, bold, its link with no underline |
 | `godmin-table-scroll` | The box a wide table scrolls inside |
@@ -398,9 +398,11 @@ instead:
 </div>
 ```
 
-The scroll rule only activates below 640px. There the actions
-column, the cell marked `godmin-table__actions`, stays pinned to the
-right edge, so a row's buttons are in view before any scroll. On a
+The scroll rule only activates on a phone, as
+[tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
+gives. There the actions column, the cell marked
+`godmin-table__actions`, stays pinned to the right edge, so a row's
+buttons are in view before any scroll. On a
 desktop the wrapper only draws a focus ring when a keyboard user
 reaches it, so you can mark up every table this way.
 

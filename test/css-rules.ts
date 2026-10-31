@@ -19,6 +19,20 @@ export function ruleOf(selector: string, css = base): string {
 }
 
 /**
+ * Tells whether the rule a selector opens sits outside every cascade layer.
+ * @param selector - The exact selector the rule starts with.
+ * @returns Whether the rule is unlayered.
+ */
+export function unlayered(selector: string): boolean {
+	const at = base.indexOf(`${selector} {`)
+	const before = base.slice(0, at)
+
+	expect(at, `the stylesheet has no ${selector} rule`).toBeGreaterThan(-1)
+
+	return before.split('{').length === before.split('}').length
+}
+
+/**
  * Returns the text of a block up to the brace that closes it.
  * @param open - The index just after the block's opening brace.
  * @returns The text between the block's braces.

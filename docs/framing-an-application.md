@@ -273,11 +273,13 @@ const sheet = useMediaQuery(`(max-width: ${SHEET_BREAKPOINT - 1}px)`)
 The frame and the sidebar draw a few words of their own: "Back",
 "Navigation", "Open navigation panel" and "Close navigation panel".
 The last one names a close button at the end of the drawer, which
-only a screen reader meets. godmin translates them in the WordPress
-`default` text domain, as the design system does. The Spanish and
-French catalogues that `listChromeCatalogFor` returns hold them, so
-load it as [the list chrome](./lists.md#the-list-chrome-in-spanish)
-shows.
+only a screen reader meets. `ListNoResults` draws two more: "No
+results found" and the line under it, "Try adjusting your search or
+filters to find what you're looking for." godmin translates them in
+the WordPress `default` text domain, as the design system does. The
+Spanish and French catalogues that `listChromeCatalogFor` returns
+hold them, so load it as
+[the list chrome](./lists.md#the-list-chrome-in-spanish) shows.
 
 ## Coloring the regions
 

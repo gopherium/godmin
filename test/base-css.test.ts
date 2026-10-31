@@ -7,8 +7,8 @@ import { dirname, join } from 'node:path'
 import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
-import { atRuleBodies, blockOf, ruleOf } from './css-rules.js'
-import { base } from './styles.js'
+import { atRuleBodies, blockOf, ruleOf, unlayered } from './css-rules.js'
+import { base, ruleValue } from './styles.js'
 
 const dataviewsManifest = createRequire(import.meta.url).resolve('@wordpress/dataviews/package.json')
 
@@ -29,20 +29,6 @@ const avatarRings = [
 
 /** The selector of the title and description column of a DataViews table inside a list region. */
 const primaryColumn = '.godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content'
-
-/**
- * Tells whether the rule a selector opens sits outside every cascade layer.
- * @param selector - The exact selector the rule starts with.
- * @returns Whether the rule is unlayered.
- */
-function unlayered(selector: string): boolean {
-	const at = base.indexOf(`${selector} {`)
-	const before = base.slice(0, at)
-
-	expect(at, `the stylesheet has no ${selector} rule`).toBeGreaterThan(-1)
-
-	return before.split('{').length === before.split('}').length
-}
 
 /**
  * Returns the stylesheet lines that are neither blank nor a comment.
@@ -836,6 +822,17 @@ test('leaves stacking context isolation to the host component', () => {
 
 test('centers the empty state, which the design system does not place itself', () => {
 	expect(base).toMatch(/\.godmin-empty\s*\{[^}]*margin-inline:\s*auto/)
+})
+
+test('drops the empty state padding inside a DataViews list and keeps 48px everywhere else', () => {
+	const inside = '.dataviews-wrapper .godmin-empty'
+
+	expect(ruleValue('.godmin-empty', 'padding-block')).toBe('48px')
+	expect(ruleValue(inside, 'padding-block')).toBe('0')
+	expect(base.indexOf(`${inside} {`), 'the inner rule comes after the outer one').toBeGreaterThan(
+		base.indexOf('\t.godmin-empty {'),
+	)
+	expect(unlayered(inside), 'the inner rule sits in the godmin layer').toBe(false)
 })
 
 test('gives the table region a containing block as well as its overflow', () => {

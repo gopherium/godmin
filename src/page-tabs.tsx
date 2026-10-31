@@ -1,6 +1,8 @@
 import { cloneElement, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactElement, ReactNode, RefObject } from 'react'
 
+import { ROUNDING_SLACK, useSizeWatch } from './size-watch.js'
+
 export interface PageTabsProps {
 	/** The name of the tab navigation, read by assistive technology. */
 	label: string
@@ -34,11 +36,6 @@ const TAB_CLASS = 'godmin-page-tabs__tab'
 const CURRENT_CLASS = 'godmin-page-tabs__tab--current'
 
 /**
- * The scroll in pixels a tab row may sit off an edge and still rest on it, for sub-pixel rounding.
- */
-const SCROLL_EPSILON = 1
-
-/**
  * Returns the classes of a tab row, fading each edge that tabs lie past.
  * @param row - The tab row element.
  * @returns The class list.
@@ -47,13 +44,22 @@ function rowClass(row: HTMLElement): string {
 	const travelled = Math.abs(row.scrollLeft)
 	const room = row.scrollWidth - row.clientWidth
 	let classes = ROW_CLASS
-	if (travelled > SCROLL_EPSILON) {
+	if (travelled > ROUNDING_SLACK) {
 		classes += ` ${FADES_START_CLASS}`
 	}
-	if (travelled < room - SCROLL_EPSILON) {
+	if (travelled < room - ROUNDING_SLACK) {
 		classes += ` ${FADES_END_CLASS}`
 	}
 	return classes
+}
+
+/**
+ * Returns the boxes whose size decides the fades of a tab row: the row and each tab in it.
+ * @param row - The tab row element.
+ * @returns The row and its tabs.
+ */
+function rowBoxes(row: HTMLElement): Element[] {
+	return [row, ...row.children]
 }
 
 /**
@@ -63,26 +69,12 @@ function rowClass(row: HTMLElement): string {
  */
 function useRowClass(ref: RefObject<HTMLElement | null>): string {
 	const [className, setClassName] = useState(ROW_CLASS)
+	useSizeWatch(ref, rowBoxes, (row) => setClassName(rowClass(row)), false)
 	useLayoutEffect(() => {
 		const row = ref.current as HTMLElement
 		const measure = () => setClassName(rowClass(row))
-		const resizes = new ResizeObserver(measure)
-		const watch = () => {
-			resizes.disconnect()
-			for (const box of [row, ...row.children]) {
-				resizes.observe(box)
-			}
-			measure()
-		}
-		const mutations = new MutationObserver(watch)
-		mutations.observe(row, { childList: true })
 		row.addEventListener('scroll', measure, { passive: true })
-		watch()
-		return () => {
-			row.removeEventListener('scroll', measure)
-			mutations.disconnect()
-			resizes.disconnect()
-		}
+		return () => row.removeEventListener('scroll', measure)
 	}, [ref])
 	return className
 }

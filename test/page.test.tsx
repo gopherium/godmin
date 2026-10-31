@@ -1,14 +1,48 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { Text } from '@wordpress/ui'
 import { createRef } from 'react'
-import { expect, test, vi } from 'vitest'
+import type { ReactNode } from 'react'
+import { afterEach, expect, test, vi } from 'vitest'
 
 import { ErrorNotice, LoadMore, Page, PageTitle, SectionTitle } from '../src/page.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
+
+afterEach(() => {
+	vi.restoreAllMocks()
+})
+
+/**
+ * Gives the DataViews scroll box the widths a browser would measure, which jsdom leaves at zero.
+ * @param layout - The width the box shows and the width of everything in it, read again on every measure.
+ */
+function measureScrollBox(layout: { shown: number; full: number }): void {
+	const isBox = (element: Element) => element.classList.contains('dataviews-layout__container')
+	vi.spyOn(Element.prototype, 'clientWidth', 'get').mockImplementation(function (this: Element) {
+		return isBox(this) ? layout.shown : 0
+	})
+	vi.spyOn(Element.prototype, 'scrollWidth', 'get').mockImplementation(function (this: Element) {
+		return isBox(this) ? layout.full : 0
+	})
+}
+
+/**
+ * Renders a list page holding a DataViews scroll box with what it is given.
+ * @param props - What the scroll box holds.
+ * @returns The page element.
+ */
+function ReportsPage({ children }: { children: ReactNode }) {
+	return (
+		<Page title="Reports" list>
+			<div className="dataviews-wrapper">
+				<div className="dataviews-layout__container">{children}</div>
+			</div>
+		</Page>
+	)
+}
 
 /**
  * Returns the class tokens the design system gives a sampled element.
@@ -336,6 +370,104 @@ test('sets no region around a body that is not a list, even given a label', () =
 	expect(screen.queryByRole('region')).toBeNull()
 	expect(container.querySelector('.godmin-page__list')).toBeNull()
 	expect(listRef.current).toBeNull()
+})
+
+test('marks the list region wide while its table is wider than its space, and drops the mark as it fits', async () => {
+	const layout = { shown: 964, full: 1980 }
+	measureScrollBox(layout)
+	const { container, rerender } = renderAdmin(
+		<ReportsPage>
+			<table className="dataviews-view-table" />
+		</ReportsPage>,
+	)
+	const region = container.querySelector('.godmin-page > .godmin-page__list') as HTMLElement
+
+	expect(region.className).toBe('godmin-page__list godmin-page__list--wide')
+
+	layout.full = 964
+	rerender(
+		<ReportsPage>
+			<div className="dataviews-no-results">No reports yet</div>
+		</ReportsPage>,
+	)
+
+	await waitFor(() => expect(region.className).toBe('godmin-page__list'))
+})
+
+test('hands the list region to a ref object and to a ref function alike', () => {
+	const object = createRef<HTMLDivElement>()
+	const handed = vi.fn()
+	const { container } = renderAdmin(
+		<>
+			<Page title="Reports" list listRef={object}>
+				<p>rows</p>
+			</Page>
+			<Page title="Users" list listRef={handed}>
+				<p>rows</p>
+			</Page>
+		</>,
+	)
+
+	const [reports, users] = container.querySelectorAll('.godmin-page__list')
+	expect(object.current).toBe(reports)
+	expect(handed).toHaveBeenLastCalledWith(users)
+})
+
+test('runs the cleanup a ref function returns as the list region leaves, in place of handing it null', () => {
+	const cleanup = vi.fn()
+	const handed = vi.fn(() => cleanup)
+	const { unmount } = renderAdmin(
+		<Page title="Users" list listRef={handed}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	expect(cleanup).not.toHaveBeenCalled()
+
+	unmount()
+
+	expect(cleanup).toHaveBeenCalledOnce()
+	expect(handed).toHaveBeenCalledOnce()
+})
+
+test('hands null to a ref function with no cleanup and to a ref object as the list region leaves', () => {
+	const object = createRef<HTMLDivElement>()
+	const handed = vi.fn()
+	const { unmount } = renderAdmin(
+		<>
+			<Page title="Reports" list listRef={object}>
+				<p>rows</p>
+			</Page>
+			<Page title="Users" list listRef={handed}>
+				<p>rows</p>
+			</Page>
+		</>,
+	)
+
+	unmount()
+
+	expect(object.current).toBeNull()
+	expect(handed).toHaveBeenLastCalledWith(null)
+})
+
+test('moves the list region to a new ref, running the cleanup of the old one', () => {
+	const cleanup = vi.fn()
+	const first = vi.fn(() => cleanup)
+	const second = vi.fn()
+	const { container, rerender } = renderAdmin(
+		<Page title="Users" list listRef={first}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	rerender(
+		<Page title="Users" list listRef={second}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	expect(cleanup).toHaveBeenCalledOnce()
+	expect(second).toHaveBeenCalledWith(container.querySelector('.godmin-page__list'))
 })
 
 test('keeps a list inside the main column beside an aside', () => {

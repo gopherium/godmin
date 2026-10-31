@@ -43,17 +43,10 @@ its paging reads. For a list you hold whole, `filterSortAndPaginate`
 searches, sorts and pages it, and answers the page of rows with those
 totals. `defaultLayouts` names the layouts a reader may switch to.
 
-DataViews pads its toolbar, its table and its footer by 24px on each
-side. The canvas pads its content by 24px as well. Without help the
-list starts 48px in, while the title starts at 24px. `list` takes the
-content out to the canvas edges, so the list's own 24px lines up with
-the title and its row lines run from edge to edge, as they do in
-WordPress.
-
-Below 640px the canvas pads by 16px and the list reaches out by 16px.
-DataViews keeps its own 24px there, so on a phone a list page pads its
-title row by the 8px between the two, and the title still lines up
-with the list.
+`list` takes the content out to the canvas edges, so the list's own
+padding lines up with the title and its row lines run from edge to
+edge, as they do in WordPress.
+[A list page](./design-system/lists.md#a-list-page) gives the values.
 
 A page with an `aside` keeps its list inside the main column, because
 the aside needs its own room.
@@ -120,8 +113,10 @@ leaves the list.
 route holds a key of its own, add it:
 `validateSearch: (raw) => ({ ...listSearch(raw), status: raw.status })`.
 
-A list shows one layout at a time and no Layout menu: the table from
-640px and the list below. `layouts: { wide: 'grid', phone: 'list' }`
+A list shows one layout at a time and no Layout menu: the table on a
+wide screen and the list on a phone, as
+[columns](./design-system/lists.md#columns) gives.
+`layouts: { wide: 'grid', phone: 'list' }`
 names others, and `layoutSettings` says what a layout opens on, such
 as `{ grid: { layout: { previewSize: 230 } } }`. `phoneFields` names
 the fields the phone list shows. The columns a reader picks stay in
@@ -131,11 +126,12 @@ the next, the list forgets the picked columns and the ticked rows.
 
 A tap on a phone list selects nothing. `openOnTap(list, open)` gives
 you a handler that opens the record instead. Pass it as
-`onChangeSelection`. `list.phone` tells you which side of 640px the
-screen is on. `openOnTap` comes from `@gopherium/godmin/router`, like
-`useListView`, and from the main entry too, so a package that draws a
-list without TanStack Router can call it with the `list` an app hands
-it. It reads only `phone` and `onChangeSelection`. The list view
+`onChangeSelection`. `list.phone` tells you which side of
+`DENSE_BREAKPOINT` the screen is on. `openOnTap` comes from
+`@gopherium/godmin/router`, like `useListView`, and from the main
+entry too, so a package that draws a list without TanStack Router can
+call it with the `list` an app hands it. It reads only `phone` and
+`onChangeSelection`. The list view
 types, such as `ListView` and `ListDefaults`, come from the main entry
 too, so such a package can type that `list` and its defaults without
 the router. This needs godmin 0.27.0 or later.
@@ -219,21 +215,46 @@ over the footer, as
 A list that is not DataViews, such as a `godmin-table`, grows the
 page instead, and the canvas scrolls as it does for any other page.
 
+## Columns
+
+Name the columns a list opens on in the view's `fields`, one set for
+every width. Never hide a column because the window is narrow, as no
+WordPress list does. A reader adds and removes columns in View
+options.
+
+When the columns need more room than the list has, the table scrolls
+sideways inside the list. A table with checkboxes keeps its checkbox
+and title columns frozen at the start edge while the other columns
+scroll under them, as
+[a wide table](./design-system/lists.md#a-wide-table) shows. You add
+nothing for it.
+
+Draw a muted cell with a weak text color, such as
+`--wpds-color-foreground-content-neutral-weak`, never with `opacity`.
+A cell with less than full opacity paints over the frozen columns as
+it scrolls under them.
+
+Give every bulk action an `icon`. At `EDGE_BREAKPOINT` and below,
+DataViews shows bulk actions as icon buttons and leaves out an action
+with no icon.
+
 ## Tabs above a list
 
 Give the page `tabs` to show [page tabs](./screens.md#pagetabs)
 between the title and the list. On a list page the tab labels line up
 with the title, the light line under them runs from edge to edge, and
-the search box sits 16px under that line, as on a WordPress list. A
-notice or a `godmin-table` right under the tabs keeps the same 16px
-from that line.
+the search box sits under that line as on a WordPress list. A notice
+or a `godmin-table` right under the tabs keeps the same space from
+that line. [A list page](./design-system/lists.md#a-list-page) gives
+the values.
 
 ## Notices above a list
 
 Anything you put in a list page before the list itself, such as an
 `ErrorNotice` for a list that failed to load, lines up with the title
-rather than the canvas edge, and keeps 16px between itself and the
-list:
+rather than the canvas edge, and keeps the page gap between itself
+and the list, as [a list page](./design-system/lists.md#a-list-page)
+gives:
 
 ```tsx
 <Page title="Users" list>
@@ -272,32 +293,61 @@ DataViews as `empty`:
 ```tsx
 import { ListEmpty } from '@gopherium/godmin'
 import { people } from '@wordpress/icons'
+import { Button } from '@wordpress/ui'
 
 <DataViews
 	{...props}
-	empty={<ListEmpty icon={people} title="No users yet." hint="Add one with New user." />}
+	empty={
+		<ListEmpty
+			icon={people}
+			title="No users yet"
+			description="Users you add show up here."
+			actions={<Button onClick={addUser}>Add User</Button>}
+		/>
+	}
 />
 ```
 
 It draws the design system empty state, centred: the icon, the title
-as a heading and the hint under it. `hint` is optional. Leave it out
-when a search narrowed the list, as in `No users found.`
+as a heading, the description under it and the buttons under that.
+`description` and `actions` are optional. Put the add button of the
+list header in `actions`, with the same words, at its default size
+rather than compact. The title is one short phrase with no full stop,
+and the description a sentence that ends with one, as
+[an empty list](./design-system/lists.md#an-empty-list) gives.
 
+When a search or a filter finds nothing, show `ListNoResults` in its
+place. It says "No results found" and "Try adjusting your search or
+filters to find what you're looking for." under the search icon, in
+[godmin's own words](./framing-an-application.md#godmins-own-words),
+and holds no button, since the DataViews filters already offer Reset.
 `viewNarrows(view)` tells you whether a search, or a filter holding a
-value, narrows the list. Use it to pick between the two messages:
+value, narrows the list. Use it to pick between the two:
 
 ```tsx
-import { ListEmpty, viewNarrows } from '@gopherium/godmin'
+import { ListEmpty, ListNoResults, viewNarrows } from '@gopherium/godmin'
 
 const empty = viewNarrows(view) ? (
-	<ListEmpty icon={people} title="No users found." />
+	<ListNoResults />
 ) : (
-	<ListEmpty icon={people} title="No users yet." hint="Add one with New user." />
+	<ListEmpty
+		icon={people}
+		title="No users yet"
+		description="Users you add show up here."
+		actions={<Button onClick={addUser}>Add User</Button>}
+	/>
 )
 ```
 
 A filter with an empty pick, or one still waiting for its value,
-narrows nothing.
+narrows nothing. A status tab narrows nothing either. A tab that holds
+nothing, such as Trash, shows words of its own and no add button:
+
+```tsx
+import { trash } from '@wordpress/icons'
+
+<ListEmpty icon={trash} title="Trash is empty" />
+```
 
 ## A list that loads
 
@@ -309,19 +359,51 @@ gives how long each step waits.
 
 Pass true while the list waits for rows it does not hold yet: from
 the first render until the first answer, even while the request still
-waits for something else, and while a new page, search or sort waits
-for its answer. With TanStack Query:
+waits for something else, while a new page, search or sort waits
+for its answer, and while the list reloads after a write of your
+own. With TanStack Query:
 
 ```tsx
-<DataViews {...props} data={orders.data?.items ?? []} isLoading={orders.isPending || orders.isPlaceholderData} />
+const { run, region, refreshing } = useListRun('orders', list.onChangeSelection)
+
+<DataViews
+	{...props}
+	data={orders.data?.items ?? []}
+	isLoading={orders.isPending || orders.isPlaceholderData || refreshing}
+/>
 ```
+
+`refreshing` comes from `useListRun`, as
+[running an action over the picked rows](#running-an-action-over-the-picked-rows)
+shows. It is true while a run reloads its list after its own write,
+which the query's own flags leave false.
 
 Do not pass `isFetching`. TanStack Query sets it on the very first
 render of a list whose stored rows are stale, and DataViews then hides
 those rows behind its spinner until the fetch ends.
 
 With urql, pass
-`result.fetching || (result.data === undefined && result.error === undefined)`.
+`result.fetching || (result.data === undefined && result.error === undefined) || refreshing`.
+A rerun of the list's query that something else starts marks the
+result `stale` and leaves `fetching` false. So after a write of your
+own, reload the list with an awaited network-only query inside
+`run.onRefresh()`:
+
+```tsx
+const ended = run.onRefresh()
+try {
+	await client.query(ContactsQuery, variables, { requestPolicy: 'network-only' }).toPromise()
+} finally {
+	ended()
+}
+```
+
+Never pass `stale` as the flag. A `cache-and-network` query sets it
+on every reopen that finds rows in the cache.
+
+A write of your own outside a run, such as a rename, looks the same
+as a run over one row: show its toast as the call ends, then call
+`run.onRefresh()` around its awaited reload.
 
 When the page already holds the first rows, such as data the server
 put in the page, give them to TanStack Query as `initialData`. The
@@ -514,9 +596,14 @@ example does, so the reader sees one toast.
 ## Running an action over the picked rows
 
 Every list action that changes rows does the same things around the
-calls: the list reloaded, one toast, and the focus moved back to the
-list once a row moved, while the reader is still with the run.
-`useListRun` and `useBulkRun` hold those things for you:
+calls: the list marked reloading as the first call that works ends,
+with the focus moved to the list from a part that turns inert, one
+toast as the last call ends, the focus moved back to the list once a
+row moved, while the reader is still with the run, then the list
+reloaded, and the focus put back on the control the reader pressed,
+or on the first control of the row that took its place, unless that
+control is a primary action. `useListRun` and `useBulkRun` hold those
+things for you:
 
 ```tsx
 import { Page, RunConfirm, useBulkRun, useListRun } from '@gopherium/godmin'
@@ -561,9 +648,103 @@ calls change with the screen, list them in the dependencies too.
 
 `useListRun` keeps track of the runs on the list. Once a run moved a
 row, the list region takes the focus, so a keyboard reader is not
-left on a button that went away with its row. When two runs overlap,
-only the latest one moves the focus. The list holds no failure. A run
-shows how it went in its toast.
+left on a button that went away with its row while the list reloads.
+The screen does not scroll as the region takes the focus, so a reader
+who ran an action near the bottom of a long list, from a row or from
+a confirm, still sees the rows they were on. While the list reloads,
+the next Tab from the region goes to the first control of the list,
+such as its search field. After a run started from the keyboard, the
+region then draws the ring WordPress draws on a region it focuses, as
+[after a write of your own](./design-system/lists.md#after-a-write-of-your-own)
+shows. When two runs overlap, only the latest one moves the focus.
+The list holds no failure. A run shows how it went in its toast.
+
+`useListRun` also hands out `refreshing`, true from the moment the
+first call of a run works until the list's reload after the run
+ends. Pass it to DataViews beside the list's own loading state, as
+[a list that loads](#a-list-that-loads) shows, so the list shows that
+reload as WordPress does
+[after a write of your own](./design-system/lists.md#after-a-write-of-your-own).
+
+DataViews then makes the table and the footer inert. A focus in
+either, such as on a row or the busy bulk button, would fall to the
+page, as it does in WordPress, where no control holds it and no ring
+shows. So once DataViews drew the list inert, the list region takes
+that focus in the same render, before the browser drops it, and here
+too the screen does not scroll. A focus anywhere else, such as in the
+search field or outside the list, stays where it is while the calls
+run.
+Pass `refreshing` to DataViews in the render that reads it, never
+through an effect, so the region can take the focus in time.
+
+Once the list reloaded, while the region still holds the focus,
+`useListRun` puts the focus back where the reader was:
+
+- on the control they pressed, when it is still there and takes the
+  focus, such as the bulk action button while a row stays ticked, or
+  a row's button while its row stays,
+- else on the first control of the row that now sits where the row of
+  that control was, its checkbox in a list with bulk actions, such as
+  the next row's checkbox when the row the reader restored left the
+  list, or the last row's when fewer rows came back. In a grid, or in
+  the list layout on a phone, it is the first control of the card or
+  item in that place,
+- else on the region still, such as when no row came back, when the
+  pressed button sat in the bulk bar and the bar went with the ticked
+  rows, or when the first control of the row is a primary action from
+  `actions`.
+
+DataViews names a row's checkbox after the field the view names as its
+`titleField`, and with no `titleField` every checkbox says "(no title)".
+So after a row left, a screen reader says the title of the row now in
+its place, then checkbox and its state, checked or not checked, and a
+second Enter does nothing, since Enter does not tick a checkbox.
+
+In a list with no bulk actions the row draws no checkbox, so the first
+control in the row decides. A title that opens the item takes the
+focus, and a second Enter opens that item. The row's actions menu
+button takes the focus when it comes first, since Enter there only
+opens a menu. A primary action from `actions`, such as a Trash with
+`isPrimary`, does not take it, whether or not the action opens a
+confirm. Its button says the action and not the row, so a second
+Enter there would act on a row the reader never picked. So the region
+keeps the focus, a second Enter writes nothing, and the next Tab goes
+to the first control of the list, such as its search field. A button
+that a field's `render` draws takes the focus as any first control
+does, so keep a write in `actions`.
+
+For a run from a confirm, the control they pressed is the one that
+opened the confirm, such as the bulk action button or the row's
+actions menu. For an action in a row's actions menu, it is the menu
+button, which the menu gives the focus back to as it closes. After a
+run started from the keyboard, while the region shows its ring, the
+rows scroll to that control when it is out of view. After a mouse
+click the region shows no ring and the rows stay where the reader left
+them. A checkbox, a `Button`, a title or a grid card's media button
+still draws WordPress's own focus style, which it draws on any focus,
+a mouse click included. An item of the list layout shows only its row
+tint and a table media button shows nothing, since those two show a
+focus style only on a keyboard focus. Once a control takes the focus,
+a screen reader has a name to say, and the next Tab goes on from it.
+A reload that fails leaves the old rows, so
+the focus goes back to the control they pressed. A focus the reader
+moved while the list reloaded stays where they put it, and a change
+of the list on show forgets where they were. A reload that also moves
+the view to another page, such as one page back once the last row of
+the last page left, keeps the same rule when it ends after the rows
+of that page show, so the row in that place on the page now on show
+takes the focus as above. When your app moves the page only once the
+reload ended with no rows, the focus stays on the region. A run that
+started with the focus on the page, such as a click that left no
+focus on the button, has nothing to put back, so the focus stays on
+the region.
+
+WordPress drops the focus to the page there. No control holds it and
+nothing shows. godmin goes further and keeps the focus on a control,
+or on the region when no control is safe to land on, so the reader
+keeps their place and a keyboard reader sees where they are.
+End the reload only once the list holds its new rows, as an awaited
+reload does, so the focus goes back among the new rows.
 
 A run can end while the reader works somewhere else, such as in a
 dialog they opened on another row. So the list takes the focus only
@@ -604,30 +785,42 @@ your `refresh` does.
 Its first argument names the list on show. Put the list and its tab
 in it, such as `'orders trash'`. When that name changes, the list
 clears the ticked rows and ignores any run started on the list
-before. The second argument replaces the ticked
-rows. Pass the setter that holds them, such as
+before, with one exception. When the first call of such a run that
+works ends only after the change, the run marks the new list
+reloading until its `refresh` ends, as WordPress reloads every list
+of the same kind of rows after a write. The second argument replaces
+the ticked rows. Pass the setter that holds them, such as
 `list.onChangeSelection`, or a setter from a parent component. The
 rows clear in the same frame the new list appears.
 
-`useBulkRun` makes one call per row with `runEach`, waits for
-`refresh`, shows one toast in your [bulk words](#bulk-messages) and
-then settles the run. The toast holds your `failed` words when any
-row failed, and your `done` words when every row worked. Wrap
-`refresh` in `useCallback`, or the handler changes on every render.
-`refresh` gets the rows the run acted on, so it can also forget each
-row's own cached copy. If `refresh` rejects, the run still shows its
-toast and settles, then rejects with that error.
+`useBulkRun` makes one call per row with `runEach`. As the first call
+that works ends, it marks the list reloading, while the other calls
+still run. As the last call ends it shows one toast in your
+[bulk words](#bulk-messages), settles the run and resolves, then calls
+`refresh`, and the list stays marked until `refresh` ends. So your app
+never reloads while its own calls still run. When every row failed,
+it still calls `refresh` but marks no reload, since nothing changed.
+The toast holds your `failed` words when any row failed, and your
+`done` words when every row worked. Wrap `refresh` in `useCallback`,
+or the handler changes on every render. `refresh` gets the rows the
+run acted on, so it can also forget each row's own cached copy. A
+`refresh` that rejects ends the reload, and the list's own loading
+state shows the failure, as on any later load. The run resolved
+before it, so it does not reject. A test that awaits the run and then
+reads the reloaded rows waits for the rows instead.
 
 `RunConfirm` is the body of the confirm modal. It runs the action
 when the reader confirms, shows the confirm button busy and keeps
-Cancel inert while the run goes, and closes once the run settles. A
-failure shows in the run's toast, never inside the modal. It also
-closes when the run rejects, and the error still reaches your app.
-It closes only itself. DataViews keeps one dialog for a row's actions
-menu and another for its primary action buttons. A reader can dismiss
-a busy confirm by clicking the dimmed page and open another dialog in
-its place, from the same menu or the same buttons. When the run then
-ends, that other dialog stays open, with what the reader typed in it.
+Cancel inert while the run goes, and closes once the run settles. So
+it stays open while a call still runs, even once the list started to
+reload, and closes as the toast shows. A failure shows in the run's
+toast, never inside the modal. It also closes when the run rejects,
+and the error still reaches your app. It closes only itself.
+DataViews keeps one dialog for a row's actions menu and another for
+its primary action buttons. A reader can dismiss a busy confirm by
+clicking the dimmed page and open another dialog in its place, from
+the same menu or the same buttons. When the run then ends, that other
+dialog stays open, with what the reader typed in it.
 
 `listLabel` and `listRef` make the list a region with a name, which
 a screen reader announces, and give the focus its target. The region
@@ -637,7 +830,13 @@ still takes the focus, but a screen reader has no name to announce.
 A button outside the list, such as one in the page header, can share
 the same run. Call `run.onStart()` as its write starts. It answers a
 function, typed `RunSettled`. Call that function once the write ends,
-with whether a row moved, and show how it went in a toast.
+with whether a row moved, and show how it went in a toast. Then call
+`run.onRefresh()` and reload the list. It answers a function that ends
+the reload. Call it once the reload ends, whether it worked or not,
+as [a list that loads](#a-list-that-loads) shows. The list region
+then takes a focus from a control in the parts DataViews makes inert,
+as in a run, and gives it back the same way once the list reloaded.
+A `ListRun` you build yourself needs an `onRefresh` too.
 
 Such a run starts outside every dialog. So when it ends, the list
 takes the focus only if the focus fell to the page or sits inside the
@@ -1321,10 +1520,7 @@ const view = { type: 'table', titleField: 'name', descriptionField: 'email', fie
 ```
 
 In a list page godmin sets the pair the way the WordPress subscriber
-list does. The title is 13px and bold, and the
-description is a 12px muted line 4px under it. A row with both is
-64px tall. A title on its own stays centered in a 32px line, level
-with the other cells of its row.
+list does, as [rows](./design-system/lists.md#rows) gives.
 
 ## Avatars
 
@@ -1388,11 +1584,12 @@ a picture, so no address leaves your application.
 
 Some lists cannot be DataViews, such as a list the user orders by
 hand with arrows. Keep those a `godmin-table`. It looks like the
-DataViews table: 13px text on 20px lines, small capital headers, 12px
-of padding in every cell but only 8px above and below a header,
-rows as tall as the DataViews rows, and a
-light line between rows. Rows also tint under the pointer and while
-keyboard focus is inside them, which DataViews does not do.
+DataViews table, with small capital headers, rows as tall as the
+DataViews rows and a light line between rows. Rows also tint under
+the pointer and while keyboard focus is inside them, which DataViews
+does not do.
+[Tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
+gives every value.
 
 Mark the cell that names the record `godmin-table__title`. It draws
 the name bold, as DataViews draws its titles. A link inside it has no
@@ -1406,7 +1603,7 @@ DataViews title field:
 ```
 
 Inside a `list` page the table reaches the canvas edges too, and its
-first and last cells pad by 24px, as DataViews does. A custom list
+first and last cells pad as DataViews pads its own. A custom list
 and a DataViews list then line up with each other and with the title.
 
 While its first rows load, show `LoadingScreen` in place of the
@@ -1433,7 +1630,8 @@ await startLocale(resolveLocale, [
 `listChromeCatalogFor` answers the catalogue for `es-ES`, and one
 for `fr-FR` with the loading words, the [list date](#dates-in-a-list)
 words and
-[godmin's own words](./framing-an-application.md#godmins-own-words).
+[godmin's own words](./framing-an-application.md#godmins-own-words),
+the words of `ListNoResults` among them.
 For any other language it answers `undefined`. French readers and
 those others keep the English chrome. Each catalogue is its own small
 module, so a bundler loads it only for a reader who needs it.

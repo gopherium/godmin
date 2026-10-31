@@ -1,8 +1,10 @@
 /* oxlint-disable react/only-export-components -- the page kit ships its parts
    beside the type they share. */
 import { Button, Notice, Stack, Text } from '@wordpress/ui'
-import { createContext, useContext } from 'react'
+import { createContext, useContext, useImperativeHandle, useRef } from 'react'
 import type { ComponentProps, HTMLAttributes, ReactNode, Ref } from 'react'
+
+import { useWideList } from './wide-list.js'
 
 type TextVariant = ComponentProps<typeof Text>['variant']
 
@@ -109,6 +111,34 @@ function regionOf(label: string | undefined, reached: boolean): HTMLAttributes<H
 }
 
 /**
+ * Renders the list region of a page, marked wide while its DataViews table is wider than its space.
+ * @param props - The name of the region, the ref code holds to it, and the list.
+ * @returns The list region element.
+ */
+function ListRegion({
+	label,
+	listRef,
+	children,
+}: {
+	label?: string
+	listRef?: Ref<HTMLDivElement>
+	children: ReactNode
+}) {
+	const own = useRef<HTMLDivElement>(null)
+	const wide = useWideList(own)
+	useImperativeHandle(listRef, () => own.current as HTMLDivElement, [])
+	return (
+		<div
+			className={wide ? 'godmin-page__list godmin-page__list--wide' : 'godmin-page__list'}
+			ref={own}
+			{...regionOf(label, listRef !== undefined)}
+		>
+			{children}
+		</div>
+	)
+}
+
+/**
  * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content.
  * @param props - The title, subtitle, actions, tabs, aside, list flag, list name and ref, extra class, title level
  * and content.
@@ -156,9 +186,9 @@ export function Page({
 				{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
 				<PageBody aside={aside}>
 					{list ? (
-						<div className="godmin-page__list" ref={listRef} {...regionOf(listLabel, listRef !== undefined)}>
+						<ListRegion label={listLabel} listRef={listRef}>
 							{children}
-						</div>
+						</ListRegion>
 					) : (
 						children
 					)}

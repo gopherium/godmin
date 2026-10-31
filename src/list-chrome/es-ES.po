@@ -665,6 +665,10 @@ msgid "True"
 msgstr "Verdadero"
 
 #, fuzzy
+msgid "Try adjusting your search or filters to find what you're looking for."
+msgstr "Prueba a ajustar tu búsqueda o tus filtros para encontrar lo que buscas."
+
+#, fuzzy
 msgid "Tue"
 msgstr "Mar"
 

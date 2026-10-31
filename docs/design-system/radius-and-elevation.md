@@ -115,15 +115,9 @@ package draws, because godmin sets none for them.
 
 Two more shadows draw a line, not depth:
 
-- Below `DENSE_BREAKPOINT` the actions column of a `godmin-table`
-  inside a `godmin-table-scroll` box stays pinned while the other
-  cells scroll. Its edge is an inset shadow, one drawn inside the
-  box: `--wpds-border-width-xs` (1px) of
-  `--wpds-color-stroke-surface-neutral`. It sits on the side that
-  faces the other cells, in a right-to-left page too. The table
-  merges the borders of its cells, and a merged border paints badly
-  on a pinned cell. [Stylesheet helpers](../screens.md#stylesheet-helpers)
-  shows the table markup.
+- The pinned actions column of a `godmin-table` inside
+  `godmin-table-scroll` draws its edge as an inset shadow, as
+  [Tables that stay custom](./lists.md#tables-that-stay-custom) gives.
 - A focused toast with no action draws its focus ring as a shadow, as
   [keyboard](./toasts.md#keyboard) on the toasts page shows.
   [The focus ring](./accessibility.md#the-focus-ring) covers the

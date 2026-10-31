@@ -8,13 +8,12 @@ import { Modal } from '@wordpress/components'
 import { DataViews } from '@wordpress/dataviews'
 import type { Field, View } from '@wordpress/dataviews'
 import { useState } from 'react'
-import type { ReactNode } from 'react'
 import { expect, waitFor } from 'storybook/test'
 
-import { Frame } from '../src/frame.js'
 import { LoadingScreen } from '../src/loading.js'
-import { NavigationScreen } from '../src/navigation-screen.js'
 import { Page } from '../src/page.js'
+import { Admin, ListPage } from './frames.js'
+import { boxOf, centredIn, find, meets, middleAcross } from './measure.js'
 
 /** A row of the sample list. */
 interface Report {
@@ -36,31 +35,6 @@ const VIEW: View = { type: 'table', titleField: 'title', page: 1, perPage: 10 }
 
 /** The modes of a story that takes no shot. */
 const NO_SHOT = { desktop: { disabled: true } }
-
-/** Renders an admin frame with a sidebar and a canvas holding what it is given. */
-function Admin({ children }: { children: ReactNode }) {
-	return (
-		<Frame.Root location="/">
-			<Frame.Sidebar>
-				<NavigationScreen title="Admin">
-					<p>Menu</p>
-				</NavigationScreen>
-			</Frame.Sidebar>
-			<Frame.Canvas>{children}</Frame.Canvas>
-		</Frame.Root>
-	)
-}
-
-/** Renders a list page holding what it is given. */
-function ListPage({ children }: { children: ReactNode }) {
-	return (
-		<Admin>
-			<Page title="Reports" list>
-				{children}
-			</Page>
-		</Admin>
-	)
-}
 
 /** Renders a list on its first load, which never ends. */
 function FirstLoad() {
@@ -127,41 +101,6 @@ function CanvasScreen({ label }: { label: string }) {
 			<LoadingScreen label={label} />
 		</Admin>
 	)
-}
-
-/** Returns the element a selector finds in the document, failing when none matches. */
-function find(selector: string): HTMLElement {
-	const found = document.querySelector<HTMLElement>(selector)
-	if (found === null) {
-		throw new Error(`nothing matches ${selector}`)
-	}
-	return found
-}
-
-/** Returns the box of the element a selector finds in the document. */
-function boxOf(selector: string): DOMRect {
-	return find(selector).getBoundingClientRect()
-}
-
-/** Returns the middle of a box across. */
-function middleAcross(box: DOMRect): number {
-	return box.left + box.width / 2
-}
-
-/** Returns the middle of a box down. */
-function middleDown(box: DOMRect): number {
-	return box.top + box.height / 2
-}
-
-/** Checks two positions meet within half a pixel. */
-async function meets(actual: number, expected: number, what: string) {
-	await expect(Math.abs(actual - expected), what).toBeLessThan(0.5)
-}
-
-/** Checks a box sits in the middle of another on both axes. */
-async function centredIn(inner: DOMRect, outer: DOMRect) {
-	await meets(middleAcross(inner), middleAcross(outer), 'across')
-	await meets(middleDown(inner), middleDown(outer), 'down')
 }
 
 /** Ends the opening motion of the dialog. */

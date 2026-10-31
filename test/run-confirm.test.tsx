@@ -5,8 +5,8 @@ import type { ActionModal } from '@wordpress/dataviews'
 import { useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
-import { RunConfirm } from '../src/index'
-import type { RunConfirmProps } from '../src/index'
+import { Page, RunConfirm, Toaster, useBulkRun, useListRun } from '../src/index'
+import type { BulkWords, RunConfirmProps } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -235,6 +235,117 @@ test('closes only itself once its run ends, leaving open a dialog opened on the 
 	await act(async () => held.settle())
 
 	expect(screen.getByRole('dialog', { name: 'Edit' })).not.toBeNull()
+})
+
+/** The words a bulk run over the list turns its outcome into. */
+const WORDS: BulkWords<Post> = {
+	done: (count) => `Moved to the trash: ${count}.`,
+	failed: (failures) => `Not moved to the trash: ${failures.length}.`,
+}
+
+/** The second item a bulk confirm runs over. */
+const SECOND: Post = { id: '2', title: 'Maria Perez' }
+
+/**
+ * Returns a call the test fulfils by hand, one item at a time.
+ * @returns The call spy and the function that fulfils the call made for an item.
+ */
+function heldEach() {
+	const waiting = new Map<Post, () => void>()
+	const call = vi.fn(
+		async (post: Post) =>
+			new Promise<void>((done) => {
+				waiting.set(post, done)
+			}),
+	)
+	return { call, finish: (post: Post) => waiting.get(post)?.() }
+}
+
+/**
+ * Renders a list whose confirm runs a bulk run over its items, with the given call and refresh.
+ * @param props - The items, the call made for each, the refresh of the list, the close handler and the reloads seen.
+ * @returns The page with the confirm in its list.
+ */
+function BulkConfirm({
+	items = [HELLO],
+	call,
+	refresh,
+	closeModal,
+	reloads = [],
+}: {
+	items?: Post[]
+	call: (post: Post) => Promise<unknown>
+	refresh: (items: Post[]) => Promise<unknown>
+	closeModal: () => void
+	reloads?: boolean[]
+}) {
+	const { run, region, refreshing } = useListRun('post publish', () => {})
+	const bulk = useBulkRun<Post>(run, refresh)
+	reloads.push(refreshing)
+	return (
+		<Page title="Posts" list listLabel="Posts" listRef={region}>
+			<RunConfirm
+				items={items}
+				closeModal={closeModal}
+				confirmLabel="Trash"
+				cancelLabel="Cancel"
+				run={(items) => bulk(items, call, WORDS)}
+			>
+				Move "Hello" to the trash?
+			</RunConfirm>
+		</Page>
+	)
+}
+
+test('closes a confirm over a bulk run, its button no longer busy, before the list refresh resolves', async () => {
+	const call = heldRun()
+	const reload = heldRun()
+	const closeModal = vi.fn()
+	renderAdmin(
+		<Toaster>
+			<BulkConfirm call={call.run} refresh={reload.run} closeModal={closeModal} />
+		</Toaster>,
+	)
+	await press('Trash')
+	const whileCalling = closeModal.mock.calls.length
+
+	await act(async () => call.settle())
+
+	await waitFor(() => expect(closeModal).toHaveBeenCalledOnce())
+	expect(whileCalling).toBe(0)
+	expect(screen.getByRole('button', { name: 'Trash' }).getAttribute('aria-disabled')).not.toBe('true')
+	expect(reload.run).toHaveBeenCalledOnce()
+	await act(async () => reload.settle())
+})
+
+test('keeps a confirm over a bulk run open and busy until its last call ends, the list already reloading', async () => {
+	const calls = heldEach()
+	const reload = heldRun()
+	const closeModal = vi.fn()
+	const reloads: boolean[] = []
+	renderAdmin(
+		<Toaster>
+			<BulkConfirm
+				items={[HELLO, SECOND]}
+				call={calls.call}
+				refresh={reload.run}
+				closeModal={closeModal}
+				reloads={reloads}
+			/>
+		</Toaster>,
+	)
+	await press('Trash')
+	await act(async () => calls.finish(HELLO))
+	await waitFor(() => expect(reloads.at(-1)).toBe(true))
+	const confirm = screen.getByRole('button', { name: 'Trash' })
+	const midway = [closeModal.mock.calls.length, confirm.getAttribute('aria-disabled')]
+
+	await act(async () => calls.finish(SECOND))
+
+	await waitFor(() => expect(closeModal).toHaveBeenCalledOnce())
+	expect(midway).toEqual([0, 'true'])
+	expect(reload.run).toHaveBeenCalledOnce()
+	await act(async () => reload.settle())
 })
 
 test('takes the props a DataViews action modal hands over', async () => {

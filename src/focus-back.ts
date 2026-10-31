@@ -7,7 +7,7 @@ import type { RefObject } from 'react'
 const MARKED = '[data-item-id]'
 
 /** Finds the card of a grid, the row of a phone list or the row of a table holding an item. */
-const HOLDERS = '.dataviews-view-grid__card, .dataviews-view-list__item-wrapper, .dataviews-view-table__row'
+export const HOLDERS = '.dataviews-view-grid__card, .dataviews-view-list__item-wrapper, .dataviews-view-table__row'
 
 /** Finds each trigger a dialog on an item opens from, inside the card or the row holding the item. */
 const TRIGGERS = {
