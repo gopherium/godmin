@@ -53,6 +53,7 @@ const preview: Preview = {
 			options: {
 				desktop: { name: 'Desktop', styles: { width: '1280px', height: '800px' } },
 				narrow: { name: 'Narrow desktop', styles: { width: '1100px', height: '800px' } },
+				medium: { name: 'Medium', styles: { width: '783px', height: '800px' } },
 				phone: { name: 'Phone', styles: { width: '390px', height: '844px' } },
 			},
 		},
