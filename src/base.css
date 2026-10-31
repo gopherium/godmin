@@ -718,6 +718,26 @@ body {
 		margin: 0;
 	}
 
+	/* Draws the WordPress region focus ring in place of the browser's inside a list region that holds the keyboard focus. */
+	.godmin-page__list[tabindex] {
+		position: relative;
+	}
+
+	.godmin-page__list:focus-visible {
+		outline: none;
+	}
+
+	.godmin-page__list:focus-visible::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 2;
+		outline: calc(2 * var(--wpds-border-width-focus)) solid var(--wpds-color-stroke-focus);
+		outline-offset: calc(-2 * var(--wpds-border-width-focus));
+		box-shadow: inset 0 0 0 calc(2 * var(--wpds-border-width-focus) + var(--wpds-border-width-xs)) var(--wpds-color-background-surface-neutral-strong);
+		pointer-events: none;
+	}
+
 	.godmin-page__tabs {
 		margin-inline: calc(-1 * var(--godmin-canvas-gutter, 0px));
 		padding-inline: var(--godmin-canvas-gutter, 0px);
