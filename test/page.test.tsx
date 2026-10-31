@@ -413,6 +413,63 @@ test('hands the list region to a ref object and to a ref function alike', () => 
 	expect(handed).toHaveBeenLastCalledWith(users)
 })
 
+test('runs the cleanup a ref function returns as the list region leaves, in place of handing it null', () => {
+	const cleanup = vi.fn()
+	const handed = vi.fn(() => cleanup)
+	const { unmount } = renderAdmin(
+		<Page title="Users" list listRef={handed}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	expect(cleanup).not.toHaveBeenCalled()
+
+	unmount()
+
+	expect(cleanup).toHaveBeenCalledOnce()
+	expect(handed).toHaveBeenCalledOnce()
+})
+
+test('hands null to a ref function with no cleanup and to a ref object as the list region leaves', () => {
+	const object = createRef<HTMLDivElement>()
+	const handed = vi.fn()
+	const { unmount } = renderAdmin(
+		<>
+			<Page title="Reports" list listRef={object}>
+				<p>rows</p>
+			</Page>
+			<Page title="Users" list listRef={handed}>
+				<p>rows</p>
+			</Page>
+		</>,
+	)
+
+	unmount()
+
+	expect(object.current).toBeNull()
+	expect(handed).toHaveBeenLastCalledWith(null)
+})
+
+test('moves the list region to a new ref, running the cleanup of the old one', () => {
+	const cleanup = vi.fn()
+	const first = vi.fn(() => cleanup)
+	const second = vi.fn()
+	const { container, rerender } = renderAdmin(
+		<Page title="Users" list listRef={first}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	rerender(
+		<Page title="Users" list listRef={second}>
+			<p>rows</p>
+		</Page>,
+	)
+
+	expect(cleanup).toHaveBeenCalledOnce()
+	expect(second).toHaveBeenCalledWith(container.querySelector('.godmin-page__list'))
+})
+
 test('keeps a list inside the main column beside an aside', () => {
 	const { container } = renderAdmin(
 		<Page title="Users" list aside={<p>Details</p>}>

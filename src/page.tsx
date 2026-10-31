@@ -1,7 +1,7 @@
 /* oxlint-disable react/only-export-components -- the page kit ships its parts
    beside the type they share. */
 import { Button, Notice, Stack, Text } from '@wordpress/ui'
-import { createContext, useCallback, useContext, useRef } from 'react'
+import { createContext, useContext, useImperativeHandle, useRef } from 'react'
 import type { ComponentProps, HTMLAttributes, ReactNode, Ref } from 'react'
 
 import { useWideList } from './wide-list.js'
@@ -111,19 +111,6 @@ function regionOf(label: string | undefined, reached: boolean): HTMLAttributes<H
 }
 
 /**
- * Hands an element to a ref object or a ref function, and to nothing when no ref is given.
- * @param ref - The ref the element goes to.
- * @param element - The element, none once it leaves.
- */
-function handTo(ref: Ref<HTMLDivElement> | undefined, element: HTMLDivElement | null): void {
-	if (typeof ref === 'function') {
-		ref(element)
-	} else if (ref) {
-		ref.current = element
-	}
-}
-
-/**
  * Renders the list region of a page, marked wide while its DataViews table is wider than its space.
  * @param props - The name of the region, the ref code holds to it, and the list.
  * @returns The list region element.
@@ -139,17 +126,11 @@ function ListRegion({
 }) {
 	const own = useRef<HTMLDivElement>(null)
 	const wide = useWideList(own)
-	const handOn = useCallback(
-		(element: HTMLDivElement | null) => {
-			own.current = element
-			handTo(listRef, element)
-		},
-		[listRef],
-	)
+	useImperativeHandle(listRef, () => own.current as HTMLDivElement, [])
 	return (
 		<div
 			className={wide ? 'godmin-page__list godmin-page__list--wide' : 'godmin-page__list'}
-			ref={handOn}
+			ref={own}
 			{...regionOf(label, listRef !== undefined)}
 		>
 			{children}
