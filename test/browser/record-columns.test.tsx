@@ -52,6 +52,16 @@ const MANY_FIELDS = 14
 /** A word longer than any column. */
 const LONG_WORD = 'invoice'.repeat(120)
 
+/** A title longer than any title row. */
+const LONG_TITLE = 'Invoice for the sample customer '.repeat(12)
+
+/** The height of the title row. */
+const TITLE_ROW = 32
+
+/** The colours WordPress paints a breadcrumb link and its slash with. */
+const LINK_COLOUR = '--wpds-color-foreground-interactive-neutral'
+const SLASH_COLOUR = '--wpds-color-stroke-surface-neutral'
+
 /** The box DataViews scrolls the rows of the list page in. */
 const SCROLLER = '.godmin-page__list .dataviews-layout__container'
 
@@ -60,6 +70,7 @@ const MAIN = '.godmin-page__main'
 const ASIDE = '.godmin-page__aside'
 const SPLIT = '.godmin-page__split'
 const CANVAS = '.godmin-layout__canvas'
+const HEAD = '.godmin-page__head'
 
 /** Where the columns sit at each window width, from the widest. */
 const FITS: Fit[] = [
@@ -123,6 +134,16 @@ function ManyFields() {
 			))}
 		</form>
 	)
+}
+
+/** Returns the colour a token paints here. */
+function colourOf(token: string): string {
+	const probe = document.createElement('span')
+	probe.style.color = `var(${token})`
+	find('.godmin-page').append(probe)
+	const { color } = getComputedStyle(probe)
+	probe.remove()
+	return color
 }
 
 /** Waits for the frame to settle on a page width, which it folds through a media query. */
@@ -312,4 +333,29 @@ test('draws no second line under tabs', async () => {
 
 	expect(getComputedStyle(find(SPLIT)).borderBlockStartWidth).toBe('0px')
 	near(boxOf(SPLIT).top, boxOf('.godmin-page__tabs').bottom, 'the split starts at the tab line')
+})
+
+test.each([
+	{ width: 1280, room: ROOM },
+	{ width: 390, room: PHONE_ROOM },
+])('keeps a long title and Save on one line at $width', async ({ width, room }) => {
+	await page.viewport(width, 800)
+	render(<Record title={LONG_TITLE} />)
+	await settled(room)
+	const head = find(HEAD)
+	const title = find('.godmin-page__heading > :last-child')
+	const trail = find('.godmin-page__breadcrumbs')
+
+	near(boxOf(HEAD).height, TITLE_ROW, 'the row stays one line')
+	near(boxOf(`${HEAD} button`).right, boxOf(HEAD).right, 'Save ends at the row end')
+	expect(title.scrollWidth, 'the title gives way').toBeGreaterThan(title.clientWidth)
+	expect(trail.scrollWidth, 'the links keep their width').toBeLessThanOrEqual(trail.clientWidth)
+	expect(head.scrollWidth, 'nothing runs past the row').toBeLessThanOrEqual(head.clientWidth)
+})
+
+test('paints the breadcrumb link and the slash from the tokens', () => {
+	render(<Record />)
+
+	expect(getComputedStyle(find('.godmin-page__breadcrumbs a')).color).toBe(colourOf(LINK_COLOUR))
+	expect(getComputedStyle(find('.godmin-page__separator')).color).toBe(colourOf(SLASH_COLOUR))
 })

@@ -693,6 +693,40 @@ body {
 		min-block-size: var(--wpds-dimension-size-md);
 	}
 
+	.godmin-page__heading {
+		display: flex;
+		align-items: center;
+		min-inline-size: 0;
+	}
+
+	.godmin-page__heading + * {
+		flex: none;
+	}
+
+	.godmin-page__heading > :last-child {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.godmin-page__breadcrumbs {
+		flex: none;
+	}
+
+	.godmin-page__breadcrumbs ul {
+		display: flex;
+		align-items: center;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.godmin-page__separator {
+		margin-inline: var(--wpds-dimension-gap-sm);
+		color: var(--wpds-color-stroke-surface-neutral);
+		user-select: none;
+	}
+
 	.godmin-page__subtitle {
 		padding-block-end: var(--wpds-dimension-padding-xs);
 		color: var(--wpds-color-foreground-content-neutral-weak);

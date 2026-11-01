@@ -91,6 +91,8 @@ export interface PageProps {
 	aside?: ReactNode
 	/** The name of the details column. */
 	asideLabel?: string
+	/** The links back to what a record belongs to, before the title. */
+	breadcrumbs?: ReactNode
 	list?: boolean
 	/** The name of the list region. */
 	listLabel?: string
@@ -151,9 +153,26 @@ function ListRegion({
 }
 
 /**
+ * Renders the title of a page, after its breadcrumbs when it has them.
+ * @param props - The title, its heading level and the breadcrumbs.
+ * @returns The title, alone or after its breadcrumbs.
+ */
+function PageHeading({ title, level, breadcrumbs }: { title: string; level: PageLevel; breadcrumbs?: ReactNode }) {
+	if (breadcrumbs === undefined) {
+		return <PageTitle level={level}>{title}</PageTitle>
+	}
+	return (
+		<div className="godmin-page__heading">
+			{breadcrumbs}
+			<PageTitle level={level}>{title}</PageTitle>
+		</div>
+	)
+}
+
+/**
  * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content.
- * @param props - The title, subtitle, actions, tabs, aside and its name, list flag, list name and ref, extra class,
- * title level and content.
+ * @param props - The title, subtitle, actions, tabs, aside and its name, breadcrumbs, list flag, list name and ref,
+ * extra class, title level and content.
  * @returns The page element.
  */
 export function Page({
@@ -163,6 +182,7 @@ export function Page({
 	tabs,
 	aside,
 	asideLabel,
+	breadcrumbs,
 	list = false,
 	listLabel,
 	listRef,
@@ -177,13 +197,13 @@ export function Page({
 				<Stack direction="column" render={<header />} className="godmin-page__header">
 					<Stack
 						direction="row"
-						wrap="wrap"
+						wrap={breadcrumbs === undefined ? 'wrap' : 'nowrap'}
 						gap="md"
 						align="center"
 						justify="space-between"
 						className="godmin-page__head"
 					>
-						<PageTitle level={headingLevel}>{title}</PageTitle>
+						<PageHeading title={title} level={headingLevel} breadcrumbs={breadcrumbs} />
 						{actions !== undefined && (
 							<Stack direction="row" gap="sm" align="center">
 								{actions}

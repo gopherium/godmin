@@ -197,6 +197,45 @@ test('wraps the actions of the page head under the title once they no longer fit
 	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('wrap')
 })
 
+test('draws no heading wrapper with no breadcrumbs', () => {
+	const { container } = renderAdmin(<Page title="Reports">body</Page>)
+
+	expect(container.querySelector('.godmin-page__heading')).toBeNull()
+})
+
+test('draws the breadcrumbs before the title, inside the title row', () => {
+	const { container } = renderAdmin(
+		<Page title="Maria Perez" breadcrumbs={<a href="/contacts">Contacts</a>}>
+			body
+		</Page>,
+	)
+
+	const heading = container.querySelector('.godmin-page__head > .godmin-page__heading:first-child')
+	expect(heading?.firstElementChild?.textContent).toBe('Contacts')
+	expect(heading?.lastElementChild).toBe(screen.getByRole('heading', { level: 1, name: 'Maria Perez' }))
+})
+
+test('keeps the title row on one line beside breadcrumbs', () => {
+	const { container } = renderAdmin(
+		<Page title="Maria Perez" breadcrumbs={<a href="/contacts">Contacts</a>}>
+			body
+		</Page>,
+	)
+
+	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('nowrap')
+})
+
+test('keeps the heading level beside breadcrumbs', () => {
+	renderAdmin(
+		<Page title="Maria Perez" headingLevel={2} breadcrumbs={<a href="/contacts">Contacts</a>}>
+			body
+		</Page>,
+	)
+
+	expect(screen.getByRole('heading', { level: 2, name: 'Maria Perez' })).not.toBeNull()
+	expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
+})
+
 test('sets the subtitle under the row of the title and the actions, as the WordPress page header does', () => {
 	const { container } = renderAdmin(
 		<Page title="Reports" subtitle="Friday, Aug 1" actions={<button type="button">New report</button>}>

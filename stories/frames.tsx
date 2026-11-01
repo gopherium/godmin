@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 import { Frame } from '../src/frame.js'
 import { NavigationScreen } from '../src/navigation-screen.js'
 import { Page } from '../src/page.js'
+import { PageBreadcrumb, PageBreadcrumbs } from '../src/page-breadcrumbs.js'
 
 /** Renders an admin frame with a sidebar and a canvas holding what it is given. */
 export function Admin({ children }: { children: ReactNode }) {
@@ -48,6 +49,11 @@ export function RecordPage({ title = 'Invoice 1042', aside, children }: RecordPa
 				headingLevel={2}
 				aside={aside}
 				asideLabel="Invoice details"
+				breadcrumbs={
+					<PageBreadcrumbs label="Breadcrumbs">
+						<PageBreadcrumb href="#invoices">Invoices</PageBreadcrumb>
+					</PageBreadcrumbs>
+				}
 				actions={
 					<Button size="compact" disabled>
 						Save

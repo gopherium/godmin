@@ -140,6 +140,37 @@ test('keeps what a column holds at its own height', () => {
 	expect(ruleOf('.godmin-page__main > *,\n\t.godmin-page__aside > *')).toMatch(/flex-shrink:\s*0/)
 })
 
+test('sets the breadcrumbs and the title on one line, only the title shrinking', () => {
+	const title = ruleOf('.godmin-page__heading > :last-child')
+
+	expect(ruleOf('.godmin-page__heading')).toMatch(/display:\s*flex/)
+	expect(ruleOf('.godmin-page__heading')).toMatch(/align-items:\s*center/)
+	expect(ruleOf('.godmin-page__heading')).toMatch(/min-inline-size:\s*0/)
+	expect(ruleOf('.godmin-page__heading + *')).toMatch(/flex:\s*none/)
+	expect(ruleOf('.godmin-page__breadcrumbs')).toMatch(/flex:\s*none/)
+	expect(title).toMatch(/overflow:\s*hidden/)
+	expect(title).toMatch(/text-overflow:\s*ellipsis/)
+	expect(title).toMatch(/white-space:\s*nowrap/)
+})
+
+test('lays the breadcrumbs out on one line with no list markers', () => {
+	const list = ruleOf('.godmin-page__breadcrumbs ul')
+
+	expect(list).toMatch(/display:\s*flex/)
+	expect(list).toMatch(/align-items:\s*center/)
+	expect(list).toMatch(/margin:\s*0/)
+	expect(list).toMatch(/padding:\s*0/)
+	expect(list).toMatch(/list-style:\s*none/)
+})
+
+test('parts the breadcrumbs with a slash from the tokens', () => {
+	const slash = ruleOf('.godmin-page__separator')
+
+	expect(slash).toMatch(/margin-inline:\s*var\(--wpds-dimension-gap-sm\)/)
+	expect(slash).toMatch(/color:\s*var\(--wpds-color-stroke-surface-neutral\);/)
+	expect(slash).toMatch(/user-select:\s*none/)
+})
+
 test('draws the line under the header of a record', () => {
 	expect(ruleOf('.godmin-page__split')).toMatch(
 		/border-block-start:\s*var\(--wpds-border-width-xs\) solid var\(--wpds-color-stroke-surface-neutral-weak\)/,
