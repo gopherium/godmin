@@ -214,8 +214,8 @@ test('draws a DataViews media link without an underline or the browser link colo
 	expect(media).toMatch(/color:\s*inherit/)
 })
 
-test('keeps the row of the title and the actions 40px tall, where the WordPress header puts the title', () => {
-	expect(ruleOf('.godmin-page__head')).toMatch(/min-block-size:\s*var\(--wpds-dimension-size-lg\)/)
+test('keeps the row of the title and the actions 32px tall, as the WordPress header does', () => {
+	expect(ruleOf('.godmin-page__head')).toMatch(/min-block-size:\s*var\(--wpds-dimension-size-md\)/)
 })
 
 test('leaves 4px under the subtitle, as the WordPress page header does', () => {

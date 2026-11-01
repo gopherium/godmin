@@ -29,10 +29,10 @@ move to a line of their own under it.
 
 `subtitle` renders as one 13px grey line under the title and the
 actions, the way WordPress sets the sentence under a page title. The
-title row is 40px tall even with no actions, so the title and the
+title row is 32px tall even with no actions, so the title and the
 subtitle sit in the same place on every page. Give the page compact
 buttons, `size="compact"`, to match the 32px buttons of a WordPress
-page header.
+page header. A button of the default size makes the row taller.
 
 `tabs` renders a row of tabs under the title block. See
 [PageTabs](#pagetabs) below.

@@ -690,7 +690,7 @@ body {
 	}
 
 	.godmin-page__head {
-		min-block-size: var(--wpds-dimension-size-lg);
+		min-block-size: var(--wpds-dimension-size-md);
 	}
 
 	.godmin-page__subtitle {
