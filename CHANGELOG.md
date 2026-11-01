@@ -4,6 +4,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Changed
+
+- **Breaking.** The page title row is 32px tall in place of 40px, as a WordPress page header.
+
 ## [0.30.0] - 2026-11-01
 
 ### Added
