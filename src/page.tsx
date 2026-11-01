@@ -1,7 +1,7 @@
 /* oxlint-disable react/only-export-components -- the page kit ships its parts
    beside the type they share. */
 import { Button, Notice, Stack, Text } from '@wordpress/ui'
-import { createContext, useContext, useImperativeHandle, useRef } from 'react'
+import { Children, createContext, useContext, useImperativeHandle, useRef } from 'react'
 import type { ComponentProps, HTMLAttributes, ReactNode, Ref } from 'react'
 
 import { useWideList } from './wide-list.js'
@@ -153,12 +153,21 @@ function ListRegion({
 }
 
 /**
+ * Tells whether a page has breadcrumbs to draw.
+ * @param breadcrumbs - What the page was given.
+ * @returns Whether it holds anything that renders.
+ */
+function hasBreadcrumbs(breadcrumbs: ReactNode): boolean {
+	return Children.toArray(breadcrumbs).length > 0
+}
+
+/**
  * Renders the title of a page, after its breadcrumbs when it has them.
  * @param props - The title, its heading level and the breadcrumbs.
  * @returns The title, alone or after its breadcrumbs.
  */
 function PageHeading({ title, level, breadcrumbs }: { title: string; level: PageLevel; breadcrumbs?: ReactNode }) {
-	if (breadcrumbs === undefined) {
+	if (!hasBreadcrumbs(breadcrumbs)) {
 		return <PageTitle level={level}>{title}</PageTitle>
 	}
 	return (
@@ -197,7 +206,7 @@ export function Page({
 				<Stack direction="column" render={<header />} className="godmin-page__header">
 					<Stack
 						direction="row"
-						wrap={breadcrumbs === undefined ? 'wrap' : 'nowrap'}
+						wrap={hasBreadcrumbs(breadcrumbs) ? 'nowrap' : 'wrap'}
 						gap="md"
 						align="center"
 						justify="space-between"

@@ -9,7 +9,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 ### Added
 
 - `Page` takes `asideLabel`, the name of its details column.
-- `Page` takes `breadcrumbs`, drawn before the title on a row that does not wrap, with `PageBreadcrumbs` and `PageBreadcrumb`.
+- `Page` takes `breadcrumbs`, drawn before the title, with `PageBreadcrumbs` and `PageBreadcrumb`.
 - `docs/design-system/record-pages.md` gives every value of a record page.
 
 ### Changed

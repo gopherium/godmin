@@ -4,7 +4,7 @@ import { composeStories } from '@storybook/react-vite'
 import { render } from '@testing-library/react'
 import { DataViews } from '@wordpress/dataviews'
 import type { Field, View } from '@wordpress/dataviews'
-import { InputControl } from '@wordpress/ui'
+import { Button, InputControl } from '@wordpress/ui'
 import type { ReactNode } from 'react'
 import { expect, test } from 'vitest'
 import { page } from 'vitest/browser'
@@ -12,6 +12,7 @@ import { page } from 'vitest/browser'
 import { AdminRoot } from '../../src/admin-root.js'
 import { LoadingScreen } from '../../src/loading.js'
 import { Page } from '../../src/page.js'
+import { PageBreadcrumb, PageBreadcrumbs } from '../../src/page-breadcrumbs.js'
 import { Admin, RecordPage } from '../../stories/frames.js'
 import * as lists from '../../stories/lists.stories.js'
 import { boxOf, columnsOf, find, middleDown } from '../../stories/measure.js'
@@ -67,6 +68,9 @@ const LONG_TITLE = 'Invoice for the sample customer '.repeat(12)
 
 /** The height of the title row. */
 const TITLE_ROW = 32
+
+/** The least room a title keeps beside its breadcrumbs. */
+const TITLE_FLOOR = 120
 
 /** The colours WordPress paints a breadcrumb link and its slash with. */
 const LINK_COLOUR = '--wpds-color-foreground-interactive-neutral'
@@ -201,6 +205,29 @@ function SectionList() {
 				paginationInfo={{ totalItems: 1, totalPages: 1 }}
 			/>
 		</div>
+	)
+}
+
+/** Renders a record whose breadcrumbs are too long for a phone. */
+function LongTrailRecord() {
+	return (
+		<AdminRoot>
+			<Admin>
+				<Page
+					title="Invoice 1042"
+					aside={<div>Invoice details</div>}
+					actions={<Button size="compact">Save</Button>}
+					breadcrumbs={
+						<PageBreadcrumbs label="Breadcrumbs">
+							<PageBreadcrumb href="#accounts">Customer accounts</PageBreadcrumb>
+							<PageBreadcrumb href="#invoices">Northern region invoices</PageBreadcrumb>
+						</PageBreadcrumbs>
+					}
+				>
+					<div>Lines</div>
+				</Page>
+			</Admin>
+		</AdminRoot>
 	)
 }
 
@@ -496,6 +523,34 @@ test.each([
 	expect(title.scrollWidth, 'the title gives way').toBeGreaterThan(title.clientWidth)
 	expect(trail.scrollWidth, 'the links keep their width').toBeLessThanOrEqual(trail.clientWidth)
 	expect(head.scrollWidth, 'nothing runs past the row').toBeLessThanOrEqual(head.clientWidth)
+})
+
+test.each([
+	{ width: 1280, room: ROOM },
+	{ width: 390, room: PHONE_ROOM },
+])('keeps a short title on the line of its breadcrumbs at $width', async ({ width, room }) => {
+	await page.viewport(width, 800)
+	render(<Record />)
+	await settled(room)
+
+	near(boxOf(HEAD).height, TITLE_ROW, 'the row stays one line')
+})
+
+test('keeps a long trail clear of Save and the title in view on a phone', async () => {
+	await page.viewport(390, 844)
+	render(<LongTrailRecord />)
+	await settled(PHONE_ROOM)
+	const save = boxOf(`${HEAD} button`)
+	const title = boxOf('.godmin-page__heading > :last-child')
+
+	const first = boxOf('.godmin-page__breadcrumbs li:first-child')
+	const last = boxOf('.godmin-page__breadcrumbs li:last-child')
+
+	expect(last.top, 'the links wrap whole').toBeGreaterThan(first.top)
+	expect(last.right, 'the links stop before Save').toBeLessThanOrEqual(save.left)
+	expect(title.right, 'the title stops before Save').toBeLessThanOrEqual(save.left)
+	expect(title.width, 'the title stays in view').toBeGreaterThanOrEqual(TITLE_FLOOR)
+	expect(find(HEAD).scrollWidth, 'nothing runs past the row').toBeLessThanOrEqual(find(HEAD).clientWidth)
 })
 
 test('paints the breadcrumb link and the slash from the tokens', () => {

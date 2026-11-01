@@ -695,6 +695,8 @@ body {
 
 	.godmin-page__heading {
 		display: flex;
+		flex: 1 1 0;
+		flex-wrap: wrap;
 		align-items: center;
 		min-inline-size: 0;
 	}
@@ -704,6 +706,7 @@ body {
 	}
 
 	.godmin-page__heading > :last-child {
+		flex: 1 1 calc(var(--wpds-dimension-surface-width-xs) / 2);
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
@@ -711,10 +714,12 @@ body {
 
 	.godmin-page__breadcrumbs {
 		flex: none;
+		max-inline-size: 100%;
 	}
 
 	.godmin-page__breadcrumbs ul {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
 		margin: 0;
 		padding: 0;

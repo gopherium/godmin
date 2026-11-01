@@ -201,6 +201,7 @@ const RECORDS: ValueTable = { page: 'record-pages.md', values: valuesOf([
 	['.godmin-page__subtitle', 'padding-block-end', 'The page header', 'subtitle'],
 	['.godmin-page__separator', 'color', 'The page header', 'slash'],
 	['.godmin-page__separator', 'margin-inline', 'The page header', 'slash'],
+	['.godmin-page__heading > :last-child', 'flex', 'The page header', 'The title keeps'],
 	['.godmin-page__aside', 'flex', 'The two columns', 'details are'],
 	['.godmin-page__split', 'column-gap', 'The two columns', 'The columns sit'],
 	[RECORD_COLUMNS, 'padding-inline', 'The two columns', 'Each column keeps'],

@@ -35,9 +35,12 @@ every value of how it looks.
 - Breadcrumbs sit before the title, on its line. Each link is
   `body-lg`. A slash in `--wpds-color-stroke-surface-neutral` follows
   it, `--wpds-dimension-gap-sm` (8px) from the text on each side.
-- Beside breadcrumbs the row never wraps. The title stays on one line
-  and ends in an ellipsis when it does not fit. The links and the
-  actions keep their width.
+- Beside breadcrumbs the actions stay on the title's line. The title
+  stays on one line and ends in an ellipsis when it does not fit. The
+  links and the actions keep their width.
+- The title keeps half of `--wpds-dimension-surface-width-xs` (240px),
+  which is 120px. A trail that leaves it less wraps, as the WordPress
+  Forms trail does, and the title moves under it.
 - Every page opened from a list takes breadcrumbs, a create page too.
 - Save comes last in the row. A menu with Delete, named "More
   options", comes before it.

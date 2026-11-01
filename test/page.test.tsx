@@ -203,6 +203,17 @@ test('draws no heading wrapper with no breadcrumbs', () => {
 	expect(container.querySelector('.godmin-page__heading')).toBeNull()
 })
 
+test.each([[false], [null]])('treats breadcrumbs given as %s as no breadcrumbs', (breadcrumbs) => {
+	const { container } = renderAdmin(
+		<Page title="Reports" breadcrumbs={breadcrumbs}>
+			body
+		</Page>,
+	)
+
+	expect(container.querySelector('.godmin-page__heading')).toBeNull()
+	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('wrap')
+})
+
 test('draws the breadcrumbs before the title, inside the title row', () => {
 	const { container } = renderAdmin(
 		<Page title="Maria Perez" breadcrumbs={<a href="/contacts">Contacts</a>}>

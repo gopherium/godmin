@@ -159,13 +159,21 @@ test('sets the breadcrumbs and the title on one line, only the title shrinking',
 	const title = ruleOf('.godmin-page__heading > :last-child')
 
 	expect(ruleOf('.godmin-page__heading')).toMatch(/display:\s*flex/)
+	expect(ruleOf('.godmin-page__heading')).toMatch(/flex:\s*1 1 0/)
 	expect(ruleOf('.godmin-page__heading')).toMatch(/align-items:\s*center/)
 	expect(ruleOf('.godmin-page__heading')).toMatch(/min-inline-size:\s*0/)
 	expect(ruleOf('.godmin-page__heading + *')).toMatch(/flex:\s*none/)
 	expect(ruleOf('.godmin-page__breadcrumbs')).toMatch(/flex:\s*none/)
+	expect(title).toMatch(/flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-xs\) \/ 2\)/)
 	expect(title).toMatch(/overflow:\s*hidden/)
 	expect(title).toMatch(/text-overflow:\s*ellipsis/)
 	expect(title).toMatch(/white-space:\s*nowrap/)
+})
+
+test('wraps a trail too long for the row, as the WordPress Forms trail does', () => {
+	expect(ruleOf('.godmin-page__heading')).toMatch(/flex-wrap:\s*wrap/)
+	expect(ruleOf('.godmin-page__breadcrumbs')).toMatch(/max-inline-size:\s*100%/)
+	expect(ruleOf('.godmin-page__breadcrumbs ul')).toMatch(/flex-wrap:\s*wrap/)
 })
 
 test('lays the breadcrumbs out on one line with no list markers', () => {
