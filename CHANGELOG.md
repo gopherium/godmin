@@ -6,9 +6,19 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 ## [Unreleased]
 
+### Added
+
+- `Page` takes `asideLabel`, the name of its details column.
+- `Page` takes `breadcrumbs`, drawn before the title on a row that does not wrap, with `PageBreadcrumbs` and `PageBreadcrumb`.
+- `docs/design-system/record-pages.md` gives every value of a record page.
+
 ### Changed
 
 - **Breaking.** The page title row is 32px tall in place of 40px, as a WordPress page header.
+- **Breaking.** A `Page` with an `aside` grows its main work beside a 400px details column, in place of a 560px column beside an aside that grows.
+- **Breaking.** A `Page` with an `aside` keeps its header in view and scrolls each column on its own, or both as one box once stacked, in place of the canvas.
+- `docs/screens.md` leaves every record value to the new page.
+- `docs/loading-and-feedback.md` puts a failed write on a page in a toast, and a server message about one field under that field.
 
 ## [0.30.0] - 2026-11-01
 
