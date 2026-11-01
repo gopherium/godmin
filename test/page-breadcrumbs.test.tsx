@@ -9,20 +9,13 @@ import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
 
-/**
- * Returns the class tokens the design system gives a sampled element.
- * @param element - The element to sample, carrying id="sample".
- * @returns The class tokens.
- */
+/** Returns the class tokens the design system gives an element carrying id="sample". */
 function sampledClasses(element: React.ReactElement): string[] {
 	const { container } = renderAdmin(element)
 	return [...(container.querySelector('#sample') as Element).classList]
 }
 
-/**
- * Renders a trail of one plain link.
- * @returns The rendered tree.
- */
+/** Renders a trail of one plain link. */
 function renderTrail() {
 	return renderAdmin(
 		<PageBreadcrumbs label="Breadcrumbs">

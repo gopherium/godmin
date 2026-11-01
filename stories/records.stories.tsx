@@ -100,7 +100,7 @@ function onlyAt(viewport: 'medium' | 'phone') {
 	}
 }
 
-/** Checks nothing runs past the split sideways, since it hides what does and shows nothing. */
+/** Checks nothing runs past the split sideways. */
 async function noSpill() {
 	const split = find('.godmin-page__split')
 	await expect(split.scrollWidth, 'nothing spills sideways').toBeLessThanOrEqual(split.clientWidth)
