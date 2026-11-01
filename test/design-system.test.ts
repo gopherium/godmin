@@ -191,8 +191,33 @@ const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
 	['.godmin-table-scroll .godmin-table__actions', 'box-shadow', 'Tables that stay custom', 'inset shadow'],
 ]) }
 
+/** The selector of the rule both columns of a record page share. */
+const RECORD_COLUMNS = '.godmin-page__main,\n\t.godmin-page__aside'
+
+/** Each record page value the record pages page gives. */
+const RECORDS: ValueTable = { page: 'record-pages.md', values: valuesOf([
+	['.godmin-page__head', 'min-block-size', 'The page header', 'title row'],
+	['.godmin-page__subtitle', 'color', 'The page header', 'subtitle'],
+	['.godmin-page__subtitle', 'padding-block-end', 'The page header', 'subtitle'],
+	['.godmin-page__separator', 'color', 'The page header', 'slash'],
+	['.godmin-page__separator', 'margin-inline', 'The page header', 'slash'],
+	['.godmin-page__main', 'flex', 'The two columns', 'main work takes'],
+	['.godmin-page__aside', 'flex', 'The two columns', 'details are'],
+	['.godmin-page__split', 'column-gap', 'The two columns', 'The columns sit'],
+	[RECORD_COLUMNS, 'padding-inline', 'The two columns', 'Each column keeps'],
+	[RECORD_COLUMNS, 'overflow-wrap', 'The two columns', 'long word'],
+	['.godmin-page__split', 'row-gap', 'When both do not fit', 'move under'],
+	[RECORD_COLUMNS, 'overflow', 'What scrolls', 'scrolls on its own'],
+	['.godmin-page__split', 'border-block-start', 'What scrolls', 'A line'],
+	['.godmin-page__main', 'padding-block-start', 'What scrolls', 'above its'],
+	['.godmin-page__aside', 'padding-block-start', 'What scrolls', 'above its'],
+	['.godmin-form', 'max-width', 'Forms on a page', 'stops at'],
+	['.godmin-form', 'gap', 'Forms on a page', 'stops at'],
+	['.godmin-form__row > *', 'flex', 'Forms on a page', 'starts from'],
+]) }
+
 /** The value tables of the Design System pages that give values the stylesheet sets. */
-const VALUE_TABLES = [TOASTS, LOADING, LISTS]
+const VALUE_TABLES = [TOASTS, LOADING, LISTS, RECORDS]
 
 /** The pixel values the lists page gives that no usage section on how a list looks may repeat. */
 const LIST_NUMBERS = [24, 48, 16, 8, 13, 12, 20, 64, 32, 4, 640, 782, 783, 280].map(
@@ -212,6 +237,12 @@ const LIST_LOOKS = [
 	].map((heading) => ['usage/lists.md', heading]),
 	['usage/screens.md', 'Stylesheet helpers'],
 ]
+
+/** The pixel values the record pages page gives that no usage section on a page may repeat. */
+const RECORD_NUMBERS = [13, 15, 32, 40, 160, 240, 400, 560, 824].map((pixels) => new RegExp(`\\b${pixels}px\\b`))
+
+/** The usage sections on how a page looks, each by its page and heading, that leave every value to that page. */
+const RECORD_LOOKS = ['Page', 'Stylesheet helpers'].map((heading) => ['usage/screens.md', heading])
 
 /** The values the loading page gives that no usage page or other section may repeat. */
 const LOADING_NUMBERS = [
@@ -355,6 +386,7 @@ test.each([
 	'toasts.md',
 	'loading.md',
 	'lists.md',
+	'record-pages.md',
 ])('the Design System holds %s', (name) => {
 	expect([...pages.keys()]).toContain(name)
 })
@@ -519,6 +551,38 @@ test('the usage pages leave every list value to the lists page', () => {
 	})
 
 	expect(found.filter((line) => !line.endsWith(': '))).toEqual([])
+})
+
+test('the usage pages leave every record value to the record pages page', () => {
+	const found = RECORD_LOOKS.map(([page, heading]) => {
+		const section = sections.get(page)?.get(heading)
+		const values = section === undefined ? ['no such section'] : RECORD_NUMBERS.filter((value) => value.test(section))
+		return `${page} ${heading}: ${values.map(String).join(' ')}`
+	})
+
+	expect(found.filter((line) => !line.endsWith(': '))).toEqual([])
+})
+
+test('the record pages page gives the width the columns fold at, as the tokens add up', () => {
+	const pixels = (token: string) => Number(groupOf(new RegExp(`${token}:\\s*(\\d+)px;`).exec(tokenSheet)))
+	const fold = pixels('--wpds-dimension-surface-width-md') * 2 + pixels('--wpds-dimension-gap-xl')
+
+	expect(sections.get('record-pages.md')?.get('When both do not fit')).toContain(`${fold}px`)
+})
+
+test('counts the ring room of both columns in the width they fold at', () => {
+	expect(ruleValue('.godmin-page__split', '--godmin-page-stacked')).toContain('2 * var(--wpds-dimension-padding-xs)')
+})
+
+test('the record pages page gives the gap inside each column, as Page sets it', () => {
+	const page = readFileSync(resolve(import.meta.dirname, '../src/page.tsx'), 'utf8')
+	const passage = passagesOf(sections.get('record-pages.md')?.get('The two columns')).find((text) =>
+		text.includes('Inside each column'),
+	)
+
+	expect(page).toMatch(/gap="lg" className="godmin-page__main"/)
+	expect(page).toMatch(/gap="lg" className="godmin-page__aside"/)
+	expect(passage).toContain('`--wpds-dimension-gap-lg`')
 })
 
 test('the lists page names the line DataViews draws beside its pinned actions, as the installed sheet sets it', () => {

@@ -145,6 +145,8 @@ jump straight to one.
 | The drawer on a small screen | `dialog` | "Navigation", whatever `label` says |
 | The tabs of a page | `navigation` | The `label` of [`PageTabs`](../screens.md#pagetabs) |
 | The list of a list page | `region` | The `listLabel` of [`Page`](../screens.md#page), when given |
+| The details of a record page | `region` | The `asideLabel` of [`Page`](../screens.md#page), when given |
+| The breadcrumbs of a page | `navigation` | The `label` of [`PageBreadcrumbs`](../screens.md#pagebreadcrumbs) |
 
 The sidebar menu draws no landmark of its own, and the drawer holds
 no region. So a screen reader meets the sidebar under one name only.
@@ -233,10 +235,11 @@ gives no label a fixed width:
   only a smallest height.
 - A long title on a sidebar screen breaks onto the next line.
 - A toast grows with its message, then wraps, as
-  [size](./toasts.md#size) on the toasts page shows. The aside of a
-  page and a log list break a long word the same way.
+  [size](./toasts.md#size) on the toasts page shows. Both columns of
+  a record page and a log list break a long word the same way.
 - The actions of a page header move under the title once they no
-  longer fit beside it. A form row and the header line of a log list
+  longer fit beside it. Beside breadcrumbs the title ends in an
+  ellipsis instead. A form row and the header line of a log list
   wrap the same way.
 - The page tabs keep each label on one line. A tab row too long for
   its page scrolls and fades the edge it cuts.
