@@ -784,6 +784,12 @@ body {
 		flex-shrink: 0;
 	}
 
+	.godmin-page__main .godmin-table-scroll,
+	.godmin-page__aside .godmin-table-scroll {
+		position: relative;
+		overflow-x: auto;
+	}
+
 	.godmin-page__aside:empty {
 		display: none;
 	}
@@ -817,6 +823,11 @@ body {
 
 	.godmin-list {
 		margin-inline: calc(-1 * min(var(--wpds-dimension-padding-2xl), var(--godmin-canvas-gutter, 0px)));
+	}
+
+	.godmin-page__main .godmin-list,
+	.godmin-page__aside .godmin-list {
+		margin-inline: 0;
 	}
 
 	.godmin-page > .godmin-page__list > :not(.dataviews-wrapper, .godmin-table-scroll, .godmin-table) {
@@ -1026,6 +1037,7 @@ body {
 		font-size: var(--wpds-typography-font-size-md);
 		line-height: var(--wpds-typography-line-height-sm);
 		text-align: left;
+		overflow-wrap: normal;
 	}
 
 	.godmin-table th,

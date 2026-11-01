@@ -2,6 +2,8 @@
 
 import { composeStories } from '@storybook/react-vite'
 import { render } from '@testing-library/react'
+import { DataViews } from '@wordpress/dataviews'
+import type { Field, View } from '@wordpress/dataviews'
 import { InputControl } from '@wordpress/ui'
 import type { ReactNode } from 'react'
 import { expect, test } from 'vitest'
@@ -69,6 +71,20 @@ const TITLE_ROW = 32
 /** The colours WordPress paints a breadcrumb link and its slash with. */
 const LINK_COLOUR = '--wpds-color-foreground-interactive-neutral'
 const SLASH_COLOUR = '--wpds-color-stroke-surface-neutral'
+
+/** The headings of a table wider than a column. */
+const WIDE_COLUMNS = ['Reference', 'Description', 'Customer', 'Quantity', 'Delivered', 'Warehouse', 'Carrier']
+
+/** One line of a list in a column. */
+interface Line {
+	id: string
+	title: string
+}
+
+/** The lines, fields and view of a small DataViews list. */
+const LINES: Line[] = [{ id: '1', title: 'Line 1' }]
+const LINE_FIELDS: Field<Line>[] = [{ id: 'title', label: 'Title', getValue: ({ item }) => item.title }]
+const LINE_VIEW: View = { type: 'list', titleField: 'title' }
 
 /** The look WordPress gives a read-only fact. */
 const FACT_LABEL = 152
@@ -155,6 +171,39 @@ function TallPart() {
 	)
 }
 
+/** Renders a table wider than a column in its scroll box. */
+function WideCustomTable() {
+	return (
+		<div className="godmin-table-scroll" role="region" aria-label="Lines" tabIndex={0}>
+			<table className="godmin-table">
+				<thead>
+					<tr>
+						{WIDE_COLUMNS.map((heading) => (
+							<th key={heading}>{heading}</th>
+						))}
+					</tr>
+				</thead>
+			</table>
+		</div>
+	)
+}
+
+/** Renders a small DataViews list in the box that lines it up with the text around it. */
+function SectionList() {
+	return (
+		<div className="godmin-list">
+			<DataViews
+				data={LINES}
+				fields={LINE_FIELDS}
+				view={LINE_VIEW}
+				onChangeView={() => {}}
+				defaultLayouts={{ list: {} }}
+				paginationInfo={{ totalItems: 1, totalPages: 1 }}
+			/>
+		</div>
+	)
+}
+
 /** Renders more fields than a details column holds. */
 function ManyFields() {
 	return (
@@ -236,6 +285,29 @@ test('holds the columns around a wide table', async () => {
 	near(details.width, DETAILS, 'the details')
 	near(main.width, ROOM - DETAILS - GAP, 'the work')
 	near(main.top, details.top, 'both start on one line')
+})
+
+test.each([
+	{ width: 1280, room: ROOM },
+	{ width: 390, room: PHONE_ROOM },
+])('scrolls a wide table in its own box inside a column at $width', async ({ width, room }) => {
+	await page.viewport(width, 800)
+	renderRecord(<div>Invoice details</div>, <WideCustomTable />)
+	await settled(room)
+	const box = find('.godmin-table-scroll')
+
+	expect(box.scrollWidth, 'the table runs past its box').toBeGreaterThan(box.clientWidth)
+	expect(find(MAIN).scrollWidth, 'the column clips nothing').toBeLessThanOrEqual(find(MAIN).clientWidth)
+})
+
+test('keeps a list whole inside a column', async () => {
+	renderRecord(<div>Invoice details</div>, <SectionList />)
+	await settled(ROOM)
+	const { main } = columnsOf()
+	const row = boxOf('.dataviews-view-list__item')
+
+	near(row.left, main.left, 'the row starts at the work')
+	near(row.right, main.right, 'the row ends at the work')
 })
 
 test('sets the details at the end right to left, the split out to the canvas edges', async () => {

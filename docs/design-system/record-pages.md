@@ -62,7 +62,13 @@ every value of how it looks.
 - Inside each column the parts sit `--wpds-dimension-gap-lg` (16px)
   apart.
 - Both columns break a long word, with `overflow-wrap: anywhere`, so
-  it cannot push the page wider.
+  it cannot push the page wider. A `godmin-table` keeps its words
+  whole.
+- A column clips what runs past its sides, so a wide table goes in a
+  `godmin-table-scroll`, which scrolls there at every width.
+- A `godmin-list` in a column stays inside it, so a row and its focus
+  ring stay whole. DataViews keeps its own padding, as a list region
+  in the main work does.
 
 ## When both do not fit
 

@@ -441,7 +441,8 @@ instead:
 
 The scroll rule only activates on a phone, as
 [tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
-gives. There the actions column, the cell marked
+gives, and in a column of a record page at every width. On a phone
+the actions column, the cell marked
 `godmin-table__actions`, stays pinned to the right edge, so a row's
 buttons are in view before any scroll. On a
 desktop the wrapper only draws a focus ring when a keyboard user
