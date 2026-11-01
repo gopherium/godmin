@@ -47,6 +47,7 @@ export function RecordPage({ title = 'Invoice 1042', aside, children }: RecordPa
 				title={title}
 				headingLevel={2}
 				aside={aside}
+				asideLabel="Invoice details"
 				actions={
 					<Button size="compact" disabled>
 						Save

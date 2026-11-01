@@ -290,6 +290,41 @@ test('leaves an aside that renders nothing empty, so the stylesheet hides it', (
 	expect(container.querySelector('.godmin-page__aside:empty')).not.toBeNull()
 })
 
+test('names the details as a region when given a label', () => {
+	renderAdmin(
+		<Page title="Invoice 1042" aside={<p>Details</p>} asideLabel="Invoice details">
+			<p>Lines</p>
+		</Page>,
+	)
+
+	const region = screen.getByRole('region', { name: 'Invoice details' })
+	expect(region.classList.contains('godmin-page__aside')).toBe(true)
+	expect(region.textContent).toBe('Details')
+})
+
+test('leaves the details a plain column with no label', () => {
+	const { container } = renderAdmin(
+		<Page title="Invoice 1042" aside={<p>Details</p>}>
+			<p>Lines</p>
+		</Page>,
+	)
+
+	const aside = container.querySelector('.godmin-page__aside')
+	expect(aside?.hasAttribute('role')).toBe(false)
+	expect(aside?.hasAttribute('aria-label')).toBe(false)
+	expect(aside?.hasAttribute('tabindex')).toBe(false)
+})
+
+test('keeps a named details column out of reach of a script focus', () => {
+	renderAdmin(
+		<Page title="Invoice 1042" aside={<p>Details</p>} asideLabel="Invoice details">
+			<p>Lines</p>
+		</Page>,
+	)
+
+	expect(screen.getByRole('region', { name: 'Invoice details' }).hasAttribute('tabindex')).toBe(false)
+})
+
 test('renders one column when a screen gives no aside', () => {
 	const { container } = renderAdmin(<Page title="Reports">body</Page>)
 

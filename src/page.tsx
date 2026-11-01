@@ -87,7 +87,10 @@ export interface PageProps {
 	subtitle?: string
 	actions?: ReactNode
 	tabs?: ReactNode
+	/** The details of a record, in a fixed column at the end of the page. */
 	aside?: ReactNode
+	/** The name of the details column. */
+	asideLabel?: string
 	list?: boolean
 	/** The name of the list region. */
 	listLabel?: string
@@ -100,6 +103,15 @@ export interface PageProps {
 }
 
 /**
+ * Returns the role and the name of a region given a label.
+ * @param label - The name of the region.
+ * @returns The role and the name, or nothing with no label.
+ */
+function namedRegion(label: string | undefined): HTMLAttributes<HTMLDivElement> {
+	return label === undefined ? {} : { role: 'region', 'aria-label': label }
+}
+
+/**
  * Returns the props that let code focus a list with a name or a ref, and name a list region given a label.
  * @param label - The name of the list region.
  * @param reached - Whether code holds a ref to the list.
@@ -107,7 +119,7 @@ export interface PageProps {
  */
 function regionOf(label: string | undefined, reached: boolean): HTMLAttributes<HTMLDivElement> {
 	const focus = label === undefined && !reached ? {} : { tabIndex: -1 }
-	return label === undefined ? focus : { ...focus, role: 'region', 'aria-label': label }
+	return { ...focus, ...namedRegion(label) }
 }
 
 /**
@@ -140,8 +152,8 @@ function ListRegion({
 
 /**
  * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content.
- * @param props - The title, subtitle, actions, tabs, aside, list flag, list name and ref, extra class, title level
- * and content.
+ * @param props - The title, subtitle, actions, tabs, aside and its name, list flag, list name and ref, extra class,
+ * title level and content.
  * @returns The page element.
  */
 export function Page({
@@ -150,6 +162,7 @@ export function Page({
 	actions,
 	tabs,
 	aside,
+	asideLabel,
 	list = false,
 	listLabel,
 	listRef,
@@ -184,7 +197,7 @@ export function Page({
 					)}
 				</Stack>
 				{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
-				<PageBody aside={aside}>
+				<PageBody aside={aside} asideLabel={asideLabel}>
 					{list ? (
 						<ListRegion label={listLabel} listRef={listRef}>
 							{children}
@@ -200,10 +213,10 @@ export function Page({
 
 /**
  * Renders a page's content, beside its aside when it has one.
- * @param props - The content and the optional aside.
+ * @param props - The content, the optional aside and the name of the aside.
  * @returns The content alone, or a main column followed by the aside.
  */
-function PageBody({ aside, children }: { aside?: ReactNode; children: ReactNode }) {
+function PageBody({ aside, asideLabel, children }: { aside?: ReactNode; asideLabel?: string; children: ReactNode }) {
 	if (aside === undefined) {
 		return children
 	}
@@ -212,7 +225,7 @@ function PageBody({ aside, children }: { aside?: ReactNode; children: ReactNode 
 			<Stack direction="column" gap="lg" className="godmin-page__main">
 				{children}
 			</Stack>
-			<Stack direction="column" gap="lg" className="godmin-page__aside">
+			<Stack direction="column" gap="lg" className="godmin-page__aside" {...namedRegion(asideLabel)}>
 				{aside}
 			</Stack>
 		</div>
