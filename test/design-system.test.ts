@@ -203,6 +203,7 @@ const RECORDS: ValueTable = { page: 'record-pages.md', values: valuesOf([
 	['.godmin-page__separator', 'margin-inline', 'The page header', 'slash'],
 	['.godmin-page__heading', 'flex', 'The page header', 'The title keeps'],
 	['.godmin-page__heading > :last-child', 'flex', 'The page header', 'The title keeps'],
+	['.godmin-page__breadcrumbs', 'overflow-wrap', 'The page header', 'long word'],
 	['.godmin-page__aside', 'flex', 'The two columns', 'details are'],
 	['.godmin-page__split', 'column-gap', 'The two columns', 'The columns sit'],
 	[RECORD_COLUMNS, 'padding-inline', 'The two columns', 'Each column keeps'],
@@ -327,10 +328,10 @@ function groupOf(found: RegExpExecArray | null): string {
 	return found[1]
 }
 
-/** Returns the pixels the installed design system gives a token. */
-function tokenPixels(token: string): number {
-	return Number(groupOf(new RegExp(`${token}:\\s*(\\d+)px;`).exec(tokenSheet)))
-}
+/** The width of a record column, the gap between two and the room at their sides, in pixels, as the tokens set them. */
+const [COLUMN_WIDTH, COLUMN_GAP, SIDE_ROOM] = ['surface-width-md', 'gap-xl', 'padding-xs'].map((name) =>
+	Number(groupOf(new RegExp(`--wpds-dimension-${name}:\\s*(\\d+)px;`).exec(tokenSheet))),
+)
 
 /** Returns the bullets and paragraphs of a section, spaces made single, none when the page has no such section. */
 function passagesOf(section: string | undefined): string[] {
@@ -572,20 +573,19 @@ test('the usage pages leave every record value to the record pages page', () => 
 })
 
 test('the record pages page gives the width the columns fold at, as the tokens add up', () => {
-	const fold = tokenPixels('--wpds-dimension-surface-width-md') * 2 + tokenPixels('--wpds-dimension-gap-xl')
+	const fold = COLUMN_WIDTH * 2 + COLUMN_GAP
 
 	expect(sections.get('record-pages.md')?.get('When both do not fit')).toContain(`${fold}px`)
 })
 
 test('the record pages page gives the width the columns fold at on a bleed canvas, as the tokens add up', () => {
-	const room = tokenPixels('--wpds-dimension-padding-xs')
-	const fold = tokenPixels('--wpds-dimension-surface-width-md') * 2 + tokenPixels('--wpds-dimension-gap-xl') + 2 * room
+	const fold = COLUMN_WIDTH * 2 + COLUMN_GAP + 2 * SIDE_ROOM
 	const passage = passagesOf(sections.get('record-pages.md')?.get('When both do not fit')).find((text) =>
 		text.includes('bleed canvas'),
 	)
 
 	expect(passage).toContain(`${fold}px`)
-	expect(passage).toContain(`${room}px`)
+	expect(passage).toContain(`${SIDE_ROOM}px`)
 })
 
 test('the record pages page keeps the padding above the details to the columns side by side', () => {

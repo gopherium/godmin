@@ -711,6 +711,7 @@ body {
 	.godmin-page__breadcrumbs {
 		flex: none;
 		max-inline-size: 100%;
+		overflow-wrap: anywhere;
 	}
 
 	.godmin-page__breadcrumbs ul {

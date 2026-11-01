@@ -42,6 +42,8 @@ every value of how it looks.
   which is 120px. A trail that leaves it less wraps, as the WordPress
   Forms trail does, and the title moves under it. Actions that leave
   it less move under the title.
+- A breadcrumb link breaks a long word, with `overflow-wrap: anywhere`,
+  so a record number with no spaces stays inside the row.
 - Every page opened from a list takes breadcrumbs, a create page too.
 - Save comes last in the row. A menu with Delete, named "More
   options", comes before it.

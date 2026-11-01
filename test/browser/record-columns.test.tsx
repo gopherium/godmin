@@ -586,6 +586,15 @@ test('keeps a long trail clear of Save and the title in view on a phone', async 
 	expect(find(HEAD).scrollWidth, 'nothing runs past the row').toBeLessThanOrEqual(find(HEAD).clientWidth)
 })
 
+test('breaks a long word in a breadcrumb before it reaches Save on a phone', async () => {
+	await page.viewport(390, 844)
+	render(<HeaderRecord links={[LONG_WORD]} actions={['Save']} />)
+	await settled(PHONE_ROOM)
+
+	expect(boxOf('.godmin-page__breadcrumbs a').right).toBeLessThanOrEqual(boxOf(`${HEAD} button`).left)
+	expect(find(HEAD).scrollWidth, 'nothing runs past the row').toBeLessThanOrEqual(find(HEAD).clientWidth)
+})
+
 test('keeps the title in view and moves wide actions under it on a phone', async () => {
 	await page.viewport(390, 844)
 	render(<HeaderRecord links={['Invoices']} actions={['Send to customer', 'Save changes']} />)
