@@ -93,7 +93,7 @@ test('lets the split take the height under the header and read its own width', (
 	const split = ruleOf('.godmin-page__split')
 
 	expect(split).toMatch(/container-type:\s*inline-size/)
-	expect(split).toMatch(/flex:\s*1 1 0/)
+	expect(split).toMatch(/flex:\s*1 1 auto/)
 })
 
 test('works out from the tokens alone whether the columns are stacked', () => {

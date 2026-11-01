@@ -361,6 +361,38 @@ test('scrolls the canvas on a page with no aside', async () => {
 	near(last.bottom - boxOf(CANVAS).top + FOOT, canvas.scrollHeight, 'the gutter under the last part')
 })
 
+test('grows a record inside a wrapper and leaves the scroll to the canvas', () => {
+	render(
+		<AdminRoot>
+			<Admin>
+				<div>
+					<Page title="Invoice 1042" aside={<div>Details</div>}>
+						<div style={{ blockSize: TALL }} />
+					</Page>
+				</div>
+			</Admin>
+		</AdminRoot>,
+	)
+	const canvas = find(CANVAS)
+
+	expect(boxOf(SPLIT).height, 'the record takes its own height').toBeGreaterThan(TALL)
+	expect(overflowOf(MAIN), 'the work has no scroll of its own').toBeLessThanOrEqual(0)
+	expect(canvas.scrollHeight, 'the canvas scrolls').toBeGreaterThan(canvas.clientHeight)
+})
+
+test('grows a record outside any frame', () => {
+	render(
+		<AdminRoot>
+			<Page title="Invoice 1042" aside={<div>Details</div>}>
+				<div style={{ blockSize: TALL }} />
+			</Page>
+		</AdminRoot>,
+	)
+
+	expect(boxOf(SPLIT).height).toBeGreaterThan(TALL)
+	expect(overflowOf(MAIN), 'the work has no scroll of its own').toBeLessThanOrEqual(0)
+})
+
 test('draws no second line under tabs', async () => {
 	render(
 		<AdminRoot>

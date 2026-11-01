@@ -103,6 +103,9 @@ every value of how it looks.
   `--godmin-canvas-gutter-block` under its last line.
 - A page with no `aside` scrolls the canvas, as
   [the canvas](./layout.md#the-canvas) says.
+- The columns scroll on their own only when the `Page` sits directly
+  in the canvas. Inside a wrapper of your own, or outside a frame, the
+  record takes its full height and whatever holds it scrolls.
 - A keyboard scrolls a column from a control inside it, so keep one
   there, such as a link or a field.
 

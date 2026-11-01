@@ -741,7 +741,7 @@ body {
 		--godmin-page-stacked: calc((2 * var(--wpds-dimension-surface-width-md) + var(--wpds-dimension-gap-xl) + 2 * var(--wpds-dimension-padding-xs) - 100cqi) * 999999);
 		container-type: inline-size;
 		display: flex;
-		flex: 1 1 0;
+		flex: 1 1 auto;
 		flex-wrap: wrap;
 		align-content: flex-start;
 		align-items: flex-start;
