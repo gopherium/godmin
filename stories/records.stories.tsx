@@ -9,10 +9,11 @@ import type { Field, Form } from '@wordpress/dataviews'
 import { Button, InputControl } from '@wordpress/ui'
 import { expect } from 'storybook/test'
 
+import { LoadingScreen } from '../src/loading.js'
 import { LogItem, LogList, LogTime } from '../src/log-list.js'
 import { SectionTitle } from '../src/page.js'
 import { RecordPage } from './frames.js'
-import { boxOf, columnsOf, find, meets } from './measure.js'
+import { boxOf, columnsOf, find, meets, middleAcross } from './measure.js'
 
 /** The facts of the sample invoice. */
 interface InvoiceFacts {
@@ -25,6 +26,12 @@ const GAP = 24
 
 /** How far a play scrolls a column. */
 const SHIFT = 160
+
+/** The window a story opens at, for its play and its shot. */
+const DESKTOP = { viewport: { value: 'desktop', isRotated: false } }
+
+/** The modes of a story that takes no shot. */
+const NO_SHOT = { desktop: { disabled: true } }
 
 /** The facts the sample invoice shows. */
 const FACTS: InvoiceFacts = { issued: '12 March 2026', owner: 'Sales desk' }
@@ -135,6 +142,13 @@ async function scrollsAlone() {
 	await meets(canvas.scrollHeight, canvas.clientHeight, 'the canvas has nothing to scroll')
 }
 
+/** Checks the spinner sits centred across the column it is in, the only status on the page. */
+async function spinsIn(column: string) {
+	const spinner = boxOf(`${column} .godmin-loading-screen svg`)
+	await meets(middleAcross(spinner), middleAcross(boxOf(column)), 'across its column')
+	await expect(document.querySelectorAll('[role="status"]')).toHaveLength(1)
+}
+
 const meta = {
 	title: 'Components/Record pages',
 	id: 'components-record-pages',
@@ -148,7 +162,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Record: Story = {
-	globals: { viewport: { value: 'desktop', isRotated: false } },
+	globals: DESKTOP,
 	play: beside,
 }
 
@@ -168,6 +182,35 @@ export const RecordPhone: Story = {
 export const LongRecord: Story = {
 	name: 'Long record',
 	args: { lines: 40 },
-	globals: { viewport: { value: 'desktop', isRotated: false } },
+	globals: DESKTOP,
 	play: scrollsAlone,
+}
+
+export const LoadingTheWork: Story = {
+	name: 'Loading the main work',
+	globals: DESKTOP,
+	render: () => (
+		<RecordPage aside={<Details />}>
+			<LoadingScreen label="Loading the invoice lines." />
+		</RecordPage>
+	),
+	play: async () => {
+		await beside()
+		await spinsIn('.godmin-page__main')
+	},
+}
+
+export const LoadingTheDetails: Story = {
+	name: 'Loading the details',
+	globals: DESKTOP,
+	parameters: { argos: { modes: NO_SHOT } },
+	render: ({ lines }) => (
+		<RecordPage aside={<LoadingScreen label="Loading the invoice details." />}>
+			<Lines lines={lines} />
+		</RecordPage>
+	),
+	play: async () => {
+		await beside()
+		await spinsIn('.godmin-page__aside')
+	},
 }

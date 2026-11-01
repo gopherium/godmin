@@ -8,6 +8,7 @@ import { expect, test } from 'vitest'
 import { page } from 'vitest/browser'
 
 import { AdminRoot } from '../../src/admin-root.js'
+import { LoadingScreen } from '../../src/loading.js'
 import { Page } from '../../src/page.js'
 import { Admin, RecordPage } from '../../stories/frames.js'
 import * as lists from '../../stories/lists.stories.js'
@@ -62,6 +63,12 @@ const TITLE_ROW = 32
 const LINK_COLOUR = '--wpds-color-foreground-interactive-neutral'
 const SLASH_COLOUR = '--wpds-color-stroke-surface-neutral'
 
+/** The look WordPress gives a read-only fact. */
+const FACT_LABEL = 152
+const FACT_GAP = 12
+const FACT_COLOUR = '--wpds-color-foreground-content-neutral-weak'
+const FACT_WEIGHT = '--wpds-typography-font-weight-default'
+
 /** The box DataViews scrolls the rows of the list page in. */
 const SCROLLER = '.godmin-page__list .dataviews-layout__container'
 
@@ -107,13 +114,29 @@ function stackedInOneBox() {
 	expect(overflowOf(ASIDE), 'the details have no scroll of their own').toBeLessThanOrEqual(0)
 }
 
-/** Renders a record with the given details and main work inside a real admin root. */
-function renderRecord(aside: ReactNode, children: ReactNode) {
-	render(
+/** Returns a record with the given details and main work inside a real admin root. */
+function recordOf(aside: ReactNode, children: ReactNode) {
+	return (
 		<AdminRoot>
 			<RecordPage aside={aside}>{children}</RecordPage>
-		</AdminRoot>,
+		</AdminRoot>
 	)
+}
+
+/** Renders a record with the given details and main work. */
+function renderRecord(aside: ReactNode, children: ReactNode) {
+	render(recordOf(aside, children))
+}
+
+/** Returns where each column starts and how far across it runs. */
+function columnEdges(): number[] {
+	const { main, details } = columnsOf()
+	return [main.left, main.right, main.top, details.left, details.right, details.top]
+}
+
+/** Renders nothing, as a panel with nothing to show does. */
+function Nothing() {
+	return null
 }
 
 /** Renders a part that scrolls sideways, which a flex column would squash, taller than any column. */
@@ -136,14 +159,14 @@ function ManyFields() {
 	)
 }
 
-/** Returns the colour a token paints here. */
-function colourOf(token: string): string {
+/** Returns the value a token gives a style here. */
+function tokenStyle(property: 'color' | 'fontWeight', token: string): string {
 	const probe = document.createElement('span')
-	probe.style.color = `var(${token})`
+	probe.style[property] = `var(${token})`
 	find('.godmin-page').append(probe)
-	const { color } = getComputedStyle(probe)
+	const value = getComputedStyle(probe)[property]
 	probe.remove()
-	return color
+	return value
 }
 
 /** Waits for the frame to settle on a page width, which it folds through a media query. */
@@ -356,6 +379,40 @@ test.each([
 test('paints the breadcrumb link and the slash from the tokens', () => {
 	render(<Record />)
 
-	expect(getComputedStyle(find('.godmin-page__breadcrumbs a')).color).toBe(colourOf(LINK_COLOUR))
-	expect(getComputedStyle(find('.godmin-page__separator')).color).toBe(colourOf(SLASH_COLOUR))
+	expect(getComputedStyle(find('.godmin-page__breadcrumbs a')).color).toBe(tokenStyle('color', LINK_COLOUR))
+	expect(getComputedStyle(find('.godmin-page__separator')).color).toBe(tokenStyle('color', SLASH_COLOUR))
+})
+
+test('gives the main work the page when the details render nothing', async () => {
+	renderRecord(<Nothing />, <div>Lines</div>)
+	await expect.poll(() => boxOf('.godmin-page__header').width).toBe(ROOM)
+
+	near(boxOf(MAIN).width - 2 * RING_ROOM, ROOM, 'the work fills the page')
+	expect(getComputedStyle(find(ASIDE)).display, 'the details take no room').toBe('none')
+})
+
+test('keeps the column edges when the details arrive', async () => {
+	const lines = <div>Lines</div>
+	const { rerender } = render(recordOf(<LoadingScreen label="Loading the invoice details." />, lines))
+	await settled(ROOM)
+	const before = columnEdges()
+
+	rerender(recordOf(<div>Invoice details</div>, lines))
+
+	expect(find(ASIDE).textContent).toBe('Invoice details')
+	columnEdges().forEach((edge, index) => near(edge, before[index], `edge ${index}`))
+})
+
+test('sets the facts as WordPress panel rows', async () => {
+	render(<Record />)
+	await settled(ROOM)
+	const rows = [...document.querySelectorAll('.dataforms-layouts-panel__field-trigger')]
+	const value = getComputedStyle(find('.dataforms-layouts-panel__field-control'))
+
+	expect(rows).toHaveLength(2)
+	near(boxOf('.dataforms-layouts-panel__field-label').width, FACT_LABEL, 'the label')
+	near(rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().bottom, FACT_GAP, 'the room between rows')
+	expect(value.color).toBe(tokenStyle('color', FACT_COLOUR))
+	expect(value.fontWeight).toBe(tokenStyle('fontWeight', FACT_WEIGHT))
+	expect(document.querySelector('.dataforms-layouts-panel__field-trigger-icon'), 'no edit button').toBeNull()
 })
