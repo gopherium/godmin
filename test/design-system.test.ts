@@ -201,6 +201,7 @@ const RECORDS: ValueTable = { page: 'record-pages.md', values: valuesOf([
 	['.godmin-page__subtitle', 'padding-block-end', 'The page header', 'subtitle'],
 	['.godmin-page__separator', 'color', 'The page header', 'slash'],
 	['.godmin-page__separator', 'margin-inline', 'The page header', 'slash'],
+	['.godmin-page__heading', 'flex', 'The page header', 'The title keeps'],
 	['.godmin-page__heading > :last-child', 'flex', 'The page header', 'The title keeps'],
 	['.godmin-page__aside', 'flex', 'The two columns', 'details are'],
 	['.godmin-page__split', 'column-gap', 'The two columns', 'The columns sit'],
@@ -239,7 +240,9 @@ const LIST_LOOKS = [
 ]
 
 /** The pixel values the record pages page gives that no usage section on a page may repeat. */
-const RECORD_NUMBERS = [13, 15, 32, 40, 160, 240, 400, 560, 824].map((pixels) => new RegExp(`\\b${pixels}px\\b`))
+const RECORD_NUMBERS = [13, 15, 32, 40, 160, 240, 400, 560, 824, 832].map(
+	(pixels) => new RegExp(`\\b${pixels}px\\b`),
+)
 
 /** The usage sections on how a page looks, each by its page and heading, that leave every value to that page. */
 const RECORD_LOOKS = ['Page', 'Stylesheet helpers'].map((heading) => ['usage/screens.md', heading])
@@ -322,6 +325,11 @@ function groupOf(found: RegExpExecArray | null): string {
 		throw new Error('the pattern found nothing')
 	}
 	return found[1]
+}
+
+/** Returns the pixels the installed design system gives a token. */
+function tokenPixels(token: string): number {
+	return Number(groupOf(new RegExp(`${token}:\\s*(\\d+)px;`).exec(tokenSheet)))
 }
 
 /** Returns the bullets and paragraphs of a section, spaces made single, none when the page has no such section. */
@@ -564,10 +572,30 @@ test('the usage pages leave every record value to the record pages page', () => 
 })
 
 test('the record pages page gives the width the columns fold at, as the tokens add up', () => {
-	const pixels = (token: string) => Number(groupOf(new RegExp(`${token}:\\s*(\\d+)px;`).exec(tokenSheet)))
-	const fold = pixels('--wpds-dimension-surface-width-md') * 2 + pixels('--wpds-dimension-gap-xl')
+	const fold = tokenPixels('--wpds-dimension-surface-width-md') * 2 + tokenPixels('--wpds-dimension-gap-xl')
 
 	expect(sections.get('record-pages.md')?.get('When both do not fit')).toContain(`${fold}px`)
+})
+
+test('the record pages page gives the width the columns fold at on a bleed canvas, as the tokens add up', () => {
+	const room = tokenPixels('--wpds-dimension-padding-xs')
+	const fold = tokenPixels('--wpds-dimension-surface-width-md') * 2 + tokenPixels('--wpds-dimension-gap-xl') + 2 * room
+	const passage = passagesOf(sections.get('record-pages.md')?.get('When both do not fit')).find((text) =>
+		text.includes('bleed canvas'),
+	)
+
+	expect(passage).toContain(`${fold}px`)
+	expect(passage).toContain(`${room}px`)
+})
+
+test('the record pages page keeps the padding above the details to the columns side by side', () => {
+	const passage = passagesOf(sections.get('record-pages.md')?.get('What scrolls')).find((text) =>
+		text.includes('above its'),
+	)
+
+	expect(ruleValue('.godmin-page__aside', 'padding-block-start')).toContain('--godmin-page-stacked')
+	expect(passage).toContain('side by side')
+	expect(passage).toContain('only the main work does')
 })
 
 test('counts the ring room of both columns in the width they fold at', () => {

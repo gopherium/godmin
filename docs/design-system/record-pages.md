@@ -35,12 +35,13 @@ every value of how it looks.
 - Breadcrumbs sit before the title, on its line. Each link is
   `body-lg`. A slash in `--wpds-color-stroke-surface-neutral` follows
   it, `--wpds-dimension-gap-sm` (8px) from the text on each side.
-- Beside breadcrumbs the actions stay on the title's line. The title
-  stays on one line and ends in an ellipsis when it does not fit. The
-  links and the actions keep their width.
+- Beside breadcrumbs the title stays on one line and ends in an
+  ellipsis when it does not fit. The links and the actions keep their
+  width.
 - The title keeps half of `--wpds-dimension-surface-width-xs` (240px),
   which is 120px. A trail that leaves it less wraps, as the WordPress
-  Forms trail does, and the title moves under it.
+  Forms trail does, and the title moves under it. Actions that leave
+  it less move under the title.
 - Every page opened from a list takes breadcrumbs, a create page too.
 - Save comes last in the row. A menu with Delete, named "More
   options", comes before it.
@@ -60,8 +61,8 @@ every value of how it looks.
   `--wpds-dimension-padding-xs` (4px) at each side is part of that gap.
 - Each column keeps `--wpds-dimension-padding-xs` (4px) of room at
   each side, inside its box, since a box that scrolls clips what
-  draws past its edge and a focus ring would lose its sides. Its
-  content still meets the edges of the page title.
+  draws past its edge and a focus ring would lose its sides. On a
+  padded canvas its content still meets the edges of the page title.
 - Inside each column the parts sit `--wpds-dimension-gap-lg` (16px)
   apart.
 - Both columns break a long word, with `overflow-wrap: anywhere`, so
@@ -81,6 +82,9 @@ every value of how it looks.
 - Below that the details move under the main work,
   `--wpds-dimension-gap-xl` (24px) apart, and both fill the page. The
   reading order stays the same.
+- A bleed canvas has no gutter for the room at each side of a column
+  to sit in, so that room stays inside the page. The columns fold at
+  832px there, and their content sits 4px in from the title.
 - The page does not narrow steadily as the window does, since the
   sidebar folds at `SIDEBAR_BREAKPOINT` and the canvas drops its
   margin at `EDGE_BREAKPOINT`. So a window just below
@@ -105,9 +109,10 @@ every value of how it looks.
 - A line `--wpds-border-width-xs` (1px) wide in
   `--wpds-color-stroke-surface-neutral-weak` runs under the header to
   the canvas edges. Under page tabs their own line takes its place.
-- Each column keeps `--wpds-dimension-padding-lg` (16px) above its
-  content, inside the part that scrolls, so a row scrolls away at the
-  line.
+- While the columns sit side by side each one keeps
+  `--wpds-dimension-padding-lg` (16px) above its content, inside the
+  part that scrolls, so a row scrolls away at the line. Once the
+  details move under the main work, only the main work does.
 - The columns reach the foot of the canvas, and each keeps
   `--godmin-canvas-gutter-block` under its last line.
 - A page with no `aside` scrolls the canvas, as

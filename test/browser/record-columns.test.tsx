@@ -44,6 +44,10 @@ const PHONE_ROOM = 358
 const FOLD = 824
 const FOLD_WINDOW = 1188
 
+/** The page width the columns fold at on a bleed canvas, and the window that gives it. */
+const BLEED_FOLD = 832
+const BLEED_WINDOW = 1148
+
 /** The room a classic scrollbar takes from a line. */
 const BAR = 15
 
@@ -166,7 +170,7 @@ function Nothing() {
 	return null
 }
 
-/** Renders a part that scrolls sideways, which a flex column would squash, taller than any column. */
+/** Renders a part that scrolls sideways, taller than any column. */
 function TallPart() {
 	return (
 		<div className="tall-part" style={{ overflowX: 'auto' }}>
@@ -208,19 +212,26 @@ function SectionList() {
 	)
 }
 
-/** Renders a record whose breadcrumbs are too long for a phone. */
-function LongTrailRecord() {
+/** Renders a record with the given breadcrumb links and actions. */
+function HeaderRecord({ links, actions }: { links: string[]; actions: string[] }) {
 	return (
 		<AdminRoot>
 			<Admin>
 				<Page
 					title="Invoice 1042"
 					aside={<div>Invoice details</div>}
-					actions={<Button size="compact">Save</Button>}
+					actions={actions.map((label) => (
+						<Button key={label} size="compact">
+							{label}
+						</Button>
+					))}
 					breadcrumbs={
 						<PageBreadcrumbs label="Breadcrumbs">
-							<PageBreadcrumb href="#accounts">Customer accounts</PageBreadcrumb>
-							<PageBreadcrumb href="#invoices">Northern region invoices</PageBreadcrumb>
+							{links.map((label) => (
+								<PageBreadcrumb key={label} href="#records">
+									{label}
+								</PageBreadcrumb>
+							))}
 						</PageBreadcrumbs>
 					}
 				>
@@ -252,7 +263,7 @@ function tokenStyle(property: 'color' | 'fontWeight', token: string): string {
 	return value
 }
 
-/** Waits for the frame to settle on a page width, which it folds through a media query. */
+/** Waits for the frame to settle on a page width. */
 async function settled(room: number) {
 	await expect.poll(() => columnsOf().page.width).toBe(room)
 }
@@ -289,6 +300,28 @@ test('leaves where the columns sit to the page width alone, whatever takes room 
 
 	near(main.top, details.top, 'both start on one line')
 	expect(overflowOf(SPLIT), 'one scroll box and not two').toBeLessThanOrEqual(0)
+})
+
+test('folds at its own width on a bleed canvas, with the content inside the title', async () => {
+	await page.viewport(BLEED_WINDOW, 800)
+	render(
+		<AdminRoot>
+			<RecordPage canvas="bleed" aside={<div>Invoice details</div>}>
+				<div>Lines</div>
+			</RecordPage>
+		</AdminRoot>,
+	)
+	await settled(BLEED_FOLD)
+	const { page: room, main, details } = columnsOf()
+
+	near(details.width, DETAILS, 'the details')
+	near(main.left, room.left + RING_ROOM, 'the work starts inside the title')
+	near(details.right, room.right - RING_ROOM, 'the details end inside the title')
+	near(main.top, details.top, 'both start on one line')
+
+	await page.viewport(BLEED_WINDOW - 1, 800)
+	await settled(BLEED_FOLD - 1)
+	stackedInOneBox()
 })
 
 test('holds the columns with a long word in each', async () => {
@@ -538,7 +571,7 @@ test.each([
 
 test('keeps a long trail clear of Save and the title in view on a phone', async () => {
 	await page.viewport(390, 844)
-	render(<LongTrailRecord />)
+	render(<HeaderRecord links={['Customer accounts', 'Northern region invoices']} actions={['Save']} />)
 	await settled(PHONE_ROOM)
 	const save = boxOf(`${HEAD} button`)
 	const title = boxOf('.godmin-page__heading > :last-child')
@@ -550,6 +583,17 @@ test('keeps a long trail clear of Save and the title in view on a phone', async 
 	expect(last.right, 'the links stop before Save').toBeLessThanOrEqual(save.left)
 	expect(title.right, 'the title stops before Save').toBeLessThanOrEqual(save.left)
 	expect(title.width, 'the title stays in view').toBeGreaterThanOrEqual(TITLE_FLOOR)
+	expect(find(HEAD).scrollWidth, 'nothing runs past the row').toBeLessThanOrEqual(find(HEAD).clientWidth)
+})
+
+test('keeps the title in view and moves wide actions under it on a phone', async () => {
+	await page.viewport(390, 844)
+	render(<HeaderRecord links={['Invoices']} actions={['Send to customer', 'Save changes']} />)
+	await settled(PHONE_ROOM)
+	const title = boxOf('.godmin-page__heading > :last-child')
+
+	expect(title.width, 'the title stays in view').toBeGreaterThanOrEqual(TITLE_FLOOR)
+	expect(boxOf(`${HEAD} button`).top, 'the actions sit under the title').toBeGreaterThanOrEqual(title.bottom)
 	expect(find(HEAD).scrollWidth, 'nothing runs past the row').toBeLessThanOrEqual(find(HEAD).clientWidth)
 })
 

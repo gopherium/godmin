@@ -4,12 +4,13 @@ import { Button } from '@wordpress/ui'
 import type { ReactNode } from 'react'
 
 import { Frame } from '../src/frame.js'
+import type { CanvasMode } from '../src/frame.js'
 import { NavigationScreen } from '../src/navigation-screen.js'
 import { Page } from '../src/page.js'
 import { PageBreadcrumb, PageBreadcrumbs } from '../src/page-breadcrumbs.js'
 
 /** Renders an admin frame with a sidebar and a canvas holding what it is given. */
-export function Admin({ children }: { children: ReactNode }) {
+export function Admin({ canvas, children }: { canvas?: CanvasMode; children: ReactNode }) {
 	return (
 		<Frame.Root location="/">
 			<Frame.Sidebar>
@@ -17,7 +18,7 @@ export function Admin({ children }: { children: ReactNode }) {
 					<p>Menu</p>
 				</NavigationScreen>
 			</Frame.Sidebar>
-			<Frame.Canvas>{children}</Frame.Canvas>
+			<Frame.Canvas canvas={canvas}>{children}</Frame.Canvas>
 		</Frame.Root>
 	)
 }
@@ -33,17 +34,18 @@ export function ListPage({ aside, children }: { aside?: ReactNode; children: Rea
 	)
 }
 
-/** The title, the details and the main work of a record page. */
+/** The title, the canvas, the details and the main work of a record page. */
 interface RecordPageProps {
 	title?: string
+	canvas?: CanvasMode
 	aside: ReactNode
 	children: ReactNode
 }
 
 /** Renders a record page beside the sidebar, nothing changed so Save is off, its details in the aside. */
-export function RecordPage({ title = 'Invoice 1042', aside, children }: RecordPageProps) {
+export function RecordPage({ title = 'Invoice 1042', canvas, aside, children }: RecordPageProps) {
 	return (
-		<Admin>
+		<Admin canvas={canvas}>
 			<Page
 				title={title}
 				headingLevel={2}

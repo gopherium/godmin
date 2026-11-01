@@ -695,14 +695,10 @@ body {
 
 	.godmin-page__heading {
 		display: flex;
-		flex: 1 1 0;
+		flex: 1 1 calc(var(--wpds-dimension-surface-width-xs) / 2);
 		flex-wrap: wrap;
 		align-items: center;
 		min-inline-size: 0;
-	}
-
-	.godmin-page__heading + * {
-		flex: none;
 	}
 
 	.godmin-page__heading > :last-child {

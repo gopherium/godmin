@@ -211,7 +211,6 @@ test.each([[false], [null]])('treats breadcrumbs given as %s as no breadcrumbs',
 	)
 
 	expect(container.querySelector('.godmin-page__heading')).toBeNull()
-	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('wrap')
 })
 
 test('draws the breadcrumbs before the title, inside the title row', () => {
@@ -226,14 +225,14 @@ test('draws the breadcrumbs before the title, inside the title row', () => {
 	expect(heading?.lastElementChild).toBe(screen.getByRole('heading', { level: 1, name: 'Maria Perez' }))
 })
 
-test('keeps the title row on one line beside breadcrumbs', () => {
+test('lets the title row wrap beside breadcrumbs, as on any page', () => {
 	const { container } = renderAdmin(
 		<Page title="Maria Perez" breadcrumbs={<a href="/contacts">Contacts</a>}>
 			body
 		</Page>,
 	)
 
-	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('nowrap')
+	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('wrap')
 })
 
 test('keeps the heading level beside breadcrumbs', () => {

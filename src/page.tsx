@@ -206,7 +206,7 @@ export function Page({
 				<Stack direction="column" render={<header />} className="godmin-page__header">
 					<Stack
 						direction="row"
-						wrap={hasBreadcrumbs(breadcrumbs) ? 'nowrap' : 'wrap'}
+						wrap="wrap"
 						gap="md"
 						align="center"
 						justify="space-between"

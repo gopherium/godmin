@@ -158,13 +158,14 @@ test('keeps what a column holds at its own height', () => {
 test('sets the breadcrumbs and the title on one line, only the title shrinking', () => {
 	const title = ruleOf('.godmin-page__heading > :last-child')
 
+	const floor = /flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-xs\) \/ 2\)/
+
 	expect(ruleOf('.godmin-page__heading')).toMatch(/display:\s*flex/)
-	expect(ruleOf('.godmin-page__heading')).toMatch(/flex:\s*1 1 0/)
+	expect(ruleOf('.godmin-page__heading')).toMatch(floor)
 	expect(ruleOf('.godmin-page__heading')).toMatch(/align-items:\s*center/)
 	expect(ruleOf('.godmin-page__heading')).toMatch(/min-inline-size:\s*0/)
-	expect(ruleOf('.godmin-page__heading + *')).toMatch(/flex:\s*none/)
 	expect(ruleOf('.godmin-page__breadcrumbs')).toMatch(/flex:\s*none/)
-	expect(title).toMatch(/flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-xs\) \/ 2\)/)
+	expect(title).toMatch(floor)
 	expect(title).toMatch(/overflow:\s*hidden/)
 	expect(title).toMatch(/text-overflow:\s*ellipsis/)
 	expect(title).toMatch(/white-space:\s*nowrap/)
