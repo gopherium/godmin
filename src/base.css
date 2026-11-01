@@ -698,23 +698,56 @@ body {
 		color: var(--wpds-color-foreground-content-neutral-weak);
 	}
 
+	.godmin-page:has(> .godmin-page__split) {
+		flex: 1 1 0;
+		min-block-size: 0;
+	}
+
 	.godmin-page__split {
+		--godmin-page-stacked: calc((2 * var(--wpds-dimension-surface-width-md) + var(--wpds-dimension-gap-xl) + 2 * var(--wpds-dimension-padding-xs) - 100cqi) * 999999);
+		container-type: inline-size;
 		display: flex;
+		flex: 1 1 0;
 		flex-wrap: wrap;
+		align-content: flex-start;
 		align-items: flex-start;
-		gap: var(--wpds-dimension-gap-xl);
+		column-gap: calc(var(--wpds-dimension-gap-xl) - 2 * var(--wpds-dimension-padding-xs));
+		row-gap: calc(var(--wpds-dimension-gap-xl) - var(--godmin-canvas-gutter-block, 0px));
+		margin-inline: calc(-1 * var(--godmin-canvas-gutter, 0px));
+		margin-block-end: calc(-1 * var(--godmin-canvas-gutter-block, 0px));
+		padding-inline: calc(var(--godmin-canvas-gutter, 0px) - var(--wpds-dimension-padding-xs));
+		border-block-start: var(--wpds-border-width-xs) solid var(--wpds-color-stroke-surface-neutral-weak);
+		overflow: hidden auto;
+	}
+
+	.godmin-page > .godmin-page__tabs + .godmin-page__split {
+		margin-block-start: calc(-1 * var(--wpds-dimension-gap-lg));
+		border-block-start: none;
 	}
 
 	.godmin-page__main {
-		flex: 9999 1 var(--wpds-dimension-surface-width-md);
-		min-inline-size: 0;
-		overflow-wrap: anywhere;
+		flex: 9999 1 calc(var(--wpds-dimension-surface-width-md) + 2 * var(--wpds-dimension-padding-xs));
+		padding-block-start: var(--wpds-dimension-padding-lg);
 	}
 
 	.godmin-page__aside {
-		flex: 1 1 var(--wpds-dimension-surface-width-md);
-		min-inline-size: 0;
+		flex: 1 1 calc(var(--wpds-dimension-surface-width-md) + 2 * var(--wpds-dimension-padding-xs));
+		padding-block-start: clamp(0px, calc(var(--wpds-dimension-padding-lg) - var(--godmin-page-stacked)), var(--wpds-dimension-padding-lg));
+	}
+
+	.godmin-page__main,
+	.godmin-page__aside {
+		box-sizing: border-box;
+		max-block-size: max(100%, var(--godmin-page-stacked));
+		padding-inline: var(--wpds-dimension-padding-xs);
+		padding-block-end: var(--godmin-canvas-gutter-block, 0px);
+		overflow: hidden auto;
 		overflow-wrap: anywhere;
+	}
+
+	.godmin-page__main > *,
+	.godmin-page__aside > * {
+		flex-shrink: 0;
 	}
 
 	.godmin-page__aside:empty {

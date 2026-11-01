@@ -27,6 +27,9 @@ const avatarRings = [
 	'.dataviews-view-list .dataviews-view-list__media-wrapper:has(> .godmin-avatar)::after',
 ].join(',\n')
 
+/** The selector of the rule both columns of a record page share. */
+const recordColumns = '.godmin-page__main,\n\t.godmin-page__aside'
+
 /** The selector of the title and description column of a DataViews table inside a list region. */
 const primaryColumn = '.godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content'
 
@@ -48,19 +51,29 @@ test('lays the aside beside the content and wraps it under on a narrow page', ()
 	expect(split).toMatch(/display:\s*flex/)
 	expect(split).toMatch(/flex-wrap:\s*wrap/)
 	expect(split).toMatch(/align-items:\s*flex-start/)
+	expect(split, 'a short stacked record keeps the gap').toMatch(/align-content:\s*flex-start/)
 })
 
 test('lets the main work grow from the medium surface width beside the details', () => {
-	expect(ruleOf('.godmin-page__main')).toMatch(/flex:\s*9999 1 var\(--wpds-dimension-surface-width-md\)/)
+	expect(ruleOf('.godmin-page__main')).toMatch(
+		/flex:\s*9999 1 calc\(var\(--wpds-dimension-surface-width-md\) \+ 2 \* var\(--wpds-dimension-padding-xs\)\)/,
+	)
 })
 
 test('holds the details at the medium surface width', () => {
-	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*1 1 var\(--wpds-dimension-surface-width-md\)/)
+	expect(ruleOf('.godmin-page__aside')).toMatch(
+		/flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-md\) \+ 2 \* var\(--wpds-dimension-padding-xs\)\)/,
+	)
 })
 
-test('lets both columns shrink under what they hold', () => {
-	expect(ruleOf('.godmin-page__main')).toMatch(/min-inline-size:\s*0/)
-	expect(ruleOf('.godmin-page__aside')).toMatch(/min-inline-size:\s*0/)
+test('keeps a focus ring whole inside a scrolling column, the content still at the page edges', () => {
+	const split = ruleOf('.godmin-page__split')
+
+	expect(ruleOf(recordColumns)).toMatch(/padding-inline:\s*var\(--wpds-dimension-padding-xs\)/)
+	expect(split).toMatch(
+		/padding-inline:\s*calc\(var\(--godmin-canvas-gutter, 0px\) - var\(--wpds-dimension-padding-xs\)\)/,
+	)
+	expect(split).toMatch(/column-gap:\s*calc\(var\(--wpds-dimension-gap-xl\) - 2 \* var\(--wpds-dimension-padding-xs\)\)/)
 })
 
 test('lets the details fill the page once they move under', () => {
@@ -68,8 +81,76 @@ test('lets the details fill the page once they move under', () => {
 })
 
 test('lets a long unbroken value wrap in either column instead of spilling past the page', () => {
-	expect(ruleOf('.godmin-page__main')).toMatch(/overflow-wrap:\s*anywhere/)
-	expect(ruleOf('.godmin-page__aside')).toMatch(/overflow-wrap:\s*anywhere/)
+	expect(ruleOf(recordColumns)).toMatch(/overflow-wrap:\s*anywhere/)
+})
+
+test('stops a page with an aside at the canvas height', () => {
+	const page = ruleOf('.godmin-page:has(> .godmin-page__split)')
+
+	expect(page).toMatch(/flex:\s*1 1 0/)
+	expect(page, 'a classic scrollbar keeps the columns beside each other at the fold').toMatch(/min-block-size:\s*0/)
+})
+
+test('lets the split take the height under the header and read its own width', () => {
+	const split = ruleOf('.godmin-page__split')
+
+	expect(split).toMatch(/container-type:\s*inline-size/)
+	expect(split).toMatch(/flex:\s*1 1 0/)
+})
+
+test('works out from the tokens alone whether the columns are stacked', () => {
+	const sum = [
+		'2 * var(--wpds-dimension-surface-width-md)',
+		'var(--wpds-dimension-gap-xl)',
+		'2 * var(--wpds-dimension-padding-xs)',
+	].join(' + ')
+
+	expect(ruleOf('.godmin-page__split')).toContain(`--godmin-page-stacked: calc((${sum} - 100cqi) * 999999);`)
+})
+
+test('scrolls each column alone beside the other and leaves a stacked pair to the split', () => {
+	const columns = ruleOf(recordColumns)
+
+	expect(columns).toMatch(/max-block-size:\s*max\(100%, var\(--godmin-page-stacked\)\)/)
+	expect(columns).toMatch(/overflow:\s*hidden auto/)
+	expect(ruleOf('.godmin-page__split')).toMatch(/overflow:\s*hidden auto/)
+})
+
+test('runs the columns out to the canvas edges and foot', () => {
+	const split = ruleOf('.godmin-page__split')
+
+	expect(split).toMatch(/margin-inline:\s*calc\(-1 \* var\(--godmin-canvas-gutter, 0px\)\)/)
+	expect(split).toMatch(/margin-block-end:\s*calc\(-1 \* var\(--godmin-canvas-gutter-block, 0px\)\)/)
+	expect(ruleOf(recordColumns)).toMatch(/padding-block-end:\s*var\(--godmin-canvas-gutter-block, 0px\)/)
+})
+
+test('parts the stacked columns by the gap', () => {
+	const head = 'var(--wpds-dimension-padding-lg)'
+
+	expect(ruleOf('.godmin-page__split')).toMatch(
+		/row-gap:\s*calc\(var\(--wpds-dimension-gap-xl\) - var\(--godmin-canvas-gutter-block, 0px\)\)/,
+	)
+	expect(ruleOf('.godmin-page__main')).toContain(`padding-block-start: ${head};`)
+	expect(ruleOf('.godmin-page__aside')).toContain(
+		`padding-block-start: clamp(0px, calc(${head} - var(--godmin-page-stacked)), ${head});`,
+	)
+})
+
+test('keeps what a column holds at its own height', () => {
+	expect(ruleOf('.godmin-page__main > *,\n\t.godmin-page__aside > *')).toMatch(/flex-shrink:\s*0/)
+})
+
+test('draws the line under the header of a record', () => {
+	expect(ruleOf('.godmin-page__split')).toMatch(
+		/border-block-start:\s*var\(--wpds-border-width-xs\) solid var\(--wpds-color-stroke-surface-neutral-weak\)/,
+	)
+})
+
+test('leaves the line to the tab row under tabs', () => {
+	const rule = ruleOf('.godmin-page > .godmin-page__tabs + .godmin-page__split')
+
+	expect(rule).toMatch(/margin-block-start:\s*calc\(-1 \* var\(--wpds-dimension-gap-lg\)\)/)
+	expect(rule).toMatch(/border-block-start:\s*none/)
 })
 
 test('hides an aside that renders nothing', () => {

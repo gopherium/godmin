@@ -61,3 +61,7 @@ do not read or set them in your app.
 - `--godmin-list-frozen-start` holds the width of the checkbox column
   of a wide list table, where its frozen title starts. It is set on
   the table.
+- `--godmin-page-stacked` tells the columns of a record page whether
+  they sit side by side. It stays far below zero while they fit and
+  rises far above the height of any record once they do not. It is
+  set on the box that holds them.

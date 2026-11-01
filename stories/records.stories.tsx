@@ -7,11 +7,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
 import { DataForm } from '@wordpress/dataviews'
 import type { Field, Form } from '@wordpress/dataviews'
 import { Button, InputControl } from '@wordpress/ui'
+import { expect } from 'storybook/test'
 
 import { LogItem, LogList, LogTime } from '../src/log-list.js'
 import { SectionTitle } from '../src/page.js'
 import { RecordPage } from './frames.js'
-import { columnsOf, meets } from './measure.js'
+import { boxOf, columnsOf, find, meets } from './measure.js'
 
 /** The facts of the sample invoice. */
 interface InvoiceFacts {
@@ -21,6 +22,9 @@ interface InvoiceFacts {
 
 /** The room between the two columns, side by side and stacked. */
 const GAP = 24
+
+/** How far a play scrolls a column. */
+const SHIFT = 160
 
 /** The facts the sample invoice shows. */
 const FACTS: InvoiceFacts = { issued: '12 March 2026', owner: 'Sales desk' }
@@ -89,6 +93,12 @@ function onlyAt(viewport: 'medium' | 'phone') {
 	}
 }
 
+/** Checks nothing runs past the split sideways, since it hides what does and shows nothing. */
+async function noSpill() {
+	const split = find('.godmin-page__split')
+	await expect(split.scrollWidth, 'nothing spills sideways').toBeLessThanOrEqual(split.clientWidth)
+}
+
 /** Checks the work grows and the details hold a fixed column at the end, on one line. */
 async function beside() {
 	const { page, main, details } = columnsOf()
@@ -97,6 +107,7 @@ async function beside() {
 	await meets(main.left, page.left, 'the work starts at the page start')
 	await meets(details.left - main.right, GAP, 'one gap between them')
 	await meets(main.top, details.top, 'both start on one line')
+	await noSpill()
 }
 
 /** Checks the details sit right under the work and both fill the page. */
@@ -105,6 +116,23 @@ async function under() {
 	await meets(main.width, page.width, 'the work fills the page')
 	await meets(details.width, page.width, 'the details fill the page')
 	await meets(details.top - main.bottom, GAP, 'no hole between them')
+	await noSpill()
+}
+
+/** Scrolls the main work and checks the title and the details stay where they were. */
+async function scrollsAlone() {
+	const work = find('.godmin-page__main')
+	const split = find('.godmin-page__split')
+	const canvas = find('.godmin-layout__canvas')
+	await expect(work.scrollHeight - work.clientHeight, 'the work overflows').toBeGreaterThan(SHIFT)
+	const before = { ...columnsOf(), title: boxOf('.godmin-page__header').top }
+	work.scrollTop = SHIFT
+	const after = columnsOf()
+	await meets(after.main.top, before.main.top - SHIFT, 'the work moved')
+	await meets(after.details.top, before.details.top, 'the details stayed beside it')
+	await meets(boxOf('.godmin-page__header').top, before.title, 'the title stayed')
+	await meets(split.scrollHeight, split.clientHeight, 'the split has nothing to scroll')
+	await meets(canvas.scrollHeight, canvas.clientHeight, 'the canvas has nothing to scroll')
 }
 
 const meta = {
@@ -135,4 +163,11 @@ export const RecordPhone: Story = {
 	args: { lines: 2 },
 	...onlyAt('phone'),
 	play: under,
+}
+
+export const LongRecord: Story = {
+	name: 'Long record',
+	args: { lines: 40 },
+	globals: { viewport: { value: 'desktop', isRotated: false } },
+	play: scrollsAlone,
 }
