@@ -37,6 +37,13 @@ const ROOM = 916
 /** The page width the frame leaves on a phone. */
 const PHONE_ROOM = 358
 
+/** The page width the columns fold at, and the window that gives it. */
+const FOLD = 824
+const FOLD_WINDOW = 1188
+
+/** The room a classic scrollbar takes from a line. */
+const BAR = 15
+
 /** The room under the last line of a record and at each side of a column. */
 const FOOT = 16
 const RING_ROOM = 4
@@ -195,6 +202,17 @@ test('keeps the same columns after a resize down and up', async () => {
 		await page.viewport(fit.width, 800)
 		await holds(fit)
 	}
+})
+
+test('leaves where the columns sit to the page width alone, whatever takes room from the line', async () => {
+	await page.viewport(FOLD_WINDOW, 800)
+	render(<LongRecord />)
+	await settled(FOLD)
+	find(ASIDE).style.marginInlineStart = `${BAR}px`
+	const { main, details } = columnsOf()
+
+	near(main.top, details.top, 'both start on one line')
+	expect(overflowOf(SPLIT), 'one scroll box and not two').toBeLessThanOrEqual(0)
 })
 
 test('holds the columns with a long word in each', async () => {

@@ -54,16 +54,14 @@ test('lays the aside beside the content and wraps it under on a narrow page', ()
 	expect(split, 'a short stacked record keeps the gap').toMatch(/align-content:\s*flex-start/)
 })
 
-test('lets the main work grow from the medium surface width beside the details', () => {
-	expect(ruleOf('.godmin-page__main')).toMatch(
-		/flex:\s*9999 1 calc\(var\(--wpds-dimension-surface-width-md\) \+ 2 \* var\(--wpds-dimension-padding-xs\)\)/,
-	)
+test('lets the main work take what the details leave', () => {
+	expect(ruleOf('.godmin-page__main')).toMatch(/flex:\s*1 1 0;/)
 })
 
-test('holds the details at the medium surface width', () => {
-	expect(ruleOf('.godmin-page__aside')).toMatch(
-		/flex:\s*1 1 calc\(var\(--wpds-dimension-surface-width-md\) \+ 2 \* var\(--wpds-dimension-padding-xs\)\)/,
-	)
+test('holds the details at the medium surface width, and a whole line once stacked', () => {
+	const width = 'var(--wpds-dimension-surface-width-md) + 2 * var(--wpds-dimension-padding-xs)'
+
+	expect(ruleOf('.godmin-page__aside')).toContain(`flex: 0 1 min(100%, max(${width}, var(--godmin-page-stacked)));`)
 })
 
 test('keeps a focus ring whole inside a scrolling column, the content still at the page edges', () => {

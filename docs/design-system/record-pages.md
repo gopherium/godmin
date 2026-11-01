@@ -45,8 +45,9 @@ every value of how it looks.
 ## The two columns
 
 - The main work takes all the room the details leave. It has no cap.
-  Its content starts from `--wpds-dimension-surface-width-md` (400px),
-  and its box adds `--wpds-dimension-padding-xs` (4px) at each side.
+  Beside the details its content is never narrower than
+  `--wpds-dimension-surface-width-md` (400px), and its box adds
+  `--wpds-dimension-padding-xs` (4px) at each side.
 - The details are `--wpds-dimension-surface-width-md` (400px) wide, at
   the end of the page, which is the right in English. Their box adds
   `--wpds-dimension-padding-xs` (4px) at each side, so it measures

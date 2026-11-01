@@ -760,12 +760,12 @@ body {
 	}
 
 	.godmin-page__main {
-		flex: 9999 1 calc(var(--wpds-dimension-surface-width-md) + 2 * var(--wpds-dimension-padding-xs));
+		flex: 1 1 0;
 		padding-block-start: var(--wpds-dimension-padding-lg);
 	}
 
 	.godmin-page__aside {
-		flex: 1 1 calc(var(--wpds-dimension-surface-width-md) + 2 * var(--wpds-dimension-padding-xs));
+		flex: 0 1 min(100%, max(var(--wpds-dimension-surface-width-md) + 2 * var(--wpds-dimension-padding-xs), var(--godmin-page-stacked)));
 		padding-block-start: clamp(0px, calc(var(--wpds-dimension-padding-lg) - var(--godmin-page-stacked)), var(--wpds-dimension-padding-lg));
 	}
 
