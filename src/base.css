@@ -693,26 +693,103 @@ body {
 		min-block-size: var(--wpds-dimension-size-md);
 	}
 
+	.godmin-page__heading {
+		display: flex;
+		flex: 1 1 calc(var(--wpds-dimension-surface-width-xs) / 2);
+		flex-wrap: wrap;
+		align-items: center;
+		min-inline-size: 0;
+	}
+
+	.godmin-page__heading > :last-child {
+		flex: 1 1 calc(var(--wpds-dimension-surface-width-xs) / 2);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.godmin-page__breadcrumbs {
+		flex: none;
+		max-inline-size: 100%;
+		overflow-wrap: anywhere;
+	}
+
+	.godmin-page__breadcrumbs ul {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.godmin-page__separator {
+		margin-inline: var(--wpds-dimension-gap-sm);
+		color: var(--wpds-color-stroke-surface-neutral);
+		user-select: none;
+	}
+
 	.godmin-page__subtitle {
 		padding-block-end: var(--wpds-dimension-padding-xs);
 		color: var(--wpds-color-foreground-content-neutral-weak);
 	}
 
+	.godmin-page:has(> .godmin-page__split) {
+		flex: 1 1 0;
+		min-block-size: 0;
+	}
+
 	.godmin-page__split {
+		--godmin-page-stacked: calc((2 * var(--wpds-dimension-surface-width-md) + var(--wpds-dimension-gap-xl) + 2 * var(--wpds-dimension-padding-xs) - 100cqi) * 999999);
+		container-type: inline-size;
 		display: flex;
+		flex: 1 1 auto;
 		flex-wrap: wrap;
+		align-content: flex-start;
 		align-items: flex-start;
-		gap: var(--wpds-dimension-gap-xl);
+		column-gap: calc(var(--wpds-dimension-gap-xl) - 2 * var(--wpds-dimension-padding-xs));
+		row-gap: calc(var(--wpds-dimension-gap-xl) - var(--godmin-canvas-gutter-block, 0px));
+		margin-inline: calc(-1 * var(--godmin-canvas-gutter, 0px));
+		margin-block-end: calc(-1 * var(--godmin-canvas-gutter-block, 0px));
+		padding-inline: calc(var(--godmin-canvas-gutter, 0px) - var(--wpds-dimension-padding-xs));
+		border-block-start: var(--wpds-border-width-xs) solid var(--wpds-color-stroke-surface-neutral-weak);
+		overflow: hidden auto;
+	}
+
+	.godmin-page > .godmin-page__tabs + .godmin-page__split {
+		margin-block-start: calc(-1 * var(--wpds-dimension-gap-lg));
+		border-block-start: none;
 	}
 
 	.godmin-page__main {
-		flex: 1 1 var(--wpds-dimension-surface-width-lg);
+		flex: 1 1 0;
+		padding-block-start: var(--wpds-dimension-padding-lg);
 	}
 
 	.godmin-page__aside {
-		flex: 999 1 0;
-		min-inline-size: min(100%, var(--wpds-dimension-surface-width-xs));
+		flex: 0 1 min(100%, max(var(--wpds-dimension-surface-width-md) + 2 * var(--wpds-dimension-padding-xs), var(--godmin-page-stacked)));
+		padding-block-start: clamp(0px, calc(var(--wpds-dimension-padding-lg) - var(--godmin-page-stacked)), var(--wpds-dimension-padding-lg));
+	}
+
+	.godmin-page__main,
+	.godmin-page__aside {
+		box-sizing: border-box;
+		max-block-size: max(100%, var(--godmin-page-stacked));
+		padding-inline: var(--wpds-dimension-padding-xs);
+		padding-block-end: var(--godmin-canvas-gutter-block, 0px);
+		overflow: hidden auto;
 		overflow-wrap: anywhere;
+	}
+
+	.godmin-page__main > *,
+	.godmin-page__aside > * {
+		flex-shrink: 0;
+	}
+
+	.godmin-page__main .godmin-table-scroll,
+	.godmin-page__aside .godmin-table-scroll {
+		position: relative;
+		overflow-x: auto;
 	}
 
 	.godmin-page__aside:empty {
@@ -748,6 +825,11 @@ body {
 
 	.godmin-list {
 		margin-inline: calc(-1 * min(var(--wpds-dimension-padding-2xl), var(--godmin-canvas-gutter, 0px)));
+	}
+
+	.godmin-page__main .godmin-list,
+	.godmin-page__aside .godmin-list {
+		margin-inline: 0;
 	}
 
 	.godmin-page > .godmin-page__list > :not(.dataviews-wrapper, .godmin-table-scroll, .godmin-table) {
@@ -957,6 +1039,7 @@ body {
 		font-size: var(--wpds-typography-font-size-md);
 		line-height: var(--wpds-typography-line-height-sm);
 		text-align: left;
+		overflow-wrap: normal;
 	}
 
 	.godmin-table th,

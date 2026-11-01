@@ -23,8 +23,8 @@ values. This table says where each one is set and what it changes.
 | --- | --- | --- |
 | `--godmin-nav-sidebar-width` | `:root` | The width of the sidebar, and of the drawer that takes its place on a small screen |
 | `--godmin-canvas-margin` | `:root` | The space around the canvas |
-| `--godmin-canvas-gutter` | the canvas | The canvas padding left and right. A `Page` with `list` and no `aside` reaches out by it to the canvas edges |
-| `--godmin-canvas-gutter-block` | the canvas | The canvas padding above and below. The band of notices above the screen keeps this space under it. A `Page` with `list` and no `aside` reaches down by it to the canvas bottom |
+| `--godmin-canvas-gutter` | the canvas | The canvas padding left and right. A `Page` with `list` and no `aside` reaches out by it to the canvas edges. A record page's columns reach out by it too |
+| `--godmin-canvas-gutter-block` | the canvas | The canvas padding above and below. The band of notices above the screen keeps this space under it. A `Page` with `list` and no `aside` reaches down by it to the canvas bottom. A record page's columns reach down by it too |
 | `--godmin-navigation-slide-distance` | `:root` | How far a sidebar screen moves as it slides in |
 | `--godmin-navigation-slide-duration` | `:root` | How long that slide takes |
 
@@ -61,3 +61,7 @@ do not read or set them in your app.
 - `--godmin-list-frozen-start` holds the width of the checkbox column
   of a wide list table, where its frozen title starts. It is set on
   the table.
+- `--godmin-page-stacked` tells the columns of a record page whether
+  they sit side by side. It stays far below zero while they fit and
+  rises far above the height of any record once they do not. It is
+  set on the box that holds them.

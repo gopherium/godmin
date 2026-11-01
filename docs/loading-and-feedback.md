@@ -199,22 +199,20 @@ Name an item in straight double quotes and in full, like
 snackbar, and godmin does not either.
 [Size](./design-system/toasts.md#size) says how a long one wraps.
 
-Use a toast for a write that failed in a dialog or in a run over list
-rows too. WordPress shows those in its snackbar, never inside the
-dialog and never above the list, and godmin's dialogs and list runs
-do the same. Say what failed, in the words your server sent when it
-sent some. [A failure from a dialog](./lists.md#a-failure-from-a-dialog)
+Use a toast for a write that failed too, in a dialog, on a page or in
+a run over list rows. WordPress shows those in its snackbar, never
+inside the dialog and never above the list, and godmin's dialogs and
+list runs do the same. Say what failed, in the words your server sent
+when it sent some. A server message about one field goes under that
+field. [A failure from a dialog](./lists.md#a-failure-from-a-dialog)
 shows how to raise one from a dialog.
 [Running an action over the picked rows](./lists.md#running-an-action-over-the-picked-rows)
 raises it for you after a run over a list.
 
 Keep an [`ErrorNotice`](./screens.md#errornotice) for a failure
-that has to stay on the screen until the user acts:
-
-- A screen or a list that failed to load. Show the notice where the
-  content would be.
-- A form on a page of its own, not in a dialog. Show the notice next
-  to the form, so the user sees what failed while they fix it.
+that has to stay on the screen until the user acts, such as a screen
+or a list that failed to load. Show the notice where the content
+would be.
 
 Skip the toast in three more cases:
 

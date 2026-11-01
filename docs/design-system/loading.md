@@ -55,6 +55,8 @@ When it shows and where it sits depend on what is around it:
   WordPress screen shows the spinner under its title. The spinner
   sits at the top of the page content, centred across, with the
   page's own gap between it and the title. The title stays on screen.
+  In a page with an `aside` it sits at the top of its column, centred
+  across that column.
 - Inside a dialog it shows at once too, and takes only the space it
   gets.
 - Inside a sidebar screen it shows at once too, under the screen's

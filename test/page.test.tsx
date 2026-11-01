@@ -197,6 +197,55 @@ test('wraps the actions of the page head under the title once they no longer fit
 	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('wrap')
 })
 
+test('draws no heading wrapper with no breadcrumbs', () => {
+	const { container } = renderAdmin(<Page title="Reports">body</Page>)
+
+	expect(container.querySelector('.godmin-page__heading')).toBeNull()
+})
+
+test.each([[false], [null]])('treats breadcrumbs given as %s as no breadcrumbs', (breadcrumbs) => {
+	const { container } = renderAdmin(
+		<Page title="Reports" breadcrumbs={breadcrumbs}>
+			body
+		</Page>,
+	)
+
+	expect(container.querySelector('.godmin-page__heading')).toBeNull()
+})
+
+test('draws the breadcrumbs before the title, inside the title row', () => {
+	const { container } = renderAdmin(
+		<Page title="Maria Perez" breadcrumbs={<a href="/contacts">Contacts</a>}>
+			body
+		</Page>,
+	)
+
+	const heading = container.querySelector('.godmin-page__head > .godmin-page__heading:first-child')
+	expect(heading?.firstElementChild?.textContent).toBe('Contacts')
+	expect(heading?.lastElementChild).toBe(screen.getByRole('heading', { level: 1, name: 'Maria Perez' }))
+})
+
+test('lets the title row wrap beside breadcrumbs, as on any page', () => {
+	const { container } = renderAdmin(
+		<Page title="Maria Perez" breadcrumbs={<a href="/contacts">Contacts</a>}>
+			body
+		</Page>,
+	)
+
+	expect((container.querySelector('.godmin-page__head') as HTMLElement).style.flexWrap).toBe('wrap')
+})
+
+test('keeps the heading level beside breadcrumbs', () => {
+	renderAdmin(
+		<Page title="Maria Perez" headingLevel={2} breadcrumbs={<a href="/contacts">Contacts</a>}>
+			body
+		</Page>,
+	)
+
+	expect(screen.getByRole('heading', { level: 2, name: 'Maria Perez' })).not.toBeNull()
+	expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
+})
+
 test('sets the subtitle under the row of the title and the actions, as the WordPress page header does', () => {
 	const { container } = renderAdmin(
 		<Page title="Reports" subtitle="Friday, Aug 1" actions={<button type="button">New report</button>}>
@@ -288,6 +337,41 @@ test('leaves an aside that renders nothing empty, so the stylesheet hides it', (
 	)
 
 	expect(container.querySelector('.godmin-page__aside:empty')).not.toBeNull()
+})
+
+test('names the details as a region when given a label', () => {
+	renderAdmin(
+		<Page title="Invoice 1042" aside={<p>Details</p>} asideLabel="Invoice details">
+			<p>Lines</p>
+		</Page>,
+	)
+
+	const region = screen.getByRole('region', { name: 'Invoice details' })
+	expect(region.classList.contains('godmin-page__aside')).toBe(true)
+	expect(region.textContent).toBe('Details')
+})
+
+test('leaves the details a plain column with no label', () => {
+	const { container } = renderAdmin(
+		<Page title="Invoice 1042" aside={<p>Details</p>}>
+			<p>Lines</p>
+		</Page>,
+	)
+
+	const aside = container.querySelector('.godmin-page__aside')
+	expect(aside?.hasAttribute('role')).toBe(false)
+	expect(aside?.hasAttribute('aria-label')).toBe(false)
+	expect(aside?.hasAttribute('tabindex')).toBe(false)
+})
+
+test('keeps a named details column out of reach of a script focus', () => {
+	renderAdmin(
+		<Page title="Invoice 1042" aside={<p>Details</p>} asideLabel="Invoice details">
+			<p>Lines</p>
+		</Page>,
+	)
+
+	expect(screen.getByRole('region', { name: 'Invoice details' }).hasAttribute('tabindex')).toBe(false)
 })
 
 test('renders one column when a screen gives no aside', () => {

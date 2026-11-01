@@ -58,8 +58,10 @@ is the padding between its edge and the screen inside it.
   and [Elevation](./radius-and-elevation.md#elevation) give the
   corners and the shadow.
 
-The canvas scrolls its screen inside itself. A bleed canvas, which
-`canvas="bleed"` asks for, has no gutter at any width and hides what
+The canvas scrolls its screen inside itself. A DataViews list page and
+a record page keep their title and scroll a part of their own, as
+[what scrolls](./record-pages.md#what-scrolls) gives for a record. A
+bleed canvas, which `canvas="bleed"` asks for, has no gutter at any width and hides what
 overflows it, so the screen scrolls its own parts. The default,
 `padded`, keeps the gutters.
 [Two canvas modes](../framing-an-application.md#two-canvas-modes)

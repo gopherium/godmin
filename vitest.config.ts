@@ -21,12 +21,14 @@ const SHOT_STYLE = [
 	'* { pointer-events: none !important; }',
 ].join(' ')
 
-/** Returns a fresh headless Chromium setup with grayscale text and no font hinting. */
-function chromium() {
+/** Returns a fresh headless Chromium setup with grayscale text and no font hinting, its default arguments less any left out. */
+function chromium(leftOut: string[] = []) {
 	return {
 		enabled: true,
 		headless: true,
-		provider: playwright({ launchOptions: { args: ['--disable-lcd-text', '--font-render-hinting=none'] } }),
+		provider: playwright({
+			launchOptions: { args: ['--disable-lcd-text', '--font-render-hinting=none'], ignoreDefaultArgs: leftOut },
+		}),
 		instances: [{ browser: 'chromium' as const }],
 	}
 }
@@ -61,8 +63,22 @@ export default defineConfig({
 				test: {
 					name: 'browser',
 					include: ['test/browser/**/*.test.{ts,tsx}'],
+					exclude: [...configDefaults.exclude, 'test/browser/scrollbars/**'],
 					setupFiles: ['test/browser/setup.ts'],
 					browser: { ...chromium(), viewport: { width: 1280, height: 800 }, commands: { reduceMotion } },
+				},
+			},
+			{
+				extends: true,
+				test: {
+					name: 'scrollbars',
+					include: ['test/browser/scrollbars/**/*.test.{ts,tsx}'],
+					setupFiles: ['test/browser/setup.ts'],
+					browser: {
+						...chromium(['--hide-scrollbars']),
+						viewport: { width: 1280, height: 800 },
+						commands: { reduceMotion },
+					},
 				},
 			},
 			{

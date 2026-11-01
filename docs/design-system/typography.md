@@ -49,7 +49,7 @@ The smallest size, `--wpds-typography-font-size-xs` (11px), is for
 small labels such as the count beside a sidebar row.
 
 Some parts give the size of their text on their own page:
-[the page subtitle](../screens.md#page),
+[the page subtitle](./record-pages.md#the-page-header),
 [the page tabs](../screens.md#pagetabs),
 [the title and description of a list row](./lists.md#rows),
 [a table that stays custom](./lists.md#tables-that-stay-custom),

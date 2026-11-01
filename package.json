@@ -60,7 +60,7 @@
 		"lint:css": "stylelint 'src/**/*.css'",
 		"storybook:dev": "storybook dev",
 		"storybook:test": "vitest run --project storybook",
-		"test:browser": "vitest run --project browser",
+		"test:browser": "vitest run --project browser --project scrollbars",
 		"typecheck": "tsc --noEmit",
 		"prepublishOnly": "pnpm run build"
 	},

@@ -42,40 +42,6 @@ function significantLines(css: string): string[] {
 		.filter((line) => line !== '' && !line.startsWith('/*') && !line.startsWith('*'))
 }
 
-test('lays the aside beside the content and wraps it under on a narrow page', () => {
-	const split = ruleOf('.godmin-page__split')
-
-	expect(split).toMatch(/display:\s*flex/)
-	expect(split).toMatch(/flex-wrap:\s*wrap/)
-	expect(split).toMatch(/align-items:\s*flex-start/)
-})
-
-test('keeps the content column at the large surface width beside an aside', () => {
-	expect(ruleOf('.godmin-page__main')).toMatch(/flex:\s*1 1 var\(--wpds-dimension-surface-width-lg\)/)
-})
-
-test('gives the aside all the room the content column leaves', () => {
-	expect(ruleOf('.godmin-page__aside')).toMatch(/flex:\s*999 1 0/)
-})
-
-test('folds the aside under the content before it gets narrower than the extra small surface width', () => {
-	expect(ruleOf('.godmin-page__aside')).toMatch(
-		/min-inline-size:\s*min\(100%, var\(--wpds-dimension-surface-width-xs\)\)/,
-	)
-})
-
-test('lets the aside grow past the large surface width', () => {
-	expect(ruleOf('.godmin-page__aside')).not.toMatch(/max-inline-size/)
-})
-
-test('lets a long unbroken value wrap inside the aside instead of spilling past the page', () => {
-	expect(ruleOf('.godmin-page__aside')).toMatch(/overflow-wrap:\s*anywhere/)
-})
-
-test('hides an aside that renders nothing', () => {
-	expect(ruleOf('.godmin-page__aside:empty')).toMatch(/display:\s*none/)
-})
-
 test('names the canvas margin once, 16px, and frames the canvas with it', () => {
 	expect(ruleOf(':root')).toMatch(/--godmin-canvas-margin:\s*16px/)
 	expect(ruleOf('.godmin-layout__canvas')).toMatch(/(?:^|\s)margin:\s*var\(--godmin-canvas-margin\);/)
