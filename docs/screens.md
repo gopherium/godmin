@@ -25,8 +25,9 @@ WordPress page title. It is an `h1` unless you pass
 `actions` renders top right,
 and `className` and `children` do what they always do. When the
 actions no longer fit beside the title, on a phone for example, they
-move to a line of their own under it. Beside breadcrumbs they stay on
-the title's line and the title gives way.
+move to a line of their own under it. Beside breadcrumbs the title
+gives way first, and the actions move only once it reaches its
+smallest width.
 
 `subtitle` renders as one grey line under the title and the actions,
 the way WordPress sets the sentence under a page title. The title row

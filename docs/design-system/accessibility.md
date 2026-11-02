@@ -239,8 +239,8 @@ gives no label a fixed width:
   a record page and a log list break a long word the same way.
 - The actions of a page header move under the title once they no
   longer fit beside it. Beside breadcrumbs the title ends in an
-  ellipsis instead. A form row and the header line of a log list
-  wrap the same way.
+  ellipsis first, and they move once it reaches its smallest width.
+  A form row and the header line of a log list wrap the same way.
 - The page tabs keep each label on one line. A tab row too long for
   its page scrolls and fades the edge it cuts.
 
