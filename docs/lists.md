@@ -601,8 +601,9 @@ with the focus moved to the list from a part that turns inert, one
 toast as the last call ends, the focus moved back to the list once a
 row moved, while the reader is still with the run, then the list
 reloaded, and the focus put back on the control the reader pressed,
-or on the first control of the row that took its place, unless that
-control is a primary action. `useListRun` and `useBulkRun` hold those
+on the same item when the reload moved it, or on the first control of
+the row that took its place, unless that control is a primary action.
+`useListRun` and `useBulkRun` hold those
 things for you:
 
 ```tsx
@@ -683,6 +684,13 @@ Once the list reloaded, while the region still holds the focus,
 - on the control they pressed, when it is still there and takes the
   focus, such as the bulk action button while a row stays ticked, or
   a row's button while its row stays,
+- else on the same item, wherever its card or row now sits, when the
+  list marks its cells with `data-item-id` as
+  [`useFocusBack`](#putting-the-focus-back-on-a-row) asks. A DataViews grid draws
+  a card anew when it moves to another grid row, so after a save that
+  sorts a file elsewhere the pressed control is gone. The focus lands
+  on the title, media or phone row the reader pressed, else on the
+  item's actions menu,
 - else on the first control of the row that now sits where the row of
   that control was, its checkbox in a list with bulk actions, such as
   the next row's checkbox when the row the reader restored left the
