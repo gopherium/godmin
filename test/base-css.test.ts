@@ -27,6 +27,9 @@ const avatarRings = [
 	'.dataviews-view-list .dataviews-view-list__media-wrapper:has(> .godmin-avatar)::after',
 ].join(',\n')
 
+/** The selector of a page tab that does not lead to the page on screen. */
+const restingTab = '.godmin-page-tabs__tab:not(.godmin-page-tabs__tab--current)'
+
 /** The selector of the title and description column of a DataViews table inside a list region. */
 const primaryColumn = '.godmin-page__list .dataviews-view-table tbody .dataviews-view-table__primary-column-content'
 
@@ -257,6 +260,7 @@ test('draws a page tab like a minimal WordPress tab: a 48px tall 13px label with
 	expect(tab).toMatch(/display:\s*flex/)
 	expect(tab).toMatch(/align-items:\s*center/)
 	expect(tab).toMatch(/position:\s*relative/)
+	expect(tab).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
 	expect(tab).toMatch(/block-size:\s*48px/)
 	expect(tab).toMatch(/padding:\s*0/)
 	expect(tab).toMatch(/color:\s*var\(--wpds-color-foreground-interactive-neutral\)/)
@@ -268,21 +272,61 @@ test('draws a page tab like a minimal WordPress tab: a 48px tall 13px label with
 	expect(tab).toMatch(/white-space:\s*nowrap/)
 })
 
-test('darkens a page tab under the pointer or the keyboard', () => {
-	expect(ruleOf('.godmin-page-tabs__tab:is(:hover, :focus-visible)')).toMatch(
+test('darkens a page tab under the pointer or the keyboard, and leaves the current tab alone under the pointer', () => {
+	expect(ruleOf(`${restingTab}:is(:hover, :active),\n\t.godmin-page-tabs__tab:focus-visible`)).toMatch(
 		/color:\s*var\(--wpds-color-foreground-interactive-neutral-active\)/,
 	)
 })
 
-test('underlines the current page tab with a 2px strong neutral line as wide as its label', () => {
-	const line = ruleOf('.godmin-page-tabs__tab--current::after')
+test('shades a page tab under the pointer or the keyboard, 4px past its label, as the WordPress tabs do', () => {
+	const shade = ruleOf(`${restingTab}:is(:hover, :active)::after,\n\t.godmin-page-tabs__tab:focus-visible::after`)
+	const area = ruleOf('.godmin-page-tabs__tab::after')
 
-	expect(line).toMatch(/content:\s*''/)
+	expect(shade).toMatch(/background-color:\s*var\(--wpds-color-background-interactive-neutral-weak-active\)/)
+	expect(shade).toContain(
+		'box-shadow: 0 0 0 var(--wpds-dimension-padding-xs) var(--wpds-color-background-interactive-neutral-weak-active)',
+	)
+	expect(shade).toMatch(/opacity:\s*1/)
+	expect(area).toContain('inset-block: calc(var(--wpds-dimension-padding-md) + var(--wpds-dimension-padding-xs))')
+	expect(area).toMatch(/inset-inline:\s*0/)
+	expect(area).toMatch(/outline-offset:\s*var\(--wpds-dimension-padding-xs\)/)
+})
+
+test('sets the shade and the ring behind the label, faded in unless the reader asks for less motion', () => {
+	const parts = ruleOf('.godmin-page-tabs__tab::after,\n\t.godmin-page-tabs__tab::before')
+
+	expect(ruleOf('.godmin-page-tabs__tab')).toMatch(/z-index:\s*1/)
+	expect(parts).toMatch(/position:\s*absolute/)
+	expect(parts).toMatch(/z-index:\s*-1/)
+	expect(parts).toMatch(/border-radius:\s*var\(--wpds-border-radius-sm\)/)
+	expect(parts).toMatch(/opacity:\s*0/)
+	expect(parts).toMatch(/pointer-events:\s*none/)
+	expect(blockOf('@media not (prefers-reduced-motion)')).toMatch(/transition:\s*opacity 0\.1s linear/)
+})
+
+test('leaves the arrow on the current page tab, as WordPress does on a selected tab', () => {
+	expect(ruleOf('.godmin-page-tabs__tab--current')).toMatch(/cursor:\s*default/)
+})
+
+test('underlines the current page tab with a 2px dark line as wide as its label', () => {
+	const line = ruleOf('.godmin-page-tabs__line')
+
 	expect(line).toMatch(/position:\s*absolute/)
 	expect(line).toMatch(/inset-inline:\s*0/)
 	expect(line).toMatch(/inset-block-end:\s*0/)
 	expect(line).toMatch(/block-size:\s*var\(--wpds-border-width-focus\)/)
-	expect(line).toMatch(/background:\s*var\(--wpds-color-stroke-interactive-neutral-strong\)/)
+	expect(line).toMatch(/background-color:\s*var\(--wpds-color-foreground-interactive-neutral\)/)
+	expect(line).toMatch(/pointer-events:\s*none/)
+	expect(ruleOf('.godmin-page-tabs__tab:focus-visible .godmin-page-tabs__line')).toMatch(
+		/background-color:\s*var\(--wpds-color-foreground-interactive-neutral-active\)/,
+	)
+})
+
+test('keeps the line of the current page tab in forced colours, where a background is dropped', () => {
+	const line = ruleOf('.godmin-page-tabs__line')
+
+	expect(line).toMatch(/outline:\s*2px solid transparent/)
+	expect(line).toMatch(/outline-offset:\s*-1px/)
 })
 
 test('underlines the tab godmin marks current, not every link a router marks active', () => {
@@ -294,16 +338,32 @@ test('underlines the tab godmin marks current, not every link a router marks act
 })
 
 test('rings a focused page tab around its label, as the WordPress tabs do', () => {
-	const ring = ruleOf('.godmin-page-tabs__tab::before')
+	const parts = ruleOf('.godmin-page-tabs__tab::after,\n\t.godmin-page-tabs__tab::before')
+
+	expect(parts).toMatch(/outline:\s*var\(--wpds-border-width-focus\) solid transparent/)
+	expect(ruleOf('.godmin-page-tabs__tab:focus-visible::after')).toMatch(
+		/outline-color:\s*var\(--wpds-color-stroke-focus\)/,
+	)
+	expect(ruleOf('.godmin-page-tabs__tab:focus-visible')).toMatch(/outline:\s*none/)
+})
+
+test('lets a page tab row that fits show the shade and the ring past its ends', () => {
+	expect(ruleOf('.godmin-page-tabs:not(.godmin-page-tabs--scrolling)')).toMatch(/overflow:\s*visible/)
+})
+
+test('moves the ring inside a tab of a row that scrolls, since the row clips what runs past it', () => {
+	const ring = ruleOf('.godmin-page-tabs--scrolling .godmin-page-tabs__tab::before')
+	const focused = ruleOf('.godmin-page-tabs--scrolling .godmin-page-tabs__tab:focus-visible::before')
 
 	expect(ring).toMatch(/content:\s*''/)
-	expect(ring).toMatch(/position:\s*absolute/)
-	expect(ring).toMatch(/inset:\s*var\(--wpds-dimension-padding-md\) var\(--wpds-border-width-focus\)/)
-	expect(ring).toMatch(/border-radius:\s*var\(--wpds-border-radius-sm\)/)
-	expect(ring).toMatch(/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\)/)
-	expect(ring).toMatch(/opacity:\s*0/)
-	expect(ruleOf('.godmin-page-tabs__tab:focus-visible::before')).toMatch(/opacity:\s*1/)
-	expect(ruleOf('.godmin-page-tabs__tab:focus-visible')).toMatch(/outline:\s*none/)
+	expect(ring).toMatch(/inset-block:\s*var\(--wpds-dimension-padding-md\)/)
+	expect(ring).toMatch(/inset-inline:\s*round\(up, var\(--wpds-border-width-focus\), 1px\)/)
+	expect(ring).toMatch(/z-index:\s*0/)
+	expect(focused).toMatch(/opacity:\s*1/)
+	expect(focused).toMatch(/outline-color:\s*var\(--wpds-color-stroke-focus\)/)
+	expect(ruleOf('.godmin-page-tabs--scrolling .godmin-page-tabs__tab:focus-visible::after')).toMatch(
+		/outline-color:\s*transparent/,
+	)
 })
 
 test('draws a 1px weak divider under the page tabs out to the canvas edges', () => {

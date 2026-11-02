@@ -136,8 +136,10 @@ navigation region, and a screen reader lists it beside the sidebar,
 so the name tells them apart.
 
 The tabs look like the WordPress tabs: 13px labels 16px apart, the
-current one underlined by a 2px grey line as wide as its label, and a
-1px light line under the row that runs to the canvas edges.
+current one underlined by a 2px dark line as wide as its label, and a
+1px light line under the row that runs to the canvas edges. A tab
+under the pointer or the keyboard gets a soft shade that reaches 4px
+past its label. The current tab keeps its plain look under the pointer.
 
 They are links and not the design system `Tabs` component on
 purpose. `Tabs` switches panels inside one page and moves between
