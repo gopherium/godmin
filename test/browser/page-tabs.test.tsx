@@ -7,6 +7,7 @@ import { page, userEvent } from 'vitest/browser'
 
 import { AdminRoot } from '../../src/admin-root.js'
 import { PageTab, PageTabs } from '../../src/page-tabs.js'
+import { ROUNDING_SLACK } from '../../src/size-watch.js'
 
 /** The tab under test on the page, and the same tab as WordPress draws it. */
 const PAGE_TAB = '.godmin-page-tabs__tab'
@@ -185,7 +186,7 @@ test('opens a row too wide for its space on its current tab', async () => {
 	const tab = tabIn(PAGE_TAB, 'Drafts waiting for a review')
 
 	await expect.poll(() => row.classList.contains('godmin-page-tabs--scrolling')).toBe(true)
-	expect(tab.getBoundingClientRect().right).toBeLessThanOrEqual(row.getBoundingClientRect().right)
+	expect(tab.getBoundingClientRect().right).toBeLessThanOrEqual(row.getBoundingClientRect().right + ROUNDING_SLACK)
 	await expect.poll(() => row.classList.contains('godmin-page-tabs--overflowing-first')).toBe(true)
 })
 
@@ -209,7 +210,7 @@ test('shows the current tab once a row narrows past it', async () => {
 
 	await expect
 		.poll(() => tabIn(PAGE_TAB, 'Drafts waiting for a review').getBoundingClientRect().right)
-		.toBeLessThanOrEqual(row.getBoundingClientRect().right)
+		.toBeLessThanOrEqual(row.getBoundingClientRect().right + ROUNDING_SLACK)
 })
 
 test('lets the shade of a row that fits run past its first label', () => {
