@@ -691,6 +691,9 @@ const LEADS = {
 	select: (name: string) => <select aria-label={name} />,
 	'text area': (name: string) => <textarea aria-label={name} />,
 	'plain button': (name: string) => <button type="button" aria-label={name} />,
+	'title field': (name: string) => (
+		<div className="dataviews-title-field" role="button" tabIndex={0} aria-label={name} />
+	),
 }
 
 /** What a test reads back from the rows screen. */
@@ -709,6 +712,19 @@ interface RowParts {
 	lead?: keyof typeof LEADS
 	/** Whether the row draws Restore as a primary action, true unless told. */
 	primary?: boolean
+	/** Whether the title cell carries the id of its item, false unless told. */
+	marked?: boolean
+	/** Whether a row that moves is drawn anew, as a grid draws a card sent to another grid row, false unless told. */
+	rebuilt?: boolean
+}
+
+/** Returns each row with its key, a new one for a row drawn anew once it moves, and the mark of its title cell. */
+function rowsOf({ shown, marked, rebuilt }: { shown: string[] } & RowParts) {
+	return shown.map((title, index) => ({
+		title,
+		key: rebuilt === true ? `${index} ${title}` : title,
+		mark: marked === true ? { 'data-item-id': title } : {},
+	}))
 }
 
 /**
@@ -724,6 +740,8 @@ function RowsScreen({
 	boxes = true,
 	lead,
 	primary = true,
+	marked,
+	rebuilt,
 	seen,
 }: {
 	scope: string
@@ -753,15 +771,15 @@ function RowsScreen({
 				<input type="search" aria-label="Search posts" />
 				<table>
 					<tbody>
-						{shown.map((title) => (
-							<tr key={title} className="dataviews-view-table__row">
+						{rowsOf({ shown, marked, rebuilt }).map(({ title, key, mark }) => (
+							<tr key={key} className="dataviews-view-table__row">
 								{boxes ? (
 									<td>
 										<input type="checkbox" aria-label={title} />
 									</td>
 								) : null}
 								{lead === undefined ? null : <td>{LEADS[lead](`Open ${title}`)}</td>}
-								<td>{title}</td>
+								<td {...mark}>{title}</td>
 								<td>
 									<div className="dataviews-item-actions">
 										{primary ? (
@@ -773,6 +791,7 @@ function RowsScreen({
 											type="button"
 											className="dataviews-all-actions-button"
 											aria-label="Actions"
+											aria-haspopup="menu"
 											onClick={startRun}
 										/>
 									</div>
@@ -884,6 +903,71 @@ test('moves the focus to the box of the row that took the place of the removed r
 	endReload(end)
 
 	expect(document.activeElement).toBe(screen.getByRole('checkbox', { name: 'Goodbye' }))
+})
+
+test('follows an item its save moved, to the actions menu the reader pressed', () => {
+	const { seen, leave } = renderRows({ marked: true, rebuilt: true })
+	const end = writeFrom(seen, rowButton('Maria Perez', 'Actions'))
+	leave(['Goodbye', 'Hello', 'Maria Perez'])
+
+	endReload(end)
+
+	expect(document.activeElement).toBe(rowButton('Maria Perez', 'Actions'))
+})
+
+test('follows an item its save moved, to the title the reader pressed', () => {
+	const { seen, leave } = renderRows({ marked: true, rebuilt: true, lead: 'title field' })
+	const title = screen.getByRole('button', { name: 'Open Maria Perez' })
+	act(() => title.focus())
+	seen.settles.push(seen.runs[0].onStart())
+	const end = settleThenMark(seen)
+	leave(['Goodbye', 'Hello', 'Maria Perez'])
+
+	endReload(end)
+
+	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Open Maria Perez' }))
+})
+
+test('follows an item its save moved, to its actions menu from a control with no trigger of its own', () => {
+	const { seen, leave } = renderRows({ marked: true, rebuilt: true })
+	const end = writeFrom(seen, rowButton('Maria Perez', 'Restore'))
+	leave(['Goodbye', 'Hello', 'Maria Perez'])
+
+	endReload(end)
+
+	expect(document.activeElement).toBe(rowButton('Maria Perez', 'Actions'))
+})
+
+test('moves the focus to the row in its place once the item left the list', () => {
+	const { seen, leave } = renderRows({ marked: true, rebuilt: true })
+	const end = writeFrom(seen, rowButton('Maria Perez', 'Actions'))
+	leave(['Hello', 'Goodbye'])
+
+	endReload(end)
+
+	expect(document.activeElement).toBe(screen.getByRole('checkbox', { name: 'Goodbye' }))
+})
+
+test('moves the focus to the row in its place when the list marks no item', () => {
+	const { seen, leave } = renderRows({ rebuilt: true })
+	const end = writeFrom(seen, rowButton('Maria Perez', 'Actions'))
+	leave(['Goodbye', 'Hello', 'Maria Perez'])
+
+	endReload(end)
+
+	expect(document.activeElement).toBe(screen.getByRole('checkbox', { name: 'Hello' }))
+})
+
+test('moves the focus to the row in its place for an item that lost every trigger', () => {
+	const { seen, leave } = renderRows({ marked: true, rebuilt: true })
+	const end = writeFrom(seen, rowButton('Maria Perez', 'Actions'))
+	const row = () => screen.getByText('Maria Perez').closest('tr') as HTMLElement
+	leave(['Goodbye', 'Hello', 'Maria Perez'])
+	row().querySelector('[aria-haspopup]')?.remove()
+
+	endReload(end)
+
+	expect(document.activeElement).toBe(screen.getByRole('checkbox', { name: 'Hello' }))
 })
 
 test('moves the focus to the box of the last row when fewer rows came back', () => {

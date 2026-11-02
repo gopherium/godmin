@@ -27,7 +27,7 @@ type ItemTrigger = keyof typeof TRIGGERS
 export type Trigger = ItemTrigger | 'bulk'
 
 /** One request to put the focus back on the trigger a dialog opened from, a new one each time it is asked. */
-interface FocusBack {
+export interface FocusBack {
 	/** The item the dialog acted on. */
 	id: string
 	/** The trigger the dialog opened from. */
@@ -35,16 +35,34 @@ interface FocusBack {
 }
 
 /**
+ * Returns the trigger a control stands for.
+ * @param control - The control.
+ * @returns The bulk bar, the media, the title or the phone row holding the control, the actions menu otherwise.
+ */
+function triggerAt(control: Element): Trigger {
+	if (control.closest(BULK_BAR) !== null) {
+		return 'bulk'
+	}
+	const triggers: ItemTrigger[] = ['media', 'title', 'row']
+	return triggers.find((trigger) => control.closest(TRIGGERS[trigger]) !== null) ?? 'actions'
+}
+
+/**
  * Returns the trigger a click, a tap or a key opened a dialog from, read from the focus it left there.
  * @returns The bulk bar, the media, the title or the phone row holding the focus, the actions menu otherwise.
  */
 export function focusedTrigger(): Trigger {
-	const focused = document.activeElement as Element
-	if (focused.closest(BULK_BAR) !== null) {
-		return 'bulk'
-	}
-	const triggers: ItemTrigger[] = ['media', 'title', 'row']
-	return triggers.find((trigger) => focused.closest(TRIGGERS[trigger]) !== null) ?? 'actions'
+	return triggerAt(document.activeElement as Element)
+}
+
+/**
+ * Returns the item a control sits on and the trigger it stands for.
+ * @param control - The control.
+ * @returns The item and the trigger, none for a control in no card or row, or in one the app marks with no id.
+ */
+export function itemAt(control: Element): FocusBack | null {
+	const id = control.closest(HOLDERS)?.querySelector<HTMLElement>(MARKED)?.dataset.itemId
+	return id === undefined ? null : { id, trigger: triggerAt(control) }
 }
 
 /**
@@ -59,18 +77,27 @@ function holderOf(list: HTMLElement, id: string): Element | null {
 }
 
 /**
+ * Returns a trigger on an item, found wherever its card or row now sits.
+ * @param list - The list region.
+ * @param asked - The item and the trigger.
+ * @returns The trigger, else the item's actions menu, none for a bulk action or an item with neither in the list.
+ */
+export function triggerOnItem(list: HTMLElement, { id, trigger }: FocusBack): HTMLElement | null {
+	const holder = holderOf(list, id)
+	if (trigger === 'bulk' || holder === null) {
+		return null
+	}
+	return holder.querySelector<HTMLElement>(TRIGGERS[trigger]) ?? holder.querySelector<HTMLElement>(TRIGGERS.actions)
+}
+
+/**
  * Returns the trigger a dialog on an item opened from, found wherever its card or row now sits.
  * @param list - The list region.
  * @param asked - The item and the trigger.
  * @returns The trigger, else the item's actions menu, else the list, which a bulk action always gets.
  */
-function triggerOf(list: HTMLElement, { id, trigger }: FocusBack): HTMLElement {
-	const holder = holderOf(list, id)
-	if (trigger === 'bulk' || holder === null) {
-		return list
-	}
-	const found = holder.querySelector<HTMLElement>(TRIGGERS[trigger])
-	return found ?? holder.querySelector<HTMLElement>(TRIGGERS.actions) ?? list
+function triggerOf(list: HTMLElement, asked: FocusBack): HTMLElement {
+	return triggerOnItem(list, asked) ?? list
 }
 
 /** Stops nothing, for a focus put on the list region, which no layout of the list takes off the page. */

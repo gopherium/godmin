@@ -276,8 +276,41 @@ test('gives the list the tab row class that scrolls and fades, and leaves the na
 	measure(LEFT_TO_RIGHT)
 	renderAdmin(<UserTabs />)
 
-	expect(tabRow().className).toBe('godmin-page-tabs godmin-page-tabs--overflowing-last')
+	expect(tabRow().className).toBe('godmin-page-tabs godmin-page-tabs--scrolling godmin-page-tabs--overflowing-last')
 	expect(screen.getByRole('navigation', { name: 'User sections' }).hasAttribute('class')).toBe(false)
+})
+
+test('marks a tab row wider than its space as scrolling, as the WordPress tabs do', () => {
+	measure(LEFT_TO_RIGHT)
+	renderAdmin(<UserTabs />)
+
+	expect(tabRow().classList.contains('godmin-page-tabs--scrolling')).toBe(true)
+})
+
+test('leaves a tab row that fits unmarked', () => {
+	measure({ ...LEFT_TO_RIGHT, shown: 418 })
+	renderAdmin(<UserTabs />)
+
+	expect(tabRow().classList.contains('godmin-page-tabs--scrolling')).toBe(false)
+})
+
+test('draws the line under the current tab only', () => {
+	const { users, tokens } = renderTwoTabs()
+
+	expect(users.querySelector('.godmin-page-tabs__line')).not.toBeNull()
+	expect(tokens.querySelector('.godmin-page-tabs__line')).toBeNull()
+})
+
+test('draws the line under a current tab that renders through a link element a screen gives', () => {
+	renderAdmin(
+		<PageTabs label="Sections">
+			<PageTab render={<a href="/users" />} current>
+				Users
+			</PageTab>
+		</PageTabs>,
+	)
+
+	expect(screen.getByRole('link', { name: 'Users' }).querySelector('.godmin-page-tabs__line')).not.toBeNull()
 })
 
 test('marks the current tab as the page on screen and leaves the others unmarked', () => {
@@ -479,7 +512,7 @@ test('scrolls the row so the current tab shows whole with the scroll margin it a
 	renderAdmin(<UserTabs current="Application passwords" />)
 
 	expect(tabRow().scrollLeft).toBe(116)
-	expect(fades(tabRow())).toEqual({ start: true, end: true })
+	expect(fadesAt(tabRow(), 116)).toEqual({ start: true, end: true })
 })
 
 test('scrolls a right to left row toward its end to show the current tab', () => {

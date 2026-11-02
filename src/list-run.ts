@@ -3,7 +3,8 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 
-import { HOLDERS } from './focus-back.js'
+import { HOLDERS, itemAt, triggerOnItem } from './focus-back.js'
+import type { FocusBack } from './focus-back.js'
 
 /** Finds the dialog or the alert dialog holding the focus. */
 const DIALOG_IN_FOCUS = '[role="dialog"]:focus-within, [role="alertdialog"]:focus-within'
@@ -55,6 +56,8 @@ interface Place {
 	control: HTMLElement
 	/** Where its card or row sits among those of the list, -1 for a control in none, such as the bulk bar's. */
 	row: number
+	/** The item its card or row holds and the trigger it stands for, none when the app marks no item there. */
+	item: FocusBack | null
 }
 
 /** What counts the reloads a list has open. */
@@ -158,7 +161,18 @@ function placeOf(list: HTMLElement | null, focused: EventTarget | null): Place |
 		return null
 	}
 	const control = focused as HTMLElement
-	return { control, row: [...list.querySelectorAll(HOLDERS)].indexOf(control.closest(HOLDERS) as Element) }
+	const row = [...list.querySelectorAll(HOLDERS)].indexOf(control.closest(HOLDERS) as Element)
+	return { control, row, item: itemAt(control) }
+}
+
+/**
+ * Returns the trigger on the item the reader stood on, found wherever its card or row now sits.
+ * @param list - The list region.
+ * @param place - Where the reader stood.
+ * @returns The trigger, none once the item left the list or when the app marks no item there.
+ */
+function onSameItem(list: HTMLElement, { item }: Place): HTMLElement | null {
+	return item === null ? null : triggerOnItem(list, item)
 }
 
 /**
@@ -174,7 +188,7 @@ function firstInPlace(list: HTMLElement, { row }: Place): HTMLElement | null | u
 }
 
 /**
- * Gives the focus back from the list region to the pressed control, else to the first control of the row in its place.
+ * Gives the focus back from the list region to the pressed control, else the same item, else the row in its place.
  * @param list - The list region, none while the screen draws no list.
  * @param place - Where the reader stood as the list took the focus, none when they stood nowhere in it.
  */
@@ -183,7 +197,7 @@ function putBack(list: HTMLElement | null, place: Place | null): void {
 		return
 	}
 	const preventScroll = !list.matches(':focus-visible')
-	for (const control of [place.control, firstInPlace(list, place)]) {
+	for (const control of [place.control, onSameItem(list, place), firstInPlace(list, place)]) {
 		if (document.activeElement === list) {
 			control?.focus({ preventScroll })
 		}

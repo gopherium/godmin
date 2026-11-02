@@ -5,11 +5,11 @@ import type { ListChromeCatalog } from '../list-chrome.js'
 /** The Spanish list chrome, list dates, sidebar and no results words, compiled from the es-ES.po source beside it. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' },
-	'%1$d of %2$d Item': ['%1$d de %2$d elemento', '%1$d de %2$d elementos'],
+	'%1$s of %2$s Item': ['%1$s de %2$s elemento', '%1$s de %2$s elementos'],
 	'%1$s, %2$s': ['%1$s, %2$s'],
 	'%1$s: %2$s': ['%1$s: %2$s'],
-	'%d Item': ['%d elemento', '%d elementos'],
-	'%d Item selected': ['%d elemento seleccionado', '%d elementos seleccionados'],
+	'%s Item': ['%s elemento', '%s elementos'],
+	'%s Item selected': ['%s elemento seleccionado', '%s elementos seleccionados'],
 	'%s, selected': ['%s, seleccionado'],
 	'%s: <groupName />': ['%s: <groupName />'],
 	'(no title)': ['(sin título)'],

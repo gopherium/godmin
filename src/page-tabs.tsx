@@ -16,6 +16,11 @@ export interface PageTabsProps {
 const ROW_CLASS = 'godmin-page-tabs'
 
 /**
+ * The class of a tab row wider than its space.
+ */
+const SCROLLS_CLASS = 'godmin-page-tabs--scrolling'
+
+/**
  * The class that fades the start edge of a tab row scrolled past its first tabs.
  */
 const FADES_START_CLASS = 'godmin-page-tabs--overflowing-first'
@@ -36,7 +41,12 @@ const TAB_CLASS = 'godmin-page-tabs__tab'
 const CURRENT_CLASS = 'godmin-page-tabs__tab--current'
 
 /**
- * Returns the classes of a tab row, fading each edge that tabs lie past.
+ * The class of the line under the tab of the page on screen.
+ */
+const LINE_CLASS = 'godmin-page-tabs__line'
+
+/**
+ * Returns the classes of a tab row, marking one wider than its space and fading each edge that tabs lie past.
  * @param row - The tab row element.
  * @returns The class list.
  */
@@ -44,6 +54,9 @@ function rowClass(row: HTMLElement): string {
 	const travelled = Math.abs(row.scrollLeft)
 	const room = row.scrollWidth - row.clientWidth
 	let classes = ROW_CLASS
+	if (room > 0) {
+		classes += ` ${SCROLLS_CLASS}`
+	}
 	if (travelled > ROUNDING_SLACK) {
 		classes += ` ${FADES_START_CLASS}`
 	}
@@ -97,14 +110,14 @@ function reveal(row: HTMLElement, tab: HTMLElement): void {
 }
 
 /**
- * Scrolls a tab row to its current tab each time a tab becomes current, forgetting the last one while none is.
+ * Scrolls a tab row to its current tab as a tab becomes current or the row starts to scroll, forgetting it otherwise.
  * @param ref - The tab row element.
  */
 function useRevealCurrent(ref: RefObject<HTMLElement | null>): void {
 	const shown = useRef<Element | null>(null)
 	useLayoutEffect(() => {
 		const row = ref.current as HTMLElement
-		const tab = row.querySelector<HTMLElement>(`.${CURRENT_CLASS}`)
+		const tab = row.classList.contains(SCROLLS_CLASS) ? row.querySelector<HTMLElement>(`.${CURRENT_CLASS}`) : null
 		const last = shown.current
 		shown.current = tab
 		if (tab === null || tab === last) {
@@ -152,10 +165,16 @@ export interface PageTabProps {
 function TabLink({ href, render, current = false, children }: PageTabProps) {
 	const ariaCurrent = current ? 'page' : undefined
 	const tabClass = current ? `${TAB_CLASS} ${CURRENT_CLASS}` : TAB_CLASS
+	const label = (
+		<>
+			{children}
+			{current && <span className={LINE_CLASS} />}
+		</>
+	)
 	if (render === undefined) {
 		return (
 			<a href={href} className={tabClass} aria-current={ariaCurrent}>
-				{children}
+				{label}
 			</a>
 		)
 	}
@@ -163,7 +182,7 @@ function TabLink({ href, render, current = false, children }: PageTabProps) {
 	return cloneElement(render, {
 		className: own === undefined ? tabClass : `${own} ${tabClass}`,
 		'aria-current': ariaCurrent,
-		children,
+		children: label,
 	} as Record<string, unknown>)
 }
 

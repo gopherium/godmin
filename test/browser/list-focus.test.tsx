@@ -32,6 +32,12 @@ const FIELDS: Field<Report>[] = [
 	{ id: 'picture', label: 'Picture', render: () => <span /> },
 ]
 
+/** The same fields with the title cell marked with the id of its item. */
+const MARKED_FIELDS: Field<Report>[] = [
+	{ ...FIELDS[0], render: ({ item }) => <span data-item-id={item.id}>{item.title}</span> },
+	FIELDS[1],
+]
+
 /** The view the sample list opens on: a table of up to forty rows a page, showing only its title. */
 const VIEW: View = { type: 'table', titleField: 'title', page: 1, perPage: 40 }
 
@@ -66,6 +72,7 @@ interface Held {
 	ended: Map<string, (worked?: boolean) => void>
 	reloaded: (gone?: string[]) => void
 	leave: (gone: string[]) => void
+	sendLast: (id: string) => void
 }
 
 /** Returns calls the test ends one row at a time and a reload it ends last. */
@@ -74,6 +81,7 @@ function held(): Held {
 		ended: new Map(),
 		reloaded: () => {},
 		leave: () => {},
+		sendLast: () => {},
 		call: async (report) =>
 			new Promise<void>((done, failed) => {
 				bench.ended.set(report.id, (worked = true) => (worked ? done() : failed(new Error('refused'))))
@@ -96,6 +104,7 @@ interface Drawn {
 	bulkActions?: boolean
 	primary?: 'restore' | 'delete' | 'none'
 	onClickItem?: (report: Report) => void
+	fields?: Field<Report>[]
 }
 
 /** Renders the rows, all ticked unless told, with a Trash, a row Restore and a confirmed delete, on held calls. */
@@ -107,6 +116,7 @@ function Reports({
 	bulkActions = true,
 	primary = 'restore',
 	onClickItem,
+	fields = FIELDS,
 }: { bench: Held; rows?: Report[] } & Drawn) {
 	const [selection, setSelection] = useState(() => ticked ?? rows.map((row) => row.id))
 	const { run, region, refreshing } = useListRun('reports', setSelection)
@@ -153,7 +163,7 @@ function Reports({
 		<Page title="Reports" list listLabel="Reports" listRef={region}>
 			<DataViews
 				data={rows}
-				fields={FIELDS}
+				fields={fields}
 				view={view}
 				onChangeView={() => {}}
 				defaultLayouts={{ [view.type]: {} }}
@@ -247,6 +257,7 @@ async function loadSheets(): Promise<void> {
 function LiveReports({ bench, drawn }: { bench: Held; drawn: Drawn }) {
 	const [rows, setRows] = useState(TALL)
 	bench.leave = (gone) => setRows((now) => now.filter((row) => !gone.includes(row.id)))
+	bench.sendLast = (id) => setRows((now) => now.toSorted((row, next) => Number(row.id === id) - Number(next.id === id)))
 	return <Reports bench={bench} rows={rows} {...drawn} />
 }
 
@@ -751,6 +762,29 @@ test('puts the focus on the box of the card in its place in a grid once a run fr
 	expect(focused, 'the focus once the list reloaded').toBe(rowBox('Report 39'))
 	expect(focused.closest('.dataviews-view-grid__card'), 'the card holding the focus').toBe(holderOf('Report 39'))
 	await expect.element(focused, { message: 'the name a screen reader says' }).toHaveAccessibleName('Report 39')
+})
+
+test('follows a card its save sent to another grid row, onto its own actions menu', async () => {
+	const bench = held()
+	await renderReal(bench, { view: GRID, fields: MARKED_FIELDS })
+	await tabTo(rowButton('Report 2', 'Actions'))
+	const pressed = document.activeElement as HTMLElement
+	await userEvent.keyboard('{Enter}')
+	const item = await screen.findByRole('menuitem', { name: 'Trash' })
+	item.focus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => bench.ended.size).toBe(1)
+
+	bench.ended.get('2')?.()
+	await expect.poll(toastText).toBe('1 reports moved to the trash.')
+	await frames(3)
+	bench.sendLast('2')
+	bench.reloaded([])
+	await expect.poll(tableInert).toBe(false)
+	await frames(3)
+
+	expect(pressed.isConnected, 'the grid drew the card anew').toBe(false)
+	expect(document.activeElement).toBe(rowButton('Report 2', 'Actions'))
 })
 
 test('puts the focus on the media button of the card in its place in a grid whose items open on a click', async () => {

@@ -14,9 +14,13 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 ### Changed
 
+- **Breaking.** The peer windows move to the `@wordpress` packages of 20 October: a11y 5, components 43, dataviews 21, date 6, i18n 7, icons 19, style-runtime 0.14, theme 3 and ui 0.25. They need Node 22.13.0 or newer.
+- **Breaking.** `PageTabs` draws the tabs of `@wordpress/ui` 0.25: a dark current line in a `godmin-page-tabs__line` element, a soft shade under the pointer and a focus ring 4px past the label.
 - **Breaking.** The page title row is 32px tall in place of 40px, as a WordPress page header.
 - **Breaking.** A `Page` with an `aside` grows its main work beside a 400px details column, in place of a 560px column beside an aside that grows.
 - **Breaking.** A `Page` with an `aside` keeps its header in view and scrolls each column on its own, or both as one box once stacked, in place of the canvas.
+- `useListRun` finds the same item again once a reload moved it, for a list that marks its cells with `data-item-id`, before it falls to the row in its place.
+- The Spanish list footers read the `%s` messages of DataViews 21.
 - `docs/screens.md` leaves every record value to the new page.
 - `docs/loading-and-feedback.md` puts a failed write on a page in a toast, and a server message about one field under that field.
 
