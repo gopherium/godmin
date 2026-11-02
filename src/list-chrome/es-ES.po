@@ -9,10 +9,10 @@ msgstr ""
 "Language: es-ES\n"
 
 #, fuzzy
-msgid "%1$d of %2$d Item"
-msgid_plural "%1$d of %2$d Items"
-msgstr[0] "%1$d de %2$d elemento"
-msgstr[1] "%1$d de %2$d elementos"
+msgid "%1$s of %2$s Item"
+msgid_plural "%1$s of %2$s Items"
+msgstr[0] "%1$s de %2$s elemento"
+msgstr[1] "%1$s de %2$s elementos"
 
 #, fuzzy
 msgid "%1$s, %2$s"
@@ -23,16 +23,16 @@ msgid "%1$s: %2$s"
 msgstr "%1$s: %2$s"
 
 #, fuzzy
-msgid "%d Item"
-msgid_plural "%d Items"
-msgstr[0] "%d elemento"
-msgstr[1] "%d elementos"
+msgid "%s Item"
+msgid_plural "%s Items"
+msgstr[0] "%s elemento"
+msgstr[1] "%s elementos"
 
 #, fuzzy
-msgid "%d Item selected"
-msgid_plural "%d Items selected"
-msgstr[0] "%d elemento seleccionado"
-msgstr[1] "%d elementos seleccionados"
+msgid "%s Item selected"
+msgid_plural "%s Items selected"
+msgstr[0] "%s elemento seleccionado"
+msgstr[1] "%s elementos seleccionados"
 
 #, fuzzy
 msgid "%s, selected"

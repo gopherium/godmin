@@ -649,6 +649,6 @@ test('answers the list chrome in Spanish through the i18n runtime DataViews read
 	expect(i18n.__('Search')).toBe('Buscar')
 	expect(i18n._x('View options', 'View is used as a noun')).toBe('Ver opciones')
 	expect(i18n._x('Filter', 'verb')).toBe('Filtrar')
-	expect(i18n._n('%d Item', '%d Items', 1)).toBe('%d elemento')
-	expect(i18n._n('%d Item', '%d Items', 3)).toBe('%d elementos')
+	expect(i18n._n('%s Item', '%s Items', 1)).toBe('%s elemento')
+	expect(i18n._n('%s Item', '%s Items', 3)).toBe('%s elementos')
 })
