@@ -9,6 +9,7 @@ import type { Action, Field, View } from '@wordpress/dataviews'
 import { backup, page } from '@wordpress/icons'
 import { Button } from '@wordpress/ui'
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { expect, waitFor, within } from 'storybook/test'
 
 import { useBulkRun } from '../src/bulk-run.js'
@@ -102,11 +103,11 @@ function neverSettles(): Promise<never> {
 	return new Promise(() => {})
 }
 
-/** Renders the first page of three of the sample table with the given number of text columns, the second row ticked. */
-function Reports({ columns }: { columns: number }) {
+/** Renders the first page of three of the sample table, the second row ticked, beside an aside when it has one. */
+function Reports({ columns, aside }: { columns: number; aside?: ReactNode }) {
 	const [selection, setSelection] = useState(['2'])
 	return (
-		<ListPage>
+		<ListPage aside={aside}>
 			<DataViews
 				data={ROWS}
 				fields={FIELDS}

@@ -37,6 +37,30 @@ export async function centredIn(inner: DOMRect, outer: DOMRect) {
 	await meets(middleDown(inner), middleDown(outer), 'down')
 }
 
+/** Returns the box of a column less the room at its sides, and where its first and last parts sit. */
+function columnOf(selector: string) {
+	const box = boxOf(selector)
+	const side = parseFloat(getComputedStyle(find(selector)).paddingInlineStart)
+	const parts = find(selector).children
+	return {
+		left: box.left + side,
+		right: box.right - side,
+		width: box.width - 2 * side,
+		top: parts[0].getBoundingClientRect().top,
+		bottom: parts[parts.length - 1].getBoundingClientRect().bottom,
+	}
+}
+
+/** Returns the content of each column of a record page and the room its header leaves. */
+export function columnsOf() {
+	const header = boxOf('.godmin-page__header')
+	return {
+		page: { left: header.left, right: header.right, width: header.width },
+		main: columnOf('.godmin-page__main'),
+		details: columnOf('.godmin-page__aside'),
+	}
+}
+
 /** A cell of a DataViews table and its box as it was measured. */
 interface Edge {
 	cell: HTMLElement

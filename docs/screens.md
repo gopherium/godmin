@@ -19,40 +19,46 @@ one in a component of your own.
 </Page>
 ```
 
-`title` is required and becomes the page's heading, at 15px like the
-title of a WordPress page. It is an `h1` unless you pass
+`title` is required and becomes the page's heading, at the size of a
+WordPress page title. It is an `h1` unless you pass
 `headingLevel`, as [heading levels](#heading-levels) explains.
 `actions` renders top right,
 and `className` and `children` do what they always do. When the
 actions no longer fit beside the title, on a phone for example, they
-move to a line of their own under it.
+move to a line of their own under it. Beside breadcrumbs they stay on
+the title's line and the title gives way.
 
-`subtitle` renders as one 13px grey line under the title and the
-actions, the way WordPress sets the sentence under a page title. The
-title row is 32px tall even with no actions, so the title and the
-subtitle sit in the same place on every page. Give the page compact
-buttons, `size="compact"`, to match the 32px buttons of a WordPress
-page header. A button of the default size makes the row taller.
+`subtitle` renders as one grey line under the title and the actions,
+the way WordPress sets the sentence under a page title. The title row
+keeps its height even with no actions, so the title and the subtitle
+sit in the same place on every page. Give the page compact buttons,
+`size="compact"`, to match the buttons of a WordPress page header. A
+button of the default size makes the row taller.
+[The page header](./design-system/record-pages.md#the-page-header)
+gives the values.
 
 `tabs` renders a row of tabs under the title block. See
 [PageTabs](#pagetabs) below.
 
-`aside` adds a second column beside the content, for the details
-that sit next to a record's main work:
+`breadcrumbs` renders links back to what a record belongs to, before
+the title. See [PageBreadcrumbs](#pagebreadcrumbs) below.
+
+`aside` adds the details of a record in a fixed column at the end of
+the page. `asideLabel` names that column for a screen reader:
 
 ```tsx
-<Page title="Invoice 1042" aside={<InvoiceDetails />}>
+<Page title="Invoice 1042" aside={<InvoiceDetails />} asideLabel="Invoice details">
 	<InvoiceLines />
 </Page>
 ```
 
-On a wide page the content keeps a 560px column and the aside takes
-the rest of the width, so the aside is the part that grows with the
-screen. Put the record's own details in the content and its longer
-lists, such as a history, in the aside. When the page is too narrow
-for both, the aside moves below the content and both fill the page.
-No breakpoint decides this, only the page's own width. An aside that
-renders nothing takes no room.
+Put what grows, such as the invoice lines or a history, in the
+content, and the record's own short fields and facts in the aside.
+When the page is too narrow for both, the aside moves under the
+content. An aside that renders nothing takes no room. A page with an
+aside keeps its title in view while the content scrolls under it.
+[Record pages](./design-system/record-pages.md) gives every value, and
+what goes where.
 
 `list` marks a page whose content is a list, such as a DataViews
 table. The content then reaches out to the canvas edges, so the
@@ -84,7 +90,7 @@ and uses `PageTitle` directly, so the page still gets its heading:
 <PageTitle>Conversations</PageTitle>
 ```
 
-It draws the 15px large heading by default. Pass `variant` to change
+It draws the large heading by default. Pass `variant` to change
 the text size, and `level` to change the heading level.
 
 ## PageTabs
@@ -139,6 +145,40 @@ tabs with the arrow keys. A tab here opens another page, so it is a
 link, reached with Tab and marked with `aria-current`, which is how
 assistive technology expects page navigation to work. godmin copies
 the look of the WordPress tabs and keeps the behavior of links.
+
+## PageBreadcrumbs
+
+`PageBreadcrumbs` and `PageBreadcrumb` lead the title of a record with
+links back to what it belongs to, like `Contacts / Maria Perez`, the
+way a WordPress record page names its list:
+
+```tsx
+<Page
+	title="Maria Perez"
+	breadcrumbs={
+		<PageBreadcrumbs label="Breadcrumbs">
+			<PageBreadcrumb render={<Link to="/contacts" />}>Contacts</PageBreadcrumb>
+		</PageBreadcrumbs>
+	}
+	aside={<ContactDetails />}
+>
+	<ContactTasks />
+</Page>
+```
+
+Each breadcrumb is a link. Pass your router's link element as
+`render`, or a plain address as `href`, as with `PageTab`. Leave the
+page on screen out of the list, since its title already names it.
+
+`label` names the links for assistive technology. They are a
+navigation region, and a screen reader lists it beside the sidebar and
+any tabs, so the name tells them apart. Translate it.
+
+Every page opened from a list takes breadcrumbs, a create page too,
+as in `Contacts / New contact`. Beside breadcrumbs the title stays on
+one line, so a long one ends in an ellipsis.
+[The page header](./design-system/record-pages.md#the-page-header)
+gives the values.
 
 ## SectionTitle
 
@@ -213,8 +253,7 @@ reader came from after Back.
 It renders the design system's error notice and announces the
 message to screen readers. Use it wherever you would otherwise
 render a bare error string, such as a screen that failed to load. A
-write that fails in a dialog or in a run over list rows goes in a
-toast instead, as
+write that fails goes in a toast instead, as
 [what goes in a toast](./loading-and-feedback.md#what-goes-in-a-toast)
 explains.
 
@@ -351,7 +390,7 @@ runs into:
 
 | Name | For |
 | --- | --- |
-| `godmin-form` | A single column form, up to 560px wide |
+| `godmin-form` | A single column form |
 | `godmin-form--inline` | A form that is one row, filling its column |
 | `godmin-form__row` | Short fields side by side inside a form |
 | `godmin-form__grow` | The field of a row that takes most of the free room |
@@ -380,12 +419,14 @@ A form row puts short fields and a button on one line:
 </form>
 ```
 
-Each field starts from 160px and they share the rest of the line. The
-button keeps its own width. When the line is too narrow, the fields
-wrap onto the next line, and a button left alone sits at the end of
-its line. A form that is only one row takes `godmin-form--inline`, so
-it fills its column instead of stopping at 560px. In a stacked form,
-a button keeps its own width instead of stretching across the form.
+Each field takes a share of the line. The button keeps its own width.
+When the line is too narrow, the fields wrap onto the next line, and
+a button left alone sits at the end of its line. A form that is only
+one row takes `godmin-form--inline`, so it fills its column instead
+of stopping at its width. In a stacked form, a button keeps its own
+width instead of stretching across the form.
+[Forms on a page](./design-system/record-pages.md#forms-on-a-page)
+gives the values.
 
 `godmin-table` and `godmin-table-scroll` are a pair, and they solve
 a phone problem: a table wider than the screen drags the whole page
@@ -400,7 +441,8 @@ instead:
 
 The scroll rule only activates on a phone, as
 [tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
-gives. There the actions column, the cell marked
+gives, and in a column of a record page at every width. On a phone
+the actions column, the cell marked
 `godmin-table__actions`, stays pinned to the right edge, so a row's
 buttons are in view before any scroll. On a
 desktop the wrapper only draws a focus ring when a keyboard user
