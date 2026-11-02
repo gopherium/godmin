@@ -7,8 +7,8 @@ import { SUPPORTED_WPDS } from '../src/index'
 const numeric = { numeric: true }
 
 test('names the design system window this build was tested against', () => {
-	expect(SUPPORTED_WPDS['@wordpress/ui']).toBe('>=0.24.0 <0.25.0')
-	expect(SUPPORTED_WPDS['@wordpress/theme']).toBe('>=2.3.0 <3.0.0')
+	expect(SUPPORTED_WPDS['@wordpress/ui']).toBe('>=0.25.0 <0.26.0')
+	expect(SUPPORTED_WPDS['@wordpress/theme']).toBe('>=3.0.0 <4.0.0')
 })
 
 test('every declared window is a longhand range rather than a caret', () => {

@@ -70,7 +70,7 @@ fallback values.
 
 Each godmin release supports one design system window, written out
 in full in its peer ranges as the first version it accepts and the
-first one it refuses, such as `>=0.24.0 <0.25.0`. The window moves
+first one it refuses, such as `>=0.25.0 <0.26.0`. The window moves
 forward with the design system and never widens, so no release
 accepts two incompatible generations at once.
 
@@ -89,14 +89,14 @@ in the peer ranges of godmin's `package.json`.
 translates godmin's own words. `@wordpress/date` is an optional peer,
 needed only by `@gopherium/godmin/dates`. `@wordpress/components` is
 an optional peer too, needed only by `@gopherium/godmin/dialogs`, in
-the window `>=42.0.0 <43.0.0`. Install each one next to godmin when
+the window `>=43.0.0 <44.0.0`. Install each one next to godmin when
 you use its entry. Load the components stylesheet once in your
 application, `@wordpress/components/build-style/style.css`, as
 DataViews already asks. godmin never imports it. Their windows are in
 the same peer ranges.
 
 `@wordpress/dataviews` is an optional peer as well, in the window
-`>=20.0.0 <21.0.0`. No godmin entry imports it, but `offeredView`
+`>=21.0.0 <22.0.0`. No godmin entry imports it, but `offeredView`
 follows the filter rules of that DataViews release. A list built on
 another release gets a peer warning when it installs godmin.
 
