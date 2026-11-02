@@ -169,6 +169,49 @@ test('keeps the row of a narrow window scrolling, with the ring inside the tab',
 	expect(getComputedStyle(tabIn(PAGE_TAB, 'Published posts and pages'), '::before').content).toBe('""')
 })
 
+test('opens a row too wide for its space on its current tab', async () => {
+	await page.viewport(240, 600)
+	render(
+		<AdminRoot>
+			<PageTabs label="Status">
+				<PageTab href="#one">Published posts and pages</PageTab>
+				<PageTab href="#two" current>
+					Drafts waiting for a review
+				</PageTab>
+			</PageTabs>
+		</AdminRoot>,
+	)
+	const row = document.querySelector('.godmin-page-tabs') as HTMLElement
+	const tab = tabIn(PAGE_TAB, 'Drafts waiting for a review')
+
+	await expect.poll(() => row.classList.contains('godmin-page-tabs--scrolling')).toBe(true)
+	expect(tab.getBoundingClientRect().right).toBeLessThanOrEqual(row.getBoundingClientRect().right)
+	await expect.poll(() => row.classList.contains('godmin-page-tabs--overflowing-first')).toBe(true)
+})
+
+test('shows the current tab once a row narrows past it', async () => {
+	await page.viewport(900, 600)
+	render(
+		<AdminRoot>
+			<PageTabs label="Status">
+				<PageTab href="#one">Published posts and pages</PageTab>
+				<PageTab href="#two" current>
+					Drafts waiting for a review
+				</PageTab>
+			</PageTabs>
+		</AdminRoot>,
+	)
+	const row = document.querySelector('.godmin-page-tabs') as HTMLElement
+	expect(row.classList.contains('godmin-page-tabs--scrolling')).toBe(false)
+
+	await page.viewport(240, 600)
+	await expect.poll(() => row.classList.contains('godmin-page-tabs--scrolling')).toBe(true)
+
+	await expect
+		.poll(() => tabIn(PAGE_TAB, 'Drafts waiting for a review').getBoundingClientRect().right)
+		.toBeLessThanOrEqual(row.getBoundingClientRect().right)
+})
+
 test('lets the shade of a row that fits run past its first label', () => {
 	render(<BothRows />)
 

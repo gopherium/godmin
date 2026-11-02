@@ -512,7 +512,7 @@ test('scrolls the row so the current tab shows whole with the scroll margin it a
 	renderAdmin(<UserTabs current="Application passwords" />)
 
 	expect(tabRow().scrollLeft).toBe(116)
-	expect(fades(tabRow())).toEqual({ start: true, end: true })
+	expect(fadesAt(tabRow(), 116)).toEqual({ start: true, end: true })
 })
 
 test('scrolls a right to left row toward its end to show the current tab', () => {
