@@ -775,7 +775,11 @@ another control outside the list keeps their place: during a run
 started outside every dialog, while the dialog the run started in is
 still open, and after that dialog left the page. Every list run does
 this, with nothing to add to your screen. This needs godmin 0.27.0 or
-later. Before it, the list took the focus wherever the focus sat.
+later. Before it, the list took the focus wherever the focus sat. Two
+cases need godmin 0.32.0 or later. Before it, the focus stayed on a
+control outside the list that opened a WPDS dialog, and the list took
+the focus from a control the reader moved to out of a dialog that then
+closed.
 
 `focusInDialog()` tells whether a dialog holds the focus, for a write
 you finish yourself outside a run. It also needs godmin 0.27.0 or
