@@ -541,9 +541,7 @@ test('stops noting what the focus leaves once the screen goes', () => {
 
 	const focusout = (calls: unknown[][]) => calls.filter(([type]) => type === 'focusout')
 	expect(focusout(added.mock.calls).length).toBeGreaterThan(0)
-	expect(focusout(removed.mock.calls).map(([, listener]) => listener)).toEqual(
-		expect.arrayContaining(focusout(added.mock.calls).map(([, listener]) => listener)),
-	)
+	expect(focusout(removed.mock.calls)).toEqual(expect.arrayContaining(focusout(added.mock.calls)))
 })
 
 test('leaves the focus on the control that opened a later dialog after the one the run started in closed', async () => {
