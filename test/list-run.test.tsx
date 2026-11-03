@@ -368,139 +368,122 @@ test('leaves the focus on a control the reader moved to after a confirm closed w
 	expect(document.activeElement).toBe(control('Add Post'))
 })
 
-test('takes the focus from the control that opened a dialog once that dialog left the page', () => {
-	const { seen, closeConfirm } = renderList('post publish')
-	focusOn('Add Post')
+/**
+ * Starts a run in the confirm, closes the confirm, focuses a control and settles the run as having moved an item.
+ * @param list - The screen on show.
+ * @param landing - The control that holds the focus once the confirm left.
+ */
+function runThenClose({ seen, closeConfirm }: ReturnType<typeof renderList>, landing: string): void {
 	start('Move to trash')
 	closeConfirm()
+	focusOn(landing)
+	settle(seen.settles.at(-1) as RunSettled, true)
+}
+
+test('takes the focus from the control that opened a dialog once that dialog left the page', () => {
+	const list = renderList('post publish')
 	focusOn('Add Post')
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Add Post')
 
 	expect(document.activeElement).toBe(listRegion())
 })
 
 test('keeps the note of the control that opened a dialog through a Tab inside the dialog', () => {
-	const { seen, closeConfirm } = renderList('post publish')
+	const list = renderList('post publish')
 	focusOn('Add Post')
 	focusOn('Cancel')
-	start('Move to trash')
-	closeConfirm()
-	focusOn('Add Post')
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Add Post')
 
 	expect(document.activeElement).toBe(listRegion())
 })
 
 test('keeps the note of the control that opened a dialog through a move out of that dialog and back', () => {
-	const { seen, closeConfirm } = renderList('post publish')
+	const list = renderList('post publish')
 	focusOn('Add Post')
 	focusOn('Cancel')
 	focusOn('Beside the dialog')
-	start('Move to trash')
-	closeConfirm()
-	focusOn('Add Post')
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Add Post')
 
 	expect(document.activeElement).toBe(listRegion())
 })
 
 test('keeps the note of the control that opened a dialog through a move into another dialog and back', () => {
-	const { seen, closeConfirm } = renderList('post publish')
+	const list = renderList('post publish')
 	focusOn('Add Post')
 	focusOn('Cancel')
 	focusOn('Beside the dialog')
 	focusOn('Title')
 	focusOn('Cancel')
-	start('Move to trash')
-	closeConfirm()
-	focusOn('Add Post')
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Add Post')
 
 	expect(document.activeElement).toBe(listRegion())
 })
 
 test('leaves the focus on a control that opened an earlier dialog when a later one took it from the page', () => {
-	const { seen, closeConfirm, openConfirm } = renderList('post publish')
+	const list = renderList('post publish')
 	focusOn('Add Post')
 	focusOn('Cancel')
-	closeConfirm()
-	openConfirm()
-	start('Move to trash')
-	closeConfirm()
-	focusOn('Add Post')
+	list.closeConfirm()
+	list.openConfirm()
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Add Post')
 
 	expect(document.activeElement).toBe(control('Add Post'))
 })
 
 test('takes the focus from the control that opened the dialog on show, not one that opened an earlier dialog', () => {
-	const { seen, closeConfirm, openConfirm } = renderList('post publish')
+	const list = renderList('post publish')
 	focusOn('Add Post')
 	focusOn('Cancel')
-	closeConfirm()
+	list.closeConfirm()
 	focusOn('Beside the dialog')
-	openConfirm()
-	start('Move to trash')
-	closeConfirm()
-	focusOn('Beside the dialog')
+	list.openConfirm()
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Beside the dialog')
 
 	expect(document.activeElement).toBe(listRegion())
 })
 
 test('takes the focus from the control that opened an alert dialog once that alert dialog left the page', () => {
-	const { seen, closeConfirm } = renderList('post publish', true, 'alertdialog')
-	focusOn('Add Post')
-	start('Move to trash')
-	closeConfirm()
+	const list = renderList('post publish', true, 'alertdialog')
 	focusOn('Add Post')
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Add Post')
 
 	expect(document.activeElement).toBe(listRegion())
 })
 
 test('takes the focus from the control that opened a dialog for a second run started in that dialog', () => {
-	const { seen, closeConfirm } = renderList('post publish')
+	const list = renderList('post publish')
 	focusOn('Add Post')
 	start('Move to trash')
-	settle(seen.settles[0], false)
-	start('Move to trash')
-	closeConfirm()
-	focusOn('Add Post')
+	settle(list.seen.settles[0], false)
 
-	settle(seen.settles[1], true)
+	runThenClose(list, 'Add Post')
 
+	expect(list.seen.settles).toHaveLength(2)
 	expect(document.activeElement).toBe(listRegion())
 })
 
 test('takes the focus from the control that opened a dialog when a handler stops its focusout event', () => {
-	const { seen, closeConfirm } = renderList('post publish')
+	const list = renderList('post publish')
 	control('Add Post').addEventListener('focusout', (event) => event.stopPropagation())
 	focusOn('Add Post')
-	start('Move to trash')
-	closeConfirm()
-	focusOn('Add Post')
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Add Post')
 
 	expect(document.activeElement).toBe(listRegion())
 })
 
 test('leaves the focus on a control inside another dialog that opened the dialog the run started in', () => {
-	const { seen, closeConfirm } = renderList('post publish')
-	focusOn('Delete permanently')
-	start('Move to trash')
-	closeConfirm()
+	const list = renderList('post publish')
 	focusOn('Delete permanently')
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Delete permanently')
 
 	expect(document.activeElement).toBe(control('Delete permanently'))
 })
@@ -567,15 +550,12 @@ test('leaves the focus on a control the reader moved to out of a dialog that the
 })
 
 test('leaves the focus on a control the reader moved to out of a dialog a control of the list opened', () => {
-	const { seen, closeConfirm } = renderList('post publish')
+	const list = renderList('post publish')
 	focusOn('Trash')
 	focusOn('Cancel')
 	focusOn('Beside the dialog')
-	start('Move to trash')
-	closeConfirm()
-	focusOn('Beside the dialog')
 
-	settle(seen.settles[0], true)
+	runThenClose(list, 'Beside the dialog')
 
 	expect(document.activeElement).toBe(control('Beside the dialog'))
 })
