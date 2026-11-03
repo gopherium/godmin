@@ -193,8 +193,8 @@ function noteOpener(
 		if (list?.contains(event.target as Node)) {
 			opener.current = dialog ? placeOf(list, event.target) : null
 		}
-		if (dialog && !openedBy.has(dialog) && !(event.target as Element).closest(DIALOG)) {
-			openedBy.set(dialog, event.target)
+		if (dialog && !(event.target as Element).closest(DIALOG)) {
+			openedBy.set(dialog, openedBy.get(dialog) ?? event.target)
 		}
 	}
 	document.addEventListener('focusout', note, true)
