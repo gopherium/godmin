@@ -160,7 +160,7 @@ way a WordPress record page names its list:
 	title="Maria Perez"
 	breadcrumbs={
 		<PageBreadcrumbs label="Breadcrumbs">
-			<PageBreadcrumb render={<Link to="/contacts" />}>Contacts</PageBreadcrumb>
+			<PageBreadcrumb render={<Link to="/contacts" activeOptions={{ exact: true }} />}>Contacts</PageBreadcrumb>
 		</PageBreadcrumbs>
 	}
 	aside={<ContactDetails />}
@@ -172,6 +172,13 @@ way a WordPress record page names its list:
 Each breadcrumb is a link. Pass your router's link element as
 `render`, or a plain address as `href`, as with `PageTab`. Leave the
 page on screen out of the list, since its title already names it.
+
+No breadcrumb is the current page, yet a router link can mark itself
+as one for screen readers. TanStack Router counts a link to
+`/contacts` as active on `/contacts/42` too, so without
+`activeOptions={{ exact: true }}` a screen reader would hear the
+breadcrumb as the page on screen. Pass it on every breadcrumb link, as
+the example does.
 
 `label` names the links for assistive technology. They are a
 navigation region, and a screen reader lists it beside the sidebar and

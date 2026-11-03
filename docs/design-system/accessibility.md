@@ -167,7 +167,9 @@ its highlight from that mark, so what the eye sees and what a screen
 reader hears always match. A page tab draws its underline from its
 `current` prop, which sets the same mark. A router link can set the
 mark on its own too, so [PageTabs](../screens.md#pagetabs) says how
-to keep the underline and the mark in step.
+to keep the underline and the mark in step. A breadcrumb never carries
+the mark, and [PageBreadcrumbs](../screens.md#pagebreadcrumbs) says how
+to keep a router link from setting it.
 
 Some screen readers stop treating a list with no bullets as a list.
 So the sidebar rows, the page tabs and a log list keep

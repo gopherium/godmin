@@ -572,6 +572,17 @@ test('the usage pages leave every record value to the record pages page', () => 
 	expect(found.filter((line) => !line.endsWith(': '))).toEqual([])
 })
 
+test('the screens page matches every router link of its tabs and breadcrumbs examples on its own address only', () => {
+	const found = ['PageTabs', 'PageBreadcrumbs'].map((heading) => {
+		const section = sections.get('usage/screens.md')?.get(heading) ?? ''
+		const links = [...section.matchAll(/<Link [^>]*\/>/g)].map(([link]) => link)
+		const loose = links.filter((link) => !link.includes('activeOptions={{ exact: true }}'))
+		return `${heading}: ${(links.length === 0 ? ['no router link'] : loose).join(' ')}`
+	})
+
+	expect(found.filter((line) => !line.endsWith(': '))).toEqual([])
+})
+
 test('the record pages page gives the width the columns fold at, as the tokens add up', () => {
 	const fold = COLUMN_WIDTH * 2 + COLUMN_GAP
 
