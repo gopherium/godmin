@@ -24,20 +24,22 @@ interface Seen {
 }
 
 /**
- * Renders a list screen whose runs start in the list, a confirm or an alert dialog, beside Add Post and an Edit form.
- * @param props - The list on show, whether it draws its region and the confirm, the selection spy and what to record.
+ * Renders a list screen whose runs start in the list, a confirm or an alert dialog, with two more buttons and a form.
+ * @param props - The list on show, whether it draws its region and the confirm, the confirm's role, the spy, a record.
  * @returns The page with its list region and the dialogs.
  */
 function ListScreen({
 	scope,
 	region = true,
 	asking = true,
+	role = 'dialog',
 	onTicks,
 	seen,
 }: {
 	scope: string
 	region?: boolean
 	asking?: boolean
+	role?: string
 	onTicks: (selection: string[]) => void
 	seen: Seen
 }) {
@@ -65,13 +67,14 @@ function ListScreen({
 				</button>
 			</Page>
 			{asking ? (
-				<div role="dialog" aria-label="Trash posts">
+				<div role={role} aria-label="Trash posts">
 					<button type="button">Cancel</button>
 					<button type="button" onClick={startRun}>
 						Move to trash
 					</button>
 				</div>
 			) : null}
+			<button type="button">Beside the dialog</button>
 			<div role="dialog" aria-label="Edit">
 				<input aria-label="Title" />
 			</div>
@@ -88,37 +91,24 @@ function ListScreen({
  * Renders the list screen on the given list.
  * @param scope - The list on show.
  * @param region - Whether the screen draws its list region.
- * @returns What the screen recorded, the selection spy, a rerender onto another list and one that closes the confirm.
+ * @param role - The role of the confirm.
+ * @returns What the screen recorded, the selection spy, an unmount, and rerenders onto another list or a confirm.
  */
-function renderList(scope: string, region = true) {
+function renderList(scope: string, region = true, role = 'dialog') {
 	const seen: Seen = { settles: [], runs: [], states: [], ticked: [] }
 	const onTicks = vi.fn()
-	const { rerender, unmount } = renderAdmin(<ListScreen scope={scope} region={region} onTicks={onTicks} seen={seen} />)
+	const screenOn = (list: string, asking: boolean) => (
+		<ListScreen scope={list} region={region} asking={asking} role={role} onTicks={onTicks} seen={seen} />
+	)
+	const { rerender, unmount } = renderAdmin(screenOn(scope, true))
 	return {
 		seen,
 		onTicks,
 		unmount,
-		show: (next: string) => rerender(<ListScreen scope={next} region={region} onTicks={onTicks} seen={seen} />),
-		closeConfirm: () =>
-			rerender(<ListScreen scope={scope} region={region} asking={false} onTicks={onTicks} seen={seen} />),
+		show: (next: string) => rerender(screenOn(next, true)),
+		closeConfirm: () => rerender(screenOn(scope, false)),
+		openConfirm: () => rerender(screenOn(scope, true)),
 	}
-}
-
-/**
- * Spies on the focusin listeners the document gains from here on.
- * @returns What counts those listeners the document still holds.
- */
-function focusinListeners(): () => number {
-	const added = vi.spyOn(document, 'addEventListener')
-	const removed = vi.spyOn(document, 'removeEventListener')
-	onTestFinished(() => {
-		added.mockRestore()
-		removed.mockRestore()
-	})
-	const focusin = (calls: unknown[][]) => calls.filter(([type]) => type === 'focusin')
-	const gone = (listener: unknown, options: unknown) =>
-		focusin(removed.mock.calls).some(([, each, eachOptions]) => each === listener && eachOptions === options)
-	return () => focusin(added.mock.calls).filter(([, listener, options]) => !gone(listener, options)).length
 }
 
 /**
@@ -378,16 +368,218 @@ test('leaves the focus on a control the reader moved to after a confirm closed w
 	expect(document.activeElement).toBe(control('Add Post'))
 })
 
-test('focuses the list region once the dialog a run started in gave the focus back, after a move inside it', () => {
+test('takes the focus from the control that opened a dialog once that dialog left the page', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	focusOn('Add Post')
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('keeps the note of the control that opened a dialog through a Tab inside the dialog', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	focusOn('Add Post')
+	focusOn('Cancel')
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('keeps the note of the control that opened a dialog through a move out of that dialog and back', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	focusOn('Add Post')
+	focusOn('Cancel')
+	focusOn('Beside the dialog')
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('keeps the note of the control that opened a dialog through a move into another dialog and back', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	focusOn('Add Post')
+	focusOn('Cancel')
+	focusOn('Beside the dialog')
+	focusOn('Title')
+	focusOn('Cancel')
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('leaves the focus on a control that opened an earlier dialog when a later one took it from the page', () => {
+	const { seen, closeConfirm, openConfirm } = renderList('post publish')
+	focusOn('Add Post')
+	focusOn('Cancel')
+	closeConfirm()
+	openConfirm()
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Add Post'))
+})
+
+test('takes the focus from the control that opened the dialog on show, not one that opened an earlier dialog', () => {
+	const { seen, closeConfirm, openConfirm } = renderList('post publish')
+	focusOn('Add Post')
+	focusOn('Cancel')
+	closeConfirm()
+	focusOn('Beside the dialog')
+	openConfirm()
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Beside the dialog')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('takes the focus from the control that opened an alert dialog once that alert dialog left the page', () => {
+	const { seen, closeConfirm } = renderList('post publish', true, 'alertdialog')
+	focusOn('Add Post')
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('takes the focus from the control that opened a dialog for a second run started in that dialog', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	focusOn('Add Post')
+	start('Move to trash')
+	settle(seen.settles[0], false)
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Add Post')
+
+	settle(seen.settles[1], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('takes the focus from the control that opened a dialog when a handler stops its focusout event', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	control('Add Post').addEventListener('focusout', (event) => event.stopPropagation())
+	focusOn('Add Post')
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('leaves the focus on a control inside another dialog that opened the dialog the run started in', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	focusOn('Delete permanently')
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Delete permanently')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Delete permanently'))
+})
+
+test('leaves the focus on a control that once opened a dialog during a run started outside every dialog', () => {
+	const { seen } = renderList('post publish')
+	focusOn('Add Post')
+	focusOn('Cancel')
+	start()
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Add Post'))
+})
+
+test('leaves the focus on the control that opened a dialog the reader moved back to while it stays open', () => {
+	const { seen } = renderList('post publish')
+	focusOn('Add Post')
+	start('Move to trash')
+	focusOn('Add Post')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Add Post'))
+})
+
+test('stops noting what the focus leaves once the screen goes', () => {
+	const added = vi.spyOn(document, 'addEventListener')
+	const removed = vi.spyOn(document, 'removeEventListener')
+	onTestFinished(() => {
+		added.mockRestore()
+		removed.mockRestore()
+	})
+	const { unmount } = renderList('post publish')
+
+	unmount()
+
+	const focusout = (calls: unknown[][]) => calls.filter(([type]) => type === 'focusout')
+	expect(focusout(added.mock.calls).length).toBeGreaterThan(0)
+	expect(focusout(removed.mock.calls).map(([, listener]) => listener)).toEqual(
+		expect.arrayContaining(focusout(added.mock.calls).map(([, listener]) => listener)),
+	)
+})
+
+test('leaves the focus on the control that opened a later dialog after the one the run started in closed', async () => {
+	const { settles } = await emptyTrash()
+	focusOn('Add Post')
+	focusOn('Title')
+	focusOn('Add Post')
+
+	settle(settles[0], true)
+
+	expect(document.activeElement).toBe(control('Add Post'))
+})
+
+test('leaves the focus on a control the reader moved to out of a dialog that then closed', () => {
 	const { seen, closeConfirm } = renderList('post publish')
 	start('Move to trash')
-	focusOn('Cancel')
 	focusOn('Add Post')
 	closeConfirm()
 
 	settle(seen.settles[0], true)
 
-	expect(document.activeElement).toBe(listRegion())
+	expect(document.activeElement).toBe(control('Add Post'))
+})
+
+test('leaves the focus on a control the reader moved to out of a dialog a control of the list opened', () => {
+	const { seen, closeConfirm } = renderList('post publish')
+	focusOn('Trash')
+	focusOn('Cancel')
+	focusOn('Beside the dialog')
+	start('Move to trash')
+	closeConfirm()
+	focusOn('Beside the dialog')
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Beside the dialog'))
 })
 
 test('leaves the focus in a dialog the reader moved to before the dialog the run started in closed', () => {
@@ -399,54 +591,6 @@ test('leaves the focus in a dialog the reader moved to before the dialog the run
 	settle(seen.settles[0], true)
 
 	expect(document.activeElement).toBe(control('Title'))
-})
-
-test('watches the focus only for a run started in a dialog, and only until that run settles', () => {
-	const { seen } = renderList('post publish')
-	const live = focusinListeners()
-	start()
-	const outside = live()
-	settle(seen.settles[0], true)
-	start('Move to trash')
-	const inDialog = live()
-
-	settle(seen.settles[1], true)
-
-	expect([outside, inDialog, live()]).toEqual([0, 1, 0])
-})
-
-test('stops watching the focus for a run once a newer run starts', () => {
-	const { seen } = renderList('post publish')
-	const live = focusinListeners()
-	start('Move to trash')
-	start('Move to trash')
-	const both = live()
-
-	settle(seen.settles[1], false)
-
-	expect([both, live()]).toEqual([1, 0])
-})
-
-test('stops watching the focus for a run once another list is shown', () => {
-	const { show } = renderList('post publish')
-	const live = focusinListeners()
-	start('Move to trash')
-	const during = live()
-
-	show('post trash')
-
-	expect([during, live()]).toEqual([1, 0])
-})
-
-test('stops watching the focus for a run once the screen goes', () => {
-	const { unmount } = renderList('post publish')
-	const live = focusinListeners()
-	start('Move to trash')
-	const during = live()
-
-	unmount()
-
-	expect([during, live()]).toEqual([1, 0])
 })
 
 test('leaves the focus alone when a run moved nothing', () => {

@@ -607,6 +607,27 @@ test('puts the focus on the box of the row in its place after a run confirmed fr
 	expect(document.activeElement, 'the focus once the list reloaded').toBe(rowBox('Report 39'))
 })
 
+test('puts the focus on the box of the row in its place after a run confirmed from its menu by mouse', async () => {
+	const bench = held()
+	await renderReal(bench)
+	const region = screen.getByRole('region', { name: 'Reports' })
+	await userEvent.click(rowButton('Report 38', 'Actions'))
+	await userEvent.click(await screen.findByRole('menuitem', { name: 'Permanently delete' }))
+	const confirm = await screen.findByRole('dialog')
+	await userEvent.click(within(confirm).getByRole('button', { name: 'Delete' }))
+	await expect.poll(() => bench.ended.size).toBe(1)
+
+	bench.ended.get('38')?.()
+	await expect.poll(() => confirm.isConnected).toBe(false)
+	await frames(3)
+	expect(document.activeElement, 'the focus while the list reloads').toBe(region)
+	bench.reloaded(['38'])
+	await expect.poll(tableInert).toBe(false)
+	await frames(3)
+
+	expect(document.activeElement, 'the focus once the list reloaded').toBe(rowBox('Report 39'))
+})
+
 test('puts the focus on the box of the row now last once the last row left after its Restore reloads', async () => {
 	const bench = held()
 	await renderReal(bench)
