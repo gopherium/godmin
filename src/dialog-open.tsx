@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
-import type { ReactNode } from 'react'
+import type { KeyboardEvent, MouseEvent, ReactNode } from 'react'
+
+/** The class every dialog's popup carries, so a long word breaks inside the card. */
+export const POPUP_CLASS = 'godmin-dialog-popup'
 
 /** What a write may answer a dialog: words to show, or a plain stay. Any other answer closes it. */
 export type DialogAnswer = { error: string } | { close: false }
@@ -92,4 +95,25 @@ export function isThenable(value: unknown): value is PromiseLike<unknown> {
 export function passRejectionOn(error: unknown): DialogAnswer {
 	void Promise.reject(error)
 	return { close: false }
+}
+
+/**
+ * Refuses the second click of a double click, while Enter and Space still press.
+ * @param event - The click on its way into the popup.
+ */
+export function refuseSecondClick(event: MouseEvent): void {
+	if (event.detail > 1) {
+		event.preventDefault()
+		event.stopPropagation()
+	}
+}
+
+/**
+ * Refuses an Enter a held key repeats, so holding it sends once.
+ * @param event - The key press on its way into the popup.
+ */
+export function refuseRepeatedEnter(event: KeyboardEvent): void {
+	if (event.repeat && event.key === 'Enter') {
+		event.preventDefault()
+	}
 }

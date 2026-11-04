@@ -7,6 +7,7 @@ import { dirname, join } from 'node:path'
 import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
+import { POPUP_CLASS } from '../src/dialog-open.js'
 import { atRuleBodies, blockOf, ruleOf, unlayered } from './css-rules.js'
 import { base, ruleValue } from './styles.js'
 
@@ -646,6 +647,10 @@ test('sets a confirm question in the godmin layer, so it outranks the design sys
 	const layered = base.slice(base.lastIndexOf('@layer godmin'))
 
 	expect(ruleOf('.godmin-modal-body__question', layered)).toMatch(/line-height:\s*1\.4;/)
+})
+
+test('breaks a long word in a dialog, so a token with no space stays in its card', () => {
+	expect(ruleOf(`.${POPUP_CLASS}`)).toMatch(/overflow-wrap:\s*anywhere;/)
 })
 
 test('spaces a copy modal body by the medium gap and a create one by the large gap, as WordPress does', () => {

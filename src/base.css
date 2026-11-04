@@ -1039,6 +1039,10 @@ body {
 		align-self: flex-start;
 	}
 
+	.godmin-dialog-popup {
+		overflow-wrap: anywhere;
+	}
+
 	.godmin-modal-body {
 		display: flex;
 		flex-direction: column;

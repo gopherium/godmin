@@ -294,13 +294,12 @@ function TrashScreen({ opener, settles }: { opener: boolean; settles: RunSettled
 			</Page>
 			{asking ? (
 				<ConfirmDialog
+					title="Empty the trash?"
 					confirmLabel="Empty trash"
 					cancelLabel="Cancel"
 					onConfirm={emptyTrash}
 					onClose={() => setAsking(false)}
-				>
-					Empty the trash?
-				</ConfirmDialog>
+				/>
 			) : null}
 			<div role="dialog" aria-label="Edit">
 				<input aria-label="Title" />
@@ -324,7 +323,7 @@ async function emptyTrash(openerLeaves = false) {
 		dropOpener()
 	}
 	start('Empty trash')
-	await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Empty the trash?' })).toBeNull())
+	await waitFor(() => expect(screen.queryByRole('alertdialog', { name: 'Empty the trash?' })).toBeNull())
 	return { settles, dropOpener }
 }
 
