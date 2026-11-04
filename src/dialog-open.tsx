@@ -54,6 +54,15 @@ export function useDialogOpen(onClose: () => void): DialogOpen {
 }
 
 /**
+ * Notes the control that held the focus as a dialog was asked, for the place the focus goes once the popup left.
+ * @returns What answers `finalFocus`: that control while the focus sits on the page, otherwise false to leave it.
+ */
+export function useFinalFocus(): () => HTMLElement | false {
+	const [opener] = useState(() => document.activeElement as HTMLElement)
+	return () => (document.activeElement === document.body && opener !== document.body ? opener : false)
+}
+
+/**
  * Reads what a write answered a dialog, whatever its shape.
  * @param answer - What the write answered.
  * @returns The words to show or a plain stay, none for a dialog that closes.

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, screen } from '@testing-library/react'
+import { render, renderHook, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { StrictMode, useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
-import { answerOf, isThenable, passRejectionOn, useDialogOpen } from '../src/dialog-open.js'
+import { answerOf, isThenable, passRejectionOn, useDialogOpen, useFinalFocus } from '../src/dialog-open.js'
 import { installTestEnvironment } from '../src/testing.js'
 
 installTestEnvironment()
@@ -36,6 +36,19 @@ function Popup({ onClose, seen = [] }: { onClose: () => void; seen?: boolean[] }
 			{onPage ? exitWatch : null}
 		</>
 	)
+}
+
+/**
+ * Draws a control on the page until the test finishes.
+ * @param name - The name of the control.
+ * @returns The control.
+ */
+function control(name: string): HTMLButtonElement {
+	const drawn = document.createElement('button')
+	drawn.textContent = name
+	document.body.append(drawn)
+	onTestFinished(() => drawn.remove())
+	return drawn
 }
 
 /**
@@ -120,6 +133,58 @@ test('runs no onClose for a popup opened again before it left', async () => {
 	await press('Close', 'Reopen', 'Leave')
 
 	expect(onClose).not.toHaveBeenCalled()
+})
+
+test('answers the control that held the focus as the dialog was asked, with the focus on the page', () => {
+	const opener = control('Delete')
+	opener.focus()
+	const { result } = renderHook(useFinalFocus)
+
+	opener.blur()
+
+	expect(result.current()).toBe(opener)
+})
+
+test('keeps the control noted on the first render through later renders', () => {
+	const opener = control('Delete')
+	const other = control('Search')
+	opener.focus()
+	const { result, rerender } = renderHook(useFinalFocus)
+	other.focus()
+	rerender()
+
+	other.blur()
+
+	expect(result.current()).toBe(opener)
+})
+
+test('answers false once the focus moved on to another control', () => {
+	const opener = control('Delete')
+	const other = control('Search')
+	opener.focus()
+	const { result } = renderHook(useFinalFocus)
+
+	other.focus()
+
+	expect(result.current()).toBe(false)
+})
+
+test('answers false for a dialog asked with the focus on the page', () => {
+	const { result } = renderHook(useFinalFocus)
+
+	expect(document.activeElement).toBe(document.body)
+	expect(result.current()).toBe(false)
+})
+
+test('answers a control gone from the page, so no other control takes the focus', () => {
+	const opener = control('Delete')
+	opener.focus()
+	const { result } = renderHook(useFinalFocus)
+
+	opener.remove()
+
+	expect(document.activeElement).toBe(document.body)
+	expect(result.current()).toBe(opener)
 })
 
 test.each([
