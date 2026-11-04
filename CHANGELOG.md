@@ -4,6 +4,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Fixed
+
+- After a run that moved an item, `useListRun` moves the focus to the list from the control that opened a WPDS dialog, as it does for a `Modal`, and leaves the focus on a control the reader moved to out of a dialog.
+
 ## [0.31.0] - 2026-11-02
 
 ### Added

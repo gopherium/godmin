@@ -761,25 +761,25 @@ while the reader is still with the run:
 - the focus fell to the page,
 - the focus sits inside the list,
 - the focus sits in the dialog the run started in,
-- or that dialog closed before the run ended, the focus still sits
-  where it first went outside that dialog while the dialog was open,
-  and no dialog holds the focus. A confirm that closes at once gives
-  the focus back to the button that opened it, and the list then
-  takes the focus from that button.
+- or that dialog left the page before the run ended, and the focus
+  sits on the control that opened it. A confirm that closes at once
+  gives the focus back to the button that opened it, and the list then
+  takes the focus from that button. This needs the list on the page as
+  the dialog opens, and the dialog taking the focus straight from that
+  button. Otherwise the focus stays on the button.
 
 A dialog opened since keeps the focus, so typing still lands in it
-and Escape still closes it. A reader who moved on to another control
-outside the list keeps their place: during a run started outside
-every dialog, while the dialog the run started in is still open, and
-after that dialog gave the focus back or closed with nowhere to give
-it. One move is the exception. A dialog that lets the focus out,
-unlike a WordPress modal, can be left for another control while it
-is still open. That control then counts as where the dialog gave the
-focus back, since the focus moves the same way in both cases. So when
-the dialog closes and the run ends with the focus still there, the
-list takes the focus from it. Every list run does this, with nothing
-to add to your screen. This needs godmin 0.27.0 or later. Before it,
-the list took the focus wherever the focus sat.
+and Escape still closes it. The same goes for a dialog whose control
+opened the dialog the run started in. A reader who moved on to
+another control outside the list keeps their place: during a run
+started outside every dialog, while the dialog the run started in is
+still open, and after that dialog left the page. Every list run does
+this, with nothing to add to your screen. This needs godmin 0.27.0 or
+later. Before it, the list took the focus wherever the focus sat. Two
+cases need godmin 0.32.0 or later. Before it, the focus stayed on a
+control outside the list that opened a WPDS dialog, and the list took
+the focus from a control the reader moved to out of a dialog that then
+closed.
 
 `focusInDialog()` tells whether a dialog holds the focus, for a write
 you finish yourself outside a run. It also needs godmin 0.27.0 or
@@ -854,8 +854,8 @@ the reader moved to, it stays there. When your button opens a
 inside `onConfirm`, as [a confirm outside a list](#a-confirm-outside-a-list)
 explains. The list then takes the focus once the run moved a row,
 even after the dialog closed, while the focus is still on the button
-the dialog gave it back to. A reader who moved to another control by
-then keeps their place. This needs godmin 0.27.0 or later.
+that opened it. A reader who moved to another control by then keeps
+their place. This needs godmin 0.27.0 or later.
 
 ## Confirming an action
 
