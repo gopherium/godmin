@@ -10,6 +10,7 @@ import { page, userEvent } from 'vitest/browser'
 
 import { Frame, Page, RunConfirm, Toaster, useBulkRun, useListRun } from '../../src/index.js'
 import type { BulkWords } from '../../src/index.js'
+import { sampleFocus } from './sample-focus.js'
 
 /** A row of the sample list. */
 interface Report {
@@ -176,20 +177,6 @@ function Reports({
 			/>
 		</Page>
 	)
-}
-
-/** Records the element that holds the focus on every frame until stopped. */
-function sampleFocus(): { seen: Set<Element | null>; stop: () => void } {
-	const seen = new Set<Element | null>()
-	let going = true
-	const sample = () => {
-		seen.add(document.activeElement)
-		if (going) {
-			requestAnimationFrame(sample)
-		}
-	}
-	sample()
-	return { seen, stop: () => (going = false) }
 }
 
 /** Waits for the browser to draw the given number of frames. */
