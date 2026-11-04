@@ -3,9 +3,9 @@
 import { render, screen } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { StrictMode, useState } from 'react'
-import { expect, test, vi } from 'vitest'
+import { expect, onTestFinished, test, vi } from 'vitest'
 
-import { useDialogOpen } from '../src/dialog-open.js'
+import { answerOf, isThenable, passRejectionOn, useDialogOpen } from '../src/dialog-open.js'
 import { installTestEnvironment } from '../src/testing.js'
 
 installTestEnvironment()
@@ -120,4 +120,70 @@ test('runs no onClose for a popup opened again before it left', async () => {
 	await press('Close', 'Reopen', 'Leave')
 
 	expect(onClose).not.toHaveBeenCalled()
+})
+
+test.each([
+	{ answer: { error: 'Could not save.' }, read: { error: 'Could not save.' } },
+	{ answer: { error: 'Could not save.', close: true }, read: { error: 'Could not save.' } },
+	{ answer: { error: '', close: false }, read: { close: false } },
+	{ answer: { close: false }, read: { close: false } },
+])('stays open on the answer $answer', ({ answer, read }) => {
+	expect(answerOf(answer)).toEqual(read)
+})
+
+test.each([
+	{ answer: undefined },
+	{ answer: null },
+	{ answer: 'Could not save.' },
+	{ answer: 7 },
+	{ answer: {} },
+	{ answer: { close: true } },
+	{ answer: { close: undefined } },
+	{ answer: { close: 0 } },
+	{ answer: { id: '1', title: 'Hello' } },
+	{ answer: { data: { id: '1' }, error: {} } },
+	{ answer: { data: { id: '1' }, error: null } },
+	{ answer: { error: 503 } },
+	{ answer: { error: '' } },
+])('closes on the answer $answer', ({ answer }) => {
+	expect(answerOf(answer)).toBeUndefined()
+})
+
+test('hands on only the words of an answer with others beside them', () => {
+	expect(answerOf({ error: 'Could not save.', data: { id: '1' } })).toStrictEqual({ error: 'Could not save.' })
+})
+
+test.each([
+	{ shape: 'a promise', value: Promise.resolve() },
+	{ shape: 'an object with then', value: { then: () => undefined } },
+	{ shape: 'a function with then', value: Object.assign(() => undefined, { then: () => undefined }) },
+])('takes $shape as a write still running', ({ value }) => {
+	expect(isThenable(value)).toBe(true)
+})
+
+test.each([
+	{ value: undefined },
+	{ value: null },
+	{ value: 'then' },
+	{ value: 7 },
+	{ value: {} },
+	{ value: { then: 'later' } },
+])('takes $value as no write running', ({ value }) => {
+	expect(isThenable(value)).toBe(false)
+})
+
+test('stays open on a rejection and hands it on to the app once', async () => {
+	const failure = new Error('Could not save.')
+	const reasons: unknown[] = []
+	const listener = (reason: unknown) => {
+		reasons.push(reason)
+	}
+	process.on('unhandledRejection', listener)
+	onTestFinished(() => {
+		process.off('unhandledRejection', listener)
+	})
+
+	expect(passRejectionOn(failure)).toEqual({ close: false })
+
+	await vi.waitFor(() => expect(reasons).toEqual([failure]))
 })

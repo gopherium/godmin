@@ -3,6 +3,9 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 
+/** What a write may answer a dialog: words to show, or a plain stay. Any other answer closes it. */
+export type DialogAnswer = { error: string } | { close: false }
+
 /** What a dialog takes from the hook that holds it open. */
 export interface DialogOpen {
 	/** Whether the dialog is open, false on the first render so its entry plays. */
@@ -48,4 +51,36 @@ export function useDialogOpen(onClose: () => void): DialogOpen {
 		setOpen(next)
 	}
 	return { open, change, exitWatch: <ExitWatch left={left} /> }
+}
+
+/**
+ * Reads what a write answered a dialog, whatever its shape.
+ * @param answer - What the write answered.
+ * @returns The words to show or a plain stay, none for a dialog that closes.
+ */
+export function answerOf(answer: unknown): DialogAnswer | undefined {
+	const { error, close } = (answer ?? {}) as { error?: unknown; close?: unknown }
+	if (typeof error === 'string' && error !== '') {
+		return { error }
+	}
+	return close === false ? { close } : undefined
+}
+
+/**
+ * Reports whether a value is a write still running, a promise or any object with a `then` method.
+ * @param value - What the write's handler returned.
+ * @returns Whether the value is one to wait for.
+ */
+export function isThenable(value: unknown): value is PromiseLike<unknown> {
+	return typeof (value as PromiseLike<unknown> | null | undefined)?.then === 'function'
+}
+
+/**
+ * Keeps a dialog open after a rejection and hands the rejection on to the app as one nobody caught.
+ * @param error - What the write rejected with.
+ * @returns A plain stay.
+ */
+export function passRejectionOn(error: unknown): DialogAnswer {
+	void Promise.reject(error)
+	return { close: false }
 }
