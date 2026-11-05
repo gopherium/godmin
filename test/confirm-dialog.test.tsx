@@ -365,6 +365,25 @@ test('stays on a rejection with the spinner ended, and hands it on to the app on
 	expect(dialog()).not.toBeNull()
 })
 
+test('stays on a handler that throws, and hands the error on to the app once', async () => {
+	const thrown = new Error('offline')
+	const reasons = heardRejections()
+	const logged = vi.spyOn(console, 'error')
+	onTestFinished(() => logged.mockRestore())
+	const { onClose } = await openDialog({
+		onConfirm: () => {
+			throw thrown
+		},
+	})
+
+	await press('Trash')
+
+	await waitFor(() => expect(reasons).toEqual([thrown]))
+	expect(logged).not.toHaveBeenCalled()
+	expect(onClose).not.toHaveBeenCalled()
+	expect(dialog()).not.toBeNull()
+})
+
 test.each([
 	{ click: 'a double click', detail: 2, sent: 0 },
 	{ click: 'a third click', detail: 3, sent: 0 },

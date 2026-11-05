@@ -33,12 +33,19 @@ export interface ConfirmDialogProps {
 }
 
 /**
- * Reads what an action returned, waiting for a write still running and handing a rejection on to the app.
- * @param running - What the action returned.
- * @returns What the dialog reads, as soon as an action that returned no write allows.
+ * Carries an action out and reads what it answers, handing what it throws or rejects with on to the app.
+ * @param action - The action.
+ * @returns What the dialog reads, at once unless the action returned a write still running.
  */
-function confirmed(running: unknown): DialogAnswer | undefined | Promise<DialogAnswer | undefined> {
-	return isThenable(running) ? Promise.resolve(running).then(answerOf, passRejectionOn) : answerOf(running)
+function confirmed(
+	action: ConfirmDialogProps['onConfirm'],
+): DialogAnswer | undefined | Promise<DialogAnswer | undefined> {
+	try {
+		const running = action()
+		return isThenable(running) ? Promise.resolve(running).then(answerOf, passRejectionOn) : answerOf(running)
+	} catch (error) {
+		return passRejectionOn(error)
+	}
 }
 
 /**
@@ -58,7 +65,7 @@ export function ConfirmDialog({
 	const { open, change, exitWatch } = useDialogOpen(onClose)
 	const finalFocus = useFinalFocus()
 	return (
-		<AlertDialog.Root open={open} onOpenChange={change} onConfirm={() => confirmed(onConfirm())}>
+		<AlertDialog.Root open={open} onOpenChange={change} onConfirm={() => confirmed(onConfirm)}>
 			<AlertDialog.Popup
 				className={POPUP_CLASS}
 				intent={intent}
