@@ -415,6 +415,7 @@ body {
 	}
 
 	.godmin-toast__action {
+		position: relative;
 		flex: none;
 		margin-inline-start: var(--wpds-dimension-gap-2xl);
 		padding: 0;
@@ -427,6 +428,12 @@ body {
 		text-underline-offset: 0.2em;
 		text-decoration-thickness: from-font;
 		cursor: var(--wpds-cursor-control);
+	}
+
+	.godmin-toast__action::after {
+		content: '';
+		position: absolute;
+		inset: calc(-1 * var(--wpds-dimension-gap-sm));
 	}
 
 	.godmin-toast__action:hover {

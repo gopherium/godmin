@@ -1166,6 +1166,17 @@ test('sets the action box on a normal line, as tall as the snackbar link button'
 	expect(action.indexOf('line-height'), 'the font shorthand resets the line').toBeGreaterThan(action.indexOf('font:'))
 })
 
+test('widens the press area of the action past its box with a part that paints nothing', () => {
+	const action = ruleOf('.godmin-toast__action')
+	const area = ruleOf('.godmin-toast__action::after')
+
+	expect(action).toMatch(/position:\s*relative/)
+	expect(area).toMatch(/content:\s*'';/)
+	expect(area).toMatch(/position:\s*absolute/)
+	expect(area).toMatch(/inset:\s*calc\(-1 \* var\(--wpds-dimension-gap-sm\)\);/)
+	expect(area, 'the part paints nothing').not.toMatch(/background|border|outline|box-shadow/)
+})
+
 test('drops the action underline under the pointer, as the snackbar does', () => {
 	expect(ruleOf('.godmin-toast__action:hover')).toMatch(/text-decoration:\s*none/)
 })
