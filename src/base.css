@@ -1057,10 +1057,6 @@ body {
 		gap: var(--wpds-dimension-gap-lg);
 	}
 
-	.godmin-modal-body__question {
-		line-height: 1.4;
-	}
-
 	.godmin-form__row {
 		display: flex;
 		flex-wrap: wrap;

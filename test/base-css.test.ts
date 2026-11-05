@@ -643,12 +643,6 @@ test('lays a modal body out as a column with the 20px of a WordPress row edit or
 	expect(body).toMatch(/gap:\s*calc\(var\(--wpds-dimension-gap-lg\) \+ var\(--wpds-dimension-gap-xs\)\);/)
 })
 
-test('sets a confirm question in the godmin layer, so it outranks the design system text line', () => {
-	const layered = base.slice(base.lastIndexOf('@layer godmin'))
-
-	expect(ruleOf('.godmin-modal-body__question', layered)).toMatch(/line-height:\s*1\.4;/)
-})
-
 test('breaks a long word in a dialog, so a token with no space stays in its card', () => {
 	expect(ruleOf(`.${POPUP_CLASS}`)).toMatch(/overflow-wrap:\s*anywhere;/)
 })

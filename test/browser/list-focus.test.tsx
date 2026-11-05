@@ -8,7 +8,8 @@ import { useMemo, useState } from 'react'
 import { expect, onTestFinished, test } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 
-import { Frame, Page, RunConfirm, Toaster, useBulkRun, useListRun } from '../../src/index.js'
+import { ConfirmDialog } from '../../src/dialogs.js'
+import { Frame, Page, Toaster, useBulkRun, useListRun } from '../../src/index.js'
 import type { BulkWords } from '../../src/index.js'
 import { sampleFocus } from './sample-focus.js'
 
@@ -120,6 +121,7 @@ function Reports({
 	fields = FIELDS,
 }: { bench: Held; rows?: Report[] } & Drawn) {
 	const [selection, setSelection] = useState(() => ticked ?? rows.map((row) => row.id))
+	const [deleting, setDeleting] = useState<Report[]>()
 	const { run, region, refreshing } = useListRun('reports', setSelection)
 	const bulk = useBulkRun<Report>(run, bench.refresh)
 	const actions = useMemo<Action<Report>[]>(
@@ -143,19 +145,7 @@ function Reports({
 				label: 'Permanently delete',
 				supportsBulk: bulkActions,
 				isPrimary: primary === 'delete',
-				hideModalHeader: true,
-				modalFocusOnMount: 'firstContentElement',
-				RenderModal: ({ items, closeModal }) => (
-					<RunConfirm
-						items={items}
-						closeModal={closeModal}
-						confirmLabel="Delete"
-						cancelLabel="Cancel"
-						run={(reports) => bulk(reports, bench.call, DELETED)}
-					>
-						Delete these reports for good?
-					</RunConfirm>
-				),
+				callback: setDeleting,
 			},
 		],
 		[bulk, bench, bulkActions, primary],
@@ -175,6 +165,15 @@ function Reports({
 				onClickItem={onClickItem}
 				isLoading={refreshing}
 			/>
+			{deleting ? (
+				<ConfirmDialog
+					title="Delete these reports for good?"
+					confirmLabel="Delete"
+					cancelLabel="Cancel"
+					onConfirm={async () => bulk(deleting, bench.call, DELETED)}
+					onClose={() => setDeleting(undefined)}
+				/>
+			) : null}
 		</Page>
 	)
 }
@@ -316,7 +315,7 @@ async function endCall(bench: Held, id: string, toast: string, gone = [id]): Pro
 /** Presses Report 38's primary delete, confirms it and ends the call, which closes the confirm before the reload. */
 async function confirmReport38(bench: Held): Promise<void> {
 	await pressKey(rowButton('Report 38', 'Permanently delete'))
-	const confirm = await screen.findByRole('dialog')
+	const confirm = await screen.findByRole('alertdialog')
 	within(confirm).getByRole('button', { name: 'Delete' }).focus()
 	await userEvent.keyboard('{Enter}')
 	await expect.poll(() => bench.ended.size).toBe(1)
@@ -468,7 +467,7 @@ test('keeps the canvas still as a run from a footer confirm ends and the list re
 	const opener = within(footer).getByRole('button', { name: 'Permanently delete' })
 	const left = await focusAtBottom(opener, canvas)
 	await userEvent.keyboard('{Enter}')
-	const confirm = await screen.findByRole('dialog')
+	const confirm = await screen.findByRole('alertdialog')
 	within(confirm).getByRole('button', { name: 'Delete' }).focus()
 	await userEvent.keyboard('{Enter}')
 	await expect.poll(() => bench.ended.size).toBe(TALL.length)
@@ -578,7 +577,7 @@ test('puts the focus on the box of the row in its place after a run confirmed fr
 	const item = await screen.findByRole('menuitem', { name: 'Permanently delete' })
 	item.focus()
 	await userEvent.keyboard('{Enter}')
-	const confirm = await screen.findByRole('dialog')
+	const confirm = await screen.findByRole('alertdialog')
 	within(confirm).getByRole('button', { name: 'Delete' }).focus()
 	await userEvent.keyboard('{Enter}')
 	await expect.poll(() => bench.ended.size).toBe(1)
@@ -600,7 +599,7 @@ test('puts the focus on the box of the row in its place after a run confirmed fr
 	const region = screen.getByRole('region', { name: 'Reports' })
 	await userEvent.click(rowButton('Report 38', 'Actions'))
 	await userEvent.click(await screen.findByRole('menuitem', { name: 'Permanently delete' }))
-	const confirm = await screen.findByRole('dialog')
+	const confirm = await screen.findByRole('alertdialog')
 	await userEvent.click(within(confirm).getByRole('button', { name: 'Delete' }))
 	await expect.poll(() => bench.ended.size).toBe(1)
 
