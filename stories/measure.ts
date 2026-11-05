@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { expect } from 'storybook/test'
+import { expect, waitFor } from 'storybook/test'
+
+/** Finds the card of a dialog or a confirm in the overlay slot. */
+export const OVERLAY_CARD = ['dialog', 'alertdialog']
+	.map((role) => `[data-wp-compat-overlay-slot] [role="${role}"]`)
+	.join(', ')
 
 /** Returns the element a selector finds in the document, failing when none matches. */
 export function find(selector: string): HTMLElement {
@@ -29,6 +34,15 @@ export function middleDown(box: DOMRect): number {
 /** Checks two positions meet within half a pixel. */
 export async function meets(actual: number, expected: number, what: string) {
 	await expect(Math.abs(actual - expected), what).toBeLessThan(0.5)
+}
+
+/** Waits for the card to start moving, then ends every motion in the overlays but one with no end. */
+export async function finishMotion() {
+	await waitFor(() => expect(find(OVERLAY_CARD)).not.toHaveAttribute('data-starting-style'))
+	find('[data-wp-compat-overlay-slot]')
+		.getAnimations({ subtree: true })
+		.filter((motion) => motion.effect?.getTiming().iterations !== Infinity)
+		.forEach((motion) => motion.finish())
 }
 
 /** Checks a box sits in the middle of another on both axes. */
