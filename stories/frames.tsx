@@ -9,6 +9,17 @@ import { NavigationScreen } from '../src/navigation-screen.js'
 import { Page } from '../src/page.js'
 import { PageBreadcrumb, PageBreadcrumbs } from '../src/page-breadcrumbs.js'
 
+/** The modes of a story that takes no shot. */
+export const NO_SHOT = { desktop: { disabled: true } }
+
+/** Runs a story and its only shot at one viewport, in place of the default desktop shot. */
+export function onlyAt(viewport: 'medium' | 'phone') {
+	return {
+		globals: { viewport: { value: viewport } },
+		parameters: { argos: { modes: { desktop: { disabled: true }, [viewport]: { viewport } } } },
+	}
+}
+
 /** Renders an admin frame with a sidebar and a canvas holding what it is given. */
 export function Admin({ canvas, children }: { canvas?: CanvasMode; children: ReactNode }) {
 	return (
