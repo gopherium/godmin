@@ -15,6 +15,9 @@ const INERT_IN_FOCUS = '[inert]:focus-within'
 /** Finds a dialog or an alert dialog. */
 const DIALOG = '[role="dialog"], [role="alertdialog"]'
 
+/** Finds the toast region, which takes the focus a leaving toast held. */
+const TOAST_REGION = '.godmin-toasts'
+
 /** Finds every control a reader can focus inside a card or a row. */
 const CONTROLS = 'a[href], button, input, select, textarea, [tabindex]'
 
@@ -202,7 +205,7 @@ function noteOpener(
 }
 
 /**
- * Reports whether the focus sits on the page, in the list, in the dialog that ran, or where that dialog left it.
+ * Reports whether the focus sits on the page, the toast region, the list, the dialog that ran, or where it left it.
  * @param list - The list region, none while the screen draws no list.
  * @param startedIn - The dialog that held the focus as the run started, none for a run started outside every dialog.
  * @param openedBy - The control that opened each dialog.
@@ -211,7 +214,8 @@ function noteOpener(
 function readerOnList(list: HTMLElement | null, startedIn: Element | null, openedBy: OpenedBy): boolean {
 	const active = document.activeElement
 	const holds = [list, startedIn].some((holder) => holder !== null && holder.contains(active))
-	return active === document.body || holds || stillWhereDialogLeftIt(startedIn, openedBy)
+	const leftByToast = active?.matches(TOAST_REGION) === true
+	return active === document.body || leftByToast || holds || stillWhereDialogLeftIt(startedIn, openedBy)
 }
 
 /**

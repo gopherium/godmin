@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { ConfirmDialog } from '../src/dialogs'
-import { focusInDialog, Page, useListRun } from '../src/index'
+import { focusInDialog, Page, Toaster, useListRun, useToaster } from '../src/index'
 import type { ListRun, ListRunState, RunSettled } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
@@ -53,8 +53,12 @@ function ListScreen({
 	seen.runs.push(run)
 	seen.ticked.push(ticked)
 	const startRun = () => seen.settles.push(run.onStart())
+	const toaster = useToaster()
 	return (
 		<>
+			<button type="button" onClick={() => toaster.show('Moved to the trash.', { label: 'Undo', onAct: () => {} })}>
+				Show a toast
+			</button>
 			<Page
 				title="Posts"
 				list={region}
@@ -100,14 +104,14 @@ function renderList(scope: string, region = true, role = 'dialog') {
 	const screenOn = (list: string, asking: boolean) => (
 		<ListScreen scope={list} region={region} asking={asking} role={role} onTicks={onTicks} seen={seen} />
 	)
-	const { rerender, unmount } = renderAdmin(screenOn(scope, true))
+	const { rerender, unmount } = renderAdmin(<Toaster>{screenOn(scope, true)}</Toaster>)
 	return {
 		seen,
 		onTicks,
 		unmount,
-		show: (next: string) => rerender(screenOn(next, true)),
-		closeConfirm: () => rerender(screenOn(scope, false)),
-		openConfirm: () => rerender(screenOn(scope, true)),
+		show: (next: string) => rerender(<Toaster>{screenOn(next, true)}</Toaster>),
+		closeConfirm: () => rerender(<Toaster>{screenOn(scope, false)}</Toaster>),
+		openConfirm: () => rerender(<Toaster>{screenOn(scope, true)}</Toaster>),
 	}
 }
 
@@ -246,6 +250,32 @@ test('leaves the focus on a control outside the list the reader moved to during 
 	settle(seen.settles[0], true)
 
 	expect(document.activeElement).toBe(control('Add Post'))
+})
+
+test('focuses the list region once a run moved an item with the focus on the toast region a leaving toast gave', () => {
+	const { seen } = renderList('post publish')
+	start()
+	fireEvent.click(control('Show a toast'))
+	focusOn('Undo')
+	fireEvent.click(control('Undo'))
+	const toasts = document.activeElement as HTMLElement
+	expect(toasts.getAttribute('role'), 'the focus after Undo, the region of no toast').toBeNull()
+	expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull()
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('leaves the focus on the action of another toast a reader moved to during a run', () => {
+	const { seen } = renderList('post publish')
+	start()
+	fireEvent.click(control('Show a toast'))
+
+	focusOn('Undo')
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Undo'))
 })
 
 test('leaves the focus on a control outside the list the reader moved to while the run dialog stays open', () => {

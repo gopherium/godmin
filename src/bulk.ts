@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import type { ToastAction } from './toaster.js'
+
 /** An item a bulk run could not finish, with the error its call failed with. */
 export interface BulkFailure<Item> {
 	/** The item the call was made for. */
@@ -76,6 +78,8 @@ export interface BulkWords<Item> {
 	done: (count: number, only: Item | undefined) => string
 	/** The toast for the items that failed, shown instead of the done one, given each failure and how many were asked. */
 	failed: (failures: BulkFailure<Item>[], asked: number) => string
+	/** The action the done toast offers once every item finished, such as Undo, given the items. */
+	undo?: (items: Item[]) => ToastAction
 }
 
 /** The messages a bulk outcome reads as, each absent when nothing calls for it. */

@@ -105,6 +105,10 @@ function ListBench({ writes }: { writes: Writes }) {
 	const { run, region, refreshing } = useListRun('reports', setSelection)
 	const bulk = useBulkRun<Report>(run, writes.refresh)
 	const focusBack = useFocusBack(refreshing, region)
+	const words: BulkWords<Report> = {
+		...WORDS,
+		undo: (done) => ({ label: 'Undo', onAct: () => void bulk(done, writes.call, WORDS) }),
+	}
 	writes.leave = (gone) => setRows((now) => now.filter((row) => !gone.includes(row.id)))
 	const actions = useMemo<Action<Report>[]>(() => {
 		const ask = (items: Report[]) => setAsked({ items, trigger: focusedTrigger() })
@@ -146,7 +150,7 @@ function ListBench({ writes }: { writes: Writes }) {
 					title="Change these reports?"
 					confirmLabel="Change them"
 					cancelLabel="Cancel"
-					onConfirm={async () => bulk(asked.items, writes.call, WORDS)}
+					onConfirm={async () => bulk(asked.items, writes.call, words)}
 					onClose={() => {
 						setAsked(undefined)
 						focusBack(asked.items[0].id, asked.trigger)
@@ -447,6 +451,28 @@ test('leaves the focus on the page once the rows were drawn anew, and the list l
 	await left(popup)
 
 	expect(document.activeElement, 'the focus once the dialog left').toBe(rowControl('Report 3', 'button', 'Actions'))
+})
+
+test('puts the focus on the list region once Undo from a toast ran', async () => {
+	const writes = renderList()
+	await askByKey(rowControl('Report 3', 'button', 'Restore'))
+	const { popup, confirm } = await dialogInFocus('Change them')
+	confirm.focus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => writes.ended.size).toBe(1)
+	writes.ended.forEach((end) => end())
+	writes.ended.clear()
+	await left(popup)
+	writes.reloaded(['3'])
+	await expect.poll(rowsInert).toBe(false)
+
+	const undo = await screen.findByRole('button', { name: 'Undo' })
+	undo.focus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => writes.ended.size).toBe(1)
+	writes.ended.forEach((end) => end())
+
+	await expect.poll(() => document.activeElement).toBe(screen.getByRole('region', { name: 'Reports' }))
 })
 
 test('sends once on a double click on the confirm button of a dialog that stays, then on Enter and Space', async () => {

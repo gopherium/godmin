@@ -261,6 +261,44 @@ async function failAll(): Promise<unknown> {
 }
 
 /**
+ * Returns the trash words with an Undo that records the items it was handed.
+ * @param undone - Where each Undo's items go.
+ * @returns The words.
+ */
+function undoWords(undone: Post[][]): BulkWords<Post> {
+	return { ...WORDS, undo: (items) => ({ label: 'Undo', onAct: () => void undone.push(items) }) }
+}
+
+test('offers Undo on the done toast once every item worked, handing it the items', async () => {
+	const undone: Post[][] = []
+	const bench = renderTrash({ words: undoWords(undone) })
+
+	await trash(bench)
+	const shown = toasts()
+	fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+	expect(shown).toEqual(['Moved to the trash: 2.Undo'])
+	expect(undone).toEqual([POSTS])
+})
+
+test('offers no Undo once an item failed, the failure toast standing alone', async () => {
+	const bench = renderTrash({ words: undoWords([]), call: failHello })
+
+	await trash(bench)
+
+	expect(toasts()).toEqual(['Not moved to the trash: 1 of 2.'])
+	expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull()
+})
+
+test('offers no action on the done toast when the words give no Undo', async () => {
+	const bench = renderTrash()
+
+	await trash(bench)
+
+	expect(document.querySelector('.godmin-toast__action')).toBeNull()
+})
+
+/**
  * Renders a list whose confirm runs over the two items.
  * @param props - The call, the refresh, what runs once the confirm left and the reloads seen.
  * @returns The page with the confirm.
