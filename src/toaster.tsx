@@ -13,7 +13,7 @@ import {
 	useRef,
 	useState,
 } from 'react'
-import type { ReactNode, RefObject } from 'react'
+import type { MouseEvent, ReactNode, RefObject } from 'react'
 
 /**
  * How long a toast with no action stays on screen when nobody touches it.
@@ -178,6 +178,30 @@ interface ToastProps {
 }
 
 /**
+ * Keeps a press on a leaving toast from moving the focus onto it.
+ * @param event - The press.
+ */
+function holdFocus(event: MouseEvent): void {
+	event.preventDefault()
+}
+
+/** What a leaving toast takes, to catch a press while hidden from a screen reader and out of the Tab order. */
+interface LeavingProps {
+	'aria-hidden'?: true
+	tabIndex?: number
+	onMouseDown?: (event: MouseEvent) => void
+}
+
+/**
+ * Returns what a toast takes while it fades out.
+ * @param leaving - Whether the toast is fading out.
+ * @returns The props, none for a toast that stays.
+ */
+function leavingProps(leaving: boolean): LeavingProps {
+	return leaving ? { 'aria-hidden': true, tabIndex: -1, onMouseDown: holdFocus } : {}
+}
+
+/**
  * Renders a toast with no action as one button that clears it, described by the dismiss hint.
  * @param props - The toast, how long it stays, the id of the dismiss hint and the handler clearing it.
  * @returns The toast element.
@@ -189,7 +213,7 @@ function PlainToast({ toast, dismissAfter, hint, onLeave }: ToastProps & { hint:
 			type="button"
 			className={toastClass('godmin-toast godmin-toast--plain', toast.leaving)}
 			aria-describedby={hint}
-			inert={toast.leaving}
+			{...leavingProps(toast.leaving)}
 			onClick={() => onLeave(toast.id)}
 		>
 			{toast.message}
@@ -204,17 +228,18 @@ function PlainToast({ toast, dismissAfter, hint, onLeave }: ToastProps & { hint:
  */
 function ActionToast({ toast, action, dismissAfter, onLeave }: ToastProps & { action: ToastAction }) {
 	useExpiry(toast, dismissAfter, onLeave)
+	const { tabIndex, ...hidden } = leavingProps(toast.leaving)
 	return (
-		<div
-			className={toastClass('godmin-toast', toast.leaving)}
-			inert={toast.leaving}
-			onClick={() => onLeave(toast.id)}
-		>
+		<div className={toastClass('godmin-toast', toast.leaving)} {...hidden} onClick={() => onLeave(toast.id)}>
 			<span className="godmin-toast__message">{toast.message}</span>
 			<button
 				type="button"
 				className="godmin-toast__action"
+				tabIndex={tabIndex}
 				onClick={() => {
+					if (toast.leaving) {
+						return
+					}
 					onLeave(toast.id)
 					action.onAct()
 				}}
