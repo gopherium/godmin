@@ -13,6 +13,9 @@ const { Plain } = composeStories(stories)
 /** Half the side of the smallest press area WCAG 2.2 asks for, in pixels, less half a pixel to stay inside it. */
 const HALF_TARGET = 11.5
 
+/** How far past its words the action takes a press, in pixels, less half a pixel to stay inside it. */
+const REACH = 7.5
+
 /** How long a double click waits between its clicks, in milliseconds. */
 const DOUBLE_CLICK_GAP = 60
 
@@ -26,7 +29,7 @@ async function shownAction(): Promise<HTMLElement> {
 	return action
 }
 
-test('takes a press anywhere in a square of 24 by 24 around the action, and just beside its words', async () => {
+test('takes a press anywhere in a square of 24 by 24 around the action, and up to 8px beside its words', async () => {
 	const action = await shownAction()
 	const box = action.getBoundingClientRect()
 	const [x, y] = [box.left + box.width / 2, box.top + box.height / 2]
@@ -34,8 +37,8 @@ test('takes a press anywhere in a square of 24 by 24 around the action, and just
 	expect(box.height, 'the words alone are shorter than the target').toBeLessThan(2 * HALF_TARGET)
 	expect(document.elementFromPoint(x, y - HALF_TARGET), 'above the words').toBe(action)
 	expect(document.elementFromPoint(x, y + HALF_TARGET), 'below the words').toBe(action)
-	expect(document.elementFromPoint(box.left - 3, y), 'just before the words').toBe(action)
-	expect(document.elementFromPoint(box.right + 3, y), 'just after the words').toBe(action)
+	expect(document.elementFromPoint(box.left - REACH, y), 'up to 8px before the words').toBe(action)
+	expect(document.elementFromPoint(box.right + REACH, y), 'up to 8px after the words').toBe(action)
 })
 
 /** Renders a button that shows a toast with Undo, and a control of the page the test moves under that toast. */
