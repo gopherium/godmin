@@ -281,6 +281,23 @@ test('offers Undo on the done toast once every item worked, handing it the items
 	expect(undone).toEqual([POSTS])
 })
 
+test('hands Undo the items the run was given, though the caller emptied its own array during the run', async () => {
+	const undone: Post[][] = []
+	const items = [...POSTS]
+	const bench = renderTrash({
+		items,
+		words: undoWords(undone),
+		call: vi.fn(async () => {
+			items.length = 0
+		}),
+	})
+
+	await trash(bench)
+	fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+	expect(undone).toEqual([POSTS])
+})
+
 test('offers no Undo once an item failed, the failure toast standing alone', async () => {
 	const bench = renderTrash({ words: undoWords([]), call: failHello })
 

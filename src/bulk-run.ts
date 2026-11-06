@@ -86,7 +86,8 @@ function doneAction<Item>(items: Item[], outcome: BulkOutcome<Item>, words: Bulk
 export function useBulkRun<Item>(list: ListRun, refresh: (items: Item[]) => Promise<unknown>): BulkRun<Item> {
 	const toaster = useToaster()
 	return useCallback<BulkRun<Item>>(
-		async (items, call, words) => {
+		async (given, call, words) => {
+			const items = given.filter(() => true)
 			const settle = list.onStart()
 			const reload = reloadOnce(list)
 			const outcome = await runEach(items, reporting(call, reload.mark))
