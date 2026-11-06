@@ -21,6 +21,9 @@ const PHONE = 390
 /** The words a write that failed answers. */
 const FAILURE = 'Could not delete "Maria Perez". The server is not answering.'
 
+/** A token with no space, as a server can answer, longer than any card is wide. */
+const LONG_WORD = 'token'.repeat(55)
+
 /** Leaves the dialog where it is, since a story never takes it away. */
 const stay = () => {}
 
@@ -125,6 +128,21 @@ export const BulkConfirm: Story = {
 	play: async () => {
 		await settled(CARD)
 		await expect(document.querySelector(OVERLAY_CARD)).toHaveAccessibleName('Delete 3 contacts?')
+	},
+}
+
+export const ConfirmWithALongWord: Story = {
+	name: 'Confirm with a long word',
+	parameters: { argos: { modes: NO_SHOT } },
+	args: { title: `Delete "${LONG_WORD}"?`, description: `It holds ${LONG_WORD}.` },
+	play: async () => {
+		await settled(CARD)
+		const card = find(OVERLAY_CARD)
+		const words = [...card.querySelectorAll<HTMLElement>('h2, p')]
+		await expect(words.length, 'the title and the description').toBeGreaterThan(1)
+		for (const line of words) {
+			await expect(line.scrollWidth, 'a line runs past its box').toBeLessThanOrEqual(line.clientWidth)
+		}
 	},
 }
 
