@@ -36,6 +36,8 @@ test('moves nothing on a page with a real scrollbar as a confirm opens over it',
 
 	rerender(<TallPage asking />)
 	const popup = await screen.findByRole('alertdialog')
+	await expect.poll(() => popup.hasAttribute('data-starting-style')).toBe(false)
+	await expect.poll(() => popup.getAnimations().length).toBeGreaterThan(0)
 	await Promise.all(popup.getAnimations().map(async (motion) => motion.finished))
 
 	const after = line.getBoundingClientRect()
