@@ -100,6 +100,53 @@ the same peer ranges.
 follows the filter rules of that DataViews release. A list built on
 another release gets a peer warning when it installs godmin.
 
+## Upgrading from godmin 0.31.0
+
+godmin 0.32.0 draws `ConfirmDialog` on the alert dialog of the design
+system, and a confirm on a list becomes a dialog your screen renders.
+Change your code in these places:
+
+- `ConfirmDialog` takes the question as `title` and what will happen
+  as `description`, in place of `children`. `size` is gone, since a
+  confirm has one width and is a card at every width. Pass
+  `intent="irreversible"` for an action that cannot be undone, which
+  draws its button red.
+- `RunConfirm`, `ConfirmBody`, `RunConfirmProps` and
+  `ConfirmBodyProps` are gone. Give the list action a `callback` that
+  stores the rows, drop its `RenderModal`, `hideModalHeader` and
+  `modalFocusOnMount`, and render a `ConfirmDialog` from your screen
+  whose `onConfirm` returns the run, as
+  [running an action over the picked rows](./lists.md#running-an-action-over-the-picked-rows)
+  shows.
+- A confirm is now an `alertdialog`. A test that finds it by the role
+  `dialog` finds it by `alertdialog`.
+- A confirm has no close button now, even with a `title`. A test that
+  pressed its close button presses Cancel instead.
+- `onClose` runs once the card has left the page, not at the press.
+  A test that reads the dialog gone, or `onClose` called, right after
+  a press waits for it, such as with `waitFor`.
+- Escape and Cancel close nothing while the write runs, and a click on
+  the dimmed page never closes a confirm. A test that dismissed a busy
+  confirm, or clicked outside one, lets the write end or presses
+  Cancel instead. Give a write that can hang a timeout.
+- A promise that rejects, or a handler that throws, leaves the confirm
+  open, and the error still goes on to your app. To close it, catch
+  the failure inside `onConfirm` and show it in a toast, as
+  [a failure from a dialog](./lists.md#a-failure-from-a-dialog) shows.
+- A handler that returns, or a promise that ends with, an object
+  whose `error` holds words, or whose `close` is `false`, now keeps
+  the confirm open. Turn such an answer into one that closes when your
+  app wants it to close.
+- Any object with a `then` method now counts as a promise, so the
+  confirm waits for it. Before, it waited only for a real `Promise`
+  and closed at once for anything else.
+- A stylesheet that styles `.godmin-modal-body__question` styles
+  nothing now.
+
+TypeScript points at `children`, `size`, `RunConfirm` and
+`ConfirmBody`. The rest changes what the reader sees and when
+`onClose` runs.
+
 ## Upgrading from godmin 0.27.0
 
 godmin 0.28.0 draws toasts as WordPress's new admin draws its

@@ -146,7 +146,9 @@ shows:
   page. A focus in the search field or the filters stays where it is
   while the calls run.
 - As the last call ends, the toast shows, the busy button ends and a
-  confirm closes. Once a row moved, the list region takes the focus,
+  confirm closes, as
+  [when a dialog closes](./dialogs.md#when-a-dialog-closes) says.
+  Once a row moved, the list region takes the focus,
   as [where focus goes](./accessibility.md#where-focus-goes) says,
   and here too the screen does not scroll. A reader who ran the action
   from a row near the bottom of the list, or from a confirm, still

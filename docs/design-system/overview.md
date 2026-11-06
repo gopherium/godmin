@@ -100,7 +100,7 @@ layer.
 - [Custom properties](./custom-properties.md): every godmin custom
   property, where it is set and what it changes.
 
-Four more pages cover a single part each, how it looks and how it
+Five more pages cover a single part each, how it looks and how it
 behaves:
 
 - [Toasts](./toasts.md): where a toast sits, how it looks, how long it
@@ -114,3 +114,6 @@ behaves:
 - [Record pages](./record-pages.md): how a page that shows one record
   sets its header and its two columns, what scrolls, what its details
   hold, how it saves and what shows while it loads.
+- [Dialogs](./dialogs.md): when an action asks first, how a confirm
+  looks and moves, what happens while its write runs, where a failure
+  shows, and what a keyboard or a screen reader meets.

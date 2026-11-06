@@ -33,11 +33,12 @@ above a toast:
 
 - The drawer on a small screen.
 - An open dialog. On a wide screen a toast shows dimmed under the dark
-  layer around the dialog. On a phone it sits behind the sheet. Screen
-  readers still hear it, because every message is also spoken. Most
-  dialogs close as their write starts or ends, so their toast shows in
-  full. A [form dialog](../lists.md#a-form-dialog) stays open after a
-  failure, so its toast shows under it, as in WordPress.
+  layer around the dialog. On a phone it sits behind the sheet of a
+  form dialog, and shows dimmed under a confirm, which stays a card.
+  Screen readers still hear it, because every message is also spoken.
+  Most dialogs close as their write starts or ends, so their toast
+  shows in full. A [form dialog](../lists.md#a-form-dialog) stays open
+  after a failure, so its toast shows under it, as in WordPress.
 
 ## Size
 
@@ -133,7 +134,10 @@ closes after it leaves, so the toasts above slide instead of jumping.
 
 - A click anywhere on a toast clears it, with or without an action.
   The pointer turns to `--wpds-cursor-control` over every toast.
-- A click on the action runs it and clears the toast.
+- A click on the action runs it and clears the toast. The action takes
+  a press up to `--wpds-dimension-gap-sm` (8px) past its words on
+  every side, so its press area is at least 24 by 24 pixels, with no
+  change to how it looks.
 - A click on a toast moves focus to the toast region, as WordPress
   moves it to its snackbar list. The region draws no ring.
 - A toast has no close button. WordPress draws its cross only on a

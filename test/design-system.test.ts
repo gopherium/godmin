@@ -51,6 +51,60 @@ const screensPage = readFileSync(resolve(import.meta.dirname, '../docs/screens.m
 /** The module of the installed design system whose stylesheet draws the empty state. */
 const EMPTY_STATE_MODULE = '@wordpress/ui/build-module/empty-state/root.mjs'
 
+/** The module of the installed design system that draws a confirm, the dialog stylesheet inside. */
+const CONFIRM_MODULE = '@wordpress/ui/build-module/alert-dialog/popup.mjs'
+
+/** The module of the installed design system that turns the gap of a stack into a design token. */
+const STACK_MODULE = '@wordpress/ui/build-module/stack/stack.mjs'
+
+/** The module of the installed design system that gives each text variant its size. */
+const TEXT_MODULE = '@wordpress/ui/build-module/text/text.mjs'
+
+/** A section of the dialogs page that gives a value of the installed design system. */
+type DialogSection = 'Size and place' | 'Inside the card' | 'Motion' | 'A failed write'
+
+/** Each value the dialogs page gives from the installed sheet: its section, its words and the pattern finding it. */
+const DIALOG_SHEET: [DialogSection, string, RegExp][] = [
+	['Size and place', 'from each window edge', /--viewport-inset:var\((--wpds-[\w-]+)/],
+	['Size and place', 'never narrower', /\bmin-width:var\((--wpds-[\w-]+)/],
+	['Size and place', 'its floor', /@media \(min-width:480px\)\{min-width:var\((--wpds-[\w-]+)/],
+	['Inside the card', 'The corners', /__popup\{[^{]*?border-radius:var\((--wpds-[\w-]+)/],
+	['Inside the card', 'border sits inside', /__popup\{[^{]*?border:var\((--wpds-[\w-]+)/],
+	['Inside the card', 'The body text', /__popup\{[^{]*?font-size:var\((--wpds-[\w-]+)/],
+	['Inside the card', 'inside that', /__footer\{justify-content:flex-end.padding-block:\S+ var\((--wpds-[\w-]+)/],
+	['Inside the card', 'sits between', /__footer\{justify-content:flex-end.padding-block:var\((--wpds-[\w-]+)/],
+	['Motion', 'dimmed layer', /transition:opacity var\((--wpds-motion-duration-[\w-]+)/],
+	[
+		'Motion',
+		'dimmed layer',
+		/transition:opacity var\(--wpds-motion-duration-md,[^)]*\) var\((--wpds-motion-easing-subtle)/,
+	],
+	[
+		'Motion',
+		'grows from',
+		/transition:opacity var\(--wpds-motion-duration-md,[^)]*\) var\((--wpds-motion-easing-expressive)/,
+	],
+]
+
+/** The values the dialogs page gives that no usage section on a dialog may repeat. */
+const DIALOG_NUMBERS = [
+	/\b320px\b/,
+	/\b400px\b/,
+	/\b480px\b/,
+	/\b560px\b/,
+	/\b600px\b/,
+	/\b24px\b/,
+	/\b20px\b/,
+	/\b16px\b/,
+	/\b13px\b/,
+	/\b12px\b/,
+	/\b8px\b/,
+	/\b200ms\b/,
+]
+
+/** The usage sections on a confirm, each by its page and heading, that leave every value to the dialogs page. */
+const DIALOG_LOOKS = ['Confirming an action', 'A failure from a dialog'].map((heading) => ['usage/lists.md', heading])
+
 /** The rule of the installed DataViews sheet that draws the line beside the pinned actions of a header cell. */
 const STUCK_LINE = '.dataviews-view-table th.dataviews-view-table__actions-column--stuck::after'
 
@@ -122,6 +176,7 @@ const TOASTS: ValueTable = { page: 'toasts.md', values: valuesOf([
 	['.godmin-toast--leaving', 'animation', 'Motion', 'fades out'],
 	['.godmin-toasts__item--leaving', 'animation', 'Motion', 'closes over'],
 	['.godmin-toast', 'cursor', 'Clearing a toast', 'The pointer'],
+	['.godmin-toast__action::after', 'inset', 'Clearing a toast', 'past its words'],
 	['.godmin-toast--plain:focus-visible', 'box-shadow', 'Keyboard', 'one button'],
 	['.godmin-toast__action:focus-visible', 'outline', 'Keyboard', 'focus ring of the action'],
 	['.godmin-toast__action:focus-visible', 'outline-offset', 'Keyboard', 'focus ring of the action'],
@@ -396,6 +451,7 @@ test.each([
 	'loading.md',
 	'lists.md',
 	'record-pages.md',
+	'dialogs.md',
 ])('the Design System holds %s', (name) => {
 	expect([...pages.keys()]).toContain(name)
 })
@@ -678,4 +734,117 @@ test('the lists page leaves the reload timing to the loading page', () => {
 
 	expect(section, 'the lists page has a section on a write of your own').not.toBe('')
 	expect(LOADING_NUMBERS.filter((value) => value.test(section))).toEqual([])
+})
+
+/** Returns the passage of a dialogs page section that holds some words, spaces single, empty when none does. */
+function dialogPassage(heading: DialogSection, phrase: string): string {
+	return passagesOf(sections.get('dialogs.md')?.get(heading)).find((passage) => passage.includes(phrase)) ?? ''
+}
+
+test.each(DIALOG_SHEET)('the dialogs page gives in %s, beside "%s", the token %s finds in the installed sheet', (
+	heading,
+	phrase,
+	pattern,
+) => {
+	const token = groupOf(pattern.exec(installedFile(CONFIRM_MODULE)))
+	const passage = dialogPassage(heading, phrase)
+
+	expect(passage, `the ${heading} section says nothing with "${phrase}"`).not.toBe('')
+	expect(passage).toContain(`\`${token}\``)
+})
+
+test('the dialogs page gives the dimmed layer as the installed sheet paints it', () => {
+	const alpha = groupOf(/__backdrop\{background-color:rgba\(0,0,0,\.(\d+)\)/.exec(installedFile(CONFIRM_MODULE)))
+
+	expect(dialogPassage('Inside the card', 'dimmed with')).toContain(`\`rgba(0, 0, 0, 0.${alpha})\``)
+})
+
+test('the dialogs page gives the scale the card grows from', () => {
+	const scale = groupOf(/scale\(\.(\d)\)/.exec(installedFile(CONFIRM_MODULE)))
+
+	expect(dialogPassage('Motion', 'grows from')).toContain(`grows from 0.${scale} of its size`)
+})
+
+test('the dialogs page says the dimmed layer appears at once, as the installed sheet orders it', () => {
+	const sheet = installedFile(CONFIRM_MODULE)
+	const backdrop = sheet.slice(sheet.indexOf('__backdrop{'), sheet.indexOf('__popup{'))
+	const starts = backdrop.indexOf('[data-starting-style]{opacity:0}')
+
+	expect(starts, 'the backdrop starts hidden').toBeGreaterThan(-1)
+	expect(backdrop.indexOf('[data-open]{opacity:1}'), 'the open rule wins as it comes later').toBeGreaterThan(starts)
+	expect(dialogPassage('Motion', 'dimmed layer')).toContain('appears at once')
+})
+
+test('the dialogs page gives the floor width at the width the sheet switches', () => {
+	const width = groupOf(/@media \(min-width:(\d+)px\)\{min-width:var\(--wpds-/.exec(installedFile(CONFIRM_MODULE)))
+
+	expect(dialogPassage('Size and place', 'its floor')).toContain(`From ${width}px wide`)
+})
+
+test('the dialogs page gives the shadow as the installed sheet paints it', () => {
+	const elevation = groupOf(/--_wp-ui-elevation-lg:([^;]+);/.exec(installedFile(CONFIRM_MODULE)))
+	const layers = [...elevation.matchAll(/(0 \d+px \d+px) rgba\(0,0,0,\.(\d+)\)/g)].map(
+		([, offsets, alpha]) => `\`${offsets}\` at ${Number(alpha)}%`,
+	)
+
+	expect(layers).toHaveLength(4)
+	expect(layers.filter((layer) => !dialogPassage('Inside the card', 'shadow').includes(layer))).toEqual([])
+})
+
+test('the dialogs page gives the gap between the buttons of a confirm, as the installed alert dialog sets it', () => {
+	const step = groupOf(/direction: "row",\s*gap: "(\w+)",\s*justify: "flex-end"/.exec(installedFile(CONFIRM_MODULE)))
+	const token = groupOf(new RegExp(`\\b${step}: "var\\((--wpds-[\\w-]+)`).exec(installedFile(STACK_MODULE)))
+
+	expect(dialogPassage('Inside the card', 'Cancel first')).toContain(`\`${token}\``)
+})
+
+test('the dialogs page gives the Cancel of a confirm, as the installed alert dialog draws it', () => {
+	const close = /_AlertDialog\.Close,\s*\{\s*render: [^\n]*jsx\(Button, \{ variant: "minimal", tone: "neutral" \}\)/
+
+	expect(installedFile(CONFIRM_MODULE)).toMatch(close)
+	expect(dialogPassage('Inside the card', 'In a confirm Cancel')).toContain('no border and takes the neutral tone')
+})
+
+/** A text of a confirm, named as the installed alert dialog draws it. */
+type ConfirmText = 'title' | 'description' | 'failure'
+
+/** The patterns finding the text variant the installed alert dialog gives each text of a confirm. */
+const VARIANT_OF: Record<ConfirmText, RegExp> = {
+	title: /variant: "([\w-]+)",\s*render: [^\n]*_AlertDialog\.Title\b/,
+	description: /variant: "([\w-]+)",\s*render: [^\n]*_AlertDialog\.Description\b/,
+	failure: /variant: "([\w-]+)",\s*className: style_default2\["error-message"\]/,
+}
+
+/** Returns the variant the installed alert dialog gives a text of a confirm, and that variant's font size token. */
+function textOf(text: ConfirmText): { variant: string; size: string } {
+	const variant = groupOf(VARIANT_OF[text].exec(installedFile(CONFIRM_MODULE)))
+	const rule = new RegExp(`__${variant}\\{[^}]*?--_gcd-p-font-size:var\\((--wpds-[\\w-]+)`)
+	return { variant, size: groupOf(rule.exec(installedFile(TEXT_MODULE))) }
+}
+
+test('the dialogs page gives the text sizes of a confirm, as the installed alert dialog draws them', () => {
+	const [title, body, failure] = (['title', 'description', 'failure'] as const).map(textOf)
+
+	expect(dialogPassage('Inside the card', 'The title is')).toContain(`\`${title.variant}\`, at \`${title.size}\``)
+	expect(dialogPassage('Inside the card', 'The body text')).toContain(`The body text is at \`${body.size}\``)
+	expect(dialogPassage('A failed write', 'under the buttons')).toContain(`\`${failure.size}\``)
+})
+
+test('the dialogs page gives the width of the one size the installed alert dialog draws', () => {
+	const popup = installedFile(CONFIRM_MODULE)
+	const classes = /className: clsx\(\s*style_default\.popup,\s*className,\s*style_default\["([\w-]+)"\]\s*\)/
+	const size = groupOf(classes.exec(popup))
+	const token = groupOf(new RegExp(`__${size}\\{max-width:var\\((--wpds-[\\w-]+)`).exec(popup))
+
+	expect(dialogPassage('Size and place', 'A confirm is at most')).toContain(`\`${token}\``)
+})
+
+test('the usage pages leave every dialog value to the dialogs page', () => {
+	const found = DIALOG_LOOKS.map(([page, heading]) => {
+		const section = sections.get(page)?.get(heading)
+		const values = section === undefined ? ['no such section'] : DIALOG_NUMBERS.filter((value) => value.test(section))
+		return `${page} ${heading}: ${values.map(String).join(' ')}`
+	})
+
+	expect(found.filter((line) => !line.endsWith(': '))).toEqual([])
 })

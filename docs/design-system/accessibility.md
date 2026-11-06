@@ -124,8 +124,8 @@ where they are and a screen reader has a control to name, or stays on
 the region when that control is a primary action.
 
 Dialogs move focus as they open and close, as
-[a confirm outside a list](../lists.md#a-confirm-outside-a-list) and
-[a form dialog](../lists.md#a-form-dialog) explain. When the list
+[keyboard and focus](./dialogs.md#keyboard-and-focus) on the dialogs
+page and [a form dialog](../lists.md#a-form-dialog) explain. When the list
 drew the row a dialog opened from anew while the dialog was open,
 `useFocusBack` puts the focus back on that row, or on the list once
 the row left it, as
