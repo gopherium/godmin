@@ -59,6 +59,9 @@ function ListScreen({
 			<button type="button" onClick={() => toaster.show('Moved to the trash.', { label: 'Undo', onAct: () => {} })}>
 				Show a toast
 			</button>
+			<button type="button" onClick={() => toaster.show('Saved.')}>
+				Show a note
+			</button>
 			<Page
 				title="Posts"
 				list={region}
@@ -258,13 +261,23 @@ test('focuses the list region once a run moved an item with the focus on the toa
 	fireEvent.click(control('Show a toast'))
 	focusOn('Undo')
 	fireEvent.click(control('Undo'))
-	const toasts = document.activeElement as HTMLElement
-	expect(toasts.getAttribute('role'), 'the focus after Undo, the region of no toast').toBeNull()
+	expect(document.activeElement, 'the focus after Undo').toBe(document.querySelector('.godmin-toasts'))
 	expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull()
 
 	settle(seen.settles[0], true)
 
 	expect(document.activeElement).toBe(listRegion())
+})
+
+test('leaves the focus on a plain toast a reader moved to during a run', () => {
+	const { seen } = renderList('post publish')
+	start()
+	fireEvent.click(control('Show a note'))
+
+	focusOn('Saved.')
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Saved.'))
 })
 
 test('leaves the focus on the action of another toast a reader moved to during a run', () => {
