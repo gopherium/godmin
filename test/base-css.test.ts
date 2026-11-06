@@ -1173,7 +1173,7 @@ test('widens the press area of the action past its box with a part that paints n
 	expect(action).toMatch(/position:\s*relative/)
 	expect(area).toMatch(/content:\s*'';/)
 	expect(area).toMatch(/position:\s*absolute/)
-	expect(area).toMatch(/inset:\s*calc\(-1 \* var\(--wpds-dimension-gap-sm\)\);/)
+	expect(area).toMatch(/inset:\s*min\(calc\(-1 \* var\(--wpds-dimension-gap-sm\)\), calc\(50% - 12px\)\);/)
 	expect(area, 'the part paints nothing').not.toMatch(/background|border|outline|box-shadow/)
 })
 

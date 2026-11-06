@@ -19,13 +19,18 @@ const REACH = 7.5
 /** How long a double click waits between its clicks, in milliseconds. */
 const DOUBLE_CLICK_GAP = 60
 
+/** Ends the arrival of the toast that holds the given action. */
+function finishArrival(action: HTMLElement): void {
+	const item = action.closest('.godmin-toasts__item') as HTMLElement
+	item.getAnimations({ subtree: true }).forEach((animation) => animation.finish())
+}
+
 /** Shows a toast with an action, ends its arrival and returns its action button. */
 async function shownAction(): Promise<HTMLElement> {
 	render(<Plain />)
 	screen.getByRole('button', { name: 'Action' }).click()
 	const action = await screen.findByRole('button', { name: 'Undo' })
-	const item = action.closest('.godmin-toasts__item') as HTMLElement
-	item.getAnimations({ subtree: true }).forEach((animation) => animation.finish())
+	finishArrival(action)
 	return action
 }
 
@@ -39,6 +44,33 @@ test('takes a press anywhere in a square of 24 by 24 around the action, and up t
 	expect(document.elementFromPoint(x, y + HALF_TARGET), 'below the words').toBe(action)
 	expect(document.elementFromPoint(box.left - REACH, y), 'up to 8px before the words').toBe(action)
 	expect(document.elementFromPoint(box.right + REACH, y), 'up to 8px after the words').toBe(action)
+})
+
+/** Renders a button that shows a toast whose action is a single narrow letter. */
+function NarrowAction({ onAct }: { onAct: () => void }) {
+	const toaster = useToaster()
+	return (
+		<button type="button" onClick={() => toaster.show('3 posts moved to the trash.', { label: 'i', onAct })}>
+			Trash
+		</button>
+	)
+}
+
+test('takes a press across 24px around an action too narrow for 8px each side to make 24px', async () => {
+	render(
+		<Toaster>
+			<NarrowAction onAct={vi.fn()} />
+		</Toaster>,
+	)
+	screen.getByRole('button', { name: 'Trash' }).click()
+	const action = await screen.findByRole('button', { name: 'i' })
+	finishArrival(action)
+	const box = action.getBoundingClientRect()
+	const [x, y] = [box.left + box.width / 2, box.top + box.height / 2]
+
+	expect(box.width + 2 * REACH, 'the words and 8px each side fall short').toBeLessThan(2 * HALF_TARGET)
+	expect(document.elementFromPoint(x - HALF_TARGET, y), 'before the words').toBe(action)
+	expect(document.elementFromPoint(x + HALF_TARGET, y), 'after the words').toBe(action)
 })
 
 /** Renders a button that shows a toast with Undo, and a control of the page the test moves under that toast. */

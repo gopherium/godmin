@@ -433,7 +433,7 @@ body {
 	.godmin-toast__action::after {
 		content: '';
 		position: absolute;
-		inset: calc(-1 * var(--wpds-dimension-gap-sm));
+		inset: min(calc(-1 * var(--wpds-dimension-gap-sm)), calc(50% - 12px));
 	}
 
 	.godmin-toast__action:hover {

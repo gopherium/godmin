@@ -135,8 +135,9 @@ closes after it leaves, so the toasts above slide instead of jumping.
 - A click anywhere on a toast clears it, with or without an action.
   The pointer turns to `--wpds-cursor-control` over every toast.
 - A click on the action runs it and clears the toast. The action takes
-  a press up to `--wpds-dimension-gap-sm` (8px) past its words on
-  every side, so its press area is at least 24 by 24 pixels, with no
+  a press `--wpds-dimension-gap-sm` (8px) past its words on every
+  side, and further past a label too short for that to make 24
+  pixels, so its press area is at least 24 by 24 pixels, with no
   change to how it looks.
 - A click on a toast moves focus to the toast region, as WordPress
   moves it to its snackbar list. The region draws no ring.

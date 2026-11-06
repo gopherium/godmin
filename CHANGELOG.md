@@ -28,7 +28,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 - After a run that moved an item, `useListRun` moves the focus to the list from the control that opened a WPDS dialog, as it does for a `Modal`, and leaves the focus on a control the reader moved to out of a dialog.
 - A run started from a toast, such as Undo, puts the focus on the list region, not on the toast region.
-- A toast's action takes a press up to 8px past its words, so its press area is at least 24 by 24.
+- A toast's action takes a press 8px past its words, and further past a very short label, so its press area is at least 24 by 24.
 - The second click of a double click on a toast stays on that toast, and never presses what lies under it.
 
 ## [0.31.0] - 2026-11-02
