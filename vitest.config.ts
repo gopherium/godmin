@@ -36,7 +36,6 @@ const holdKey: BrowserCommand<[key: string, repeats: number, gap: number]> = asy
 const SHOT_STYLE = [
 	'.godmin-toasts__item, .godmin-toast { animation: none; }',
 	'.godmin-loading-screen path, .components-spinner path { animation: none; }',
-	'.components-modal__frame { animation: none; transform: scale(1); }',
 	'.dataviews-wrapper .is-refreshing { animation: none !important; opacity: 0.5 !important; }',
 	'[data-wp-compat-overlay-slot] * { transition: none }',
 	'[role="alertdialog"] button svg path, [role="dialog"] button svg path { animation: none }',
