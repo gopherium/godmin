@@ -2,11 +2,11 @@
 
 import { speak } from '@wordpress/a11y'
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { Modal } from '@wordpress/components'
 import { StrictMode, useEffect } from 'react'
 import { afterEach, beforeEach, expect, expectTypeOf, onTestFinished, test, vi } from 'vitest'
 
 import manifest from '../package.json'
+import { FormDialog } from '../src/dialogs.js'
 import { getAnnouncement, installTestEnvironment, renderAdmin } from '../src/testing.js'
 import { Toaster, useToaster } from '../src/toaster.js'
 import type { ToastAction, ToasterHandle, ToasterProps } from '../src/toaster.js'
@@ -987,25 +987,25 @@ test('hands focus to the toast region before a focused toast starts fading out',
 })
 
 /**
- * Renders a WordPress modal holding a button that raises a toast.
- * @returns The modal.
+ * Renders a form dialog holding a button that raises a toast.
+ * @returns The dialog.
  */
 function DialogThatRaises() {
 	return (
-		<Modal title="Add Page" onRequestClose={vi.fn()}>
+		<FormDialog title="Add Page" submitLabel="Add" onSubmit={() => ({ close: false })} onClose={vi.fn()}>
 			<Raise message="Injected failure for the measurement." />
-		</Modal>
+		</FormDialog>
 	)
 }
 
-test('keeps the toast region inside the application, under an open dialog, as WordPress draws its snackbar', () => {
+test('keeps the toast region inside the application under an open dialog, as WordPress does its snackbar', async () => {
 	const { container } = renderAdmin(
 		<Toaster>
 			<DialogThatRaises />
 		</Toaster>,
 	)
 
-	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
+	fireEvent.click(await screen.findByRole('button', { name: 'Raise' }))
 
 	expect(screen.getByRole('dialog', { name: 'Add Page' })).not.toBeNull()
 	expect(region().textContent).toBe('Injected failure for the measurement.')

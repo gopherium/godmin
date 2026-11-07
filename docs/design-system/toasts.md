@@ -32,13 +32,12 @@ floats over the list footer, as it does in WordPress. Two things paint
 above a toast:
 
 - The drawer on a small screen.
-- An open dialog. On a wide screen a toast shows dimmed under the dark
-  layer around the dialog. On a phone it sits behind the sheet of a
-  form dialog, and shows dimmed under a confirm, which stays a card.
-  Screen readers still hear it, because every message is also spoken.
-  Most dialogs close as their write starts or ends, so their toast
-  shows in full. A [form dialog](../lists.md#a-form-dialog) stays open
-  after a failure, so its toast shows under it, as in WordPress.
+- An open dialog. A toast shows dimmed under the dark layer around
+  the dialog, at every width. Screen readers still hear it, because
+  every message is also spoken. A dialog that closes as its write
+  starts or ends shows its toast in full. A dialog that stays open
+  says why inside, as [a failed write](./dialogs.md#a-failed-write)
+  says.
 
 ## Size
 

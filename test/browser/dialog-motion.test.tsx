@@ -1,45 +1,66 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { render, screen } from '@testing-library/react'
+import { InputControl } from '@wordpress/ui'
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { expect, test, vi } from 'vitest'
 import { commands } from 'vitest/browser'
 
-import { ConfirmDialog } from '../../src/dialogs.js'
+import { ConfirmDialog, FormDialog } from '../../src/dialogs.js'
 
 /** How long every transition of a dialog runs, in milliseconds. */
 const DURATION = 200
 
-/** Renders a button that asks a confirm, and tells the spy when the confirm has gone. */
-function Asker({ onClose }: { onClose: () => void }) {
+/** The dialogs these tests play: a confirm, and a form dialog. */
+type Shape = 'confirm' | 'form'
+
+/** Both shapes, for the tests that hold for each. */
+const SHAPES: Shape[] = ['confirm', 'form']
+
+/** The role each shape of dialog takes. */
+const ROLES: Record<Shape, string> = { confirm: 'alertdialog', form: 'dialog' }
+
+/** Renders the dialog of the given shape, with the close it runs once it has gone. */
+function dialogOf(shape: Shape, close: () => void): ReactNode {
+	return shape === 'confirm' ? (
+		<ConfirmDialog
+			title="Empty the trash?"
+			confirmLabel="Empty trash"
+			cancelLabel="Cancel"
+			onConfirm={() => undefined}
+			onClose={close}
+		/>
+	) : (
+		<FormDialog title="Add Page" submitLabel="Add" cancelLabel="Cancel" onSubmit={() => undefined} onClose={close}>
+			<InputControl label="Title" />
+		</FormDialog>
+	)
+}
+
+/** Renders a button that asks a dialog of the given shape, and tells the spy when the dialog has gone. */
+function Asker({ shape, onClose }: { shape: Shape; onClose: () => void }) {
 	const [asking, setAsking] = useState(false)
+	const close = () => {
+		onClose()
+		setAsking(false)
+	}
 	return (
 		<>
 			<button type="button" onClick={() => setAsking(true)}>
 				Ask
 			</button>
-			{asking ? (
-				<ConfirmDialog
-					title="Empty the trash?"
-					confirmLabel="Empty trash"
-					cancelLabel="Cancel"
-					onConfirm={() => undefined}
-					onClose={() => {
-						onClose()
-						setAsking(false)
-					}}
-				/>
-			) : null}
+			{asking ? dialogOf(shape, close) : null}
 		</>
 	)
 }
 
-/** Draws the page, asks the confirm and returns its popup and its backdrop, with the close spy. */
-async function ask() {
+/** Draws the page, asks a dialog of the given shape and returns its popup and its backdrop, with the close spy. */
+async function ask(shape: Shape) {
 	const onClose = vi.fn()
-	render(<Asker onClose={onClose} />)
+	render(<Asker shape={shape} onClose={onClose} />)
 	screen.getByRole('button', { name: 'Ask' }).click()
-	const popup = await screen.findByRole('alertdialog')
+	const popup = await screen.findByRole(ROLES[shape])
 	return { onClose, popup, backdrop: document.querySelector('[class*="backdrop"]') as Element }
 }
 
@@ -82,16 +103,16 @@ function finish(transitions: CSSTransition[]): void {
 	transitions.forEach((transition) => transition.finish())
 }
 
-/** Asks the confirm and ends its entry at once. */
-async function askAndSettle() {
-	const asked = await ask()
+/** Asks a dialog of the given shape and ends its entry at once. */
+async function askAndSettle(shape: Shape) {
+	const asked = await ask(shape)
 	finish(await transitionsOf(asked.popup))
 	await frames(2)
 	return asked
 }
 
-test('plays its entry on the card alone, and its exit on the card and on the backdrop', async () => {
-	const { popup, backdrop } = await ask()
+test.each(SHAPES)('plays the entry of a %s on the card alone, its exit on the card and the backdrop', async (shape) => {
+	const { popup, backdrop } = await ask(shape)
 
 	const entry = await transitionsOf(popup)
 	expect(readings(entry, popup)).toEqual([
@@ -114,8 +135,8 @@ test('plays its entry on the card alone, and its exit on the card and on the bac
 	finish([...exit, ...fading])
 })
 
-test('starts its entry fully faded and at nine tenths of its size', async () => {
-	const { popup } = await ask()
+test.each(SHAPES)('starts the entry of a %s fully faded and at nine tenths of its size', async (shape) => {
+	const { popup } = await ask(shape)
 
 	const entry = await transitionsOf(popup)
 	entry.forEach((transition) => {
@@ -129,8 +150,8 @@ test('starts its entry fully faded and at nine tenths of its size', async () => 
 	finish(entry)
 })
 
-test('stays on the page until its exit ended, and runs onClose after', async () => {
-	const { onClose, popup } = await askAndSettle()
+test.each(SHAPES)('keeps a %s on the page until its exit ended, and runs onClose after', async (shape) => {
+	const { onClose, popup } = await askAndSettle(shape)
 
 	screen.getByRole('button', { name: 'Cancel' }).click()
 
@@ -145,9 +166,9 @@ test('stays on the page until its exit ended, and runs onClose after', async () 
 	expect(onClose).toHaveBeenCalledOnce()
 })
 
-test('moves nothing under a reduced motion preference, and runs onClose as the card leaves', async () => {
+test.each(SHAPES)('moves no %s under a reduced motion preference, and runs onClose as it leaves', async (shape) => {
 	await commands.reduceMotion(true)
-	const { onClose, popup, backdrop } = await ask()
+	const { onClose, popup, backdrop } = await ask(shape)
 
 	await frames(3)
 	expect(popup.getAnimations()).toEqual([])

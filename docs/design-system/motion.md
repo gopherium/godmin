@@ -11,8 +11,9 @@ nothing else. It sets no transitions, so its own hover and focus
 looks change at once.
 
 Parts that WordPress packages draw keep the motion those packages
-give them. These include the dialogs, the drawer on a small screen,
-the spinners and the pulse of a list that loads.
+give them. These include the drawer on a small screen, the spinners
+and the pulse of a list that loads. The dialogs move as
+[motion](./dialogs.md#motion) on the dialogs page says.
 
 ## The tokens
 

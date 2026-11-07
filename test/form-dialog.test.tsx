@@ -1,27 +1,45 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
+import { speak } from '@wordpress/a11y'
 import { InputControl } from '@wordpress/ui'
 import { useState } from 'react'
-import { expect, onTestFinished, test, vi } from 'vitest'
+import { beforeEach, expect, onTestFinished, test, vi } from 'vitest'
 
+import { POPUP_CLASS } from '../src/dialog-open.js'
 import { FormDialog } from '../src/dialogs'
-import type { FormDialogProps } from '../src/dialogs'
-import { buttonClasses, installTestEnvironment, renderAdmin, stubLayout } from '../src/testing.js'
-import { cardWidth, gapInPixels } from './styles.js'
+import type { DialogAnswer, FormDialogProps } from '../src/dialogs'
+import { buttonClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
+
+vi.mock('@wordpress/a11y', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('@wordpress/a11y')>()
+	return { ...actual, speak: vi.fn(actual.speak) }
+})
 
 installTestEnvironment()
 
-/** How a test opens the dialog and what it does on send. */
-type Opening = Partial<Pick<FormDialogProps, 'size' | 'kind' | 'canSubmit' | 'onSubmit'>>
+beforeEach(() => {
+	vi.mocked(speak).mockClear()
+})
+
+/** The help sentence of the dialog of these tests. */
+const DESCRIPTION = 'A page holds one piece of writing.'
+
+/** The words a write that failed answers. */
+const FAILURE = 'Could not add the page. The server is busy.'
+
+/** How a test opens the dialog, what it does on send, and whether the title is needed. */
+type Opening = Partial<Pick<FormDialogProps, 'description' | 'cancelLabel' | 'canSubmit' | 'onSubmit'>> & {
+	titleRequired?: boolean
+}
 
 /**
  * Renders the Add Page button that opens a form dialog asking for a title and a summary.
- * @param props - The size, the kind, the send gate, the send and the spy told when the dialog is taken away.
+ * @param props - The help sentence, the Cancel label, the send gate, the send, the needed title and the close spy.
  * @returns The opener and the dialog while it is asked for.
  */
-function AddPage({ onClose, ...opening }: Opening & { onClose: () => void }) {
+function AddPage({ onClose, titleRequired = false, ...opening }: Opening & { onClose: () => void }) {
 	const [asking, setAsking] = useState(false)
 	const [title, setTitle] = useState('')
 	const [summary, setSummary] = useState('')
@@ -42,7 +60,12 @@ function AddPage({ onClose, ...opening }: Opening & { onClose: () => void }) {
 						setAsking(false)
 					}}
 				>
-					<InputControl label="Title" value={title} onChange={(event) => setTitle(event.target.value)} />
+					<InputControl
+						label="Title"
+						required={titleRequired}
+						value={title}
+						onChange={(event) => setTitle(event.target.value)}
+					/>
 					<InputControl label="Summary" value={summary} onChange={(event) => setSummary(event.target.value)} />
 				</FormDialog>
 			) : null}
@@ -52,7 +75,7 @@ function AddPage({ onClose, ...opening }: Opening & { onClose: () => void }) {
 
 /**
  * Renders the opener and opens the dialog from it, as a pointer press does.
- * @param opening - The size, the kind, the send gate and the send.
+ * @param opening - The help sentence, the Cancel label, the send gate, the send and the needed title.
  * @returns The send spy, the close spy and the opener.
  */
 async function openDialog(opening: Opening = {}) {
@@ -61,6 +84,7 @@ async function openDialog(opening: Opening = {}) {
 	renderAdmin(<AddPage {...opening} onSubmit={onSubmit} onClose={onClose} />)
 	const opener = screen.getByRole('button', { name: 'Add Page' })
 	await userEvent.setup().click(opener)
+	await screen.findByRole('dialog')
 	return { onSubmit, onClose, opener }
 }
 
@@ -108,7 +132,15 @@ function dialog(): HTMLElement {
  * @returns The input labelled Title.
  */
 function field(): HTMLInputElement {
-	return screen.getByLabelText('Title') as HTMLInputElement
+	return screen.getByRole('textbox', { name: /^Title/ }) as HTMLInputElement
+}
+
+/**
+ * Returns the form the fields sit in.
+ * @returns The form element.
+ */
+function form(): HTMLFormElement {
+	return field().form as HTMLFormElement
 }
 
 /**
@@ -117,6 +149,14 @@ function field(): HTMLInputElement {
  */
 function submit(): HTMLElement {
 	return screen.getByRole('button', { name: 'Add' })
+}
+
+/**
+ * Returns the names of the buttons in the dialog footer, in order.
+ * @returns The button labels.
+ */
+function footerButtons(): HTMLElement[] {
+	return [...(submit().closest('footer') as HTMLElement).querySelectorAll('button')]
 }
 
 /**
@@ -130,103 +170,165 @@ async function press(name: string): Promise<void> {
 }
 
 /**
- * Presses and lets go of the pointer on the dark overlay around the dialog.
+ * Presses and lets go of the pointer on the dimmed page around the dialog.
  */
-function clickOutside(): void {
-	const overlay = document.querySelector('.components-modal__screen-overlay') as HTMLElement
-	fireEvent.pointerDown(overlay, { button: 0 })
-	fireEvent.pointerUp(overlay, { button: 0 })
+async function clickOutside(): Promise<void> {
+	const backdrop = document.querySelector('[class*="backdrop"]') as Element
+	await act(async () => {
+		fireEvent.pointerDown(backdrop, { button: 0 })
+		fireEvent.pointerUp(backdrop, { button: 0 })
+		fireEvent.click(backdrop)
+	})
 }
 
-test('opens a titled dialog with a close button', async () => {
+/**
+ * Presses Escape in the first field and lets what it started settle.
+ */
+async function pressEscape(): Promise<void> {
+	await act(async () => {
+		fireEvent.keyDown(field(), { key: 'Escape', code: 'Escape' })
+	})
+}
+
+test('opens a dialog named by its title, with a close icon', async () => {
 	await openDialog()
 
 	expect(screen.getByRole('dialog', { name: 'Add Page' })).toBe(dialog())
-	expect(screen.getByRole('heading', { name: 'Add Page' })).not.toBeNull()
+	expect(screen.getByRole('heading', { level: 2, name: 'Add Page' })).not.toBeNull()
 	expect(screen.getByRole('button', { name: 'Close' })).not.toBeNull()
 })
 
-test('puts the cursor in the first field when it opens', async () => {
-	stubLayout()
+test('describes the dialog by its help sentence, the first child of the form', async () => {
+	await openDialog({ description: DESCRIPTION })
 
+	expect(screen.getByRole('dialog', { description: DESCRIPTION })).toBe(dialog())
+	expect(form().firstElementChild?.textContent).toBe(DESCRIPTION)
+})
+
+test('describes the dialog by nothing when it has no help sentence', async () => {
+	await openDialog()
+
+	expect(dialog().hasAttribute('aria-describedby')).toBe(false)
+})
+
+test('puts the cursor in the first field when it opens, past the close icon', async () => {
 	await openDialog()
 
 	await waitFor(() => expect(document.activeElement).toBe(field()))
 })
 
-test('opens on the WordPress modal frame, which rises as a bottom sheet on a phone', async () => {
+test('opens on the WPDS dialog at its medium width, with the class that breaks a long word', async () => {
 	await openDialog()
 
-	expect(dialog().classList.contains('components-modal__frame')).toBe(true)
+	expect(dialog().className).toMatch(/__is-medium\b/)
+	expect(dialog().classList.contains(POPUP_CLASS)).toBe(true)
 })
 
-test.each([
-	['by default', {}, 'small', '400px'],
-	['when asked for the small size', { size: 'small' }, 'small', '400px'],
-	['when asked for the medium size', { size: 'medium' }, 'medium', '560px'],
-] as const)('opens as the WordPress card of the right width %s', async (_case, opening, size, width) => {
-	await openDialog(opening)
-
-	expect(dialog().classList.contains(`has-size-${size}`)).toBe(true)
-	expect(cardWidth(size)).toBe(width)
-})
-
-test('draws Cancel first as accent text and the submit button after it as the solid one', async () => {
+test('draws a neutral outline Cancel first and the solid submit button after it, in the footer', async () => {
 	await openDialog()
 
-	const buttons = [...(field().form as HTMLFormElement).querySelectorAll('button')]
+	const buttons = footerButtons()
 	expect(buttons.map((button) => button.textContent)).toEqual(['Cancel', 'Add'])
-	expect([...buttons[0].classList]).toEqual(buttonClasses('minimal'))
+	expect([...buttons[0].classList]).toEqual(buttonClasses('outline', undefined, 'neutral'))
 	expect([...buttons[1].classList]).toEqual(buttonClasses('solid'))
 })
 
-test.each([
-	['16px for a create, the default, as WordPress spaces Add Page', {}, 16],
-	['20px for an edit', { kind: 'edit' }, 20],
-	['12px for a copy', { kind: 'copy' }, 12],
-] as const)('leaves %s above the buttons', async (_case, opening, pixels) => {
-	await openDialog(opening)
+test('draws the submit button alone when it has no Cancel', async () => {
+	await openDialog({ cancelLabel: undefined })
 
-	expect(gapInPixels(field().form as HTMLFormElement)).toBe(pixels)
+	expect(footerButtons().map((button) => button.textContent)).toEqual(['Add'])
 })
 
-test('sends the form once when Enter is pressed in a field, through a real form', async () => {
+test('sends the form once on a press on the submit button, which sits outside the form and names it', async () => {
 	const { onSubmit } = await openDialog()
+	expect(submit().closest('form')).toBeNull()
+	expect(submit().getAttribute('form')).toBe(form().id)
 
-	await userEvent.setup().type(field(), 'Hello{Enter}')
+	await press('Add')
 
 	expect(onSubmit).toHaveBeenCalledOnce()
-	expect(field().form).not.toBeNull()
+})
+
+test('sends nothing on a press while a field the form needs is blank', async () => {
+	const { onSubmit } = await openDialog({ titleRequired: true })
+
+	await press('Add')
+
+	expect(onSubmit).not.toHaveBeenCalled()
 })
 
 test('sends nothing while a needed field is empty, and keeps the submit button focusable', async () => {
 	const { onSubmit } = await openDialog({ canSubmit: false })
 
 	await press('Add')
-	await userEvent.setup().type(field(), '{Enter}')
 
 	expect(onSubmit).not.toHaveBeenCalled()
 	expect(submit().getAttribute('aria-disabled')).toBe('true')
 	expect(submit().hasAttribute('disabled')).toBe(false)
 })
 
-test('keeps the submit busy while the returned promise runs and ignores a second send', async () => {
+test('keeps the submit busy while the write runs, ignores a second send, and closes once it ends', async () => {
 	const held = heldSend()
-	const { onSubmit } = await openDialog({ onSubmit: held.send })
+	const { onSubmit, onClose } = await openDialog({ onSubmit: held.send })
 
 	await press('Add')
 	await press('Add')
-	await userEvent.setup().type(field(), '{Enter}')
 
 	expect(onSubmit).toHaveBeenCalledOnce()
 	expect(submit().getAttribute('aria-disabled')).toBe('true')
+	expect(onClose).not.toHaveBeenCalled()
 	await act(async () => held.fulfil())
-	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
 })
 
-test('keeps the submit busy until a write that ends with the saved item ends', async () => {
+test('spins for a write that is a thenable but not a promise', async () => {
+	const held = heldSend()
+	const thenable = { then: (done: () => void) => void held.send().then(done) } as unknown as PromiseLike<void>
+	await openDialog({ onSubmit: () => thenable })
+
+	await press('Add')
+
+	expect(submit().getAttribute('aria-disabled')).toBe('true')
+	await act(async () => held.fulfil())
+})
+
+test('hands a function given as the fields whether the write runs', async () => {
+	const held = heldSend()
+	renderAdmin(
+		<FormDialog title="Add Page" submitLabel="Add" onSubmit={held.send} onClose={() => undefined}>
+			{(busy) => <InputControl label="Title" readOnly={busy} />}
+		</FormDialog>,
+	)
+	await screen.findByRole('dialog')
+	expect(field().readOnly).toBe(false)
+
+	await press('Add')
+
+	expect(field().readOnly).toBe(true)
+	await act(async () => held.fulfil())
+})
+
+test('sends nothing more from a plain button in the fields pressed while the send runs', async () => {
+	const held = heldSend()
+	const onSubmit = vi.fn(held.send)
+	renderAdmin(
+		<FormDialog title="Add Page" submitLabel="Add" onSubmit={onSubmit} onClose={() => undefined}>
+			<button type="submit">Send from the fields</button>
+		</FormDialog>,
+	)
+	await screen.findByRole('dialog')
+
+	await press('Send from the fields')
+	await press('Send from the fields')
+
+	expect(onSubmit).toHaveBeenCalledOnce()
+	await act(async () => held.fulfil())
+})
+
+test('closes itself once a write that ends with the saved item ends', async () => {
 	let finish: (saved: { id: string }) => void = () => {}
-	await openDialog({
+	const { onClose } = await openDialog({
 		onSubmit: () =>
 			new Promise<{ id: string }>((done) => {
 				finish = done
@@ -237,72 +339,209 @@ test('keeps the submit busy until a write that ends with the saved item ends', a
 	expect(submit().getAttribute('aria-disabled')).toBe('true')
 
 	await act(async () => finish({ id: '1' }))
-	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
 })
 
-test('keeps Cancel live while the send runs', async () => {
+test('greys Cancel and the close icon while the send runs', async () => {
 	const held = heldSend()
 	await openDialog({ onSubmit: held.send })
 
 	await press('Add')
 
-	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('aria-disabled')).not.toBe('true')
+	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('aria-disabled')).toBe('true')
+	expect(screen.getByRole('button', { name: 'Close' }).getAttribute('aria-disabled')).toBe('true')
 	await act(async () => held.fulfil())
 })
 
-test('never turns busy for a send that returns nothing', async () => {
-	const { onSubmit } = await openDialog()
+test('closes at once on a send that returns nothing', async () => {
+	const { onSubmit, onClose } = await openDialog()
 
 	await press('Add')
-	await press('Add')
 
-	expect(onSubmit).toHaveBeenCalledTimes(2)
-	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onSubmit).toHaveBeenCalledOnce()
+	expect(onClose).toHaveBeenCalledOnce()
 })
 
-test('stays open when the send settles, until the caller closes it', async () => {
-	const held = heldSend()
-	const { onClose } = await openDialog({ onSubmit: held.send })
+test.each([
+	['at once', (): DialogAnswer => ({ close: false })],
+	['once its promise ends', async (): Promise<DialogAnswer> => ({ close: false })],
+])('stays open with nothing drawn on a send that answers a plain stay %s', async (_when, answer) => {
+	const { onSubmit, onClose } = await openDialog({ onSubmit: answer })
 
 	await press('Add')
-	await act(async () => held.fulfil())
 
 	expect(dialog()).not.toBeNull()
 	expect(onClose).not.toHaveBeenCalled()
+	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await press('Add')
+	expect(onSubmit).toHaveBeenCalledTimes(2)
+})
+
+/**
+ * Returns the notice that says why the last write failed, none while there is none.
+ * @returns The notice, the last child of the form.
+ */
+function notice(): HTMLElement | null {
+	const last = form().lastElementChild as HTMLElement
+	return within(last).queryByText(FAILURE) === null ? null : last
+}
+
+/**
+ * Records every place the body of the dialog is scrolled to, from a body as tall as the given height.
+ * @param height - How tall the body's content is, in pixels.
+ * @returns The places it was scrolled to, in order.
+ */
+function scrollsOfBody(height: number): number[] {
+	const body = form().parentElement as HTMLElement
+	const places: number[] = []
+	Object.defineProperty(body, 'scrollHeight', { configurable: true, value: height })
+	Object.defineProperty(body, 'scrollTop', {
+		configurable: true,
+		get: () => places.at(-1) ?? 0,
+		set: (place: number) => places.push(place),
+	})
+	return places
+}
+
+test.each([
+	['at once', (): DialogAnswer => ({ error: FAILURE })],
+	['once its promise ends', async (): Promise<DialogAnswer> => ({ error: FAILURE })],
+])('stays on a send that answers an error %s, says it at the end of the form and speaks it', async (_when, answer) => {
+	const { onClose } = await openDialog({ onSubmit: answer })
+	await userEvent.setup().type(field(), 'Hello')
+
+	await press('Add')
+
+	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
+	expect(notice()).not.toBeNull()
+	expect(speak).toHaveBeenCalledOnce()
+	expect(speak).toHaveBeenCalledWith(FAILURE, 'assertive')
+	expect(field().value).toBe('Hello')
+	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+})
+
+test('says a failure in a plain notice, never one that alerts as it is drawn', async () => {
+	await openDialog({ onSubmit: () => ({ error: FAILURE }) })
+
+	await press('Add')
+
+	expect(notice()).not.toBeNull()
+	expect(screen.queryByRole('alert')).toBeNull()
+})
+
+test('clears the failure as soon as the reader types', async () => {
+	await openDialog({ onSubmit: () => ({ error: FAILURE }) })
+	await press('Add')
+
+	await userEvent.setup().type(field(), 'H')
+
+	expect(notice()).toBeNull()
+})
+
+test('clears the failure as the next send starts', async () => {
+	const held = heldSend()
+	const onSubmit = vi.fn<() => DialogAnswer | Promise<void>>(() => ({ error: FAILURE }))
+	await openDialog({ onSubmit })
+	await press('Add')
+	expect(notice()).not.toBeNull()
+
+	onSubmit.mockImplementation(held.send)
+	await press('Add')
+
+	expect(notice()).toBeNull()
+	await act(async () => held.fulfil())
+})
+
+test('scrolls the body to its end on a failure, and again when the same words come back at once', async () => {
+	await openDialog({ onSubmit: () => ({ error: FAILURE }) })
+	const places = scrollsOfBody(640)
+
+	await press('Add')
+	expect(places).toEqual([640])
+
+	await press('Add')
+	expect(places).toEqual([640, 640])
+})
+
+test('closes with no words on a write that ends with an object in its error', async () => {
+	const { onClose } = await openDialog({ onSubmit: async () => ({ data: null, error: { message: FAILURE } }) })
+
+	await press('Add')
+
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
+	expect(speak).not.toHaveBeenCalled()
 })
 
 test.each([
 	['Cancel', async () => press('Cancel')],
-	['Escape', async () => fireEvent.keyDown(field(), { key: 'Escape', code: 'Escape' })],
-	['a click on the dimmed page', async () => clickOutside()],
-	['its close button', async () => press('Close')],
-])('closes on %s, also while the send runs', async (_way, close) => {
+	['Escape', pressEscape],
+	['a click on the dimmed page', clickOutside],
+	['its close icon', async () => press('Close')],
+])('stays open on %s while the send runs, and closes once it ends', async (_way, close) => {
 	const held = heldSend()
 	const { onClose } = await openDialog({ onSubmit: held.send })
 	await press('Add')
 
 	await close()
 
-	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-	expect(onClose).toHaveBeenCalledOnce()
+	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
 	await act(async () => held.fulfil())
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
 	expect(onClose).toHaveBeenCalledOnce()
 })
 
-test('lets the reader send again after a send that throws, and hands the error on', async () => {
+test.each([
+	['Cancel', async () => press('Cancel')],
+	['Escape', pressEscape],
+	['a click on the dimmed page', clickOutside],
+	['its close icon', async () => press('Close')],
+])('closes on %s while idle, sends nothing, and runs onClose once the card left', async (_way, close) => {
+	const { onSubmit, onClose } = await openDialog()
+
+	await close()
+
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('stays on a rejection with the spinner ended, hands it on once, and lets the reader send again', async () => {
 	const thrown = new Error('offline')
 	const reasons = heardRejections()
 	const held = heldSend()
-	const { onSubmit } = await openDialog({ onSubmit: held.send })
+	const { onSubmit, onClose } = await openDialog({ onSubmit: held.send })
 
 	await press('Add')
 	await act(async () => held.reject(thrown))
 	await waitFor(() => expect(reasons).toEqual([thrown]))
-	await press('Add')
 
 	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
+	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await press('Add')
 	expect(onSubmit).toHaveBeenCalledTimes(2)
 	await act(async () => held.fulfil())
+})
+
+test('stays on a handler that throws, and hands the error on to the app once', async () => {
+	const thrown = new Error('offline')
+	const reasons = heardRejections()
+	const { onClose } = await openDialog({
+		onSubmit: () => {
+			throw thrown
+		},
+	})
+
+	await press('Add')
+	await waitFor(() => expect(reasons).toEqual([thrown]))
+
+	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
 })
 
 test('keeps what was typed after a send that throws', async () => {
@@ -319,12 +558,11 @@ test('keeps what was typed after a send that throws', async () => {
 })
 
 test('gives the focus back to the button that opened it once closed', async () => {
-	stubLayout()
 	const { opener } = await openDialog()
 	await waitFor(() => expect(document.activeElement).toBe(field()))
 
 	await userEvent.setup().click(screen.getByRole('button', { name: 'Cancel' }))
 
-	expect(screen.queryByRole('dialog')).toBeNull()
-	expect(document.activeElement).toBe(opener)
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	await waitFor(() => expect(document.activeElement).toBe(opener))
 })

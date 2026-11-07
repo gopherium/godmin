@@ -40,6 +40,10 @@ msgid "Back"
 msgstr "Retour"
 
 #, fuzzy
+msgid "Close"
+msgstr "Fermer"
+
+#, fuzzy
 msgid "Close navigation panel"
 msgstr "Fermer le panneau de navigation"
 

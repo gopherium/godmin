@@ -4,13 +4,22 @@ import { render, screen, within } from '@testing-library/react'
 import { DataViews } from '@wordpress/dataviews'
 import type { Action, Field, View } from '@wordpress/dataviews'
 import { backup } from '@wordpress/icons'
+import { InputControl } from '@wordpress/ui'
 import { useMemo, useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { commands, userEvent } from 'vitest/browser'
 
-import { ConfirmDialog } from '../../src/dialogs.js'
-import type { DialogAnswer } from '../../src/dialogs.js'
-import { Page, Toaster, focusedTrigger, useBulkRun, useFocusBack, useListRun } from '../../src/index.js'
+import { ConfirmDialog, FormDialog } from '../../src/dialogs.js'
+import type { DialogAnswer, FormDialogProps } from '../../src/dialogs.js'
+import {
+	Page,
+	Toaster,
+	focusedTrigger,
+	useBulkRun,
+	useDialogRun,
+	useFocusBack,
+	useListRun,
+} from '../../src/index.js'
 import type { BulkWords, Trigger } from '../../src/index.js'
 import { sampleFocus } from './sample-focus.js'
 
@@ -100,10 +109,12 @@ function ListBench({ writes }: { writes: Writes }) {
 	const [rows, setRows] = useState(REPORTS)
 	const [selection, setSelection] = useState(['1', '2'])
 	const [asked, setAsked] = useState<Asked>()
+	const [renaming, setRenaming] = useState<Report[]>()
 	const [adding, setAdding] = useState(false)
 	const [drawing, setDrawing] = useState(0)
 	const { run, region, refreshing } = useListRun('reports', setSelection)
 	const bulk = useBulkRun<Report>(run, writes.refresh)
+	const write = useDialogRun<Report>(run, writes.refresh)
 	const focusBack = useFocusBack(refreshing, region)
 	const words: BulkWords<Report> = {
 		...WORDS,
@@ -115,6 +126,7 @@ function ListBench({ writes }: { writes: Writes }) {
 		return [
 			{ id: 'restore', label: 'Restore', icon: backup, isPrimary: true, callback: ask },
 			{ id: 'delete', label: 'Delete', supportsBulk: true, callback: ask },
+			{ id: 'rename', label: 'Rename', callback: setRenaming },
 		]
 	}, [])
 	return (
@@ -156,6 +168,17 @@ function ListBench({ writes }: { writes: Writes }) {
 						focusBack(asked.items[0].id, asked.trigger)
 					}}
 				/>
+			) : null}
+			{renaming ? (
+				<FormDialog
+					title="Rename report"
+					submitLabel="Save"
+					cancelLabel="Cancel"
+					onSubmit={async () => write(renaming, writes.call, WORDS)}
+					onClose={() => setRenaming(undefined)}
+				>
+					<InputControl label="Name" />
+				</FormDialog>
 			) : null}
 			{adding ? (
 				<ConfirmDialog
@@ -259,6 +282,11 @@ function pageControl(name: string): HTMLElement {
 /** Returns the region of the page, whether or not the dialog hides it. */
 function region(): HTMLElement {
 	return screen.getByRole('region', { name: 'Posts', hidden: true })
+}
+
+/** Returns the dimmed layer behind the dialog. */
+function backdropOf(): Element {
+	return document.querySelector('[class*="backdrop"]') as Element
 }
 
 /** Waits for the browser to draw the given number of frames. */
@@ -434,6 +462,34 @@ test.each([
 	expect(document.activeElement, 'the focus once the list reloaded').toBe(shape.landing())
 })
 
+test('lands the focus on the row as a row form leaves, once a reload that ended before its card left', async () => {
+	const writes = renderList()
+	const opener = rowControl('Report 3', 'button', 'Actions')
+	opener.focus()
+	await userEvent.keyboard('{Enter}')
+	const rename = await screen.findByRole('menuitem', { name: 'Rename' })
+	rename.focus()
+	await userEvent.keyboard('{Enter}')
+	const popup = await screen.findByRole('dialog')
+	const name = within(popup).getByRole('textbox', { name: 'Name' })
+	await expect.poll(() => document.activeElement).toBe(name)
+	await Promise.all(popup.getAnimations().map(async (transition) => transition.finished))
+
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => writes.ended.size).toBe(1)
+	writes.ended.forEach((end) => end())
+	await expect.poll(() => popup.getAnimations().length).toBeGreaterThan(0)
+	popup.getAnimations().forEach((transition) => transition.pause())
+	writes.reloaded([])
+	await expect.poll(rowsInert).toBe(false)
+	await frames(3)
+	expect(document.activeElement, 'the focus once the list reloaded, the card still leaving').toBe(opener)
+
+	popup.getAnimations().forEach((transition) => transition.finish())
+	await left(popup)
+	expect(document.activeElement, 'the focus once the card left').toBe(opener)
+})
+
 test('leaves the focus on the page once the rows were drawn anew, and the list lands it on the same item', async () => {
 	renderList()
 	await askByKey(pageControl('Add report'))
@@ -542,4 +598,228 @@ test('stays open on an Enter held from the control that asked it', async () => {
 
 	expect(popup.isConnected).toBe(true)
 	expect(onConfirm).not.toHaveBeenCalled()
+})
+
+/** What the form bench changes on its dialog: the send, the send gate, and whether its first field is needed. */
+interface FormDrawn {
+	/** Sends the form. */
+	onSubmit?: FormDialogProps['onSubmit']
+	/** Whether the form may be sent now. */
+	canSubmit?: boolean
+	/** Whether the first field must be filled before a send. */
+	titleRequired?: boolean
+}
+
+/** Renders two buttons that open a form dialog with two fields, and a button that drops the second. */
+function FormBench({ onSubmit = () => undefined, canSubmit, titleRequired = false }: FormDrawn) {
+	const [asking, setAsking] = useState(false)
+	const [second, setSecond] = useState(true)
+	return (
+		<>
+			<button type="button" onClick={() => setAsking(true)}>
+				Add Page
+			</button>
+			{second ? (
+				<button type="button" onClick={() => setAsking(true)}>
+					Add Post
+				</button>
+			) : null}
+			<button type="button" onClick={() => setSecond(false)}>
+				Drop Add Post
+			</button>
+			{asking ? (
+				<FormDialog
+					title="Add Page"
+					submitLabel="Add"
+					cancelLabel="Cancel"
+					canSubmit={canSubmit}
+					onSubmit={onSubmit}
+					onClose={() => setAsking(false)}
+				>
+					<InputControl label="Title" required={titleRequired} />
+					<InputControl label="Summary" />
+				</FormDialog>
+			) : null}
+		</>
+	)
+}
+
+/** Opens the form bench's dialog by key from a button, waits for the focus on its first field, gives its controls. */
+async function formInFocus(opener = 'Add Page') {
+	pageControl(opener).focus()
+	await userEvent.keyboard('{Enter}')
+	const popup = await screen.findByRole('dialog')
+	const title = within(popup).getByRole('textbox', { name: /^Title/ })
+	await expect.poll(() => document.activeElement).toBe(title)
+	const [close, cancel, save] = ['Close', 'Cancel', 'Add'].map((name) => within(popup).getByRole('button', { name }))
+	return { popup, title, summary: within(popup).getByRole('textbox', { name: 'Summary' }), close, cancel, save }
+}
+
+test('puts the first focus of a form dialog on its first field, past the close icon', async () => {
+	render(<FormBench />)
+
+	const { title } = await formInFocus()
+
+	expect(document.activeElement).toBe(title)
+})
+
+test('wraps Tab inside a form dialog, and Shift Tab back', async () => {
+	render(<FormBench />)
+	const { title, summary, close, cancel, save } = await formInFocus()
+
+	const reached: (Element | null)[] = []
+	for (let press = 0; press < 5; press += 1) {
+		await userEvent.keyboard('{Tab}')
+		await frames(3)
+		reached.push(document.activeElement)
+	}
+	expect(reached).toEqual([summary, cancel, save, close, title])
+
+	await userEvent.keyboard('{Shift>}{Tab}{/Shift}')
+	await frames(3)
+	expect(document.activeElement).toBe(close)
+})
+
+test('sends a form once on each Enter in either field, through its footer button', async () => {
+	const onSubmit = vi.fn((): DialogAnswer => ({ close: false }))
+	render(<FormBench onSubmit={onSubmit} />)
+	const { summary } = await formInFocus()
+
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+	expect(onSubmit).toHaveBeenCalledOnce()
+
+	summary.focus()
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+	expect(onSubmit).toHaveBeenCalledTimes(2)
+})
+
+test('sends nothing on Enter in a field while Save is greyed', async () => {
+	const onSubmit = vi.fn()
+	render(<FormBench onSubmit={onSubmit} canSubmit={false} />)
+	await formInFocus()
+
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('sends nothing on Enter in a blank field the form needs', async () => {
+	const onSubmit = vi.fn()
+	render(<FormBench onSubmit={onSubmit} titleRequired />)
+	await formInFocus()
+
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('leaves the focus on the page once the button that opened a form left, never on one used earlier', async () => {
+	render(<FormBench />)
+	const first = await formInFocus()
+	await userEvent.keyboard('{Escape}')
+	await left(first.popup)
+	expect(document.activeElement).toBe(pageControl('Add Page'))
+
+	const { popup } = await formInFocus('Add Post')
+	pageControl('Drop Add Post').click()
+	await expect.poll(() => screen.queryByRole('button', { name: 'Add Post', hidden: true })).toBeNull()
+	await userEvent.keyboard('{Escape}')
+	await left(popup)
+
+	expect(document.activeElement).toBe(document.body)
+})
+
+test('closes a form dialog on Escape with the focus on a Save greyed while a field is empty', async () => {
+	render(<FormBench canSubmit={false} />)
+	const { popup, save } = await formInFocus()
+	save.focus()
+	await expect.poll(() => document.activeElement).toBe(save)
+
+	await userEvent.keyboard('{Escape}')
+
+	await left(popup)
+	expect(document.activeElement).toBe(pageControl('Add Page'))
+})
+
+/** Returns a write the test ends by hand, and what ends it. */
+function heldForm(): { write: () => Promise<void>; end: () => void } {
+	let end = () => {}
+	return {
+		write: async () =>
+			new Promise<void>((done) => {
+				end = done
+			}),
+		end: () => end(),
+	}
+}
+
+test.each(['Add', 'Cancel'])('keeps a form dialog open on Escape from %s greyed while it writes', async (name) => {
+	const held = heldForm()
+	render(<FormBench onSubmit={held.write} />)
+	const { popup, save } = await formInFocus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => save.getAttribute('aria-disabled')).toBe('true')
+	const greyed = within(popup).getByRole('button', { name })
+	greyed.focus()
+	await expect.poll(() => document.activeElement).toBe(greyed)
+
+	await userEvent.keyboard('{Escape}')
+	await frames(3)
+
+	expect(popup.isConnected).toBe(true)
+	expect(popup.hasAttribute('data-ending-style')).toBe(false)
+	held.end()
+	await left(popup)
+})
+
+test('sends a form once on a double click on Save over a write that stays, then on Enter and Space', async () => {
+	const onSubmit = vi.fn(async (): Promise<DialogAnswer> => {
+		await new Promise((done) => setTimeout(done, 20))
+		return { close: false }
+	})
+	render(<FormBench onSubmit={onSubmit} />)
+	const { popup, save } = await formInFocus()
+	const idle = async () => expect.poll(() => save.getAttribute('aria-disabled')).not.toBe('true')
+
+	const [x, y] = await middleOf(save, popup)
+	await commands.doubleClickAt(x, y, DOUBLE_CLICK_GAP)
+	await idle()
+	await frames(3)
+	expect(onSubmit).toHaveBeenCalledOnce()
+
+	save.focus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => onSubmit.mock.calls.length).toBe(2)
+	await idle()
+
+	await userEvent.keyboard('[Space]')
+	await expect.poll(() => onSubmit.mock.calls.length).toBe(3)
+	await idle()
+})
+
+test.each([
+	['Escape', async () => userEvent.keyboard('{Escape}')],
+	['Cancel', async () => userEvent.click(screen.getByRole('button', { name: 'Cancel' }))],
+	['a click on the dimmed page', async () => userEvent.click(backdropOf(), { position: { x: 8, y: 8 } })],
+])('sends nothing on a press on Save or on Enter while a form dialog leaves after %s', async (_way, close) => {
+	const onSubmit = vi.fn()
+	render(<FormBench onSubmit={onSubmit} />)
+	const { popup, save, title } = await formInFocus()
+	await Promise.all(popup.getAnimations().map(async (transition) => transition.finished))
+
+	await close()
+	await expect.poll(() => popup.getAnimations().length).toBeGreaterThan(0)
+	popup.getAnimations().forEach((transition) => transition.pause())
+	await userEvent.click(save, { force: true })
+	title.focus()
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+
+	expect(onSubmit).not.toHaveBeenCalled()
+	popup.getAnimations().forEach((transition) => transition.finish())
+	await left(popup)
 })

@@ -513,10 +513,10 @@ test('covers every message the DataViews list chrome asks for', () => {
 	}
 })
 
-test('ships the words the WordPress button and modal speak inside a dialog, in each language', () => {
+test('ships the words a WordPress dialog, its buttons and its close icon speak, in each language', () => {
 	for (const catalogue of CATALOGUES) {
 		const ships = new Set(catalogue.messages.map(keyOf))
-		for (const spoken of ['Loading', 'Scrollable section']) {
+		for (const spoken of ['Close', 'Loading', 'Scrollable section']) {
 			expect(ships.has(spoken), `${catalogue.locale} ships no ${spoken}`).toBe(true)
 		}
 	}

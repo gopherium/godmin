@@ -8,9 +8,12 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 ### Added
 
-- `docs/design-system/dialogs.md` gives every value of a confirm, when to ask first and where a failure shows.
+- `docs/design-system/dialogs.md` gives every value of a confirm and a form dialog, when to ask first and where a failure shows.
 - `BulkWords` takes `undo`, the action a done toast offers once every item finished.
-- `DialogAnswer` from `@gopherium/godmin/dialogs` types what `onConfirm` may answer to stay open.
+- `DialogAnswer` from `@gopherium/godmin/dialogs` types what `onConfirm` and `onSubmit` may answer to stay open.
+- `useDialogRun` runs a dialog's write on a list: one item that failed keeps the dialog open and says why, several close and report in a toast.
+- `FormDialog` takes `description`, and a function as its children to read `busy`.
+- The French list catalogue speaks `Close`.
 
 ### Changed
 
@@ -22,7 +25,14 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `ConfirmDialog` ignores the second click of a double click, so a fast write is not sent twice and a confirm is not pressed unread.
 - `ConfirmDialog` sends once while Enter is held down.
 - An `onConfirm` that throws keeps the confirm open and hands the error on to the app, as a rejection does.
-- `docs/lists.md` leaves every confirm value to the new page.
+- **Breaking.** `FormDialog` draws the WPDS `Dialog`: a card at every width, a close icon, a pinned footer, an outline neutral Cancel and one width.
+- **Breaking.** `FormDialog` closes itself when its write ends, and holds Cancel, the close icon, Escape and the dimmed page while a write runs.
+- **Breaking.** `onClose` of `FormDialog` runs after the card has left.
+- **Breaking.** `onSubmit` may answer `{ error }` to show the failure inside the dialog, or `{ close: false }` to stay open, and a rejected promise or a throw leaves it open.
+- **Breaking.** `kind` and `size` go from `FormDialog`.
+- A failed write in a dialog that stays open shows inside it. A dialog that closes keeps the toast.
+- `FormDialog` sends nothing once it is closing, and ignores the second click of a double click on its send button.
+- `docs/lists.md` leaves every confirm and form dialog value to the new page.
 
 ### Fixed
 

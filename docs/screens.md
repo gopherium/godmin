@@ -265,7 +265,8 @@ message to screen readers. Use it wherever you would otherwise
 render a bare error string, such as a screen that failed to load. A
 write that fails goes in a toast instead, as
 [what goes in a toast](./loading-and-feedback.md#what-goes-in-a-toast)
-explains.
+explains. A dialog that stays open draws its own notice, as
+[a failed write](./design-system/dialogs.md#a-failed-write) says.
 
 ## LoadMore
 

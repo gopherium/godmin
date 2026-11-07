@@ -54,6 +54,12 @@ const EMPTY_STATE_MODULE = '@wordpress/ui/build-module/empty-state/root.mjs'
 /** The module of the installed design system that draws a confirm, the dialog stylesheet inside. */
 const CONFIRM_MODULE = '@wordpress/ui/build-module/alert-dialog/popup.mjs'
 
+/** The module of the installed design system that draws the card of a form dialog. */
+const DIALOG_MODULE = '@wordpress/ui/build-module/dialog/popup.mjs'
+
+/** The source of godmin's form dialog. */
+const formDialog = readFileSync(resolve(import.meta.dirname, '../src/form-dialog.tsx'), 'utf8')
+
 /** The module of the installed design system that turns the gap of a stack into a design token. */
 const STACK_MODULE = '@wordpress/ui/build-module/stack/stack.mjs'
 
@@ -102,8 +108,11 @@ const DIALOG_NUMBERS = [
 	/\b200ms\b/,
 ]
 
-/** The usage sections on a confirm, each by its page and heading, that leave every value to the dialogs page. */
-const DIALOG_LOOKS = ['Confirming an action', 'A failure from a dialog'].map((heading) => ['usage/lists.md', heading])
+/** The usage sections on a dialog, each by its page and heading, that leave every value to the dialogs page. */
+const DIALOG_LOOKS = ['Confirming an action', 'A form dialog', 'A failure from a dialog'].map((heading) => [
+	'usage/lists.md',
+	heading,
+])
 
 /** The rule of the installed DataViews sheet that draws the line beside the pinned actions of a header cell. */
 const STUCK_LINE = '.dataviews-view-table th.dataviews-view-table__actions-column--stuck::after'
@@ -837,6 +846,27 @@ test('the dialogs page gives the width of the one size the installed alert dialo
 	const token = groupOf(new RegExp(`__${size}\\{max-width:var\\((--wpds-[\\w-]+)`).exec(popup))
 
 	expect(dialogPassage('Size and place', 'A confirm is at most')).toContain(`\`${token}\``)
+})
+
+test('the dialogs page gives the gap between the fields of a form dialog, as the form sets it', () => {
+	const step = groupOf(/render=\{<form [^>]*\/>\} direction="column" gap="(\w+)"/.exec(formDialog))
+	const token = groupOf(new RegExp(`\\b${step}: "var\\((--wpds-[\\w-]+)`).exec(installedFile(STACK_MODULE)))
+
+	expect(dialogPassage('Inside the card', 'fields of a form dialog')).toContain(`\`${token}\``)
+})
+
+test('the dialogs page gives a form dialog the width of a confirm, the default of the installed dialog', () => {
+	const sized = /className: clsx\(\s*style_default\.popup,\s*className,\s*style_default\["is-([\w-]+)"\]\s*\)/
+	const confirm = groupOf(sized.exec(installedFile(CONFIRM_MODULE)))
+
+	expect(formDialog).not.toMatch(/<Dialog\.Popup[^>]*\bsize=/)
+	expect(groupOf(/\bsize = "(\w+)"/.exec(installedFile(DIALOG_MODULE)))).toBe(confirm)
+	expect(dialogPassage('Size and place', 'A form dialog')).toContain('takes the same width')
+})
+
+test('the dialogs page gives the Cancel of a form dialog, as the form draws it', () => {
+	expect(formDialog).toMatch(/<Dialog\.Action variant="outline" tone="neutral"/)
+	expect(dialogPassage('Inside the card', 'In a form dialog Cancel')).toContain('an outline and takes the neutral tone')
 })
 
 test('the usage pages leave every dialog value to the dialogs page', () => {

@@ -4,16 +4,16 @@ import '@wordpress/components/build-style/style.css'
 import '@wordpress/dataviews/build-style/style.css'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
-import { Modal } from '@wordpress/components'
 import { DataViews } from '@wordpress/dataviews'
 import type { Field, View } from '@wordpress/dataviews'
 import { useState } from 'react'
 import { expect, waitFor } from 'storybook/test'
 
+import { FormDialog } from '../src/dialogs.js'
 import { LoadingScreen } from '../src/loading.js'
 import { Page } from '../src/page.js'
 import { Admin, ListPage, NO_SHOT } from './frames.js'
-import { boxOf, centredIn, find, meets, middleAcross } from './measure.js'
+import { OVERLAY_CARD, boxOf, centredIn, find, finishMotion, meets, middleAcross } from './measure.js'
 
 /** A row of the sample list. */
 interface Report {
@@ -79,14 +79,21 @@ function ScreenPage({ label }: { label: string }) {
 	)
 }
 
-/** Renders an empty list page under a dialog holding a loading screen. */
+/** Renders an empty list page under a form dialog holding a loading screen. */
 function DialogScreen({ label }: { label: string }) {
 	return (
 		<>
 			<ListPage>{null}</ListPage>
-			<Modal title="Report" focusOnMount="firstContentElement" onRequestClose={() => {}}>
+			<FormDialog
+				title="Report"
+				submitLabel="Save"
+				cancelLabel="Cancel"
+				canSubmit={false}
+				onSubmit={() => undefined}
+				onClose={() => {}}
+			>
 				<LoadingScreen label={label} />
-			</Modal>
+			</FormDialog>
 		</>
 	)
 }
@@ -98,13 +105,6 @@ function CanvasScreen({ label }: { label: string }) {
 			<LoadingScreen label={label} />
 		</Admin>
 	)
-}
-
-/** Ends the opening motion of the dialog. */
-function openDialog() {
-	find('.components-modal__frame')
-		.getAnimations()
-		.forEach((animation) => animation.finish())
 }
 
 /** Checks the loading screen tells a screen reader the label of the stories. */
@@ -173,13 +173,14 @@ export const InADialog: Story = {
 	render: (args) => <DialogScreen label={args.label} />,
 	play: async () => {
 		await announces()
-		await expect(find('.components-modal__frame')).not.toHaveFocus()
-		openDialog()
+		await finishMotion()
+		const cancel = [...find(OVERLAY_CARD).querySelectorAll('button')].find((button) => button.textContent === 'Cancel')
+		await waitFor(() => expect(cancel).toHaveFocus())
 		const spinner = boxOf('.godmin-loading-screen svg')
 		const style = getComputedStyle(find('.godmin-loading-screen'))
 		const height = parseFloat(style.paddingBlockStart) + spinner.height + parseFloat(style.paddingBlockEnd)
 		await meets(boxOf('.godmin-loading-screen').height, height, 'as tall as its paddings and the spinner')
-		await meets(middleAcross(spinner), middleAcross(boxOf('.components-modal__content')), 'across the dialog')
+		await meets(middleAcross(spinner), middleAcross(boxOf('[data-wp-ui-overlay-scroll-container]')), 'across the dialog')
 	},
 }
 
