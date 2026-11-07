@@ -4,8 +4,6 @@ import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join, resolve } from 'node:path'
 
-import { SHEET_BREAKPOINT } from '../src/breakpoints.js'
-
 /** Finds a file of an installed package. */
 const packageFile = createRequire(import.meta.url).resolve
 
@@ -106,15 +104,4 @@ export function gapInPixels(element: Element): number {
 		throw new Error(`no rule of ${element.className} sets a gap`)
 	}
 	return pixelsOf(gap)
-}
-
-/**
- * Returns the widest the WordPress modal draws a card of the given size from the sheet breakpoint up.
- * @param size - The modal size.
- * @returns The width in pixels the size falls back to, none when the stylesheet has no such rule.
- */
-export function cardWidth(size: string): string | undefined {
-	const card = components.indexOf(`@media (min-width: ${SHEET_BREAKPOINT}px) {\n  .components-modal__frame {`)
-	const rule = components.indexOf(`.components-modal__frame.has-size-${size} {`, card)
-	return /max-width:\s*var\([^,]+,\s*(\d+px)\)/.exec(components.slice(rule, components.indexOf('}', rule)))?.[1]
 }

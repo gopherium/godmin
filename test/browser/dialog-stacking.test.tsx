@@ -11,8 +11,7 @@ import { expect, onTestFinished, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 
 import { AdminRoot } from '../../src/admin-root.js'
-import { ConfirmDialog, FormDialog } from '../../src/dialogs.js'
-import { Toaster, useToaster } from '../../src/index.js'
+import { ConfirmDialog, FormDialog, Toaster, useToaster } from '../../src/index.js'
 
 /** Loads the WordPress components stylesheet an app loads for DataViews, for the running test only. */
 async function loadComponentsSheet(): Promise<void> {

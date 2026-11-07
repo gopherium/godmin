@@ -31,10 +31,6 @@
 			"types": "./dist/dates.d.ts",
 			"default": "./dist/dates.js"
 		},
-		"./dialogs": {
-			"types": "./dist/dialogs.d.ts",
-			"default": "./dist/dialogs.js"
-		},
 		"./router": {
 			"types": "./dist/router.d.ts",
 			"default": "./dist/router.js"
@@ -71,7 +67,6 @@
 		"@tanstack/react-router": "^1.170.44",
 		"@testing-library/react": "^16.3.2",
 		"@wordpress/a11y": ">=5.0.0 <6.0.0",
-		"@wordpress/components": ">=43.0.0 <44.0.0",
 		"@wordpress/dataviews": ">=21.0.0 <22.0.0",
 		"@wordpress/date": ">=6.0.0 <7.0.0",
 		"@wordpress/i18n": ">=7.0.0 <8.0.0",
@@ -88,9 +83,6 @@
 			"optional": true
 		},
 		"@testing-library/react": {
-			"optional": true
-		},
-		"@wordpress/components": {
 			"optional": true
 		},
 		"@wordpress/dataviews": {

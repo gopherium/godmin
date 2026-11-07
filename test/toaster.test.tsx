@@ -6,7 +6,7 @@ import { StrictMode, useEffect } from 'react'
 import { afterEach, beforeEach, expect, expectTypeOf, onTestFinished, test, vi } from 'vitest'
 
 import manifest from '../package.json'
-import { FormDialog } from '../src/dialogs.js'
+import { FormDialog } from '../src/index.js'
 import { getAnnouncement, installTestEnvironment, renderAdmin } from '../src/testing.js'
 import { Toaster, useToaster } from '../src/toaster.js'
 import type { ToastAction, ToasterHandle, ToasterProps } from '../src/toaster.js'

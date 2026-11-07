@@ -7,7 +7,7 @@ import type { ReactNode } from 'react'
 import { expect, test, vi } from 'vitest'
 import { commands } from 'vitest/browser'
 
-import { ConfirmDialog, FormDialog } from '../../src/dialogs.js'
+import { ConfirmDialog, FormDialog } from '../../src/index.js'
 
 /** How long every transition of a dialog runs, in milliseconds. */
 const DURATION = 200

@@ -19,7 +19,7 @@ export const EDGE_BREAKPOINT = 782
 export const DENSE_BREAKPOINT = 640
 
 /**
- * The viewport width below which modals rise as sheets and toasts widen to the screen, the WordPress small breakpoint.
+ * The viewport width below which toasts widen to the screen, the WordPress small breakpoint.
  */
 export const SHEET_BREAKPOINT = 600
 

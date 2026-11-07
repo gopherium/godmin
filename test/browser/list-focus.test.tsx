@@ -8,8 +8,7 @@ import { useMemo, useState } from 'react'
 import { expect, onTestFinished, test } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
 
-import { ConfirmDialog } from '../../src/dialogs.js'
-import { Frame, Page, Toaster, useBulkRun, useListRun } from '../../src/index.js'
+import { ConfirmDialog, Frame, Page, Toaster, useBulkRun, useListRun } from '../../src/index.js'
 import type { BulkWords } from '../../src/index.js'
 import { sampleFocus } from './sample-focus.js'
 

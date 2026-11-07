@@ -9,10 +9,11 @@ import { useMemo, useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { commands, userEvent } from 'vitest/browser'
 
-import { ConfirmDialog, FormDialog } from '../../src/dialogs.js'
-import type { DialogAnswer, FormDialogProps } from '../../src/dialogs.js'
 import {
+	ConfirmDialog,
+	FormDialog,
 	Page,
+	RenameDialog,
 	Toaster,
 	focusedTrigger,
 	useBulkRun,
@@ -20,7 +21,7 @@ import {
 	useFocusBack,
 	useListRun,
 } from '../../src/index.js'
-import type { BulkWords, Trigger } from '../../src/index.js'
+import type { BulkWords, DialogAnswer, FormDialogProps, Trigger } from '../../src/index.js'
 import { sampleFocus } from './sample-focus.js'
 
 /** How long a double click waits between its clicks, in milliseconds. */
@@ -822,4 +823,31 @@ test.each([
 	expect(onSubmit).not.toHaveBeenCalled()
 	popup.getAnimations().forEach((transition) => transition.finish())
 	await left(popup)
+})
+
+test('sends nothing on Enter in a rename field that holds only spaces, and sends a real name once', async () => {
+	const onSubmit = vi.fn((): DialogAnswer => ({ close: false }))
+	render(
+		<RenameDialog
+			title="Rename"
+			name="   "
+			fieldLabel="Name"
+			submitLabel="Save"
+			cancelLabel="Cancel"
+			onSubmit={onSubmit}
+			onClose={() => {}}
+		/>,
+	)
+	const popup = await screen.findByRole('dialog')
+	const name = within(popup).getByRole('textbox', { name: 'Name' })
+	await expect.poll(() => document.activeElement).toBe(name)
+
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+	expect(onSubmit).not.toHaveBeenCalled()
+
+	await userEvent.fill(name, 'Report 5')
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => onSubmit.mock.calls.length).toBe(1)
+	expect(onSubmit).toHaveBeenCalledWith('Report 5')
 })
