@@ -24,6 +24,8 @@ export { NavigationItem } from './navigation-item.js'
 export type { NavigationItemProps } from './navigation-item.js'
 export { NavigationList } from './navigation-list.js'
 export type { NavigationListProps } from './navigation-list.js'
+export { UnsavedChangesDialog } from './unsaved-changes-dialog.js'
+export type { UnsavedChangesDialogProps } from './unsaved-changes-dialog.js'
 
 declare module '@tanstack/react-router' {
 	interface StaticDataRouteOption {
