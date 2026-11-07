@@ -11,7 +11,15 @@ import { commands, userEvent } from 'vitest/browser'
 
 import { ConfirmDialog, FormDialog } from '../../src/dialogs.js'
 import type { DialogAnswer, FormDialogProps } from '../../src/dialogs.js'
-import { Page, Toaster, focusedTrigger, useBulkRun, useFocusBack, useListRun } from '../../src/index.js'
+import {
+	Page,
+	Toaster,
+	focusedTrigger,
+	useBulkRun,
+	useDialogRun,
+	useFocusBack,
+	useListRun,
+} from '../../src/index.js'
 import type { BulkWords, Trigger } from '../../src/index.js'
 import { sampleFocus } from './sample-focus.js'
 
@@ -101,10 +109,12 @@ function ListBench({ writes }: { writes: Writes }) {
 	const [rows, setRows] = useState(REPORTS)
 	const [selection, setSelection] = useState(['1', '2'])
 	const [asked, setAsked] = useState<Asked>()
+	const [renaming, setRenaming] = useState<Report[]>()
 	const [adding, setAdding] = useState(false)
 	const [drawing, setDrawing] = useState(0)
 	const { run, region, refreshing } = useListRun('reports', setSelection)
 	const bulk = useBulkRun<Report>(run, writes.refresh)
+	const write = useDialogRun<Report>(run, writes.refresh)
 	const focusBack = useFocusBack(refreshing, region)
 	const words: BulkWords<Report> = {
 		...WORDS,
@@ -116,6 +126,7 @@ function ListBench({ writes }: { writes: Writes }) {
 		return [
 			{ id: 'restore', label: 'Restore', icon: backup, isPrimary: true, callback: ask },
 			{ id: 'delete', label: 'Delete', supportsBulk: true, callback: ask },
+			{ id: 'rename', label: 'Rename', callback: setRenaming },
 		]
 	}, [])
 	return (
@@ -157,6 +168,17 @@ function ListBench({ writes }: { writes: Writes }) {
 						focusBack(asked.items[0].id, asked.trigger)
 					}}
 				/>
+			) : null}
+			{renaming ? (
+				<FormDialog
+					title="Rename report"
+					submitLabel="Save"
+					cancelLabel="Cancel"
+					onSubmit={async () => write(renaming, writes.call, WORDS)}
+					onClose={() => setRenaming(undefined)}
+				>
+					<InputControl label="Name" />
+				</FormDialog>
 			) : null}
 			{adding ? (
 				<ConfirmDialog
@@ -438,6 +460,34 @@ test.each([
 	await expect.poll(rowsInert).toBe(false)
 	await frames(3)
 	expect(document.activeElement, 'the focus once the list reloaded').toBe(shape.landing())
+})
+
+test('lands the focus on the row as a row form leaves, once a reload that ended before its card left', async () => {
+	const writes = renderList()
+	const opener = rowControl('Report 3', 'button', 'Actions')
+	opener.focus()
+	await userEvent.keyboard('{Enter}')
+	const rename = await screen.findByRole('menuitem', { name: 'Rename' })
+	rename.focus()
+	await userEvent.keyboard('{Enter}')
+	const popup = await screen.findByRole('dialog')
+	const name = within(popup).getByRole('textbox', { name: 'Name' })
+	await expect.poll(() => document.activeElement).toBe(name)
+	await Promise.all(popup.getAnimations().map(async (transition) => transition.finished))
+
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => writes.ended.size).toBe(1)
+	writes.ended.forEach((end) => end())
+	await expect.poll(() => popup.getAnimations().length).toBeGreaterThan(0)
+	popup.getAnimations().forEach((transition) => transition.pause())
+	writes.reloaded([])
+	await expect.poll(rowsInert).toBe(false)
+	await frames(3)
+	expect(document.activeElement, 'the focus once the list reloaded, the card still leaving').toBe(opener)
+
+	popup.getAnimations().forEach((transition) => transition.finish())
+	await left(popup)
+	expect(document.activeElement, 'the focus once the card left').toBe(opener)
 })
 
 test('leaves the focus on the page once the rows were drawn anew, and the list lands it on the same item', async () => {

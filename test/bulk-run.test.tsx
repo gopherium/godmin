@@ -4,8 +4,9 @@ import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { ConfirmDialog } from '../src/dialogs'
-import { Page, Toaster, useBulkRun, useListRun } from '../src/index'
-import type { BulkRun, BulkWords } from '../src/index'
+import type { DialogAnswer } from '../src/dialogs'
+import { Page, Toaster, useBulkRun, useDialogRun, useListRun } from '../src/index'
+import type { BulkFailure, BulkRun, BulkWords, DialogRun, ListRun } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -45,6 +46,8 @@ interface Bench {
 	words: BulkWords<Post>
 	/** The runs the Trash button started, in order. */
 	runs: Promise<void>[]
+	/** What each dialog run the Rename button started answers its dialog, in order. */
+	answers: Promise<DialogAnswer | undefined>[]
 	/** Whether the list reloaded on each render, in order. */
 	reloads: boolean[]
 	/** Whether the Trash button sits in a footer that turns inert while the list reloads, as DataViews' footer does. */
@@ -69,6 +72,7 @@ interface Settling {
 function TrashScreen({ bench }: { bench: Bench }) {
 	const { run, region, refreshing } = useListRun('post publish', () => {})
 	const bulk = useBulkRun<Post>(run, bench.refresh)
+	const write = useDialogRun<Post>(run, bench.refresh)
 	bench.reloads.push(refreshing)
 	return (
 		<Page
@@ -88,6 +92,9 @@ function TrashScreen({ bench }: { bench: Bench }) {
 				<button type="button" onClick={() => bench.runs.push(bulk(bench.items, bench.call, bench.words))}>
 					Trash
 				</button>
+				<button type="button" onClick={() => bench.answers.push(write(bench.items, bench.call, bench.words))}>
+					Rename
+				</button>
 			</div>
 		</Page>
 	)
@@ -105,6 +112,7 @@ function renderTrash(bench: Partial<Bench> = {}): Bench {
 		refresh: vi.fn(async () => undefined),
 		words: WORDS,
 		runs: [],
+		answers: [],
 		reloads: [],
 		inertFooter: false,
 		inertHeader: false,
@@ -152,7 +160,7 @@ async function drain(): Promise<void> {
  * @param run - The run to watch.
  * @returns How the run has settled so far, kept up to date.
  */
-function watch(run: Promise<void>): Settling {
+function watch(run: Promise<unknown>): Settling {
 	const settling: Settling = { state: 'pending' }
 	void run.then(
 		() => {
@@ -774,37 +782,122 @@ test('still refreshes and ends the reload when the words throw, settles, then ha
 	expect([during, bench.reloads.at(-1)]).toEqual([true, false])
 })
 
+/** A hook that hands a run over a list, for a bulk action or for a dialog. */
+type RunHook = (list: ListRun, refresh: (items: Post[]) => Promise<unknown>) => BulkRun<Post> | DialogRun<Post>
+
 /**
- * Records the bulk run a list hands on each render.
- * @param props - The refresh the run takes and the runs seen so far.
+ * Records the run a list hands on each render.
+ * @param props - The hook that hands the run, the refresh the run takes and the runs seen so far.
  * @returns Nothing.
  */
-function RunRecorder({ refresh, seen }: { refresh: (items: Post[]) => Promise<unknown>; seen: BulkRun<Post>[] }) {
+function RunRecorder({ useRun, refresh, seen }: { useRun: RunHook; refresh: Bench['refresh']; seen: unknown[] }) {
 	const { run } = useListRun('post publish', () => {})
-	seen.push(useBulkRun<Post>(run, refresh))
+	seen.push(useRun(run, refresh))
 	return null
 }
 
-test('hands the same run while the list run and the refresh stay the same, and a new one for a new refresh', () => {
-	const seen: BulkRun<Post>[] = []
+test.each([
+	['bulk run', useBulkRun<Post>],
+	['dialog run', useDialogRun<Post>],
+])('hands the same %s while the list run and refresh stay, and a new one for a new refresh', (_run, useRun) => {
+	const seen: unknown[] = []
 	const refresh = vi.fn(async () => undefined)
 	const { rerender } = renderAdmin(
 		<Toaster>
-			<RunRecorder refresh={refresh} seen={seen} />
+			<RunRecorder useRun={useRun} refresh={refresh} seen={seen} />
 		</Toaster>,
 	)
 
 	rerender(
 		<Toaster>
-			<RunRecorder refresh={refresh} seen={seen} />
+			<RunRecorder useRun={useRun} refresh={refresh} seen={seen} />
 		</Toaster>,
 	)
 	expect(seen.at(-1)).toBe(seen[0])
 
 	rerender(
 		<Toaster>
-			<RunRecorder refresh={vi.fn(async () => undefined)} seen={seen} />
+			<RunRecorder useRun={useRun} refresh={vi.fn(async () => undefined)} seen={seen} />
 		</Toaster>,
 	)
 	expect(seen.at(-1)).not.toBe(seen[0])
+})
+
+/**
+ * Presses Rename, focused first as a pointer press leaves it, and waits for what its dialog run answers.
+ * @param bench - The bench whose dialog run to wait for.
+ * @returns What the run answered its dialog.
+ */
+async function rename(bench: Bench): Promise<DialogAnswer | undefined> {
+	const button = screen.getByRole('button', { name: 'Rename' })
+	button.focus()
+	fireEvent.click(button)
+	let answer: DialogAnswer | undefined
+	await act(async () => {
+		answer = await bench.answers.at(-1)
+	})
+	return answer
+}
+
+test('answers nothing for one item that worked, toasts, focuses the list and marks it reloading', async () => {
+	const held = heldRefresh()
+	const bench = renderTrash({ items: [POSTS[0]], refresh: held.refresh })
+
+	const answer = await rename(bench)
+
+	expect(answer).toBeUndefined()
+	expect(toasts()).toEqual(['"Hello" moved to the trash.'])
+	expect(document.activeElement).toBe(listRegion())
+	expect(bench.reloads.at(-1)).toBe(true)
+	await act(async () => held.reload())
+})
+
+test('answers the failure words for one item that failed, with no toast, the focus and list left alone', async () => {
+	const bench = renderTrash({ items: [POSTS[0]], call: failAll })
+
+	const answer = await rename(bench)
+	await drain()
+
+	expect(answer).toEqual({ error: 'Not moved to the trash: 1 of 1.' })
+	expect(toasts()).toEqual([])
+	expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Rename' }))
+	expect(bench.reloads).not.toContain(true)
+})
+
+test('answers nothing for several items with a failure, and shows one toast in the failure words', async () => {
+	const bench = renderTrash({ call: failHello })
+
+	const answer = await rename(bench)
+
+	expect(answer).toBeUndefined()
+	expect(toasts()).toEqual(['Not moved to the trash: 1 of 2.'])
+})
+
+test('hands the failure words of one item the error object its call answered, as it came', async () => {
+	const raw = { message: 'The name is taken.' }
+	const failed = vi.fn(
+		(failures: BulkFailure<Post>[]) => `Could not rename. ${(failures[0].error as typeof raw).message}`,
+	)
+	const call = async () => ({ data: null, error: raw })
+	const bench = renderTrash({ items: [POSTS[0]], call, words: { ...WORDS, failed } })
+
+	const answer = await rename(bench)
+
+	expect(answer).toEqual({ error: 'Could not rename. The name is taken.' })
+	expect(failed).toHaveBeenCalledExactlyOnceWith([{ item: POSTS[0], error: raw }], 1)
+})
+
+test('answers its dialog before the reload ends', async () => {
+	const held = heldRefresh()
+	const bench = renderTrash({ items: [POSTS[0]], refresh: held.refresh })
+	const button = screen.getByRole('button', { name: 'Rename' })
+	button.focus()
+	fireEvent.click(button)
+
+	const answering = watch(bench.answers[0])
+	await drain()
+
+	expect(answering.state).toBe('resolved')
+	expect(held.refresh).toHaveBeenCalledOnce()
+	await act(async () => held.reload())
 })

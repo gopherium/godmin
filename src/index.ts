@@ -13,8 +13,8 @@ export {
 	SMALL_VIEWPORT,
 	TITLE_BREAKPOINT,
 } from './breakpoints.js'
-export { useBulkRun } from './bulk-run.js'
-export type { BulkRun } from './bulk-run.js'
+export { useBulkRun, useDialogRun } from './bulk-run.js'
+export type { BulkRun, DialogRun } from './bulk-run.js'
 export { bulkNotes, runEach } from './bulk.js'
 export type { BulkFailure, BulkNotes, BulkOutcome, BulkWords } from './bulk.js'
 export { useCloseWhileOpen } from './close-while-open.js'
