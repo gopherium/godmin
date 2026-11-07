@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { Button, Dialog, Stack } from '@wordpress/ui'
-import { useId, useState } from 'react'
+import { speak } from '@wordpress/a11y'
+import { Button, Dialog, Notice, Stack } from '@wordpress/ui'
+import { useId, useLayoutEffect, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
 import { POPUP_CLASS, answered, isThenable, refuseSecondClick, useDialogOpen, useFinalFocus } from './dialog-open.js'
@@ -45,16 +46,30 @@ export function FormDialog({
 	const { open, change, exitWatch } = useDialogOpen(onClose)
 	const finalFocus = useFinalFocus()
 	const [busy, setBusy] = useState(false)
+	const [failure, setFailure] = useState<string>()
+	const [failures, setFailures] = useState(0)
+	const content = useRef<HTMLDivElement>(null)
 	const form = useId()
 	const sendable = canSubmit && !busy && open
+	useLayoutEffect(() => {
+		const body = content.current
+		if (failures > 0 && body !== null) {
+			body.scrollTop = body.scrollHeight
+		}
+	}, [failures])
 	const guarded = (next: boolean) => {
 		if (next || !busy) {
 			change(next)
 		}
 	}
+	const clear = () => setFailure(undefined)
 	const settle = (answer: DialogAnswer | undefined) => {
 		if (answer === undefined) {
 			change(false)
+		} else if ('error' in answer) {
+			setFailure(answer.error)
+			setFailures((count) => count + 1)
+			speak(answer.error, 'assertive')
 		}
 	}
 	const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -62,6 +77,7 @@ export function FormDialog({
 		if (!sendable) {
 			return
 		}
+		clear()
 		const answer = answered(onSubmit)
 		if (!isThenable(answer)) {
 			settle(answer)
@@ -80,10 +96,15 @@ export function FormDialog({
 					<Dialog.Title>{title}</Dialog.Title>
 					<Dialog.CloseIconButton disabled={busy} />
 				</Dialog.Header>
-				<Dialog.Content>
-					<Stack render={<form id={form} onSubmit={submit} />} direction="column" gap="lg">
+				<Dialog.Content ref={content}>
+					<Stack render={<form id={form} onSubmit={submit} onChange={clear} />} direction="column" gap="lg">
 						{description === undefined ? null : <Dialog.Description>{description}</Dialog.Description>}
 						{typeof children === 'function' ? children(busy) : children}
+						{failure === undefined ? null : (
+							<Notice.Root intent="error">
+								<Notice.Description>{failure}</Notice.Description>
+							</Notice.Root>
+						)}
 					</Stack>
 				</Dialog.Content>
 				<Dialog.Footer>

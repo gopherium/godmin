@@ -1,20 +1,33 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
+import { speak } from '@wordpress/a11y'
 import { InputControl } from '@wordpress/ui'
 import { useState } from 'react'
-import { expect, onTestFinished, test, vi } from 'vitest'
+import { beforeEach, expect, onTestFinished, test, vi } from 'vitest'
 
 import { POPUP_CLASS } from '../src/dialog-open.js'
 import { FormDialog } from '../src/dialogs'
 import type { DialogAnswer, FormDialogProps } from '../src/dialogs'
 import { buttonClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
 
+vi.mock('@wordpress/a11y', async (importOriginal) => {
+	const actual = await importOriginal<typeof import('@wordpress/a11y')>()
+	return { ...actual, speak: vi.fn(actual.speak) }
+})
+
 installTestEnvironment()
+
+beforeEach(() => {
+	vi.mocked(speak).mockClear()
+})
 
 /** The help sentence of the dialog of these tests. */
 const DESCRIPTION = 'A page holds one piece of writing.'
+
+/** The words a write that failed answers. */
+const FAILURE = 'Could not add the page. The server is busy.'
 
 /** How a test opens the dialog, what it does on send, and whether the title is needed. */
 type Opening = Partial<Pick<FormDialogProps, 'description' | 'cancelLabel' | 'canSubmit' | 'onSubmit'>> & {
@@ -364,6 +377,103 @@ test.each([
 	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
 	await press('Add')
 	expect(onSubmit).toHaveBeenCalledTimes(2)
+})
+
+/**
+ * Returns the notice that says why the last write failed, none while there is none.
+ * @returns The notice, the last child of the form.
+ */
+function notice(): HTMLElement | null {
+	const last = form().lastElementChild as HTMLElement
+	return within(last).queryByText(FAILURE) === null ? null : last
+}
+
+/**
+ * Records every place the body of the dialog is scrolled to, from a body as tall as the given height.
+ * @param height - How tall the body's content is, in pixels.
+ * @returns The places it was scrolled to, in order.
+ */
+function scrollsOfBody(height: number): number[] {
+	const body = form().parentElement as HTMLElement
+	const places: number[] = []
+	Object.defineProperty(body, 'scrollHeight', { configurable: true, value: height })
+	Object.defineProperty(body, 'scrollTop', {
+		configurable: true,
+		get: () => places.at(-1) ?? 0,
+		set: (place: number) => places.push(place),
+	})
+	return places
+}
+
+test.each([
+	['at once', (): DialogAnswer => ({ error: FAILURE })],
+	['once its promise ends', async (): Promise<DialogAnswer> => ({ error: FAILURE })],
+])('stays on a send that answers an error %s, says it at the end of the form and speaks it', async (_when, answer) => {
+	const { onClose } = await openDialog({ onSubmit: answer })
+	await userEvent.setup().type(field(), 'Hello')
+
+	await press('Add')
+
+	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
+	expect(notice()).not.toBeNull()
+	expect(speak).toHaveBeenCalledOnce()
+	expect(speak).toHaveBeenCalledWith(FAILURE, 'assertive')
+	expect(field().value).toBe('Hello')
+	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+})
+
+test('says a failure in a plain notice, never one that alerts as it is drawn', async () => {
+	await openDialog({ onSubmit: () => ({ error: FAILURE }) })
+
+	await press('Add')
+
+	expect(notice()).not.toBeNull()
+	expect(screen.queryByRole('alert')).toBeNull()
+})
+
+test('clears the failure as soon as the reader types', async () => {
+	await openDialog({ onSubmit: () => ({ error: FAILURE }) })
+	await press('Add')
+
+	await userEvent.setup().type(field(), 'H')
+
+	expect(notice()).toBeNull()
+})
+
+test('clears the failure as the next send starts', async () => {
+	const held = heldSend()
+	const onSubmit = vi.fn<() => DialogAnswer | Promise<void>>(() => ({ error: FAILURE }))
+	await openDialog({ onSubmit })
+	await press('Add')
+	expect(notice()).not.toBeNull()
+
+	onSubmit.mockImplementation(held.send)
+	await press('Add')
+
+	expect(notice()).toBeNull()
+	await act(async () => held.fulfil())
+})
+
+test('scrolls the body to its end on a failure, and again when the same words come back at once', async () => {
+	await openDialog({ onSubmit: () => ({ error: FAILURE }) })
+	const places = scrollsOfBody(640)
+
+	await press('Add')
+	expect(places).toEqual([640])
+
+	await press('Add')
+	expect(places).toEqual([640, 640])
+})
+
+test('closes with no words on a write that ends with an object in its error', async () => {
+	const { onClose } = await openDialog({ onSubmit: async () => ({ data: null, error: { message: FAILURE } }) })
+
+	await press('Add')
+
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
+	expect(speak).not.toHaveBeenCalled()
 })
 
 test.each([
