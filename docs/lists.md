@@ -1051,7 +1051,7 @@ as it was still sends. Enter in the field does what Save does.
 `onSubmit` answers the dialog as the one of
 [a form dialog](#a-form-dialog) does. Through `useDialogRun`, the
 dialog stays open while the write runs, with a spinner on Save and
-the field read only. It closes when the write works, and stays with
+the field read-only. It closes when the write works, and stays with
 the words of `failed` and the typed name when it fails, as
 [a failure from a dialog](#a-failure-from-a-dialog) shows.
 
