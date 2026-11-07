@@ -4,11 +4,12 @@ import { render, screen, within } from '@testing-library/react'
 import { DataViews } from '@wordpress/dataviews'
 import type { Action, Field, View } from '@wordpress/dataviews'
 import { backup } from '@wordpress/icons'
+import { InputControl } from '@wordpress/ui'
 import { useMemo, useState } from 'react'
 import { expect, test, vi } from 'vitest'
 import { commands, userEvent } from 'vitest/browser'
 
-import { ConfirmDialog } from '../../src/dialogs.js'
+import { ConfirmDialog, FormDialog } from '../../src/dialogs.js'
 import type { DialogAnswer } from '../../src/dialogs.js'
 import { Page, Toaster, focusedTrigger, useBulkRun, useFocusBack, useListRun } from '../../src/index.js'
 import type { BulkWords, Trigger } from '../../src/index.js'
@@ -542,4 +543,149 @@ test('stays open on an Enter held from the control that asked it', async () => {
 
 	expect(popup.isConnected).toBe(true)
 	expect(onConfirm).not.toHaveBeenCalled()
+})
+
+/** What the form bench changes on its dialog: the send, the send gate, and whether its first field is needed. */
+interface FormDrawn {
+	/** Sends the form. */
+	onSubmit?: () => void
+	/** Whether the form may be sent now. */
+	canSubmit?: boolean
+	/** Whether the first field must be filled before a send. */
+	titleRequired?: boolean
+}
+
+/** Renders two buttons that open a form dialog with two fields, and a button that drops the second. */
+function FormBench({ onSubmit = () => undefined, canSubmit, titleRequired = false }: FormDrawn) {
+	const [asking, setAsking] = useState(false)
+	const [second, setSecond] = useState(true)
+	return (
+		<>
+			<button type="button" onClick={() => setAsking(true)}>
+				Add Page
+			</button>
+			{second ? (
+				<button type="button" onClick={() => setAsking(true)}>
+					Add Post
+				</button>
+			) : null}
+			<button type="button" onClick={() => setSecond(false)}>
+				Drop Add Post
+			</button>
+			{asking ? (
+				<FormDialog
+					title="Add Page"
+					submitLabel="Add"
+					cancelLabel="Cancel"
+					canSubmit={canSubmit}
+					onSubmit={onSubmit}
+					onClose={() => setAsking(false)}
+				>
+					<InputControl label="Title" required={titleRequired} />
+					<InputControl label="Summary" />
+				</FormDialog>
+			) : null}
+		</>
+	)
+}
+
+/** Opens the form bench's dialog by key from a button, waits for the focus on its first field, gives its controls. */
+async function formInFocus(opener = 'Add Page') {
+	pageControl(opener).focus()
+	await userEvent.keyboard('{Enter}')
+	const popup = await screen.findByRole('dialog')
+	const title = within(popup).getByRole('textbox', { name: /^Title/ })
+	await expect.poll(() => document.activeElement).toBe(title)
+	const [close, cancel, save] = ['Close', 'Cancel', 'Add'].map((name) => within(popup).getByRole('button', { name }))
+	return { popup, title, summary: within(popup).getByRole('textbox', { name: 'Summary' }), close, cancel, save }
+}
+
+test('puts the first focus of a form dialog on its first field, past the close icon', async () => {
+	render(<FormBench />)
+
+	const { title } = await formInFocus()
+
+	expect(document.activeElement).toBe(title)
+})
+
+test('wraps Tab inside a form dialog, and Shift Tab back', async () => {
+	render(<FormBench />)
+	const { title, summary, close, cancel, save } = await formInFocus()
+
+	const reached: (Element | null)[] = []
+	for (let press = 0; press < 5; press += 1) {
+		await userEvent.keyboard('{Tab}')
+		await frames(3)
+		reached.push(document.activeElement)
+	}
+	expect(reached).toEqual([summary, cancel, save, close, title])
+
+	await userEvent.keyboard('{Shift>}{Tab}{/Shift}')
+	await frames(3)
+	expect(document.activeElement).toBe(close)
+})
+
+test('sends a form once on each Enter in either field, through its footer button', async () => {
+	const onSubmit = vi.fn()
+	render(<FormBench onSubmit={onSubmit} />)
+	const { summary } = await formInFocus()
+
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+	expect(onSubmit).toHaveBeenCalledOnce()
+
+	summary.focus()
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+	expect(onSubmit).toHaveBeenCalledTimes(2)
+})
+
+test('sends nothing on Enter in a field while Save is greyed', async () => {
+	const onSubmit = vi.fn()
+	render(<FormBench onSubmit={onSubmit} canSubmit={false} />)
+	await formInFocus()
+
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('sends nothing on Enter in a blank field the form needs', async () => {
+	const onSubmit = vi.fn()
+	render(<FormBench onSubmit={onSubmit} titleRequired />)
+	await formInFocus()
+
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('leaves the focus on the page once the button that opened a form left, never on one used earlier', async () => {
+	render(<FormBench />)
+	const first = await formInFocus()
+	await userEvent.keyboard('{Escape}')
+	await left(first.popup)
+	expect(document.activeElement).toBe(pageControl('Add Page'))
+
+	const { popup } = await formInFocus('Add Post')
+	pageControl('Drop Add Post').click()
+	await expect.poll(() => screen.queryByRole('button', { name: 'Add Post', hidden: true })).toBeNull()
+	await userEvent.keyboard('{Escape}')
+	await left(popup)
+
+	expect(document.activeElement).toBe(document.body)
+})
+
+test('closes a form dialog on Escape with the focus on a Save greyed while a field is empty', async () => {
+	render(<FormBench canSubmit={false} />)
+	const { popup, save } = await formInFocus()
+	save.focus()
+	await expect.poll(() => document.activeElement).toBe(save)
+
+	await userEvent.keyboard('{Escape}')
+
+	await left(popup)
+	expect(document.activeElement).toBe(pageControl('Add Page'))
 })

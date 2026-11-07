@@ -6,22 +6,27 @@ import { InputControl } from '@wordpress/ui'
 import { useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
+import { POPUP_CLASS } from '../src/dialog-open.js'
 import { FormDialog } from '../src/dialogs'
 import type { FormDialogProps } from '../src/dialogs'
-import { buttonClasses, installTestEnvironment, renderAdmin, stubLayout } from '../src/testing.js'
-import { cardWidth, gapInPixels } from './styles.js'
+import { buttonClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
 
-/** How a test opens the dialog and what it does on send. */
-type Opening = Partial<Pick<FormDialogProps, 'size' | 'kind' | 'canSubmit' | 'onSubmit'>>
+/** The help sentence of the dialog of these tests. */
+const DESCRIPTION = 'A page holds one piece of writing.'
+
+/** How a test opens the dialog, what it does on send, and whether the title is needed. */
+type Opening = Partial<Pick<FormDialogProps, 'description' | 'cancelLabel' | 'canSubmit' | 'onSubmit'>> & {
+	titleRequired?: boolean
+}
 
 /**
  * Renders the Add Page button that opens a form dialog asking for a title and a summary.
- * @param props - The size, the kind, the send gate, the send and the spy told when the dialog is taken away.
+ * @param props - The help sentence, the Cancel label, the send gate, the send, the needed title and the close spy.
  * @returns The opener and the dialog while it is asked for.
  */
-function AddPage({ onClose, ...opening }: Opening & { onClose: () => void }) {
+function AddPage({ onClose, titleRequired = false, ...opening }: Opening & { onClose: () => void }) {
 	const [asking, setAsking] = useState(false)
 	const [title, setTitle] = useState('')
 	const [summary, setSummary] = useState('')
@@ -42,7 +47,12 @@ function AddPage({ onClose, ...opening }: Opening & { onClose: () => void }) {
 						setAsking(false)
 					}}
 				>
-					<InputControl label="Title" value={title} onChange={(event) => setTitle(event.target.value)} />
+					<InputControl
+						label="Title"
+						required={titleRequired}
+						value={title}
+						onChange={(event) => setTitle(event.target.value)}
+					/>
 					<InputControl label="Summary" value={summary} onChange={(event) => setSummary(event.target.value)} />
 				</FormDialog>
 			) : null}
@@ -52,7 +62,7 @@ function AddPage({ onClose, ...opening }: Opening & { onClose: () => void }) {
 
 /**
  * Renders the opener and opens the dialog from it, as a pointer press does.
- * @param opening - The size, the kind, the send gate and the send.
+ * @param opening - The help sentence, the Cancel label, the send gate, the send and the needed title.
  * @returns The send spy, the close spy and the opener.
  */
 async function openDialog(opening: Opening = {}) {
@@ -61,6 +71,7 @@ async function openDialog(opening: Opening = {}) {
 	renderAdmin(<AddPage {...opening} onSubmit={onSubmit} onClose={onClose} />)
 	const opener = screen.getByRole('button', { name: 'Add Page' })
 	await userEvent.setup().click(opener)
+	await screen.findByRole('dialog')
 	return { onSubmit, onClose, opener }
 }
 
@@ -108,7 +119,15 @@ function dialog(): HTMLElement {
  * @returns The input labelled Title.
  */
 function field(): HTMLInputElement {
-	return screen.getByLabelText('Title') as HTMLInputElement
+	return screen.getByRole('textbox', { name: /^Title/ }) as HTMLInputElement
+}
+
+/**
+ * Returns the form the fields sit in.
+ * @returns The form element.
+ */
+function form(): HTMLFormElement {
+	return field().form as HTMLFormElement
 }
 
 /**
@@ -117,6 +136,14 @@ function field(): HTMLInputElement {
  */
 function submit(): HTMLElement {
 	return screen.getByRole('button', { name: 'Add' })
+}
+
+/**
+ * Returns the names of the buttons in the dialog footer, in order.
+ * @returns The button labels.
+ */
+function footerButtons(): HTMLElement[] {
+	return [...(submit().closest('footer') as HTMLElement).querySelectorAll('button')]
 }
 
 /**
@@ -130,80 +157,97 @@ async function press(name: string): Promise<void> {
 }
 
 /**
- * Presses and lets go of the pointer on the dark overlay around the dialog.
+ * Presses and lets go of the pointer on the dimmed page around the dialog.
  */
-function clickOutside(): void {
-	const overlay = document.querySelector('.components-modal__screen-overlay') as HTMLElement
-	fireEvent.pointerDown(overlay, { button: 0 })
-	fireEvent.pointerUp(overlay, { button: 0 })
+async function clickOutside(): Promise<void> {
+	const backdrop = document.querySelector('[class*="backdrop"]') as Element
+	await act(async () => {
+		fireEvent.pointerDown(backdrop, { button: 0 })
+		fireEvent.pointerUp(backdrop, { button: 0 })
+		fireEvent.click(backdrop)
+	})
 }
 
-test('opens a titled dialog with a close button', async () => {
+/**
+ * Presses Escape in the first field and lets what it started settle.
+ */
+async function pressEscape(): Promise<void> {
+	await act(async () => {
+		fireEvent.keyDown(field(), { key: 'Escape', code: 'Escape' })
+	})
+}
+
+test('opens a dialog named by its title, with a close icon', async () => {
 	await openDialog()
 
 	expect(screen.getByRole('dialog', { name: 'Add Page' })).toBe(dialog())
-	expect(screen.getByRole('heading', { name: 'Add Page' })).not.toBeNull()
+	expect(screen.getByRole('heading', { level: 2, name: 'Add Page' })).not.toBeNull()
 	expect(screen.getByRole('button', { name: 'Close' })).not.toBeNull()
 })
 
-test('puts the cursor in the first field when it opens', async () => {
-	stubLayout()
+test('describes the dialog by its help sentence, the first child of the form', async () => {
+	await openDialog({ description: DESCRIPTION })
 
+	expect(screen.getByRole('dialog', { description: DESCRIPTION })).toBe(dialog())
+	expect(form().firstElementChild?.textContent).toBe(DESCRIPTION)
+})
+
+test('describes the dialog by nothing when it has no help sentence', async () => {
+	await openDialog()
+
+	expect(dialog().hasAttribute('aria-describedby')).toBe(false)
+})
+
+test('puts the cursor in the first field when it opens, past the close icon', async () => {
 	await openDialog()
 
 	await waitFor(() => expect(document.activeElement).toBe(field()))
 })
 
-test('opens on the WordPress modal frame, which rises as a bottom sheet on a phone', async () => {
+test('opens on the WPDS dialog at its medium width, with the class that breaks a long word', async () => {
 	await openDialog()
 
-	expect(dialog().classList.contains('components-modal__frame')).toBe(true)
+	expect(dialog().className).toMatch(/__is-medium\b/)
+	expect(dialog().classList.contains(POPUP_CLASS)).toBe(true)
 })
 
-test.each([
-	['by default', {}, 'small', '400px'],
-	['when asked for the small size', { size: 'small' }, 'small', '400px'],
-	['when asked for the medium size', { size: 'medium' }, 'medium', '560px'],
-] as const)('opens as the WordPress card of the right width %s', async (_case, opening, size, width) => {
-	await openDialog(opening)
-
-	expect(dialog().classList.contains(`has-size-${size}`)).toBe(true)
-	expect(cardWidth(size)).toBe(width)
-})
-
-test('draws Cancel first as accent text and the submit button after it as the solid one', async () => {
+test('draws a neutral outline Cancel first and the solid submit button after it, in the footer', async () => {
 	await openDialog()
 
-	const buttons = [...(field().form as HTMLFormElement).querySelectorAll('button')]
+	const buttons = footerButtons()
 	expect(buttons.map((button) => button.textContent)).toEqual(['Cancel', 'Add'])
-	expect([...buttons[0].classList]).toEqual(buttonClasses('minimal'))
+	expect([...buttons[0].classList]).toEqual(buttonClasses('outline', undefined, 'neutral'))
 	expect([...buttons[1].classList]).toEqual(buttonClasses('solid'))
 })
 
-test.each([
-	['16px for a create, the default, as WordPress spaces Add Page', {}, 16],
-	['20px for an edit', { kind: 'edit' }, 20],
-	['12px for a copy', { kind: 'copy' }, 12],
-] as const)('leaves %s above the buttons', async (_case, opening, pixels) => {
-	await openDialog(opening)
+test('draws the submit button alone when it has no Cancel', async () => {
+	await openDialog({ cancelLabel: undefined })
 
-	expect(gapInPixels(field().form as HTMLFormElement)).toBe(pixels)
+	expect(footerButtons().map((button) => button.textContent)).toEqual(['Add'])
 })
 
-test('sends the form once when Enter is pressed in a field, through a real form', async () => {
+test('sends the form once on a press on the submit button, which sits outside the form and names it', async () => {
 	const { onSubmit } = await openDialog()
 
-	await userEvent.setup().type(field(), 'Hello{Enter}')
+	await press('Add')
 
 	expect(onSubmit).toHaveBeenCalledOnce()
-	expect(field().form).not.toBeNull()
+	expect(submit().closest('form')).toBeNull()
+	expect(submit().getAttribute('form')).toBe(form().id)
+})
+
+test('sends nothing on a press while a field the form needs is blank', async () => {
+	const { onSubmit } = await openDialog({ titleRequired: true })
+
+	await press('Add')
+
+	expect(onSubmit).not.toHaveBeenCalled()
 })
 
 test('sends nothing while a needed field is empty, and keeps the submit button focusable', async () => {
 	const { onSubmit } = await openDialog({ canSubmit: false })
 
 	await press('Add')
-	await userEvent.setup().type(field(), '{Enter}')
 
 	expect(onSubmit).not.toHaveBeenCalled()
 	expect(submit().getAttribute('aria-disabled')).toBe('true')
@@ -216,12 +260,28 @@ test('keeps the submit busy while the returned promise runs and ignores a second
 
 	await press('Add')
 	await press('Add')
-	await userEvent.setup().type(field(), '{Enter}')
 
 	expect(onSubmit).toHaveBeenCalledOnce()
 	expect(submit().getAttribute('aria-disabled')).toBe('true')
 	await act(async () => held.fulfil())
 	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+})
+
+test('sends nothing more from a plain button in the fields pressed while the send runs', async () => {
+	const held = heldSend()
+	const onSubmit = vi.fn(held.send)
+	renderAdmin(
+		<FormDialog title="Add Page" submitLabel="Add" onSubmit={onSubmit} onClose={() => undefined}>
+			<button type="submit">Send from the fields</button>
+		</FormDialog>,
+	)
+	await screen.findByRole('dialog')
+
+	await press('Send from the fields')
+	await press('Send from the fields')
+
+	expect(onSubmit).toHaveBeenCalledOnce()
+	await act(async () => held.fulfil())
 })
 
 test('keeps the submit busy until a write that ends with the saved item ends', async () => {
@@ -273,10 +333,10 @@ test('stays open when the send settles, until the caller closes it', async () =>
 
 test.each([
 	['Cancel', async () => press('Cancel')],
-	['Escape', async () => fireEvent.keyDown(field(), { key: 'Escape', code: 'Escape' })],
-	['a click on the dimmed page', async () => clickOutside()],
-	['its close button', async () => press('Close')],
-])('closes on %s, also while the send runs', async (_way, close) => {
+	['Escape', pressEscape],
+	['a click on the dimmed page', clickOutside],
+	['its close icon', async () => press('Close')],
+])('closes on %s, also while the send runs, and runs onClose once the card left', async (_way, close) => {
 	const held = heldSend()
 	const { onClose } = await openDialog({ onSubmit: held.send })
 	await press('Add')
@@ -319,12 +379,11 @@ test('keeps what was typed after a send that throws', async () => {
 })
 
 test('gives the focus back to the button that opened it once closed', async () => {
-	stubLayout()
 	const { opener } = await openDialog()
 	await waitFor(() => expect(document.activeElement).toBe(field()))
 
 	await userEvent.setup().click(screen.getByRole('button', { name: 'Cancel' }))
 
-	expect(screen.queryByRole('dialog')).toBeNull()
-	expect(document.activeElement).toBe(opener)
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	await waitFor(() => expect(document.activeElement).toBe(opener))
 })
