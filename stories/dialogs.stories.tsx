@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
+import { InputControl } from '@wordpress/ui'
 import type { ComponentProps } from 'react'
 import { expect, waitFor } from 'storybook/test'
 
-import { ConfirmDialog } from '../src/dialogs.js'
-import type { DialogAnswer } from '../src/dialogs.js'
+import { ConfirmDialog, FormDialog } from '../src/dialogs.js'
+import type { DialogAnswer, FormDialogProps } from '../src/dialogs.js'
 import { ListPage, NO_SHOT, onlyAt } from './frames.js'
 import { OVERLAY_CARD, boxOf, centredIn, find, finishMotion, meets } from './measure.js'
 
@@ -48,13 +49,66 @@ function button(name: string): HTMLElement {
 	return found
 }
 
-/** Checks the card has come to rest in the middle of the window, as wide as given, with Cancel focused. */
-async function settled(width: number) {
+/** Checks the card has come to rest in the middle of the window, as wide as given. */
+async function cardAtRest(width: number) {
 	await finishMotion()
 	const card = boxOf(OVERLAY_CARD)
 	await meets(card.width, width, 'the card width')
 	await centredIn(card, new DOMRect(0, 0, document.documentElement.clientWidth, window.innerHeight))
+}
+
+/** Checks a confirm has come to rest in the middle of the window, as wide as given, with Cancel focused. */
+async function settled(width: number) {
+	await cardAtRest(width)
 	await expect(button('Cancel')).toHaveFocus()
+}
+
+/** The words a form whose write failed answers. */
+const FORM_FAILURE = 'Could not add "Maria Perez". The phone 184467235 is already in use.'
+
+/** How many fields the tall form holds, more than a window shows. */
+const TALL_FIELDS = 30
+
+/** Renders an empty list page under a form dialog asking for a contact, its fields as given. */
+function FormOver({ onSubmit = stay, fields = 2 }: { onSubmit?: FormDialogProps['onSubmit']; fields?: number }) {
+	return (
+		<>
+			<ListPage>{null}</ListPage>
+			<FormDialog
+				title="Add contact"
+				description="The contact joins your list."
+				submitLabel="Add"
+				cancelLabel="Cancel"
+				onSubmit={onSubmit}
+				onClose={stay}
+			>
+				<InputControl label="Name" />
+				{Array.from({ length: fields - 1 }, (_, at) => (
+					<InputControl key={at} label={at === 0 ? 'Phone' : `Note ${at}`} />
+				))}
+			</FormDialog>
+		</>
+	)
+}
+
+/** Returns the element a selector finds inside the card on show, failing when none matches. */
+function inCard(selector: string): HTMLElement {
+	const found = find(OVERLAY_CARD).querySelector<HTMLElement>(selector)
+	if (found === null) {
+		throw new Error(`the card holds no ${selector}`)
+	}
+	return found
+}
+
+/** Returns the first field of the form dialog. */
+function firstField(): HTMLInputElement {
+	return inCard('input') as HTMLInputElement
+}
+
+/** Checks a form dialog has come to rest in the middle of the window, as wide as given, its first field focused. */
+async function formSettled(width: number) {
+	await cardAtRest(width)
+	await waitFor(() => expect(firstField()).toHaveFocus())
 }
 
 const meta = {
@@ -155,5 +209,55 @@ export const ConfirmThatFailed: Story = {
 		await userEvent.click(button('Delete permanently'))
 		await waitFor(() => expect(document.querySelector(OVERLAY_CARD)).toHaveTextContent(FAILURE))
 		await expect(button('Delete permanently')).toHaveAttribute('aria-disabled', 'false')
+	},
+}
+
+export const FormThatAdds: Story = {
+	name: 'Form dialog',
+	render: () => <FormOver />,
+	play: async () => {
+		await formSettled(CARD)
+		await expect(inCard('[data-wp-ui-dialog-close-icon]')).toBeVisible()
+		await expect(button('Cancel').className).toMatch(/outline/)
+		await expect(inCard('footer')).toContainElement(button('Add'))
+	},
+}
+
+export const FormThatAddsOnAPhone: Story = {
+	name: 'Form dialog, on a phone',
+	...onlyAt('phone'),
+	render: () => <FormOver />,
+	play: async () => {
+		await formSettled(PHONE - 2 * GUTTER)
+	},
+}
+
+export const FormThatFailed: Story = {
+	name: 'Form dialog that failed',
+	render: () => <FormOver onSubmit={(): DialogAnswer => ({ error: FORM_FAILURE })} />,
+	play: async ({ userEvent }) => {
+		await formSettled(CARD)
+		await userEvent.type(firstField(), 'Maria Perez')
+		await userEvent.click(button('Add'))
+		await waitFor(() => expect(inCard('form').lastElementChild).toHaveTextContent(FORM_FAILURE))
+		await expect(firstField()).toHaveValue('Maria Perez')
+	},
+}
+
+export const TallForm: Story = {
+	name: 'Form dialog, tall',
+	parameters: { argos: { modes: NO_SHOT } },
+	render: () => <FormOver fields={TALL_FIELDS} />,
+	play: async () => {
+		await formSettled(CARD)
+		const card = boxOf(OVERLAY_CARD)
+		const body = inCard('form').parentElement as HTMLElement
+		await expect(body.scrollHeight, 'the body holds more than it shows').toBeGreaterThan(body.clientHeight)
+		await expect(card.bottom, 'the card ends inside the window').toBeLessThanOrEqual(window.innerHeight)
+		const footer = inCard('footer').getBoundingClientRect()
+		await expect(footer.bottom, 'the footer stays in the card').toBeLessThanOrEqual(card.bottom)
+		await expect(inCard('header').getBoundingClientRect().top, 'the header stays in the card').toBeGreaterThanOrEqual(
+			card.top,
+		)
 	},
 }
