@@ -87,13 +87,9 @@ in the peer ranges of godmin's `package.json`.
 
 `@wordpress/i18n` is a required peer, because the main entry
 translates godmin's own words. `@wordpress/date` is an optional peer,
-needed only by `@gopherium/godmin/dates`. `@wordpress/components` is
-an optional peer too, needed only by `@gopherium/godmin/dialogs`, in
-the window `>=43.0.0 <44.0.0`. Install each one next to godmin when
-you use its entry. Load the components stylesheet once in your
-application, `@wordpress/components/build-style/style.css`, as
-DataViews already asks. godmin never imports it. Their windows are in
-the same peer ranges.
+needed only by `@gopherium/godmin/dates`. Install it next to godmin
+when you use that entry. Its window is in the same peer ranges.
+godmin never imports `@wordpress/components`.
 
 `@wordpress/dataviews` is an optional peer as well, in the window
 `>=21.0.0 <22.0.0`. No godmin entry imports it, but `offeredView`
@@ -103,9 +99,15 @@ another release gets a peer warning when it installs godmin.
 ## Upgrading from godmin 0.31.0
 
 godmin 0.32.0 draws `ConfirmDialog` on the alert dialog of the design
-system and `FormDialog` on its dialog, and a confirm on a list becomes
-a dialog your screen renders. Change your code in these places:
+system and `FormDialog` on its dialog, a confirm or a form on a list
+becomes a dialog your screen renders, and the dialogs move to the main
+entry. Change your code in these places:
 
+- `@gopherium/godmin/dialogs` is gone. Import `ConfirmDialog`,
+  `FormDialog`, `DialogAnswer` and their props types from
+  `@gopherium/godmin`. godmin no longer has `@wordpress/components` as
+  a peer. An app that draws DataViews keeps it, since DataViews needs
+  it.
 - `ConfirmDialog` takes the question as `title` and what will happen
   as `description`, in place of `children`. `size` is gone, since a
   confirm has one width and is a card at every width. Pass
@@ -118,6 +120,17 @@ a dialog your screen renders. Change your code in these places:
   whose `onConfirm` returns the run, as
   [running an action over the picked rows](./lists.md#running-an-action-over-the-picked-rows)
   shows.
+- `FormBody`, `FormKind`, `RenameBody`, `useCloseWhileOpen`,
+  `FormBodyProps` and `RenameBodyProps` are gone. Give the row action a
+  `callback` that stores the rows, drop its `RenderModal`,
+  `modalHeader`, `modalSize` and `modalFocusOnMount`, and render a
+  `FormDialog` or a `RenameDialog` from your screen whose `onSubmit`
+  returns the write of `useDialogRun`, as
+  [renaming an item](./lists.md#renaming-an-item) shows. Stop closing
+  the dialog before its write.
+- A rename keeps Save on with a blank field, and the browser refuses
+  the send. A test that read Save off reads that a press on it sends
+  nothing.
 - A confirm is now an `alertdialog`. A test that finds it by the role
   `dialog` finds it by `alertdialog`.
 - A confirm has no close button now, even with a `title`. A test that
@@ -140,8 +153,9 @@ a dialog your screen renders. Change your code in these places:
 - Any object with a `then` method now counts as a promise, so the
   confirm waits for it. Before, it waited only for a real `Promise`
   and closed at once for anything else.
-- A stylesheet that styles `.godmin-modal-body__question` styles
-  nothing now.
+- A stylesheet that styles `.godmin-modal-body`, its `--copy` and
+  `--create` forms, or `.godmin-modal-body__question` styles nothing
+  now.
 - `FormDialog` has no `kind` and no `size`. It has one width, it is a
   card at every width, and its footer sets the space above its
   buttons.
@@ -164,9 +178,10 @@ a dialog your screen renders. Change your code in these places:
   Enter there, so a test that typed Enter in a field presses the send
   button instead, or runs in a browser.
 
-TypeScript points at `children`, `size`, `kind`, `RunConfirm` and
-`ConfirmBody`. The rest changes what the reader sees and when
-`onClose` runs.
+TypeScript points at `children`, `size`, `kind`, `RunConfirm`,
+`ConfirmBody`, `FormBody`, `RenameBody`, `useCloseWhileOpen` and each
+import from `@gopherium/godmin/dialogs`. The rest changes what the
+reader sees and when `onClose` runs.
 
 ## Upgrading from godmin 0.27.0
 

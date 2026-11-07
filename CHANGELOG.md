@@ -10,10 +10,11 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 - `docs/design-system/dialogs.md` gives every value of a confirm and a form dialog, when to ask first and where a failure shows.
 - `BulkWords` takes `undo`, the action a done toast offers once every item finished.
-- `DialogAnswer` from `@gopherium/godmin/dialogs` types what `onConfirm` and `onSubmit` may answer to stay open.
+- `DialogAnswer` types what `onConfirm` and `onSubmit` may answer to stay open.
 - `useDialogRun` runs a dialog's write on a list: one item that failed keeps the dialog open and says why, several close and report in a toast.
 - `FormDialog` takes `description`, and a function as its children to read `busy`.
 - The French list catalogue speaks `Close`.
+- `RenameDialog` asks for a new name: Save stays on, and a blank name is refused.
 
 ### Changed
 
@@ -33,6 +34,10 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - A failed write in a dialog that stays open shows inside it. A dialog that closes keeps the toast.
 - `FormDialog` sends nothing once it is closing, and ignores the second click of a double click on its send button.
 - `docs/lists.md` leaves every confirm and form dialog value to the new page.
+- **Breaking.** `ConfirmDialog` and `FormDialog` move to the main entry. `@gopherium/godmin/dialogs` goes.
+- **Breaking.** `@wordpress/components` is no longer a peer. godmin no longer imports it.
+- **Breaking.** `FormBody`, `FormKind`, `RenameBody`, `useCloseWhileOpen` and their props types go. A row form is a `callback` and a `FormDialog` the screen renders.
+- Escape closes an idle dialog with the focus on a greyed button. During a write Escape stays refused, as the WPDS `AlertDialog` does.
 
 ### Fixed
 

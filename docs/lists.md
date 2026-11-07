@@ -607,8 +607,7 @@ the row that took its place, unless that control is a primary action.
 things for you:
 
 ```tsx
-import { Page, useBulkRun, useListRun } from '@gopherium/godmin'
-import { ConfirmDialog } from '@gopherium/godmin/dialogs'
+import { ConfirmDialog, Page, useBulkRun, useListRun } from '@gopherium/godmin'
 
 function OrdersScreen() {
 	const client = useQueryClient()
@@ -882,8 +881,7 @@ such as Delete permanently in an editor or Empty Trash above a list.
 Render it only while you ask, so each new ask starts fresh:
 
 ```tsx
-import { useToaster } from '@gopherium/godmin'
-import { ConfirmDialog } from '@gopherium/godmin/dialogs'
+import { ConfirmDialog, useToaster } from '@gopherium/godmin'
 import { Button } from '@wordpress/ui'
 
 function DeleteButton({ post }: { post: Post }) {
@@ -949,8 +947,8 @@ shows:
 - Answer `{ error: 'words' }`, at once or as the promise ends, and the
   dialog stays open and shows the words inside. Do this when trying
   again is the next step. Answer `{ close: false }` to stay open and
-  say nothing. `DialogAnswer` from `@gopherium/godmin/dialogs` types
-  both answers.
+  say nothing. `DialogAnswer` from `@gopherium/godmin` types both
+  answers.
 - A handler that throws, or a promise that rejects, keeps the dialog
   open and hands the error on to your app, as
   [a failure from a dialog](#a-failure-from-a-dialog) explains.
@@ -995,185 +993,73 @@ the focus is still there. Either way, a reader who moved to another
 control or opened another dialog since keeps their place. This needs
 godmin 0.27.0 or later.
 
-`ConfirmDialog` comes from `@gopherium/godmin/dialogs`, the entry it
-shares with `FormDialog`. That entry needs `@wordpress/components`, a
-large package the main entry never loads. Install
-`@wordpress/components` and load its stylesheet once,
-`@wordpress/components/build-style/style.css`, as DataViews already
-asks.
-
 ## Renaming an item
 
-A rename asks for one new name. `RenameBody` is the body of that
-modal: a field that starts with the current name, an accent text
-Cancel and the submit button:
+A rename asks for one new name. `RenameDialog` asks it on a form
+dialog: a field that starts with the current name, Cancel and Save.
+Give the action a `callback` that stores the row, and render the
+dialog from your screen:
 
 ```tsx
-import { RenameBody, markLatest, useToaster, useUnsavedText } from '@gopherium/godmin'
+import { Page, RenameDialog, useDialogRun, useListRun } from '@gopherium/godmin'
+import type { BulkWords } from '@gopherium/godmin'
 import type { Action } from '@wordpress/dataviews'
 
-function useRenameAction(): Action<Post> {
-	const toaster = useToaster()
-	const renames = useUnsavedText()
-	return useMemo<Action<Post>>(
-		() => ({
-			id: 'rename',
-			label: 'Rename',
-			modalHeader: 'Rename',
-			modalFocusOnMount: 'firstContentElement',
-			RenderModal: ({ items: [post], closeModal }) => (
-				<RenameBody
-					name={renames.get(post.id) ?? post.title}
+const nameWords: BulkWords<Post> = {
+	done: () => 'Name updated.',
+	failed: ([{ error }]) => `Could not save the name. ${(error as Error).message}`,
+}
+
+function PostsScreen() {
+	const { run, region } = useListRun('posts', list.onChangeSelection)
+	const write = useDialogRun<Post>(run, refresh)
+	const [renaming, setRenaming] = useState<Post>()
+	const actions = useMemo<Action<Post>[]>(
+		() => [{ id: 'rename', label: 'Rename…', callback: ([post]) => setRenaming(post) }],
+		[],
+	)
+	return (
+		<Page title="Posts" list listLabel="Posts" listRef={region}>
+			<DataViews {...props} actions={actions} />
+			{renaming ? (
+				<RenameDialog
+					title="Rename"
+					name={renaming.title}
 					fieldLabel="Name"
 					submitLabel="Save"
 					cancelLabel="Cancel"
-					onSubmit={(title) => {
-						closeModal?.()
-						renames.delete(post.id)
-						const stillLatest = markLatest(renames, post.id)
-						renamePost(post.id, title)
-							.then(() => toaster.show('Name updated.'))
-							.catch((failure) => {
-								if (stillLatest()) {
-									renames.set(post.id, title)
-								}
-								toaster.show(failure.message)
-							})
-					}}
-					onCancel={closeModal}
+					onSubmit={(title) => write([renaming], (post) => renamePost(post.id, title), nameWords)}
+					onClose={() => setRenaming(undefined)}
 				/>
-			),
-		}),
-		[toaster, renames],
+			) : null}
+		</Page>
 	)
 }
 ```
 
-Leave `modalSize` out, so the rename takes the DataViews width, 560px,
-as the WordPress rename does. WordPress titles it Rename and labels
-its button Save, and the example does the same.
+WordPress titles it Rename and labels its button Save, and the
+example does the same. Every word comes from you: the title, the
+field label, both button labels and the toasts. Pass them through
+your translations.
 
-The submit button is off only while the field is blank. A name left
-as it was can still be sent, as in the WordPress rename. Enter in the
-field does what the submit button does. `onSubmit` gets the name
-exactly as typed, and your code does the write and the toast.
+Save stays on, even with the field blank, as in the WordPress rename.
+The field is required and must hold more than spaces, so the browser
+refuses a blank name in its own words and sends nothing. A name left
+as it was still sends. Enter in the field does what Save does.
+`onSubmit` gets the name exactly as typed.
 
-A rename closes the moment the reader presses Save, before its write,
-as WordPress closes its rename. So the body is never busy and never
-shows a failure. When the write fails, say so in a toast and keep
-what the reader typed. `name` is the text the field starts with, so
-hand that text back on the next open. The reader then finds the name
-they typed and can try once more.
+`onSubmit` answers the dialog as the one of
+[a form dialog](#a-form-dialog) does. Through `useDialogRun`, the
+dialog stays open while the write runs, with a spinner on Save and
+the field read only. It closes when the write works, and stays with
+the words of `failed` and the typed name when it fails, as
+[a failure from a dialog](#a-failure-from-a-dialog) shows.
 
-`useUnsavedText` holds that text, by item id, for as long as the
-screen stays. Keep it in the hook that builds the action, never in the
-modal, which goes the moment the reader saves. Clear the item's text
-before each write, so a save that works leaves nothing behind.
-`markLatest` marks the write as the latest one sent to the item and
-returns a check. Keep the failed text only while the check holds, so
-an earlier save that fails late never overwrites what a later save
-sent, and a later save that works is never undone. The store holds
-any value, so a form with several fields keeps them all, as
-`useUnsavedText<Fields>()`. This needs godmin 0.24.1, or 0.27.0 or
-later. 0.25.0 and 0.26.0 do not have it.
-
-Every word comes from you: the field label, both button labels and
-the toasts. Pass them through your translations.
-
-`modalFocusOnMount: 'firstContentElement'` puts the cursor in the
-field when the modal opens, as the WordPress rename does. Without it,
-the modal window itself takes the focus, and the reader has to press
-Tab to reach the field.
-
-## A form in a row action
-
-Some row actions ask for more than a yes or a name, such as a copy
-with a title of its own or a new role for a user. `FormBody` is the
-body of that modal: the fields you give it, an accent text Cancel and
-the submit button. It is a real form, so Enter in a field sends it:
-
-```tsx
-import { FormBody, useCloseWhileOpen, useToaster } from '@gopherium/godmin'
-import type { Action, RenderModalProps } from '@wordpress/dataviews'
-import { InputControl } from '@wordpress/ui'
-
-function DuplicateModal({ items: [post], closeModal }: RenderModalProps<Post>) {
-	const toaster = useToaster()
-	const close = useCloseWhileOpen(closeModal)
-	const [title, setTitle] = useState(`${post.title} (Copy)`)
-	const [busy, setBusy] = useState(false)
-	const duplicate = () => {
-		setBusy(true)
-		duplicatePost(post.id, title)
-			.then(() => toaster.show(`"${title}" created.`))
-			.catch((failure) => toaster.show(failure.message))
-			.finally(close)
-	}
-	return (
-		<FormBody
-			kind="copy"
-			submitLabel="Duplicate"
-			cancelLabel="Cancel"
-			canSubmit={title.trim() !== ''}
-			busy={busy}
-			onSubmit={duplicate}
-			onCancel={closeModal}
-		>
-			<InputControl label="Title" value={title} onChange={(event) => setTitle(event.target.value)} />
-		</FormBody>
-	)
-}
-
-const duplicateAction: Action<Post> = {
-	id: 'duplicate',
-	label: 'Duplicate',
-	modalHeader: 'Duplicate',
-	modalFocusOnMount: 'firstContentElement',
-	RenderModal: DuplicateModal,
-}
-```
-
-`submitLabel` and `cancelLabel` name the two buttons. `onSubmit` runs
-from the submit button or from Enter, and `onCancel` from Cancel.
-`canSubmit` turns the submit button off, for example while a needed
-field is empty. The button stays reachable with Tab, so a keyboard
-reader still finds it. While `busy`, the submit button shows a
-spinner and a second send does nothing. Cancel stays live the whole
-time, as in WordPress forms.
-
-`kind` says what the form does, and sets the space above the buttons
-as WordPress spaces it:
-
-| `kind` | For | Space above the buttons |
-| --- | --- | --- |
-| `edit`, the default | A change to one item, such as a new role | 20px |
-| `copy` | A copy of an item, such as Duplicate | 12px |
-| `create` | Something new | 16px |
-
-When the modal closes depends on the action, as in WordPress:
-
-- A change to one item closes the moment the reader sends it, before
-  its write, like the [rename](#renaming-an-item). Call `closeModal`
-  first, then write.
-- A copy, something new, or a change to several items stays open with
-  its button busy, then closes when the write ends, worked or failed.
-  Set `busy` while it runs, and close it through
-  `useCloseWhileOpen(closeModal)`, as the example does. DataViews
-  keeps one dialog for a row's actions menu and another for its
-  primary action buttons. Every dialog that opens in one of them gets
-  the same `closeModal`, so a write that ends after the reader
-  dismissed your modal and opened another one in its place would shut
-  the new one. The close `useCloseWhileOpen` returns does nothing once
-  your modal left the screen. This needs godmin 0.27.0 or later.
-
-Either way, a failure goes in a toast. `FormBody` never shows one. To
-give the reader back what they typed after a failure, keep it in a
-`useUnsavedText` store outside the modal and pass it in as the first
-value of the fields, as the rename does.
-
-Leave `modalSize` out, so the form takes the DataViews width, 560px,
-as WordPress row forms do. `modalFocusOnMount: 'firstContentElement'`
-puts the cursor in the first field.
+A rename that closes at once, by returning nothing from `onSubmit`
+and writing after, loses the typed name when the write fails. Keep it
+in a `useUnsavedText` store by item id, hand it back as `name` on the
+next open, and check `markLatest` so an earlier save that fails late
+never overwrites a later one.
 
 ## A form dialog
 
@@ -1183,8 +1069,7 @@ Page dialog: a card with a title, a close icon, the cursor in the
 first field, and Cancel and the send button at the end:
 
 ```tsx
-import { useToaster } from '@gopherium/godmin'
-import { FormDialog } from '@gopherium/godmin/dialogs'
+import { FormDialog, useToaster } from '@gopherium/godmin'
 import { Button, InputControl } from '@wordpress/ui'
 
 function AddProjectDialog({ onClose }: { onClose: () => void }) {
@@ -1251,9 +1136,6 @@ opened it.
 A form over a row or over the picked rows of a list you draw yourself
 writes through `useDialogRun`, as
 [a failure from a dialog](#a-failure-from-a-dialog) shows.
-
-`FormDialog` comes from `@gopherium/godmin/dialogs`, beside
-`ConfirmDialog`.
 
 ## Putting the focus back on a row
 
@@ -1367,19 +1249,27 @@ same way, then answers the dialog:
 const { run, region } = useListRun('posts', list.onChangeSelection)
 const write = useDialogRun<Post>(run, refresh)
 
-const nameWords: BulkWords<Post> = {
-	done: () => 'Name updated.',
-	failed: ([{ error }]) => `Could not save the name. ${(error as Error).message}`,
+const tagWords: BulkWords<Post> = {
+	done: (count) => (count === 1 ? 'Tag added.' : `Tag added to ${count} posts.`),
+	failed: (failures, asked) =>
+		asked === 1
+			? `Could not add the tag. ${(failures[0].error as Error).message}`
+			: `Could not add the tag to ${failures.length} of ${asked} posts.`,
 }
 
 <FormDialog
-	title="Rename"
-	submitLabel="Save"
+	title="Add tag"
+	submitLabel="Add"
 	cancelLabel="Cancel"
-	onSubmit={() => write(posts, async (post) => rename(post, name), nameWords)}
-	onClose={() => setRenaming(undefined)}
+	onSubmit={() => write(tagging, (post) => addTag(post.id, tag), tagWords)}
+	onClose={() => setTagging(undefined)}
 >
+	<InputControl label="Tag" value={tag} onChange={(event) => setTag(event.target.value)} />
+</FormDialog>
 ```
+
+The action's `callback` stores the rows in `tagging`, as
+[renaming an item](#renaming-an-item) stores its row.
 
 - One item that failed: no toast, and the dialog stays with the words
   of `failed`, the typed text kept.

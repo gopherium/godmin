@@ -109,10 +109,9 @@ const DIALOG_NUMBERS = [
 ]
 
 /** The usage sections on a dialog, each by its page and heading, that leave every value to the dialogs page. */
-const DIALOG_LOOKS = ['Confirming an action', 'A form dialog', 'A failure from a dialog'].map((heading) => [
-	'usage/lists.md',
-	heading,
-])
+const DIALOG_LOOKS = ['Confirming an action', 'Renaming an item', 'A form dialog', 'A failure from a dialog'].map(
+	(heading) => ['usage/lists.md', heading],
+)
 
 /** The rule of the installed DataViews sheet that draws the line beside the pinned actions of a header cell. */
 const STUCK_LINE = '.dataviews-view-table th.dataviews-view-table__actions-column--stuck::after'
