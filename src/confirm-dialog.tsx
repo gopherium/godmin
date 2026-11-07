@@ -4,9 +4,7 @@ import { AlertDialog } from '@wordpress/ui'
 
 import {
 	POPUP_CLASS,
-	answerOf,
-	isThenable,
-	passRejectionOn,
+	answered,
 	refuseRepeatedEnter,
 	refuseSecondClick,
 	useDialogOpen,
@@ -33,22 +31,6 @@ export interface ConfirmDialogProps {
 }
 
 /**
- * Carries an action out and reads what it answers, handing what it throws or rejects with on to the app.
- * @param action - The action.
- * @returns What the dialog reads, at once unless the action returned a write still running.
- */
-function confirmed(
-	action: ConfirmDialogProps['onConfirm'],
-): DialogAnswer | undefined | Promise<DialogAnswer | undefined> {
-	try {
-		const running = action()
-		return isThenable(running) ? Promise.resolve(running).then(answerOf, passRejectionOn) : answerOf(running)
-	} catch (error) {
-		return passRejectionOn(error)
-	}
-}
-
-/**
  * Renders a dialog that asks one question before an action, on the WPDS alert dialog, with Cancel focused.
  * @param props - The question, what will happen, the intent, the labels and the handlers.
  * @returns The dialog.
@@ -65,7 +47,7 @@ export function ConfirmDialog({
 	const { open, change, exitWatch } = useDialogOpen(onClose)
 	const finalFocus = useFinalFocus()
 	return (
-		<AlertDialog.Root open={open} onOpenChange={change} onConfirm={() => confirmed(onConfirm)}>
+		<AlertDialog.Root open={open} onOpenChange={change} onConfirm={() => answered(onConfirm)}>
 			<AlertDialog.Popup
 				className={POPUP_CLASS}
 				intent={intent}

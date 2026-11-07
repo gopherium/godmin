@@ -98,6 +98,20 @@ export function passRejectionOn(error: unknown): DialogAnswer {
 }
 
 /**
+ * Carries a dialog's action out and reads what it answers, handing what it throws or rejects with on to the app.
+ * @param action - The action.
+ * @returns What the dialog reads, at once unless the action returned a write still running.
+ */
+export function answered(action: () => unknown): DialogAnswer | undefined | Promise<DialogAnswer | undefined> {
+	try {
+		const running = action()
+		return isThenable(running) ? Promise.resolve(running).then(answerOf, passRejectionOn) : answerOf(running)
+	} catch (error) {
+		return passRejectionOn(error)
+	}
+}
+
+/**
  * Refuses the second click of a double click, while Enter and Space still press.
  * @param event - The click on its way into the popup.
  */
