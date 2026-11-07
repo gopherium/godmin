@@ -8,7 +8,7 @@ import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { POPUP_CLASS } from '../src/dialog-open.js'
 import { FormDialog } from '../src/dialogs'
-import type { FormDialogProps } from '../src/dialogs'
+import type { DialogAnswer, FormDialogProps } from '../src/dialogs'
 import { buttonClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -228,12 +228,12 @@ test('draws the submit button alone when it has no Cancel', async () => {
 
 test('sends the form once on a press on the submit button, which sits outside the form and names it', async () => {
 	const { onSubmit } = await openDialog()
+	expect(submit().closest('form')).toBeNull()
+	expect(submit().getAttribute('form')).toBe(form().id)
 
 	await press('Add')
 
 	expect(onSubmit).toHaveBeenCalledOnce()
-	expect(submit().closest('form')).toBeNull()
-	expect(submit().getAttribute('form')).toBe(form().id)
 })
 
 test('sends nothing on a press while a field the form needs is blank', async () => {
@@ -254,17 +254,46 @@ test('sends nothing while a needed field is empty, and keeps the submit button f
 	expect(submit().hasAttribute('disabled')).toBe(false)
 })
 
-test('keeps the submit busy while the returned promise runs and ignores a second send', async () => {
+test('keeps the submit busy while the write runs, ignores a second send, and closes once it ends', async () => {
 	const held = heldSend()
-	const { onSubmit } = await openDialog({ onSubmit: held.send })
+	const { onSubmit, onClose } = await openDialog({ onSubmit: held.send })
 
 	await press('Add')
 	await press('Add')
 
 	expect(onSubmit).toHaveBeenCalledOnce()
 	expect(submit().getAttribute('aria-disabled')).toBe('true')
+	expect(onClose).not.toHaveBeenCalled()
 	await act(async () => held.fulfil())
-	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
+})
+
+test('spins for a write that is a thenable but not a promise', async () => {
+	const held = heldSend()
+	const thenable = { then: (done: () => void) => void held.send().then(done) } as unknown as PromiseLike<void>
+	await openDialog({ onSubmit: () => thenable })
+
+	await press('Add')
+
+	expect(submit().getAttribute('aria-disabled')).toBe('true')
+	await act(async () => held.fulfil())
+})
+
+test('hands a function given as the fields whether the write runs', async () => {
+	const held = heldSend()
+	renderAdmin(
+		<FormDialog title="Add Page" submitLabel="Add" onSubmit={held.send} onClose={() => undefined}>
+			{(busy) => <InputControl label="Title" readOnly={busy} />}
+		</FormDialog>,
+	)
+	await screen.findByRole('dialog')
+	expect(field().readOnly).toBe(false)
+
+	await press('Add')
+
+	expect(field().readOnly).toBe(true)
+	await act(async () => held.fulfil())
 })
 
 test('sends nothing more from a plain button in the fields pressed while the send runs', async () => {
@@ -284,9 +313,9 @@ test('sends nothing more from a plain button in the fields pressed while the sen
 	await act(async () => held.fulfil())
 })
 
-test('keeps the submit busy until a write that ends with the saved item ends', async () => {
+test('closes itself once a write that ends with the saved item ends', async () => {
 	let finish: (saved: { id: string }) => void = () => {}
-	await openDialog({
+	const { onClose } = await openDialog({
 		onSubmit: () =>
 			new Promise<{ id: string }>((done) => {
 				finish = done
@@ -297,38 +326,44 @@ test('keeps the submit busy until a write that ends with the saved item ends', a
 	expect(submit().getAttribute('aria-disabled')).toBe('true')
 
 	await act(async () => finish({ id: '1' }))
-	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
 })
 
-test('keeps Cancel live while the send runs', async () => {
+test('greys Cancel and the close icon while the send runs', async () => {
 	const held = heldSend()
 	await openDialog({ onSubmit: held.send })
 
 	await press('Add')
 
-	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('aria-disabled')).not.toBe('true')
+	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('aria-disabled')).toBe('true')
+	expect(screen.getByRole('button', { name: 'Close' }).getAttribute('aria-disabled')).toBe('true')
 	await act(async () => held.fulfil())
 })
 
-test('never turns busy for a send that returns nothing', async () => {
-	const { onSubmit } = await openDialog()
+test('closes at once on a send that returns nothing', async () => {
+	const { onSubmit, onClose } = await openDialog()
 
 	await press('Add')
-	await press('Add')
 
-	expect(onSubmit).toHaveBeenCalledTimes(2)
-	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onSubmit).toHaveBeenCalledOnce()
+	expect(onClose).toHaveBeenCalledOnce()
 })
 
-test('stays open when the send settles, until the caller closes it', async () => {
-	const held = heldSend()
-	const { onClose } = await openDialog({ onSubmit: held.send })
+test.each([
+	['at once', (): DialogAnswer => ({ close: false })],
+	['once its promise ends', async (): Promise<DialogAnswer> => ({ close: false })],
+])('stays open with nothing drawn on a send that answers a plain stay %s', async (_when, answer) => {
+	const { onSubmit, onClose } = await openDialog({ onSubmit: answer })
 
 	await press('Add')
-	await act(async () => held.fulfil())
 
 	expect(dialog()).not.toBeNull()
 	expect(onClose).not.toHaveBeenCalled()
+	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await press('Add')
+	expect(onSubmit).toHaveBeenCalledTimes(2)
 })
 
 test.each([
@@ -336,33 +371,67 @@ test.each([
 	['Escape', pressEscape],
 	['a click on the dimmed page', clickOutside],
 	['its close icon', async () => press('Close')],
-])('closes on %s, also while the send runs, and runs onClose once the card left', async (_way, close) => {
+])('stays open on %s while the send runs, and closes once it ends', async (_way, close) => {
 	const held = heldSend()
 	const { onClose } = await openDialog({ onSubmit: held.send })
 	await press('Add')
 
 	await close()
 
-	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-	expect(onClose).toHaveBeenCalledOnce()
+	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
 	await act(async () => held.fulfil())
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
 	expect(onClose).toHaveBeenCalledOnce()
 })
 
-test('lets the reader send again after a send that throws, and hands the error on', async () => {
+test.each([
+	['Cancel', async () => press('Cancel')],
+	['Escape', pressEscape],
+	['a click on the dimmed page', clickOutside],
+	['its close icon', async () => press('Close')],
+])('closes on %s while idle, sends nothing, and runs onClose once the card left', async (_way, close) => {
+	const { onSubmit, onClose } = await openDialog()
+
+	await close()
+
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
+	expect(onSubmit).not.toHaveBeenCalled()
+})
+
+test('stays on a rejection with the spinner ended, hands it on once, and lets the reader send again', async () => {
 	const thrown = new Error('offline')
 	const reasons = heardRejections()
 	const held = heldSend()
-	const { onSubmit } = await openDialog({ onSubmit: held.send })
+	const { onSubmit, onClose } = await openDialog({ onSubmit: held.send })
 
 	await press('Add')
 	await act(async () => held.reject(thrown))
 	await waitFor(() => expect(reasons).toEqual([thrown]))
-	await press('Add')
 
 	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
+	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	await press('Add')
 	expect(onSubmit).toHaveBeenCalledTimes(2)
 	await act(async () => held.fulfil())
+})
+
+test('stays on a handler that throws, and hands the error on to the app once', async () => {
+	const thrown = new Error('offline')
+	const reasons = heardRejections()
+	const { onClose } = await openDialog({
+		onSubmit: () => {
+			throw thrown
+		},
+	})
+
+	await press('Add')
+	await waitFor(() => expect(reasons).toEqual([thrown]))
+
+	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
 })
 
 test('keeps what was typed after a send that throws', async () => {

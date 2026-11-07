@@ -10,7 +10,7 @@ import { expect, test, vi } from 'vitest'
 import { commands, userEvent } from 'vitest/browser'
 
 import { ConfirmDialog, FormDialog } from '../../src/dialogs.js'
-import type { DialogAnswer } from '../../src/dialogs.js'
+import type { DialogAnswer, FormDialogProps } from '../../src/dialogs.js'
 import { Page, Toaster, focusedTrigger, useBulkRun, useFocusBack, useListRun } from '../../src/index.js'
 import type { BulkWords, Trigger } from '../../src/index.js'
 import { sampleFocus } from './sample-focus.js'
@@ -260,6 +260,11 @@ function pageControl(name: string): HTMLElement {
 /** Returns the region of the page, whether or not the dialog hides it. */
 function region(): HTMLElement {
 	return screen.getByRole('region', { name: 'Posts', hidden: true })
+}
+
+/** Returns the dimmed layer behind the dialog. */
+function backdropOf(): Element {
+	return document.querySelector('[class*="backdrop"]') as Element
 }
 
 /** Waits for the browser to draw the given number of frames. */
@@ -548,7 +553,7 @@ test('stays open on an Enter held from the control that asked it', async () => {
 /** What the form bench changes on its dialog: the send, the send gate, and whether its first field is needed. */
 interface FormDrawn {
 	/** Sends the form. */
-	onSubmit?: () => void
+	onSubmit?: FormDialogProps['onSubmit']
 	/** Whether the form may be sent now. */
 	canSubmit?: boolean
 	/** Whether the first field must be filled before a send. */
@@ -626,7 +631,7 @@ test('wraps Tab inside a form dialog, and Shift Tab back', async () => {
 })
 
 test('sends a form once on each Enter in either field, through its footer button', async () => {
-	const onSubmit = vi.fn()
+	const onSubmit = vi.fn((): DialogAnswer => ({ close: false }))
 	render(<FormBench onSubmit={onSubmit} />)
 	const { summary } = await formInFocus()
 
@@ -688,4 +693,83 @@ test('closes a form dialog on Escape with the focus on a Save greyed while a fie
 
 	await left(popup)
 	expect(document.activeElement).toBe(pageControl('Add Page'))
+})
+
+/** Returns a write the test ends by hand, and what ends it. */
+function heldForm(): { write: () => Promise<void>; end: () => void } {
+	let end = () => {}
+	return {
+		write: async () =>
+			new Promise<void>((done) => {
+				end = done
+			}),
+		end: () => end(),
+	}
+}
+
+test.each(['Add', 'Cancel'])('keeps a form dialog open on Escape from %s greyed while it writes', async (name) => {
+	const held = heldForm()
+	render(<FormBench onSubmit={held.write} />)
+	const { popup, save } = await formInFocus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => save.getAttribute('aria-disabled')).toBe('true')
+	const greyed = within(popup).getByRole('button', { name })
+	greyed.focus()
+	await expect.poll(() => document.activeElement).toBe(greyed)
+
+	await userEvent.keyboard('{Escape}')
+	await frames(3)
+
+	expect(popup.isConnected).toBe(true)
+	expect(popup.hasAttribute('data-ending-style')).toBe(false)
+	held.end()
+	await left(popup)
+})
+
+test('sends a form once on a double click on Save over a write that stays, then on Enter and Space', async () => {
+	const onSubmit = vi.fn(async (): Promise<DialogAnswer> => {
+		await new Promise((done) => setTimeout(done, 20))
+		return { close: false }
+	})
+	render(<FormBench onSubmit={onSubmit} />)
+	const { popup, save } = await formInFocus()
+	const idle = async () => expect.poll(() => save.getAttribute('aria-disabled')).not.toBe('true')
+
+	const [x, y] = await middleOf(save, popup)
+	await commands.doubleClickAt(x, y, DOUBLE_CLICK_GAP)
+	await idle()
+	await frames(3)
+	expect(onSubmit).toHaveBeenCalledOnce()
+
+	save.focus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => onSubmit.mock.calls.length).toBe(2)
+	await idle()
+
+	await userEvent.keyboard('[Space]')
+	await expect.poll(() => onSubmit.mock.calls.length).toBe(3)
+	await idle()
+})
+
+test.each([
+	['Escape', async () => userEvent.keyboard('{Escape}')],
+	['Cancel', async () => userEvent.click(screen.getByRole('button', { name: 'Cancel' }))],
+	['a click on the dimmed page', async () => userEvent.click(backdropOf(), { position: { x: 8, y: 8 } })],
+])('sends nothing on a press on Save or on Enter while a form dialog leaves after %s', async (_way, close) => {
+	const onSubmit = vi.fn()
+	render(<FormBench onSubmit={onSubmit} />)
+	const { popup, save, title } = await formInFocus()
+	await Promise.all(popup.getAnimations().map(async (transition) => transition.finished))
+
+	await close()
+	await expect.poll(() => popup.getAnimations().length).toBeGreaterThan(0)
+	popup.getAnimations().forEach((transition) => transition.pause())
+	await userEvent.click(save, { force: true })
+	title.focus()
+	await userEvent.keyboard('{Enter}')
+	await frames(3)
+
+	expect(onSubmit).not.toHaveBeenCalled()
+	popup.getAnimations().forEach((transition) => transition.finish())
+	await left(popup)
 })

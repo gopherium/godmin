@@ -4,12 +4,13 @@ import { Button, Dialog, Stack } from '@wordpress/ui'
 import { useId, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
-import { POPUP_CLASS, useDialogOpen, useFinalFocus } from './dialog-open.js'
+import { POPUP_CLASS, answered, isThenable, refuseSecondClick, useDialogOpen, useFinalFocus } from './dialog-open.js'
+import type { DialogAnswer } from './dialog-open.js'
 
 /** The props of a form dialog opened from a button outside a list row. */
 export interface FormDialogProps {
-	/** The fields, in the order the reader meets them. */
-	children: ReactNode
+	/** The fields in the order the reader meets them, or a function of whether the write runs that draws them. */
+	children: ReactNode | ((busy: boolean) => ReactNode)
 	/** The title in the dialog header, beside its close icon, the name of the dialog. */
 	title: string
 	/** A help sentence before the fields, which describes the dialog. */
@@ -20,8 +21,8 @@ export interface FormDialogProps {
 	cancelLabel?: string
 	/** Whether the form may be sent now, false while a needed field is empty, true when left out. */
 	canSubmit?: boolean
-	/** Sends the form. Return the write's promise to keep the button busy until it ends. */
-	onSubmit: () => void | Promise<unknown>
+	/** Sends the form. Return nothing to close at once, the write to hold the dialog until it ends, or an answer. */
+	onSubmit: () => void | DialogAnswer | PromiseLike<unknown>
 	/** Takes the dialog away, once its card has left the page. */
 	onClose: () => void
 }
@@ -45,38 +46,59 @@ export function FormDialog({
 	const finalFocus = useFinalFocus()
 	const [busy, setBusy] = useState(false)
 	const form = useId()
-	const sendable = canSubmit && !busy
+	const sendable = canSubmit && !busy && open
+	const guarded = (next: boolean) => {
+		if (next || !busy) {
+			change(next)
+		}
+	}
+	const settle = (answer: DialogAnswer | undefined) => {
+		if (answer === undefined) {
+			change(false)
+		}
+	}
 	const submit = (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault()
 		if (!sendable) {
 			return
 		}
-		const sending = onSubmit()
-		if (sending instanceof Promise) {
-			setBusy(true)
-			void sending.finally(() => setBusy(false))
+		const answer = answered(onSubmit)
+		if (!isThenable(answer)) {
+			settle(answer)
+			return
 		}
+		setBusy(true)
+		void answer.then((reply) => {
+			setBusy(false)
+			settle(reply)
+		})
 	}
 	return (
-		<Dialog.Root open={open} onOpenChange={change}>
+		<Dialog.Root open={open} onOpenChange={guarded}>
 			<Dialog.Popup className={POPUP_CLASS} finalFocus={finalFocus}>
 				<Dialog.Header>
 					<Dialog.Title>{title}</Dialog.Title>
-					<Dialog.CloseIconButton />
+					<Dialog.CloseIconButton disabled={busy} />
 				</Dialog.Header>
 				<Dialog.Content>
 					<Stack render={<form id={form} onSubmit={submit} />} direction="column" gap="lg">
 						{description === undefined ? null : <Dialog.Description>{description}</Dialog.Description>}
-						{children}
+						{typeof children === 'function' ? children(busy) : children}
 					</Stack>
 				</Dialog.Content>
 				<Dialog.Footer>
 					{cancelLabel === undefined ? null : (
-						<Dialog.Action variant="outline" tone="neutral">
+						<Dialog.Action variant="outline" tone="neutral" disabled={busy}>
 							{cancelLabel}
 						</Dialog.Action>
 					)}
-					<Button type="submit" form={form} loading={busy} disabled={!sendable}>
+					<Button
+						type="submit"
+						form={form}
+						loading={busy}
+						disabled={!sendable}
+						onClick={refuseSecondClick}
+					>
 						{submitLabel}
 					</Button>
 				</Dialog.Footer>
