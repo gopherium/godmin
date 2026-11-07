@@ -173,6 +173,13 @@ test('the router entry hands out the sidebar rows, their list and the access che
 	expect(parts.map((name) => typeof router[name])).toEqual(['function', 'function', 'function', 'function'])
 })
 
+test('the router entry hands out the dialog that asks before a move leaves unsaved work', async () => {
+	const router = (await import(join(source, 'router.ts'))) as Record<string, unknown>
+
+	expect(typeof router.UnsavedChangesDialog).toBe('function')
+	expect(packagesReachedFrom(join(source, 'unsaved-changes-dialog.tsx')).has('@tanstack/react-router')).toBe(true)
+})
+
 test('the router entry hands out the menu, which reads the matched routes', async () => {
 	const router = (await import(join(source, 'router.ts'))) as Record<string, unknown>
 
