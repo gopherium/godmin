@@ -171,8 +171,10 @@ every value of how it looks.
   column.
 - A row added to a list, such as a note, keeps its own button and
   saves at once.
-- While the record holds unsaved work, warn on `beforeunload`, and
-  ask before a link in the app leaves the page, such as a breadcrumb.
+- While the record holds unsaved work, ask before a link in the app
+  leaves the page, such as a breadcrumb, as
+  [leaving with unsaved work](./dialogs.md#leaving-with-unsaved-work)
+  says.
 
 ## While a record loads
 

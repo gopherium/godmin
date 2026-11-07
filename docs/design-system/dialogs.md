@@ -161,6 +161,27 @@ does.
   dimmed under the dialog, as
   [where a toast sits](./toasts.md#where-a-toast-sits) says.
 
+## Leaving with unsaved work
+
+- `UnsavedChangesDialog` from `@gopherium/godmin/router` asks before a
+  move in the app leaves a page that holds unsaved work: a link, the
+  sidebar, Back and Forward. Its `when` is true while the page holds
+  such work.
+- It is an irreversible confirm in your words, `title`, `description`,
+  `discardLabel` and `keepLabel`, such as "Discard changes?",
+  "Discard" and "Keep editing".
+- A change of the search alone, such as a sort of a list inside the
+  page, does not ask, since the page and its edits stay.
+- Closing the tab, reloading, or Back off the app's first page shows
+  the browser's own box.
+- Keep editing, or Escape, stays on the page with the edits. After
+  Back the address moves back too.
+- Discard lets the card leave as any confirm does, then the page
+  leaves.
+- A handler that saves and then leaves in one go passes
+  `ignoreBlocker: true` to its `navigate`, since the page counts as
+  unsaved until the save has drawn. Delete on a record does the same.
+
 ## Keyboard and focus
 
 - A confirm opens with the focus on Cancel. A form dialog opens with

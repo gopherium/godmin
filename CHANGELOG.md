@@ -15,6 +15,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `FormDialog` takes `description`, and a function as its children to read `busy`.
 - The French list catalogue speaks `Close`.
 - `RenameDialog` asks for a new name: Save stays on, and a blank name is refused.
+- `UnsavedChangesDialog` in `@gopherium/godmin/router` asks before a link leaves a page with unsaved work.
 
 ### Changed
 

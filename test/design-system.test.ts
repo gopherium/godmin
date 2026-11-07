@@ -60,6 +60,9 @@ const DIALOG_MODULE = '@wordpress/ui/build-module/dialog/popup.mjs'
 /** The source of godmin's form dialog. */
 const formDialog = readFileSync(resolve(import.meta.dirname, '../src/form-dialog.tsx'), 'utf8')
 
+/** The source of the dialog that asks before a move leaves unsaved work. */
+const unsavedDialog = readFileSync(resolve(import.meta.dirname, '../src/unsaved-changes-dialog.tsx'), 'utf8')
+
 /** The module of the installed design system that turns the gap of a stack into a design token. */
 const STACK_MODULE = '@wordpress/ui/build-module/stack/stack.mjs'
 
@@ -861,6 +864,15 @@ test('the dialogs page gives a form dialog the width of a confirm, the default o
 	expect(formDialog).not.toMatch(/<Dialog\.Popup[^>]*\bsize=/)
 	expect(groupOf(/\bsize = "(\w+)"/.exec(installedFile(DIALOG_MODULE)))).toBe(confirm)
 	expect(dialogPassage('Size and place', 'A form dialog')).toContain('takes the same width')
+})
+
+test('the dialogs page says unsaved work asks in red, and that a save that leaves passes the guard', () => {
+	const section = sections.get('dialogs.md')?.get('Leaving with unsaved work') ?? ''
+
+	expect(unsavedDialog).toMatch(/<ConfirmDialog\s+intent="irreversible"/)
+	expect(section).toContain('irreversible confirm')
+	expect(section).toContain('`ignoreBlocker: true`')
+	expect(pages.get('record-pages.md')).toContain('](./dialogs.md#leaving-with-unsaved-work)')
 })
 
 test('the dialogs page gives the Cancel of a form dialog, as the form draws it', () => {
