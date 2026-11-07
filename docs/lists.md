@@ -769,8 +769,9 @@ while the reader is still with the run:
   the dialog opens, and the dialog taking the focus straight from that
   button. Otherwise the focus stays on the button.
 
-A dialog opened since keeps the focus, so typing still lands in it
-and Escape still closes it. The same goes for a dialog whose control
+A dialog opened since keeps the focus, when it draws in its default
+portal as godmin's dialogs do, so typing still lands in it and Escape
+still closes it. The same goes for a dialog whose control
 opened the dialog the run started in. A reader who moved on to
 another control outside the list keeps their place: during a run
 started outside every dialog, while the dialog the run started in is
@@ -1178,8 +1179,8 @@ puts the cursor in the first field.
 
 Some forms open from a button outside any list, such as Add Project
 in a page header. `FormDialog` asks those, as WordPress opens its Add
-Page dialog: a card with a title and a close button, the cursor in
-the first field, and the same form as `FormBody` inside:
+Page dialog: a card with a title, a close icon, the cursor in the
+first field, and Cancel and the send button at the end:
 
 ```tsx
 import { useToaster } from '@gopherium/godmin'
@@ -1189,18 +1190,19 @@ import { Button, InputControl } from '@wordpress/ui'
 function AddProjectDialog({ onClose }: { onClose: () => void }) {
 	const toaster = useToaster()
 	const [name, setName] = useState('')
-	const add = async () => {
-		await addProject(name)
-		toaster.show(`"${name}" added.`)
-		onClose()
-	}
 	return (
 		<FormDialog
 			title="Add Project"
+			description="A project groups your orders."
 			submitLabel="Add"
 			cancelLabel="Cancel"
 			canSubmit={name.trim() !== ''}
-			onSubmit={() => add().catch((failure) => toaster.show(failure.message))}
+			onSubmit={() =>
+				addProject(name).then(
+					() => void toaster.show(`"${name}" added.`),
+					(failure: Error) => ({ error: `Could not add the project. ${failure.message}` }),
+				)
+			}
 			onClose={onClose}
 		>
 			<InputControl label="Name" value={name} onChange={(event) => setName(event.target.value)} />
@@ -1225,38 +1227,33 @@ Render the dialog only while you ask, as the example does. Keep the
 state of the fields in the dialog's own component, as
 `AddProjectDialog` does, so each new ask starts with empty fields.
 
-`size` picks the card width from 600px up. `small`, the default,
-draws it 400px wide, as WordPress draws Add Page. `medium` draws it
-560px wide, for a form whose controls need the room. Below 600px both
-are the same sheet along the bottom of the screen. `title` is the
-heading beside the close button. `submitLabel`, `cancelLabel` and
-`canSubmit` work as in `FormBody`. So does `kind`, but a dialog is a
-`create` by default, 16px above its buttons.
+`title` is the heading beside the close icon, and `description` an
+optional help sentence before the fields. `submitLabel` names the
+send button. `cancelLabel` names Cancel, and a last step with nothing
+to cancel leaves it out. `canSubmit` greys the send button while a
+needed field is empty, and it stays reachable with Tab.
 
-`onSubmit` runs from the submit button or from Enter. Return the
-write's promise, and the submit button shows a spinner until the
-write ends. A second send meanwhile does nothing. The dialog never
-closes itself after a send:
+`onSubmit` runs from the send button or from Enter in a field. Return
+nothing to close at once, or the write's promise to keep the dialog
+open with a spinner until it ends. Answer `{ error }` to stay open and
+say why, or `{ close: false }` to stay open with nothing said, as
+[when a dialog closes](./design-system/dialogs.md#when-a-dialog-closes)
+says. godmin closes the dialog itself, so call nothing to close it.
+`onClose` runs once the card has left, and that is where you take the
+dialog away.
 
-- When the write worked, close it yourself, as `add` does with
-  `onClose`.
-- When the write failed, leave it open, as WordPress leaves Add Page.
-  The reader keeps what they typed and can try again. Show the
-  failure in a toast, with the `.catch` inside `onSubmit`, as
-  [a failure from a dialog](#a-failure-from-a-dialog) explains.
+While the write runs, Cancel, the close icon, Escape and a click on
+the dimmed page close nothing. Pass a function as the children to
+read `busy`, such as to set a field `readOnly` until the write ends.
+When the dialog goes away, the focus goes back to the button that
+opened it.
 
-A form that opens from a row's own menu, in a list you draw yourself,
-and changes that one item closes before its write, like the
-[rename](#renaming-an-item). Give it `size="medium"`, the width
-WordPress gives its row forms, and `kind="edit"`. In `onSubmit`, take
-the dialog away first, then start the write, and return nothing.
+A form over a row or over the picked rows of a list you draw yourself
+writes through `useDialogRun`, as
+[a failure from a dialog](#a-failure-from-a-dialog) shows.
 
-Cancel, Escape, a click outside the dialog and its close button all
-call `onClose`, even while the write runs. When the dialog goes away,
-the focus goes back to the button that opened it.
-
-`FormDialog` comes from `@gopherium/godmin/dialogs`, the entry that
-needs `@wordpress/components` and its stylesheet.
+`FormDialog` comes from `@gopherium/godmin/dialogs`, beside
+`ConfirmDialog`.
 
 ## Putting the focus back on a row
 
@@ -1332,37 +1329,73 @@ moved to keeps the focus. This needs godmin 0.27.0 or later.
 
 ## A failure from a dialog
 
-A write that fails in a `FormDialog` shows in a toast, as WordPress
-shows it in its snackbar. So does a write that fails in a
-`ConfirmDialog` that closes. A confirm that stays open says why
-inside, as [confirming an action](#confirming-an-action) shows. When
-`onSubmit` or `onConfirm` returns a promise, show the toast from
-inside that same function, and return the promise that `.catch`
-answers:
+A dialog that stays open after a failure says why inside it. A dialog
+that closes says how its write went in a toast, as
+[a failed write](./design-system/dialogs.md#a-failed-write) says. Turn
+the failure into words and answer them as `{ error }`:
 
 ```tsx
-onSubmit={() => save(values).catch((failure) => toaster.show(failure.message))}
+onSubmit={() =>
+	save(values).then(
+		() => undefined,
+		(failure: Error) => ({ error: `Could not save the project. ${failure.message}` }),
+	)
+}
 ```
 
-`.catch` answers a new promise. That one ends with no error once the
-toast shows. The dialog stops its spinner, a `ConfirmDialog` closes,
-and no error goes on to your app. An `async` function that catches
-its own error inside works the same way, as long as you return what
-it answers.
+The second function of `.then` answers the words, so the promise ends
+with `{ error }` and the dialog stays with them inside, the typed text
+kept. An `async` function that catches its own error inside works the
+same way, as long as you return what it answers. A `ConfirmDialog`
+reads the same answers. Answer `{ close: false }` when the words go
+somewhere else, such as a server message about one field under that
+field.
 
-The line works whatever `save` ends with, the saved item or nothing,
-since the dialog only waits for the promise to end. This needs godmin
-0.23.1 or later. A `ConfirmDialog` also reads what the promise ends
-with. Of those answers, it stays open only for `{ error }` with words
-in it or for `{ close: false }`.
+A write that rejects with nothing caught also leaves the dialog open,
+with no words, and its error goes on to your app.
 
-`.catch` sees a failure only when the write's promise
-rejects. Many GraphQL clients answer an object with `error` instead,
-as [bulk actions](#bulk-actions) says. With such a client, throw that
-`error` inside your write. Otherwise the dialog takes the write as
-one that worked.
+Many GraphQL clients answer a failed write with an object in `error`
+instead of rejecting, as [bulk actions](#bulk-actions) says. Only
+words in `error` keep a dialog open, so turn that answer into words
+first. Otherwise the dialog takes the write as one that worked.
 
-Do not add the `.catch` as a separate step and then return the first
+A dialog over one row or over the picked rows of a list writes
+through `useDialogRun`. It takes what `useBulkRun` takes and runs the
+same way, then answers the dialog:
+
+```tsx
+const { run, region } = useListRun('posts', list.onChangeSelection)
+const write = useDialogRun<Post>(run, refresh)
+
+const nameWords: BulkWords<Post> = {
+	done: () => 'Name updated.',
+	failed: ([{ error }]) => `Could not save the name. ${(error as Error).message}`,
+}
+
+<FormDialog
+	title="Rename"
+	submitLabel="Save"
+	cancelLabel="Cancel"
+	onSubmit={() => write(posts, async (post) => rename(post, name), nameWords)}
+	onClose={() => setRenaming(undefined)}
+>
+```
+
+- One item that failed: no toast, and the dialog stays with the words
+  of `failed`, the typed text kept.
+- One item that worked, or several items whatever happened: one toast
+  in your words, and the dialog closes, since a run can half work and
+  a retry would send to every item again.
+- A call that answers an object with `error`, as a GraphQL client
+  does, counts as a failure, and `failed` gets that object as it came.
+- The promise ends before the reload ends, so the dialog closes
+  without waiting for the list.
+
+A run moves the focus to the list, so write through `useDialogRun`
+only from a dialog that closes when its write works. A dialog that
+stays open after a run that worked would leave the focus behind it.
+
+Do not catch a failure as a separate step and then return the first
 promise:
 
 ```tsx
@@ -1373,10 +1406,11 @@ onSubmit={() => {
 }}
 ```
 
-The toast shows, but `saving` itself still fails. The dialog waits on
-`saving`, so it gets the error too and hands it on to your app as an
-error nobody caught. The same failure reaches your app a second
-time, after you already showed it, and a `ConfirmDialog` stays open.
+The toast shows dimmed under the open dialog, and `saving` itself
+still fails. The dialog waits on `saving`, so it gets the error too
+and hands it on to your app as an error nobody caught. The same
+failure reaches your app a second time, after you already showed it,
+and the dialog stays open.
 
 That handing on is on purpose. A failure you did not catch is one you
 did not expect, and it should not go quiet. It reaches your app,

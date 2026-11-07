@@ -1,13 +1,14 @@
 ---
 title: Dialogs
-description: When an action asks first, how a confirm looks and moves, what happens while its write runs, where a failure shows, and what a keyboard or a screen reader meets.
+description: When an action asks first, how a confirm and a form dialog look and move, what happens while a write runs, where a failure shows, and what a keyboard or a screen reader meets.
 ---
 
-A dialog stops the page to ask one thing. A confirm is the dialog
-that asks one question before an action. godmin draws it on the
-design system's own alert dialog.
-[Confirming an action](../lists.md#confirming-an-action) shows how to
-open one. This page gives every value of how it looks and behaves.
+A dialog stops the page to ask one thing. godmin draws two kinds on
+the design system's own parts. A confirm asks one question before an
+action, on the alert dialog. A form dialog holds a short form, on the
+dialog. [Confirming an action](../lists.md#confirming-an-action) and
+[a form dialog](../lists.md#a-form-dialog) show how to open them. This
+page gives every value of how they look and behave.
 
 ## When to ask first
 
@@ -38,12 +39,14 @@ open one. This page gives every value of how it looks and behaves.
 
 ## Size and place
 
-- A confirm is a card in the middle of the window at every width. It
+- A dialog is a card in the middle of the window at every width. It
   never turns into a sheet on a phone.
 - It keeps `--wpds-dimension-padding-2xl` (24px) from each window edge
   while it can.
 - A confirm is at most `--wpds-dimension-surface-width-lg` (560px)
   wide, and it has no other width.
+- A form dialog takes the same width, and it has no other width
+  either.
 - It is never narrower than `--wpds-dimension-surface-width-sm`
   (320px), so on a 320px window it touches both edges.
 - From 480px wide its floor is `--wpds-dimension-surface-width-md`
@@ -68,12 +71,17 @@ open one. This page gives every value of how it looks and behaves.
   (20px). The body text is at `--wpds-typography-font-size-md` (13px).
 - `--wpds-dimension-gap-lg` (16px) sits between the title and the
   body, and between the body and the buttons.
+- The fields of a form dialog sit `--wpds-dimension-gap-lg` (16px)
+  apart, its help sentence first.
 - The buttons sit at the end, Cancel first,
   `--wpds-dimension-gap-sm` (8px) apart.
 - In a confirm Cancel has no border and takes the neutral tone. The
   confirm button is solid in your accent color, or red with
   `intent="irreversible"`. No prop changes that red, as
   [the three seeds](./color.md#the-three-seeds) says.
+- In a form dialog Cancel has an outline and takes the neutral tone,
+  and the send button is solid in your accent color. A close icon
+  sits beside the title. A confirm has no close icon.
 - A word too long for the card, such as a long link in a server
   message, breaks at the card's edge.
 
@@ -90,21 +98,27 @@ open one. This page gives every value of how it looks and behaves.
 
 ## While a write runs
 
-When `onConfirm` returns a promise, the confirm stays open until it
-ends.
+When `onConfirm` or `onSubmit` returns a promise, the dialog stays
+open until it ends.
 
-- The confirm button shows a spinner over its hidden label and keeps
-  its width. A confirm shows no word such as "Deleting…".
-- Cancel turns grey and stays reachable with Tab.
-- Escape closes nothing, wherever the focus sits, so a failure always
-  has a place to show. Give a write that can hang a timeout.
-- The confirm button ignores the second click of a double click, and
-  a held Enter presses it once, so a fast write is not sent twice. A
-  press after the confirm closed sends nothing.
+- The main button shows a spinner over its hidden label and keeps its
+  width. No dialog shows a word such as "Deleting…" or "Saving…".
+- Cancel and the close icon turn grey and stay reachable with Tab.
+- Escape and the dimmed page close nothing, wherever the focus sits,
+  so a failure always has a place to show. Give a write that can hang
+  a timeout.
+- The fields stay as you drew them. If one must wait, pass a function
+  as the children of `FormDialog`. It gets `busy`, so set the field
+  `readOnly` while the write runs. Never set it `disabled`, since a
+  field that holds the focus would drop it out of the dialog.
+- The main button ignores the second click of a double click, so a
+  fast write is not sent twice. On a confirm a held Enter presses it
+  once. A press or an Enter after the dialog started to close sends
+  nothing.
 
 ## When a dialog closes
 
-| What `onConfirm` does | The confirm |
+| What `onConfirm` or `onSubmit` does | The dialog |
 | --- | --- |
 | Returns nothing | Closes at once, and the write runs behind it |
 | Returns a promise | Shows the spinner, then closes when the promise ends |
@@ -112,60 +126,94 @@ ends.
 | Answers `{ close: false }`, at once or when its promise ends | Stays and says nothing |
 | Throws, or returns a promise that rejects | Stays, and the error goes on to your app |
 
-Any other answer, such as the saved item, closes the confirm. Close
-first for a long write, and show it busy on the button that opened
-the dialog.
+Any other answer, such as the saved item, closes the dialog. godmin
+closes it itself, so call nothing from your handler to close it, and
+take it away in `onClose`. Close first for a long write, and show it
+busy on the button that opened the dialog.
 
-Of what `error` may hold, only words keep a confirm open. An empty
+Of what `error` may hold, only words keep a dialog open. An empty
 string or an object there closes it, unless `close` is `false`. Many
 GraphQL clients answer a failed write with an object in `error`, and
-the confirm then closes with nothing said. Turn that answer into
-words first.
+the dialog then closes with nothing said. Turn that answer into words
+first, or write through `useDialogRun`, as
+[a failure from a dialog](../lists.md#a-failure-from-a-dialog) shows.
 
 ## A failed write
 
-Does the confirm stay open? Then it says why inside. Otherwise a toast
+Does the dialog stay open? Then it says why inside. Otherwise a toast
 does.
 
+- In a form dialog `{ error }` draws a notice at the end of the form,
+  above the buttons, and scrolls the body to it. What the reader typed
+  stays. The notice goes on the next send or the first edit.
 - In a confirm `{ error }` draws the words under the buttons, at the
   end, in `--wpds-typography-font-size-sm` (12px). They go on the next
   press of the confirm button.
+- A form dialog over several items closes, and one toast says how the
+  run went, since a run can half work. A form over one item that
+  failed stays and says why. `useDialogRun` does both.
+- A server message about one field goes under that field, as on a
+  [record page](./record-pages.md#saving). Answer `{ close: false }`
+  so the dialog stays with nothing more said.
 - A confirm that closes, such as a run over the picked rows, says how
   it went in a toast.
-- Never raise a toast for a confirm that stays open. It would show
-  dimmed under the confirm, as
+- Never raise a toast for a dialog that stays open. It would show
+  dimmed under the dialog, as
   [where a toast sits](./toasts.md#where-a-toast-sits) says.
 
 ## Keyboard and focus
 
-- A confirm opens with the focus on Cancel.
-- Enter presses the button that holds the focus, so an Enter right
-  after the confirm opens closes it.
-- Tab stays inside the confirm.
-- Escape closes an idle confirm, wherever the focus sits.
-- A click on the dimmed page never closes a confirm.
-- When a confirm goes, the focus goes back to the control that opened
+- A confirm opens with the focus on Cancel. A form dialog opens with
+  the focus on its first field, past the close icon. A form dialog
+  with no field opens on Cancel.
+- Enter in a field sends the form. On a button it presses that button,
+  so an Enter right after a confirm opens closes it.
+- Enter in a blank field the form marks `required` sends nothing.
+- Tab stays inside the dialog.
+- Escape closes an idle dialog, wherever the focus sits, a greyed
+  button included.
+- A click on the dimmed page closes an idle form dialog, never a
+  confirm.
+- When a dialog goes, the focus goes back to the control that opened
   it. A row menu hands the focus to its Actions button before the
-  confirm opens, so a confirm from a row menu returns there. When that
+  dialog opens, so a dialog from a row menu returns there. When that
   control left the page, see
   [putting the focus back on a row](../lists.md#putting-the-focus-back-on-a-row).
-- A focus your code or the reader moved out of the confirm stays
+- When your steps swap inside one form dialog, move the focus
+  yourself, such as to the field the next step shows.
+- A focus your code or the reader moved out of the dialog stays
   there.
 - After Undo in the toast of a run, the focus goes to the list, as it
   does after any run.
 
 ## What paints above what
 
-- A toast sits under a confirm, as
+- A toast sits under a dialog, as
   [where a toast sits](./toasts.md#where-a-toast-sits) says.
+- A select, a menu or a confirm from the design system opened inside
+  a dialog paints above it. Draw a confirm inside the dialog in your
+  component tree, so the dimmed layer does not double.
+- A `Modal`, `Popover`, `Dropdown` or `Tooltip` from
+  `@wordpress/components` opened inside a dialog sits under it, and a
+  press on it can close the dialog with the typed work. Keep to design
+  system parts.
+- A form dialog holds no part from `@wordpress/components` that opens
+  over it. A `DataForm` in one uses the regular layout, where a date
+  field is an inline calendar. A `color` field opens a `Dropdown`, so
+  leave it out.
+- A screen that truly needs such a part draws the design system's
+  dialog parts itself, with `Popover.Slot` after the footer and
+  outside the form, under a `SlotFillProvider`. A press in the card
+  then leaves the panel open, and Escape with the focus in a field
+  closes the dialog with the panel still showing.
 
 ## What a screen reader hears
 
-- A confirm is an `alertdialog`. The title names it, and its
-  description describes it.
+- A confirm is an `alertdialog` and a form dialog a `dialog`. The
+  title names it, and its description describes it.
 - A busy button says "Loading" once.
-- A failure inside a confirm is spoken at once.
-- A toast under a confirm is still spoken, politely. Its action cannot
-  be reached until the confirm goes.
-- While a confirm is open, a `role="alert"` of your own with no
+- A failure inside a dialog is spoken at once.
+- A toast under a dialog is still spoken, politely. Its action cannot
+  be reached until the dialog goes.
+- While a dialog is open, a `role="alert"` of your own with no
   `aria-live` is hidden. Use `speak`.

@@ -103,8 +103,8 @@ another release gets a peer warning when it installs godmin.
 ## Upgrading from godmin 0.31.0
 
 godmin 0.32.0 draws `ConfirmDialog` on the alert dialog of the design
-system, and a confirm on a list becomes a dialog your screen renders.
-Change your code in these places:
+system and `FormDialog` on its dialog, and a confirm on a list becomes
+a dialog your screen renders. Change your code in these places:
 
 - `ConfirmDialog` takes the question as `title` and what will happen
   as `description`, in place of `children`. `size` is gone, since a
@@ -142,8 +142,29 @@ Change your code in these places:
   and closed at once for anything else.
 - A stylesheet that styles `.godmin-modal-body__question` styles
   nothing now.
+- `FormDialog` has no `kind` and no `size`. It has one width, it is a
+  card at every width, and its footer sets the space above its
+  buttons.
+- `FormDialog` closes itself. Return nothing from `onSubmit` to close
+  at once, or the write's promise to close when it ends, and stop
+  closing it from your handler. Take it away in `onClose`, which runs
+  once the card has left the page.
+- A form write that fails shows inside the dialog. Answer `{ error }`
+  with words from `onSubmit`, in place of a toast, as
+  [a failure from a dialog](./lists.md#a-failure-from-a-dialog) shows.
+  A promise that rejects, or a handler that throws, leaves the form
+  dialog open, and the error still goes on to your app.
+- Cancel, the close icon, Escape and a click on the dimmed page close
+  nothing while a form writes. A test that dismissed a busy form
+  dialog lets the write end instead.
+- The close button of a form dialog is now a close icon named "Close"
+  beside the title, and Cancel draws an outline.
+- The send button of a form dialog sits in the footer, outside the
+  form, and names it. user-event in jsdom finds no send button for
+  Enter there, so a test that typed Enter in a field presses the send
+  button instead, or runs in a browser.
 
-TypeScript points at `children`, `size`, `RunConfirm` and
+TypeScript points at `children`, `size`, `kind`, `RunConfirm` and
 `ConfirmBody`. The rest changes what the reader sees and when
 `onClose` runs.
 

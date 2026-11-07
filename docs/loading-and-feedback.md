@@ -201,12 +201,12 @@ Name an item in straight double quotes and in full, like
 snackbar, and godmin does not either.
 [Size](./design-system/toasts.md#size) says how a long one wraps.
 
-Use a toast for a write that failed too, in a form dialog, on a page
-or in a run over list rows. WordPress shows those in its snackbar,
-never inside the form and never above the list, and godmin's form
-dialogs and list runs do the same. A confirm that closes says how its
-write went in a toast too. A confirm that stays open says why inside,
-as [a failed write](./design-system/dialogs.md#a-failed-write) says.
+Use a toast for a write that failed too, on a page or in a run over
+list rows. WordPress shows those in its snackbar, never above the
+list, and godmin's list runs do the same. A dialog that closes says
+how its write went in a toast too. A dialog that stays open says why
+inside, as [a failed write](./design-system/dialogs.md#a-failed-write)
+says.
 Say what failed, in the words your server sent when it sent some. A
 server message about one field goes under that field.
 [A failure from a dialog](./lists.md#a-failure-from-a-dialog)
