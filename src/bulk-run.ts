@@ -6,6 +6,7 @@ import { bulkNotes, runEach } from './bulk.js'
 import type { BulkOutcome, BulkWords } from './bulk.js'
 import type { ListRun } from './list-run.js'
 import { useToaster } from './toaster.js'
+import type { ToastAction } from './toaster.js'
 
 /** Runs one call over each item, reports what the run reached in the given words and then reloads the list. */
 export type BulkRun<Item> = (
@@ -66,6 +67,17 @@ function bulkToast<Item>(items: Item[], outcome: BulkOutcome<Item>, words: BulkW
 }
 
 /**
+ * Returns the action the toast of a run offers, the words' Undo once every item finished, none otherwise.
+ * @param items - The items the run was given.
+ * @param outcome - What the run reached.
+ * @param words - The words of the run.
+ * @returns The action, none when an item failed or the words give no Undo.
+ */
+function doneAction<Item>(items: Item[], outcome: BulkOutcome<Item>, words: BulkWords<Item>): ToastAction | undefined {
+	return outcome.failures.length === 0 ? words.undo?.(items) : undefined
+}
+
+/**
  * Returns the handler that runs a call per item, marks the list reloading at the first that works, toasts at the last.
  * @param list - What the list does around a run.
  * @param refresh - Reloads the list once the last call ended, given the items the run acted on.
@@ -74,7 +86,8 @@ function bulkToast<Item>(items: Item[], outcome: BulkOutcome<Item>, words: BulkW
 export function useBulkRun<Item>(list: ListRun, refresh: (items: Item[]) => Promise<unknown>): BulkRun<Item> {
 	const toaster = useToaster()
 	return useCallback<BulkRun<Item>>(
-		async (items, call, words) => {
+		async (given, call, words) => {
+			const items = given.filter(() => true)
 			const settle = list.onStart()
 			const reload = reloadOnce(list)
 			const outcome = await runEach(items, reporting(call, reload.mark))
@@ -84,7 +97,7 @@ export function useBulkRun<Item>(list: ListRun, refresh: (items: Item[]) => Prom
 			try {
 				const message = bulkToast(items, outcome, words)
 				if (message !== undefined) {
-					toaster.show(message)
+					toaster.show(message, doneAction(items, outcome, words))
 				}
 			} finally {
 				settle(outcome.done > 0)

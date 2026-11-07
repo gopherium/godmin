@@ -417,7 +417,9 @@ test('keeps a leaving toast on screen until its fade ends, and lets nobody press
 
 	const leaving = screen.getByText('Saved')
 	expect(leaving.classList.contains('godmin-toast--leaving')).toBe(true)
-	expect(leaving.hasAttribute('inert')).toBe(true)
+	expect(leaving.getAttribute('aria-hidden')).toBe('true')
+	expect(leaving.tabIndex).toBe(-1)
+	expect(fireEvent.mouseDown(leaving), 'the press moves the focus onto the leaving toast').toBe(false)
 
 	await fade.finish()
 
@@ -495,18 +497,24 @@ test('keeps a leaving toast on the page until its fade and the closing of its it
 
 test('lets nobody press a toast with an action while it fades out', () => {
 	holdFade()
+	const onAct = vi.fn()
 	renderAdmin(
 		<Toaster>
-			<Raise message="Saved" action={{ label: 'Undo', onAct: vi.fn() }} />
+			<Raise message="Saved" action={{ label: 'Undo', onAct }} />
 		</Toaster>,
 	)
 	fireEvent.click(screen.getByRole('button', { name: 'Raise' }))
 
 	fireEvent.click(screen.getByText('Saved'))
 
-	const leaving = screen.getByText('Saved').parentElement
-	expect(leaving?.classList.contains('godmin-toast--leaving')).toBe(true)
-	expect(leaving?.hasAttribute('inert')).toBe(true)
+	const leaving = screen.getByText('Saved').parentElement as HTMLElement
+	const undo = screen.getByRole('button', { name: 'Undo', hidden: true })
+	expect(leaving.classList.contains('godmin-toast--leaving')).toBe(true)
+	expect(leaving.getAttribute('aria-hidden')).toBe('true')
+	expect(undo.tabIndex).toBe(-1)
+	expect(fireEvent.mouseDown(undo), 'the press moves the focus onto the leaving action').toBe(false)
+	fireEvent.click(undo)
+	expect(onAct).not.toHaveBeenCalled()
 })
 
 test('draws a toast that is not leaving without the leaving look', () => {
@@ -520,7 +528,9 @@ test('draws a toast that is not leaving without the leaving look', () => {
 
 	const toast = screen.getByRole('button', { name: 'Saved' })
 	expect(toast.classList.contains('godmin-toast--leaving')).toBe(false)
-	expect(toast.hasAttribute('inert')).toBe(false)
+	expect(toast.hasAttribute('aria-hidden')).toBe(false)
+	expect(toast.hasAttribute('tabindex')).toBe(false)
+	expect(fireEvent.mouseDown(toast), 'a press on a toast that stays').toBe(true)
 })
 
 test('clears a toast nobody touched once its time is up', () => {
@@ -934,7 +944,7 @@ test('hands focus to the toast region when a focused toast runs out of time', ()
 	expect(document.activeElement).toBe(region())
 })
 
-test('moves focus out of a toast running out of time before the toast turns inert, as a browser renders', async () => {
+test('moves focus out of a toast running out of time before the toast is hidden, as a browser renders', async () => {
 	renderAdmin(
 		<Toaster actionDismissAfter={1}>
 			<Raise message="Post moved to trash" action={{ label: 'Undo', onAct: vi.fn() }} />
@@ -945,12 +955,12 @@ test('moves focus out of a toast running out of time before the toast turns iner
 	const toast = screen.getByText('Post moved to trash').parentElement as HTMLElement
 	const holder = region()
 	const observers: MutationObserver[] = []
-	const focusOnceInert = new Promise<Element | null>((resolve) => {
-		const turnedInert = new MutationObserver(() => resolve(document.activeElement))
+	const focusOnceHidden = new Promise<Element | null>((resolve) => {
+		const turnedHidden = new MutationObserver(() => resolve(document.activeElement))
 		const removed = new MutationObserver(() => resolve(null))
-		turnedInert.observe(toast, { attributeFilter: ['inert'] })
+		turnedHidden.observe(toast, { attributeFilter: ['aria-hidden'] })
 		removed.observe(holder, { childList: true })
-		observers.push(turnedInert, removed)
+		observers.push(turnedHidden, removed)
 	})
 	const acting = Reflect.get(globalThis, 'IS_REACT_ACT_ENVIRONMENT')
 	Reflect.set(globalThis, 'IS_REACT_ACT_ENVIRONMENT', false)
@@ -961,7 +971,7 @@ test('moves focus out of a toast running out of time before the toast turns iner
 		}
 	})
 
-	expect(await focusOnceInert).toBe(holder)
+	expect(await focusOnceHidden).toBe(holder)
 })
 
 test('hands focus to the toast region before a focused toast starts fading out', () => {
@@ -972,7 +982,7 @@ test('hands focus to the toast region before a focused toast starts fading out',
 
 	fireEvent.click(toast)
 
-	expect(screen.getByText('Saved').hasAttribute('inert')).toBe(true)
+	expect(screen.getByText('Saved').getAttribute('aria-hidden')).toBe('true')
 	expect(document.activeElement).toBe(region())
 })
 

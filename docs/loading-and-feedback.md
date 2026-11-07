@@ -43,6 +43,8 @@ decides how it shows:
   page, under the title, as on a WordPress screen.
 - Inside a dialog, when nothing of the dialog body is known yet. It
   shows at once there too.
+  [When to ask first](./design-system/dialogs.md#when-to-ask-first)
+  says when an action opens a dialog at all.
 - Alone, when nothing of the screen is known yet, such as while the
   session loads before the frame is drawn. It then waits a moment, so
   a fast load shows nothing, and fades in, in the middle of the space
@@ -199,12 +201,15 @@ Name an item in straight double quotes and in full, like
 snackbar, and godmin does not either.
 [Size](./design-system/toasts.md#size) says how a long one wraps.
 
-Use a toast for a write that failed too, in a dialog, on a page or in
-a run over list rows. WordPress shows those in its snackbar, never
-inside the dialog and never above the list, and godmin's dialogs and
-list runs do the same. Say what failed, in the words your server sent
-when it sent some. A server message about one field goes under that
-field. [A failure from a dialog](./lists.md#a-failure-from-a-dialog)
+Use a toast for a write that failed too, in a form dialog, on a page
+or in a run over list rows. WordPress shows those in its snackbar,
+never inside the form and never above the list, and godmin's form
+dialogs and list runs do the same. A confirm that closes says how its
+write went in a toast too. A confirm that stays open says why inside,
+as [a failed write](./design-system/dialogs.md#a-failed-write) says.
+Say what failed, in the words your server sent when it sent some. A
+server message about one field goes under that field.
+[A failure from a dialog](./lists.md#a-failure-from-a-dialog)
 shows how to raise one from a dialog.
 [Running an action over the picked rows](./lists.md#running-an-action-over-the-picked-rows)
 raises it for you after a run over a list.

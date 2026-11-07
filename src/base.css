@@ -415,6 +415,7 @@ body {
 	}
 
 	.godmin-toast__action {
+		position: relative;
 		flex: none;
 		margin-inline-start: var(--wpds-dimension-gap-2xl);
 		padding: 0;
@@ -427,6 +428,12 @@ body {
 		text-underline-offset: 0.2em;
 		text-decoration-thickness: from-font;
 		cursor: var(--wpds-cursor-control);
+	}
+
+	.godmin-toast__action::after {
+		content: '';
+		position: absolute;
+		inset: min(calc(-1 * var(--wpds-dimension-gap-sm)), calc(50% - 12px));
 	}
 
 	.godmin-toast__action:hover {
@@ -1039,6 +1046,10 @@ body {
 		align-self: flex-start;
 	}
 
+	.godmin-dialog-popup {
+		overflow-wrap: anywhere;
+	}
+
 	.godmin-modal-body {
 		display: flex;
 		flex-direction: column;
@@ -1051,10 +1062,6 @@ body {
 
 	.godmin-modal-body--create {
 		gap: var(--wpds-dimension-gap-lg);
-	}
-
-	.godmin-modal-body__question {
-		line-height: 1.4;
 	}
 
 	.godmin-form__row {

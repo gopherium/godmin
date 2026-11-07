@@ -12,7 +12,7 @@ import { expect, waitFor } from 'storybook/test'
 
 import { LoadingScreen } from '../src/loading.js'
 import { Page } from '../src/page.js'
-import { Admin, ListPage } from './frames.js'
+import { Admin, ListPage, NO_SHOT } from './frames.js'
 import { boxOf, centredIn, find, meets, middleAcross } from './measure.js'
 
 /** A row of the sample list. */
@@ -32,9 +32,6 @@ const FIELDS: Field<Report>[] = [{ id: 'title', label: 'Title', getValue: ({ ite
 
 /** The view the sample list opens on: a table of ten rows on its first page. */
 const VIEW: View = { type: 'table', titleField: 'title', page: 1, perPage: 10 }
-
-/** The modes of a story that takes no shot. */
-const NO_SHOT = { desktop: { disabled: true } }
 
 /** Renders a list on its first load, which never ends. */
 function FirstLoad() {

@@ -3,6 +3,7 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
+import { ConfirmDialog } from '../src/dialogs'
 import { Page, Toaster, useBulkRun, useListRun } from '../src/index'
 import type { BulkRun, BulkWords } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
@@ -258,6 +259,117 @@ async function failHello(post: Post): Promise<unknown> {
 async function failAll(): Promise<unknown> {
 	throw new Error('refused')
 }
+
+/**
+ * Returns the trash words with an Undo that records the items it was handed.
+ * @param undone - Where each Undo's items go.
+ * @returns The words.
+ */
+function undoWords(undone: Post[][]): BulkWords<Post> {
+	return { ...WORDS, undo: (items) => ({ label: 'Undo', onAct: () => void undone.push(items) }) }
+}
+
+test('offers Undo on the done toast once every item worked, handing it the items', async () => {
+	const undone: Post[][] = []
+	const bench = renderTrash({ words: undoWords(undone) })
+
+	await trash(bench)
+	const shown = toasts()
+	fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+	expect(shown).toEqual(['Moved to the trash: 2.Undo'])
+	expect(undone).toEqual([POSTS])
+})
+
+test('hands Undo the items the run was given, though the caller emptied its own array during the run', async () => {
+	const undone: Post[][] = []
+	const items = [...POSTS]
+	const bench = renderTrash({
+		items,
+		words: undoWords(undone),
+		call: vi.fn(async () => {
+			items.length = 0
+		}),
+	})
+
+	await trash(bench)
+	fireEvent.click(screen.getByRole('button', { name: 'Undo' }))
+
+	expect(undone).toEqual([POSTS])
+})
+
+test('offers no Undo once an item failed, the failure toast standing alone', async () => {
+	const bench = renderTrash({ words: undoWords([]), call: failHello })
+
+	await trash(bench)
+
+	expect(toasts()).toEqual(['Not moved to the trash: 1 of 2.'])
+	expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull()
+})
+
+test('offers no action on the done toast when the words give no Undo', async () => {
+	const bench = renderTrash()
+
+	await trash(bench)
+
+	expect(document.querySelector('.godmin-toast__action')).toBeNull()
+})
+
+/**
+ * Renders a list whose confirm runs over the two items.
+ * @param props - The call, the refresh, what runs once the confirm left and the reloads seen.
+ * @returns The page with the confirm.
+ */
+function ConfirmedTrash({
+	call,
+	refresh,
+	onClose,
+	reloads,
+}: Pick<Bench, 'call' | 'refresh' | 'reloads'> & { onClose: () => void }) {
+	const { run, region, refreshing } = useListRun('post publish', () => {})
+	const bulk = useBulkRun<Post>(run, refresh)
+	reloads.push(refreshing)
+	return (
+		<Page title="Posts" list listLabel="Posts" listRef={region}>
+			<ConfirmDialog
+				title="Move these posts to the trash?"
+				confirmLabel="Trash"
+				cancelLabel="Cancel"
+				onConfirm={async () => bulk(POSTS, call, WORDS)}
+				onClose={onClose}
+			/>
+		</Page>
+	)
+}
+
+test('holds a confirm over a run busy until its last call ends, then closes it before the reload ends', async () => {
+	const calls = heldCalls()
+	const held = heldRefresh()
+	const onClose = vi.fn()
+	const reloads: boolean[] = []
+	renderAdmin(
+		<Toaster>
+			<ConfirmedTrash call={calls.call} refresh={held.refresh} onClose={onClose} reloads={reloads} />
+		</Toaster>,
+	)
+	const confirm = await screen.findByRole('button', { name: 'Trash' })
+
+	await act(async () => {
+		fireEvent.click(confirm)
+	})
+	await calls.end(POSTS[0])
+
+	expect(reloads.at(-1), 'the list after the first call').toBe(true)
+	expect(onClose, 'the close after the first call').not.toHaveBeenCalled()
+	expect(confirm.getAttribute('aria-disabled'), 'the button after the first call').toBe('true')
+
+	await calls.end(POSTS[1])
+
+	expect(onClose, 'the close after the last call').toHaveBeenCalledOnce()
+	expect(held.refresh, 'the reload after the last call').toHaveBeenCalledOnce()
+	expect(reloads.at(-1), 'the list after the last call').toBe(true)
+	await act(async () => held.reload())
+})
 
 test('runs one call per item, shows one toast in the given words, then refreshes the list', async () => {
 	const order: string[] = []

@@ -1,6 +1,6 @@
 ---
 title: Lists with DataViews
-description: Hosting a WordPress DataViews list in a godmin page, its view in the address, paging it on the server, empty states, runs over the picked rows, confirmations, confirms outside a list, renames, forms in a dialog, the focus back on a row, bulk messages, uploads, its Spanish chrome, its dates, and the table look for lists that stay custom.
+description: Hosting a WordPress DataViews list in a godmin page, its view in the address, paging it on the server, empty states, runs over the picked rows, confirms, renames, forms in a dialog, the focus back on a row, bulk messages, uploads, its Spanish chrome, its dates, and the table look for lists that stay custom.
 ---
 
 DataViews is the WordPress list component. It draws the search box,
@@ -607,7 +607,8 @@ the row that took its place, unless that control is a primary action.
 things for you:
 
 ```tsx
-import { Page, RunConfirm, useBulkRun, useListRun } from '@gopherium/godmin'
+import { Page, useBulkRun, useListRun } from '@gopherium/godmin'
+import { ConfirmDialog } from '@gopherium/godmin/dialogs'
 
 function OrdersScreen() {
 	const client = useQueryClient()
@@ -615,37 +616,35 @@ function OrdersScreen() {
 	const { run, region } = useListRun('orders', list.onChangeSelection)
 	const refresh = useCallback(() => client.invalidateQueries({ queryKey: ['orders'] }), [client])
 	const bulk = useBulkRun<Order>(run, refresh)
+	const [deleting, setDeleting] = useState<Order[]>()
 	const actions = useMemo<Action<Order>[]>(
-		() => [
-			{
-				id: 'delete',
-				label: 'Delete…',
-				supportsBulk: true,
-				hideModalHeader: true,
-				modalFocusOnMount: 'firstContentElement',
-				RenderModal: (props) => (
-					<RunConfirm {...props} confirmLabel="Delete" cancelLabel="Cancel" run={(orders) => bulk(orders, (order) => deleteOrder(order.id), words)}>
-						Delete these orders for good?
-					</RunConfirm>
-				),
-			},
-		],
-		[bulk],
+		() => [{ id: 'delete', label: 'Delete…', supportsBulk: true, callback: setDeleting }],
+		[],
 	)
 	return (
 		<Page title="Orders" list listLabel="Orders" listRef={region}>
 			<DataViews {...props} actions={actions} />
+			{deleting ? (
+				<ConfirmDialog
+					intent="irreversible"
+					title={deleting.length === 1 ? `Delete "${deleting[0].name}"?` : `Delete ${deleting.length} orders?`}
+					description="This action cannot be undone."
+					confirmLabel="Delete"
+					cancelLabel="Cancel"
+					onConfirm={() => bulk(deleting, (order) => deleteOrder(order.id), words)}
+					onClose={() => setDeleting(undefined)}
+				/>
+			) : null}
 		</Page>
 	)
 }
 ```
 
-Build the actions once with `useMemo`, as the example does. A run
-renders the screen again, and DataViews draws the confirm of a bulk
-action from the actions you pass. A new `RenderModal` would start the
-confirm over in the middle of the run: Cancel would work again, and
-the confirm button could start a second run. When your words or your
-calls change with the screen, list them in the dependencies too.
+The action's `callback` stores the rows to ask about, and the screen
+draws the confirm from them, as
+[confirming an action](#confirming-an-action) explains. DataViews
+calls the same `callback` from a row's actions menu, its primary
+action button and the bulk bar.
 
 `useListRun` keeps track of the runs on the list. Once a run moved a
 row, the list region takes the focus, so a keyboard reader is not
@@ -759,6 +758,8 @@ dialog they opened on another row. So the list takes the focus only
 while the reader is still with the run:
 
 - the focus fell to the page,
+- the focus sits on the toast region itself, where a toast leaves it
+  as it goes, such as after the reader pressed Undo in it,
 - the focus sits inside the list,
 - the focus sits in the dialog the run started in,
 - or that dialog left the page before the run ended, and the focus
@@ -775,11 +776,12 @@ another control outside the list keeps their place: during a run
 started outside every dialog, while the dialog the run started in is
 still open, and after that dialog left the page. Every list run does
 this, with nothing to add to your screen. This needs godmin 0.27.0 or
-later. Before it, the list took the focus wherever the focus sat. Two
-cases need godmin 0.32.0 or later. Before it, the focus stayed on a
-control outside the list that opened a WPDS dialog, and the list took
+later. Before it, the list took the focus wherever the focus sat.
+Three cases need godmin 0.32.0 or later. Before it, the focus stayed
+on a control outside the list that opened a WPDS dialog, the list took
 the focus from a control the reader moved to out of a dialog that then
-closed.
+closed, and a run started from a toast left the focus on the toast
+region.
 
 `focusInDialog()` tells whether a dialog holds the focus, for a write
 you finish yourself outside a run. It also needs godmin 0.27.0 or
@@ -817,18 +819,31 @@ state shows the failure, as on any later load. The run resolved
 before it, so it does not reject. A test that awaits the run and then
 reads the reloaded rows waits for the rows instead.
 
-`RunConfirm` is the body of the confirm modal. It runs the action
-when the reader confirms, shows the confirm button busy and keeps
-Cancel inert while the run goes, and closes once the run settles. So
-it stays open while a call still runs, even once the list started to
-reload, and closes as the toast shows. A failure shows in the run's
-toast, never inside the modal. It also closes when the run rejects,
-and the error still reaches your app. It closes only itself.
-DataViews keeps one dialog for a row's actions menu and another for
-its primary action buttons. A reader can dismiss a busy confirm by
-clicking the dimmed page and open another dialog in its place, from
-the same menu or the same buttons. When the run then ends, that other
-dialog stays open, with what the reader typed in it.
+Give your words an `undo`, and the done toast offers it once every row
+worked. `undo` gets the rows the run was given and answers the toast's
+action, its `label` and its `onAct`. When any row failed, the toast
+holds your `failed` words and offers nothing:
+
+```tsx
+const restoreWords: BulkWords<Post> = {
+	done: (count, only) => (only === undefined ? `${count} posts restored.` : `"${only.title}" restored.`),
+	failed: (failures) => `Could not restore ${failures.length} posts.`,
+}
+
+callback: (posts) =>
+	bulk(posts, (post) => trashPost(post.id), {
+		...trashWords,
+		undo: (done) => ({ label: 'Undo', onAct: () => void bulk(done, (post) => restorePost(post.id), restoreWords) }),
+	})
+```
+
+Undo is then a run of its own, so the list reloads as after any run.
+A press on Undo leaves the focus on the toast region as the toast
+goes, and the list takes it from there once a row moved. This needs
+godmin 0.32.0 or later.
+
+A confirm whose `onConfirm` returns the run stays open until the run
+ends, then closes as the toast shows.
 
 `listLabel` and `listRef` make the list a region with a name, which
 a screen reader announces, and give the focus its target. The region
@@ -851,7 +866,7 @@ takes the focus only if the focus fell to the page or sits inside the
 list. While the focus is still on your button, or on another control
 the reader moved to, it stays there. When your button opens a
 `ConfirmDialog` first, as Empty Trash does, call `run.onStart()`
-inside `onConfirm`, as [a confirm outside a list](#a-confirm-outside-a-list)
+inside `onConfirm`, as [confirming an action](#confirming-an-action)
 explains. The list then takes the focus once the run moved a row,
 even after the dialog closed, while the focus is still on the button
 that opened it. A reader who moved to another control by then keeps
@@ -859,182 +874,116 @@ their place. This needs godmin 0.27.0 or later.
 
 ## Confirming an action
 
-An action that cannot be undone asks first. DataViews opens a modal
-for an action that has a `RenderModal`, and `RunConfirm` is the body
-of that modal for a
-[run over the picked rows](#running-an-action-over-the-picked-rows):
-
-```tsx
-const trash = useMemo<Action<Post>>(
-	() => ({
-		id: 'move-to-trash',
-		label: 'Move to trash',
-		supportsBulk: true,
-		hideModalHeader: true,
-		modalFocusOnMount: 'firstContentElement',
-		RenderModal: (props) => (
-			<RunConfirm {...props} confirmLabel="Move to trash" cancelLabel="Cancel" run={(posts) => bulk(posts, (post) => trashPost(post.id), words)}>
-				Move the picked posts to the trash?
-			</RunConfirm>
-		),
-	}),
-	[bulk],
-)
-```
-
-A confirm that removes something, such as Move to trash or Delete
-permanently, has no header, as in WordPress. Give the action
-`hideModalHeader: true`, and the question is the only text. A plain
-confirm, such as making an item the default, keeps its title through
-`modalHeader`. Leave `modalSize` out, so the modal takes the DataViews
-width, 560px, as WordPress list confirms do.
-`modalFocusOnMount: 'firstContentElement'` puts the focus on Cancel.
-Cancel is borderless text in your accent colour, left of the confirm
-button.
-
-For a run you write yourself, `ConfirmBody` is the same body without
-the run:
-
-```tsx
-import { ConfirmBody, runEach, useCloseWhileOpen, useToaster } from '@gopherium/godmin'
-
-function TrashModal({ items, closeModal }: RenderModalProps<Post>) {
-	const toaster = useToaster()
-	const close = useCloseWhileOpen(closeModal)
-	const [busy, setBusy] = useState(false)
-	const confirm = async () => {
-		setBusy(true)
-		const outcome = await runEach(items, (post) => trashPost(post.id))
-		const moved = outcome.failures.length === 0
-		toaster.show(moved ? 'Post moved to the trash.' : 'The post could not be moved to the trash.')
-		close()
-	}
-	return (
-		<ConfirmBody
-			confirmLabel="Move to trash"
-			cancelLabel="Cancel"
-			busy={busy}
-			onConfirm={() => void confirm()}
-			onCancel={closeModal}
-		>
-			Move the post to the trash?
-		</ConfirmBody>
-	)
-}
-```
-
-It draws the question, then Cancel as accent text and the solid
-confirm button at the end, 20px under the question. While `busy`,
-the confirm button shows a spinner and ignores a second press, and
-Cancel closes nothing.
-
-The body never shows a failure. Close the modal once the write ends,
-whether it worked or not, and say how it went in a toast, as the
-WordPress list confirms do.
-
-Close it through `useCloseWhileOpen(closeModal)`, as the example
-does. DataViews keeps one dialog for a row's actions menu and another
-for its primary action buttons. Every dialog that opens in one of
-them gets the same `closeModal`, so a write that ends after the reader
-dismissed your modal and opened another one in its place would shut
-the new one. The close `useCloseWhileOpen` returns does nothing once
-your modal left the screen. `RunConfirm` closes this way already.
-This needs godmin 0.27.0 or later.
-
-## A confirm outside a list
-
-Some confirms open from a button outside any list, such as Move to
-trash in an editor or Empty Trash above a list. `ConfirmDialog` asks
-those, as WordPress dialogs do. A confirm above a list can also start
-a [list run](#running-an-action-over-the-picked-rows), as Empty Trash
-does. This section says where the focus goes once that run ends.
-Here the dialog asks before Move to trash in an editor:
+An action that cannot be undone asks first. `ConfirmDialog` asks the
+question, on the alert dialog of the design system. The same dialog
+asks for a row action, a bulk action and a button outside any list,
+such as Delete permanently in an editor or Empty Trash above a list.
+Render it only while you ask, so each new ask starts fresh:
 
 ```tsx
 import { useToaster } from '@gopherium/godmin'
 import { ConfirmDialog } from '@gopherium/godmin/dialogs'
 import { Button } from '@wordpress/ui'
 
-function TrashButton({ post }: { post: Post }) {
+function DeleteButton({ post }: { post: Post }) {
 	const toaster = useToaster()
 	const [asking, setAsking] = useState(false)
-	const [trashing, setTrashing] = useState(false)
-	const trash = () => {
-		setTrashing(true)
-		trashPost(post.id)
-			.then(() => toaster.show('Post moved to the trash.'))
+	const [deleting, setDeleting] = useState(false)
+	const remove = () => {
+		setDeleting(true)
+		deletePost(post.id)
+			.then(() => toaster.show(`"${post.title}" deleted.`))
 			.catch((failure) => toaster.show(failure.message))
-			.finally(() => setTrashing(false))
+			.finally(() => setDeleting(false))
 	}
 	return (
 		<>
-			<Button variant="outline" loading={trashing} onClick={() => setAsking(true)}>Move to trash</Button>
+			<Button variant="outline" loading={deleting} onClick={() => setAsking(true)}>Delete permanently</Button>
 			{asking ? (
-				<ConfirmDialog size="small" confirmLabel="Move to trash" cancelLabel="Cancel" onConfirm={trash} onClose={() => setAsking(false)}>
-					Move "Hello" to the trash?
-				</ConfirmDialog>
+				<ConfirmDialog
+					intent="irreversible"
+					title={`Delete "${post.title}"?`}
+					description="This will permanently delete this post. This action cannot be undone."
+					confirmLabel="Delete permanently"
+					cancelLabel="Cancel"
+					onConfirm={remove}
+					onClose={() => setAsking(false)}
+				/>
 			) : null}
 		</>
 	)
 }
 ```
 
-It draws the WordPress modal: a card from 600px up, and a sheet
-along the bottom of the screen below 600px, the width
-`SHEET_BREAKPOINT` names. `size` picks the card width. `small` draws
-it 400px wide, as WordPress does for the Move to trash button in its
-editor sidebar, so the example asks for it. `medium`, the default,
-is the 560px card WordPress opens for the Trash action of a list or
-of an actions menu. Both sizes are the same sheet on a phone.
+`title` is the question, and it names the dialog. `description` says
+what will happen, as plain text. `intent="irreversible"` draws the
+confirm button red, for an action that cannot be undone. `confirmLabel`
+and `cancelLabel` name the two buttons. Every word comes from you, so
+pass them through your translations.
+[The words](./design-system/dialogs.md#the-words) says what to write.
 
-Leave `title` out for a confirm that removes something, so the
-question is the only text. Give a plain confirm a `title`, and it
-gets a header with a close button. Cancel has the focus when the
-dialog opens.
+For a row action or a bulk action, give the action a `callback` that
+stores the rows, and render the dialog from your screen, as
+[running an action over the picked rows](#running-an-action-over-the-picked-rows)
+shows. Name one row in the title and count several.
 
-What `onConfirm` returns decides when the dialog goes:
+What `onConfirm` does decides when the dialog goes, as
+[when a dialog closes](./design-system/dialogs.md#when-a-dialog-closes)
+shows:
 
 - Return nothing, and the dialog closes at once while your write
-  runs. WordPress does this for a confirm that opens from a button or
-  a screen menu, such as Move to trash in its editor or Empty Trash
-  above a list. Show the write as busy on the button that opened the
-  dialog, as the example does with `loading`. Make `onConfirm` a
-  plain function, as `trash` is. An `async` function always returns
-  a promise, so the dialog would stay open until the write ends. When
-  the write is a list run, call `run.onStart()` inside `onConfirm`,
-  while the dialog still holds the focus. The dialog gives the focus
-  back to its button as it closes, and the list takes the focus once
-  the run moved a row, while the focus is still on that button. A
-  reader who moved to another control or opened another dialog by
-  then keeps their place.
+  runs. Do this for a write that can take long, such as Empty Trash.
+  Show the write as busy on the button that opened the dialog, as the
+  example does with `loading`. Make `onConfirm` a plain function, as
+  `remove` is. An `async` function always returns a promise, so the
+  dialog would stay open until the write ends. When the write is a
+  list run, call `run.onStart()` inside `onConfirm`, while the dialog
+  still holds the focus. The dialog gives the focus back to its button
+  once it has gone, and the list takes the focus once the run moved a
+  row, while the focus is still on that button. A reader who moved to
+  another control or opened another dialog by then keeps their place.
 - Return the write's promise, and the dialog stays open while it
-  runs. The confirm button shows a spinner and Cancel greys out. When
-  the promise ends, worked or failed, the dialog closes. WordPress
-  does this for a confirm that opens from a row's own menu, so use it
-  for the rows of a list you draw yourself, outside DataViews:
+  runs, with a spinner on its confirm button. When the promise ends,
+  the dialog closes. A run over the picked rows works this way.
+- Answer `{ error: 'words' }`, at once or as the promise ends, and the
+  dialog stays open and shows the words inside. Do this when trying
+  again is the next step. Answer `{ close: false }` to stay open and
+  say nothing. `DialogAnswer` from `@gopherium/godmin/dialogs` types
+  both answers.
+- A handler that throws, or a promise that rejects, keeps the dialog
+  open and hands the error on to your app, as
+  [a failure from a dialog](#a-failure-from-a-dialog) explains.
+
+Here a plain confirm stays open after a failure, so the reader can
+try again:
 
 ```tsx
 <ConfirmDialog
-	confirmLabel="Delete"
+	title="Make this the default?"
+	description="New items will use it."
+	confirmLabel="Make default"
 	cancelLabel="Cancel"
-	onConfirm={() => deleteGroup(group.id).catch((failure) => toaster.show(failure.message))}
+	onConfirm={() =>
+		makeDefault(item.id).then(
+			() => toaster.show(`"${item.name}" is now the default.`),
+			(failure: Error) => ({ error: failure.message }),
+		)
+	}
 	onClose={() => setAsking(false)}
->
-	Delete "{group.name}"?
-</ConfirmDialog>
+/>
 ```
 
-Either way, show a failure in a toast. The dialog never shows one
-inside. Put the `.catch` inside `onConfirm` and return what it
-answers, as [a failure from a dialog](#a-failure-from-a-dialog)
-explains.
+A dialog that closes says how its write went in a toast.
+[A failed write](./design-system/dialogs.md#a-failed-write) says
+where each failure shows.
 
-The dialog calls `onClose` after Cancel, Escape, a click outside it,
-the close button of a titled confirm, or a confirm that finished.
-Escape, a click outside it and its close button work at any time,
-even while the write runs. The write then goes on, and `onClose`
-still runs only once. When the dialog goes away, the focus goes back
-to the button that opened it, unless your action already moved it.
+The dialog calls `onClose` once its card has left the page, after
+Cancel, Escape or a confirm that finished, and only once. Take the
+dialog away there, as the examples do. While the write runs, Cancel
+and Escape close nothing, as
+[while a write runs](./design-system/dialogs.md#while-a-write-runs)
+says. When the dialog goes away, the focus goes back to the control
+that opened it, unless your action already moved it.
 
 A list run started in `onConfirm` moves the focus to the list once it
 moved a row, whether the dialog stayed open until then or closed
@@ -1045,14 +994,12 @@ the focus is still there. Either way, a reader who moved to another
 control or opened another dialog since keeps their place. This needs
 godmin 0.27.0 or later.
 
-Render the dialog only while you ask, as the example does. Each new
-ask then starts fresh.
-
-`ConfirmDialog` comes from its own entry, `@gopherium/godmin/dialogs`,
-because it needs `@wordpress/components`, a large package the main
-entry never loads. Install `@wordpress/components` and load its
-stylesheet once, `@wordpress/components/build-style/style.css`, as
-DataViews already asks.
+`ConfirmDialog` comes from `@gopherium/godmin/dialogs`, the entry it
+shares with `FormDialog`. That entry needs `@wordpress/components`, a
+large package the main entry never loads. Install
+`@wordpress/components` and load its stylesheet once,
+`@wordpress/components/build-style/style.css`, as DataViews already
+asks.
 
 ## Renaming an item
 
@@ -1210,9 +1157,13 @@ When the modal closes depends on the action, as in WordPress:
 - A copy, something new, or a change to several items stays open with
   its button busy, then closes when the write ends, worked or failed.
   Set `busy` while it runs, and close it through
-  `useCloseWhileOpen(closeModal)`, as the example does.
-  [Confirming an action](#confirming-an-action) says why. This needs
-  godmin 0.27.0 or later.
+  `useCloseWhileOpen(closeModal)`, as the example does. DataViews
+  keeps one dialog for a row's actions menu and another for its
+  primary action buttons. Every dialog that opens in one of them gets
+  the same `closeModal`, so a write that ends after the reader
+  dismissed your modal and opened another one in its place would shut
+  the new one. The close `useCloseWhileOpen` returns does nothing once
+  your modal left the screen. This needs godmin 0.27.0 or later.
 
 Either way, a failure goes in a toast. `FormBody` never shows one. To
 give the reader back what they typed after a failure, keep it in a
@@ -1304,9 +1255,8 @@ Cancel, Escape, a click outside the dialog and its close button all
 call `onClose`, even while the write runs. When the dialog goes away,
 the focus goes back to the button that opened it.
 
-`FormDialog` comes from `@gopherium/godmin/dialogs`, like
-`ConfirmDialog`, so it needs `@wordpress/components` and its
-stylesheet the same way.
+`FormDialog` comes from `@gopherium/godmin/dialogs`, the entry that
+needs `@wordpress/components` and its stylesheet.
 
 ## Putting the focus back on a row
 
@@ -1382,10 +1332,13 @@ moved to keeps the focus. This needs godmin 0.27.0 or later.
 
 ## A failure from a dialog
 
-A write that fails never shows inside a dialog. It shows in a toast,
-as WordPress shows it in its snackbar. When `onSubmit` or `onConfirm`
-returns a promise, show the toast from inside that same function, and
-return the promise that `.catch` answers:
+A write that fails in a `FormDialog` shows in a toast, as WordPress
+shows it in its snackbar. So does a write that fails in a
+`ConfirmDialog` that closes. A confirm that stays open says why
+inside, as [confirming an action](#confirming-an-action) shows. When
+`onSubmit` or `onConfirm` returns a promise, show the toast from
+inside that same function, and return the promise that `.catch`
+answers:
 
 ```tsx
 onSubmit={() => save(values).catch((failure) => toaster.show(failure.message))}
@@ -1399,7 +1352,9 @@ it answers.
 
 The line works whatever `save` ends with, the saved item or nothing,
 since the dialog only waits for the promise to end. This needs godmin
-0.23.1 or later.
+0.23.1 or later. A `ConfirmDialog` also reads what the promise ends
+with. Of those answers, it stays open only for `{ error }` with words
+in it or for `{ close: false }`.
 
 `.catch` sees a failure only when the write's promise
 rejects. Many GraphQL clients answer an object with `error` instead,
@@ -1421,7 +1376,7 @@ onSubmit={() => {
 The toast shows, but `saving` itself still fails. The dialog waits on
 `saving`, so it gets the error too and hands it on to your app as an
 error nobody caught. The same failure reaches your app a second
-time, after you already showed it.
+time, after you already showed it, and a `ConfirmDialog` stays open.
 
 That handing on is on purpose. A failure you did not catch is one you
 did not expect, and it should not go quiet. It reaches your app,

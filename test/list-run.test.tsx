@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { ConfirmDialog } from '../src/dialogs'
-import { focusInDialog, Page, useListRun } from '../src/index'
+import { focusInDialog, Page, Toaster, useListRun, useToaster } from '../src/index'
 import type { ListRun, ListRunState, RunSettled } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
@@ -53,8 +53,15 @@ function ListScreen({
 	seen.runs.push(run)
 	seen.ticked.push(ticked)
 	const startRun = () => seen.settles.push(run.onStart())
+	const toaster = useToaster()
 	return (
 		<>
+			<button type="button" onClick={() => toaster.show('Moved to the trash.', { label: 'Undo', onAct: () => {} })}>
+				Show a toast
+			</button>
+			<button type="button" onClick={() => toaster.show('Saved.')}>
+				Show a note
+			</button>
 			<Page
 				title="Posts"
 				list={region}
@@ -100,14 +107,14 @@ function renderList(scope: string, region = true, role = 'dialog') {
 	const screenOn = (list: string, asking: boolean) => (
 		<ListScreen scope={list} region={region} asking={asking} role={role} onTicks={onTicks} seen={seen} />
 	)
-	const { rerender, unmount } = renderAdmin(screenOn(scope, true))
+	const { rerender, unmount } = renderAdmin(<Toaster>{screenOn(scope, true)}</Toaster>)
 	return {
 		seen,
 		onTicks,
 		unmount,
-		show: (next: string) => rerender(screenOn(next, true)),
-		closeConfirm: () => rerender(screenOn(scope, false)),
-		openConfirm: () => rerender(screenOn(scope, true)),
+		show: (next: string) => rerender(<Toaster>{screenOn(next, true)}</Toaster>),
+		closeConfirm: () => rerender(<Toaster>{screenOn(scope, false)}</Toaster>),
+		openConfirm: () => rerender(<Toaster>{screenOn(scope, true)}</Toaster>),
 	}
 }
 
@@ -248,6 +255,42 @@ test('leaves the focus on a control outside the list the reader moved to during 
 	expect(document.activeElement).toBe(control('Add Post'))
 })
 
+test('focuses the list region once a run moved an item with the focus on the toast region a leaving toast gave', () => {
+	const { seen } = renderList('post publish')
+	start()
+	fireEvent.click(control('Show a toast'))
+	focusOn('Undo')
+	fireEvent.click(control('Undo'))
+	expect(document.activeElement, 'the focus after Undo').toBe(document.querySelector('.godmin-toasts'))
+	expect(screen.queryByRole('button', { name: 'Undo' })).toBeNull()
+
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
+test('leaves the focus on a plain toast a reader moved to during a run', () => {
+	const { seen } = renderList('post publish')
+	start()
+	fireEvent.click(control('Show a note'))
+
+	focusOn('Saved.')
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Saved.'))
+})
+
+test('leaves the focus on the action of another toast a reader moved to during a run', () => {
+	const { seen } = renderList('post publish')
+	start()
+	fireEvent.click(control('Show a toast'))
+
+	focusOn('Undo')
+	settle(seen.settles[0], true)
+
+	expect(document.activeElement).toBe(control('Undo'))
+})
+
 test('leaves the focus on a control outside the list the reader moved to while the run dialog stays open', () => {
 	const { seen } = renderList('post publish')
 	start('Move to trash')
@@ -294,13 +337,12 @@ function TrashScreen({ opener, settles }: { opener: boolean; settles: RunSettled
 			</Page>
 			{asking ? (
 				<ConfirmDialog
+					title="Empty the trash?"
 					confirmLabel="Empty trash"
 					cancelLabel="Cancel"
 					onConfirm={emptyTrash}
 					onClose={() => setAsking(false)}
-				>
-					Empty the trash?
-				</ConfirmDialog>
+				/>
 			) : null}
 			<div role="dialog" aria-label="Edit">
 				<input aria-label="Title" />
@@ -324,7 +366,7 @@ async function emptyTrash(openerLeaves = false) {
 		dropOpener()
 	}
 	start('Empty trash')
-	await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Empty the trash?' })).toBeNull())
+	await waitFor(() => expect(screen.queryByRole('alertdialog', { name: 'Empty the trash?' })).toBeNull())
 	return { settles, dropOpener }
 }
 

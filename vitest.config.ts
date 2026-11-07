@@ -12,12 +12,34 @@ const reduceMotion: BrowserCommand<[on: boolean]> = async ({ page }, on) => {
 	await page.emulateMedia({ reducedMotion: on ? 'reduce' : 'no-preference' })
 }
 
+/** Clicks twice at a point of the test page, a set gap apart, as a person double clicks. */
+const doubleClickAt: BrowserCommand<[x: number, y: number, gap: number]> = async ({ page, iframe }, x, y, gap) => {
+	const frame = await iframe.owner().boundingBox()
+	await page.mouse.move((frame?.x ?? 0) + x, (frame?.y ?? 0) + y)
+	await page.mouse.down({ clickCount: 1 })
+	await page.mouse.up({ clickCount: 1 })
+	await new Promise((done) => setTimeout(done, gap))
+	await page.mouse.down({ clickCount: 2 })
+	await page.mouse.up({ clickCount: 2 })
+}
+
+/** Holds a key down as a person does, the browser reading each press after the first as a repeat. */
+const holdKey: BrowserCommand<[key: string, repeats: number, gap: number]> = async ({ page }, key, repeats, gap) => {
+	for (let press = 0; press <= repeats; press += 1) {
+		await page.keyboard.down(key)
+		await new Promise((done) => setTimeout(done, gap))
+	}
+	await page.keyboard.up(key)
+}
+
 /** The style Argos adds to a shot: no motion, spinners at rest, the list pulse dim, no pointer. */
 const SHOT_STYLE = [
 	'.godmin-toasts__item, .godmin-toast { animation: none; }',
 	'.godmin-loading-screen path, .components-spinner path { animation: none; }',
 	'.components-modal__frame { animation: none; transform: scale(1); }',
 	'.dataviews-wrapper .is-refreshing { animation: none !important; opacity: 0.5 !important; }',
+	'[data-wp-compat-overlay-slot] * { transition: none }',
+	'[role="alertdialog"] button svg path, [role="dialog"] button svg path { animation: none }',
 	'* { pointer-events: none !important; }',
 ].join(' ')
 
@@ -65,7 +87,11 @@ export default defineConfig({
 					include: ['test/browser/**/*.test.{ts,tsx}'],
 					exclude: [...configDefaults.exclude, 'test/browser/scrollbars/**'],
 					setupFiles: ['test/browser/setup.ts'],
-					browser: { ...chromium(), viewport: { width: 1280, height: 800 }, commands: { reduceMotion } },
+					browser: {
+						...chromium(),
+						viewport: { width: 1280, height: 800 },
+						commands: { reduceMotion, doubleClickAt, holdKey },
+					},
 				},
 			},
 			{

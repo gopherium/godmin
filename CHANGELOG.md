@@ -6,9 +6,30 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 ## [Unreleased]
 
+### Added
+
+- `docs/design-system/dialogs.md` gives every value of a confirm, when to ask first and where a failure shows.
+- `BulkWords` takes `undo`, the action a done toast offers once every item finished.
+- `DialogAnswer` from `@gopherium/godmin/dialogs` types what `onConfirm` may answer to stay open.
+
+### Changed
+
+- **Breaking.** `ConfirmDialog` draws the WPDS `AlertDialog`: a required `title`, a `description`, `intent` for a red button, one width, a neutral Cancel with no border, no close button, and a card at every width.
+- **Breaking.** `ConfirmDialog` ignores Escape and Cancel while a write runs, and a click on the dimmed page never closes it.
+- **Breaking.** `onClose` of `ConfirmDialog` runs after the card has left.
+- **Breaking.** `onConfirm` may answer `{ error }`, at once or through its promise, to stay open and say why. A rejected promise leaves the dialog open, and any object with a `then` method is waited for as a promise.
+- **Breaking.** `RunConfirm`, `ConfirmBody` and their props types go. A list confirm is a `callback` that stores the items and a `ConfirmDialog` the screen renders.
+- `ConfirmDialog` ignores the second click of a double click, so a fast write is not sent twice and a confirm is not pressed unread.
+- `ConfirmDialog` sends once while Enter is held down.
+- An `onConfirm` that throws keeps the confirm open and hands the error on to the app, as a rejection does.
+- `docs/lists.md` leaves every confirm value to the new page.
+
 ### Fixed
 
 - After a run that moved an item, `useListRun` moves the focus to the list from the control that opened a WPDS dialog, as it does for a `Modal`, and leaves the focus on a control the reader moved to out of a dialog.
+- A run started from a toast, such as Undo, puts the focus on the list region, not on the toast region.
+- A toast's action takes a press 8px past its words, and further past a very short label, so its press area is at least 24 by 24.
+- The second click of a double click on a toast stays on that toast, and never presses what lies under it.
 
 ## [0.31.0] - 2026-11-02
 

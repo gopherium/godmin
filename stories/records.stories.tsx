@@ -12,7 +12,7 @@ import { expect } from 'storybook/test'
 import { LoadingScreen } from '../src/loading.js'
 import { LogItem, LogList, LogTime } from '../src/log-list.js'
 import { SectionTitle } from '../src/page.js'
-import { RecordPage } from './frames.js'
+import { NO_SHOT, RecordPage, onlyAt } from './frames.js'
 import { boxOf, columnsOf, find, meets, middleAcross } from './measure.js'
 
 /** The facts of the sample invoice. */
@@ -29,9 +29,6 @@ const SHIFT = 160
 
 /** The window a story opens at, for its play and its shot. */
 const DESKTOP = { viewport: { value: 'desktop', isRotated: false } }
-
-/** The modes of a story that takes no shot. */
-const NO_SHOT = { desktop: { disabled: true } }
 
 /** The facts the sample invoice shows. */
 const FACTS: InvoiceFacts = { issued: '12 March 2026', owner: 'Sales desk' }
@@ -90,14 +87,6 @@ function Invoice({ lines, title }: { lines: number; title?: string }) {
 			<Lines lines={lines} />
 		</RecordPage>
 	)
-}
-
-/** Runs a story and its only shot at one viewport, in place of the default desktop shot. */
-function onlyAt(viewport: 'medium' | 'phone') {
-	return {
-		globals: { viewport: { value: viewport } },
-		parameters: { argos: { modes: { desktop: { disabled: true }, [viewport]: { viewport } } } },
-	}
 }
 
 /** Checks nothing runs past the split sideways. */

@@ -135,20 +135,20 @@ setViewport(PHONE)
 ## Giving elements a layout box
 
 jsdom lays nothing out, so no element has a size or a place on the
-screen. The WordPress modal looks for the first element it can focus
-among those on screen, finds none, and leaves the focus where it was.
-A test that checks the dialog focused Cancel, or that a form dialog
-put the cursor in its first field, then fails, though a browser
-moves the focus there. `stubLayout` gives every element one small
-box, as a browser does for an element on screen:
+screen. The WordPress modal of a form dialog looks for the first
+element it can focus among those on screen, finds none, and leaves
+the focus where it was. A test that checks a form dialog put the
+cursor in its first field then fails, though a browser moves the
+focus there. `stubLayout` gives every element one small box, as a
+browser does for an element on screen:
 
 ```ts
 import { stubLayout } from '@gopherium/godmin/testing'
 
-test('focuses Cancel when the dialog opens', async () => {
+test('puts the cursor in the name field when the dialog opens', async () => {
 	stubLayout()
-	await user.click(screen.getByRole('button', { name: 'Move to trash' }))
-	await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' })))
+	await user.click(screen.getByRole('button', { name: 'Add Project' }))
+	await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Name' })))
 })
 ```
 
