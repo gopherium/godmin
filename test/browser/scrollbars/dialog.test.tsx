@@ -3,7 +3,7 @@
 import { render, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
 
-import { ConfirmDialog } from '../../../src/dialogs.js'
+import { ConfirmDialog } from '../../../src/index.js'
 
 /** How tall the page grows, well past the window, so the page scrolls. */
 const TALL = '3000px'

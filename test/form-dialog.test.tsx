@@ -8,8 +8,8 @@ import { useState } from 'react'
 import { beforeEach, expect, onTestFinished, test, vi } from 'vitest'
 
 import { POPUP_CLASS } from '../src/dialog-open.js'
-import { FormDialog } from '../src/dialogs'
-import type { DialogAnswer, FormDialogProps } from '../src/dialogs'
+import { FormDialog } from '../src/index'
+import type { DialogAnswer, FormDialogProps } from '../src/index'
 import { buttonClasses, installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 vi.mock('@wordpress/a11y', async (importOriginal) => {

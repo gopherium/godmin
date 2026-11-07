@@ -9,7 +9,7 @@ import type { Field, View } from '@wordpress/dataviews'
 import { useState } from 'react'
 import { expect, waitFor } from 'storybook/test'
 
-import { FormDialog } from '../src/dialogs.js'
+import { FormDialog } from '../src/index.js'
 import { LoadingScreen } from '../src/loading.js'
 import { Page } from '../src/page.js'
 import { Admin, ListPage, NO_SHOT } from './frames.js'

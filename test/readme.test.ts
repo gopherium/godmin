@@ -70,8 +70,6 @@ test('the README says godmin translates its own words in the default domain thro
 	expect(section).toContain('required peer')
 })
 
-test('the README tells an app of the dialogs entry to load the components stylesheet', () => {
-	const row = readme.split('\n').find((line) => line.startsWith('| `@gopherium/godmin/dialogs` |'))
-
-	expect(row).toContain('@wordpress/components/build-style/style.css')
+test.each(tables)('%s keeps no row for a dialogs entry, since the main entry hands the dialogs out', (_, page) => {
+	expect(exportRow(page, '@gopherium/godmin/dialogs')).toBe('')
 })

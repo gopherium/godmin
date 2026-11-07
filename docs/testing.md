@@ -135,9 +135,10 @@ setViewport(PHONE)
 ## Giving elements a layout box
 
 jsdom lays nothing out, so no element has a size or a place on the
-screen. The WordPress components modal, such as the one DataViews
-opens for a row action, looks for the first element it can focus
-among those on screen, finds none, and leaves the focus where it was.
+screen. The `Modal` of `@wordpress/components`, such as one your app
+draws itself or one DataViews opens for an action with a
+`RenderModal`, looks for the first element it can focus among those
+on screen, finds none, and leaves the focus where it was.
 A test that checks such a modal put the cursor in its first field
 then fails, though a browser moves the focus there. godmin's own
 dialogs need no box for that. `stubLayout` gives every element one
@@ -146,10 +147,10 @@ small box, as a browser does for an element on screen:
 ```ts
 import { stubLayout } from '@gopherium/godmin/testing'
 
-test('puts the cursor in the title field when the row form opens', async () => {
+test('puts the cursor in the note field when the export modal opens', async () => {
 	stubLayout()
-	await user.click(screen.getByRole('button', { name: 'Duplicate' }))
-	await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Title' })))
+	await user.click(screen.getByRole('button', { name: 'Export' }))
+	await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Note' })))
 })
 ```
 

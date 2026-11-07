@@ -5,8 +5,8 @@ import { InputControl } from '@wordpress/ui'
 import type { ComponentProps } from 'react'
 import { expect, waitFor } from 'storybook/test'
 
-import { ConfirmDialog, FormDialog } from '../src/dialogs.js'
-import type { DialogAnswer, FormDialogProps } from '../src/dialogs.js'
+import { ConfirmDialog, FormDialog, RenameDialog } from '../src/index.js'
+import type { DialogAnswer, FormDialogProps } from '../src/index.js'
 import { ListPage, NO_SHOT, onlyAt } from './frames.js'
 import { OVERLAY_CARD, boxOf, centredIn, find, finishMotion, meets } from './measure.js'
 
@@ -259,5 +259,30 @@ export const TallForm: Story = {
 		await expect(inCard('header').getBoundingClientRect().top, 'the header stays in the card').toBeGreaterThanOrEqual(
 			card.top,
 		)
+	},
+}
+
+export const Rename: Story = {
+	parameters: { argos: { modes: NO_SHOT } },
+	render: () => (
+		<>
+			<ListPage>{null}</ListPage>
+			<RenameDialog
+				title="Rename"
+				name="Maria Perez"
+				fieldLabel="Name"
+				submitLabel="Save"
+				cancelLabel="Cancel"
+				onSubmit={stay}
+				onClose={stay}
+			/>
+		</>
+	),
+	play: async ({ userEvent }) => {
+		await formSettled(CARD)
+		await expect(firstField()).toHaveValue('Maria Perez')
+		await userEvent.clear(firstField())
+		await expect(firstField()).toBeRequired()
+		await expect(button('Save')).not.toHaveAttribute('aria-disabled', 'true')
 	},
 }

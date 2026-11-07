@@ -3,10 +3,8 @@
 import { act, cleanup, fireEvent, screen } from '@testing-library/react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
-import { ConfirmDialog } from '../src/dialogs'
-import type { DialogAnswer } from '../src/dialogs'
-import { Page, Toaster, useBulkRun, useDialogRun, useListRun } from '../src/index'
-import type { BulkFailure, BulkRun, BulkWords, DialogRun, ListRun } from '../src/index'
+import { ConfirmDialog, Page, Toaster, useBulkRun, useDialogRun, useListRun } from '../src/index'
+import type { BulkFailure, BulkRun, BulkWords, DialogAnswer, DialogRun, ListRun } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()

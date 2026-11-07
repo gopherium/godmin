@@ -4,8 +4,7 @@ import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { useState } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
-import { ConfirmDialog } from '../src/dialogs'
-import { focusInDialog, Page, Toaster, useListRun, useToaster } from '../src/index'
+import { ConfirmDialog, focusInDialog, Page, Toaster, useListRun, useToaster } from '../src/index'
 import type { ListRun, ListRunState, RunSettled } from '../src/index'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 

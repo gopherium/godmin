@@ -635,23 +635,8 @@ test('keeps a button of a stacked form at its own width at the start of the colu
 	expect(ruleOf('.godmin-form > button')).toMatch(/align-self:\s*flex-start/)
 })
 
-test('lays a modal body out as a column with the 20px of a WordPress row edit or confirm, which no token holds', () => {
-	const body = ruleOf('.godmin-modal-body')
-
-	expect(body).toMatch(/display:\s*flex/)
-	expect(body).toMatch(/flex-direction:\s*column/)
-	expect(body).toMatch(/gap:\s*calc\(var\(--wpds-dimension-gap-lg\) \+ var\(--wpds-dimension-gap-xs\)\);/)
-})
-
 test('breaks a long word in a dialog, so a token with no space stays in its card', () => {
 	expect(ruleOf(`.${POPUP_CLASS}`)).toMatch(/overflow-wrap:\s*anywhere;/)
-})
-
-test('spaces a copy modal body by the medium gap and a create one by the large gap, as WordPress does', () => {
-	expect(ruleOf('.godmin-modal-body--copy')).toMatch(/gap:\s*var\(--wpds-dimension-gap-md\);/)
-	expect(ruleOf('.godmin-modal-body--create')).toMatch(/gap:\s*var\(--wpds-dimension-gap-lg\);/)
-	expect(base.indexOf('.godmin-modal-body--copy {')).toBeGreaterThan(base.indexOf('.godmin-modal-body {'))
-	expect(base.indexOf('.godmin-modal-body--create {')).toBeGreaterThan(base.indexOf('.godmin-modal-body {'))
 })
 
 test('sets the inputs and the controls of a repeated row on one line that wraps on a narrow list', () => {

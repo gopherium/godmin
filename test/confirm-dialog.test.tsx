@@ -7,8 +7,8 @@ import type { ComponentProps } from 'react'
 import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { POPUP_CLASS } from '../src/dialog-open.js'
-import { ConfirmDialog } from '../src/dialogs'
-import type { DialogAnswer } from '../src/dialogs'
+import { ConfirmDialog } from '../src/index'
+import type { DialogAnswer } from '../src/index'
 import { installTestEnvironment, renderAdmin, stubLayout } from '../src/testing.js'
 
 installTestEnvironment()

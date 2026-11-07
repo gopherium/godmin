@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -8,8 +8,7 @@ import { dirname, join, resolve } from 'node:path'
 import { expect, expectTypeOf, test } from 'vitest'
 
 import manifest from '../package.json'
-import * as dialogs from '../src/dialogs.js'
-import type * as MainEntry from '../src/index'
+import * as MainEntry from '../src/index'
 import type * as RouterEntry from '../src/router'
 
 /** The source folder the entries are built from. */
@@ -136,8 +135,11 @@ test('the i18n package is a required peer, which every app already has through t
 	expect(meta[i18nPackage]).toBeUndefined()
 })
 
-test('the main entry reaches no components package, so importing it never loads the WordPress components', () => {
-	expect(packagesReachedFrom(join(source, 'index.ts')).has(componentsPackage)).toBe(false)
+test('no source file reaches the components package, so no entry ever loads the WordPress components', () => {
+	const files = readdirSync(source, { recursive: true, encoding: 'utf8' }).filter((name) => /\.tsx?$/.test(name))
+
+	expect(files.length, 'the walk finds the source files').toBeGreaterThan(1)
+	expect(files.filter((name) => importsOf(join(source, name)).map(packageOf).includes(componentsPackage))).toEqual([])
 })
 
 test('the main entry reaches no DataViews package, so importing it never loads DataViews', () => {
@@ -150,25 +152,18 @@ test('the DataViews package is an optional peer, its filter rules copied by the 
 	expect(meta[dataviewsPackage]?.optional).toBe(true)
 })
 
-test('the dialogs entry hands out the confirm dialog and the form dialog, and reaches no components package', () => {
-	const entry = dialogs as Record<string, unknown>
+test('the main entry hands out the confirm, the form and the rename dialogs', () => {
+	const main = MainEntry as Record<string, unknown>
 
-	expect(typeof entry.ConfirmDialog).toBe('function')
-	expect(typeof entry.FormDialog).toBe('function')
-	expect(packagesReachedFrom(join(source, 'dialogs.ts')).has(componentsPackage)).toBe(false)
+	expect(['ConfirmDialog', 'FormDialog', 'RenameDialog'].map((name) => typeof main[name])).toEqual([
+		'function',
+		'function',
+		'function',
+	])
 })
 
-test('the main entry hands out the form body, which needs no components package', async () => {
-	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
-
-	expect(typeof main.FormBody).toBe('function')
-	expect(packagesReachedFrom(join(source, 'form.tsx')).has(componentsPackage)).toBe(false)
-})
-
-test('the package publishes the dialogs entry beside the main one', () => {
-	const exported = manifest.exports as Record<string, unknown>
-
-	expect(exported['./dialogs']).toEqual({ types: './dist/dialogs.d.ts', default: './dist/dialogs.js' })
+test('the package publishes no dialogs entry, since the main one hands the dialogs out', () => {
+	expect(Object.keys(manifest.exports)).not.toContain('./dialogs')
 })
 
 test('the router entry hands out the sidebar rows, their list and the access check', async () => {
@@ -204,7 +199,6 @@ test('the main entry hands out the tap handler of a phone list, which reaches no
 })
 
 test.each([
-	{ file: 'close-while-open.ts', hooks: ['useCloseWhileOpen'] },
 	{ file: 'list-run.ts', hooks: ['useListRun', 'focusInDialog'] },
 	{ file: 'focus-back.ts', hooks: ['useFocusBack', 'focusedTrigger'] },
 ])('the main entry hands out the dialog and focus hooks of $file, which reach React alone', async ({ file, hooks }) => {
@@ -228,8 +222,10 @@ test('the router peer starts at a release whose route matching runs no route con
 	expect(manifest.peerDependencies['@tanstack/react-router']).toBe('^1.170.44')
 })
 
-test('the components package is an optional peer, needed only by the dialogs entry', () => {
+test('the components package is no peer, since no source file reaches it', () => {
+	const peers = manifest.peerDependencies as Record<string, string | undefined>
 	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
 
-	expect(meta[componentsPackage]?.optional).toBe(true)
+	expect(peers[componentsPackage]).toBeUndefined()
+	expect(meta[componentsPackage]).toBeUndefined()
 })
