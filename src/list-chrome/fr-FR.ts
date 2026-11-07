@@ -11,6 +11,7 @@ const catalog: ListChromeCatalog = {
 	August: ['août'],
 	'August abbreviation\u0004Aug': ['Août'],
 	Back: ['Retour'],
+	Close: ['Fermer'],
 	'Close navigation panel': ['Fermer le panneau de navigation'],
 	December: ['décembre'],
 	'December abbreviation\u0004Dec': ['Déc'],
