@@ -4,7 +4,7 @@ import { Link, useRouter } from '@tanstack/react-router'
 import type { AnyRouter, LinkComponentProps, RegisteredRouter } from '@tanstack/react-router'
 import { Icon } from '@wordpress/icons'
 import { useContext } from 'react'
-import type { ReactElement, ReactNode } from 'react'
+import type { ComponentType, ReactElement, ReactNode } from 'react'
 
 import { canOpenRoutes } from './menu-item.js'
 import { IconPlaceholderContext, ScreenContext } from './navigation-state.js'
@@ -49,6 +49,8 @@ interface RowProps {
 	id?: string
 	/** What ends the row, such as a suffix or a chevron. */
 	end?: ReactNode
+	/** The router link the row draws, TanStack's Link when absent. */
+	linkComponent?: ComponentType<LinkComponentProps>
 	children: ReactNode
 }
 
@@ -79,14 +81,14 @@ export function RowSuffix({ children }: { children: ReactNode }) {
  * @param props - The link props, where the row goes, the icon, the classes, the id, the end of the row and its label.
  * @returns The list item element, or null.
  */
-export function Row({ link, routes, icon, className, id, end, children }: RowProps) {
+export function Row({ link, routes, icon, className, id, end, linkComponent: RowLink = Link, children }: RowProps) {
 	const { can } = useContext(ScreenContext)
 	if (!canOpenRoutes(routes.capabilities, can)) {
 		return null
 	}
 	return (
 		<li>
-			<Link
+			<RowLink
 				{...link}
 				id={id ?? link.id}
 				className={link.className === undefined ? className : `${className} ${link.className}`}
@@ -94,7 +96,7 @@ export function Row({ link, routes, icon, className, id, end, children }: RowPro
 				<RowIcon icon={icon} />
 				<div className="godmin-navigation-item__label">{children}</div>
 				{end}
-			</Link>
+			</RowLink>
 		</li>
 	)
 }
