@@ -52,7 +52,7 @@ those two lines do for you.
 | `@gopherium/godmin` | `AdminRoot`, `Frame`, `Page`, `PageTitle`, `PageTabs`, `PageTab`, `PageBreadcrumbs`, `PageBreadcrumb`, `SectionTitle`, `InitialsAvatar`, `NavigationScreen`, `MenuCount`, `ErrorNotice`, `LoadMore`, `LogList`, `LogItem`, `LogTime`, `LoadingScreen`, `Toaster`, `useToaster`, `RepeatRows`, `RowControls`, `useRowKeys`, `keyFromLabel`, `listChromeCatalogFor`, `LIST_CHROME_DOMAIN`, `ListEmpty`, `ListNoResults`, `ConfirmDialog`, `FormDialog`, `RenameDialog`, `FileButton`, `useServerPaging`, `pageWindow`, `paginationOf`, `runEach`, `bulkNotes`, `useListRun`, `useBulkRun`, `useDialogRun`, `focusInDialog`, `useFocusBack`, `focusedTrigger`, `openOnTap`, `useUnsavedText`, `markLatest`, `viewNarrows`, `offeredView`, `offeredSize`, `sizedView`, `useMediaQuery`, `useTokenDocument`, the breakpoints `HUGE_BREAKPOINT`, `SIDEBAR_BREAKPOINT`, `EDGE_BREAKPOINT`, `DENSE_BREAKPOINT`, `SHEET_BREAKPOINT`, `TITLE_BREAKPOINT` and `SMALL_VIEWPORT`, `SUPPORTED_WPDS` |
 | `@gopherium/godmin/base.css` | Cascade layer order, design tokens, host rules, frame and screen styles |
 | `@gopherium/godmin/dates` | `startListDates`, `listDate`, the only entry that loads `@wordpress/date` |
-| `@gopherium/godmin/router` | `Navigation`, `NavigationList`, `NavigationItem`, `DrilldownItem`, `useCanAccess` and the `MenuItem` type with its optional `count`, `useListView`, `listSearch`, `openOnTap`, `useCanvas`, `useFrameLocation`, `routerDefaults`, `UnsavedChangesDialog`, the `canvas`, `Sidebar` and `capability` route static data |
+| `@gopherium/godmin/router` | `Navigation`, `NavigationList`, `NavigationItem`, `DrilldownItem`, `useCanAccess` and the `MenuItem` type with its optional `count`, `useListView`, `listSearch`, `openOnTap`, `useCanvas`, `useFrameLocation`, `useShownPath`, `routerDefaults` and its not found screen, `UnsavedChangesDialog`, the `canvas`, `Sidebar` and `capability` route static data |
 | `@gopherium/godmin/testing` | `installTestEnvironment`, `renderAdmin`, `setViewport` and its `TestViewport` type, `getAnnouncement`, `clearAnnouncements`, `assertElementPatched`, `WPDS_IGNORE_SELECTOR`, `textClasses`, `badgeClasses`, `buttonClasses`, `stubLayout` |
 | `@gopherium/godmin/vite` | `godminDedupe`, `godminSingleCopy`, `godminStylesheetFirst`, `duplicateCopies`, `hoistStylesheet` |
 | `@gopherium/godmin/stylelint` | The design system stylelint rules |
@@ -62,7 +62,10 @@ those two lines do for you.
 GodMin speaks a few words of its own: Back on a sidebar screen, the name of
 the sidebar column and its phone drawer, the phone menu button and the
 drawer's close button, which only a screen reader meets, and "No results
-found" with the line under it, which `ListNoResults` shows. It
+found" with the line under it, which `ListNoResults` shows. It also gives
+the words of the tab title, the screen title then the app name as
+`%1$s ‹ %2$s`, and of the not found screen `routerDefaults` gives, "Route
+not found" with the line "The page you're looking for does not exist". It
 translates them in the WordPress `default` text domain, as `@wordpress/ui`
 translates its own, so `@wordpress/i18n` is a required peer. Every app
 already has it, since

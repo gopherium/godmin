@@ -8,8 +8,8 @@ import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
 import { POPUP_CLASS } from '../src/dialog-open.js'
-import { atRuleBodies, blockOf, ruleOf, unlayered } from './css-rules.js'
-import { base, ruleValue } from './styles.js'
+import { atRuleBodies, blockOf, blocksOf, ruleOf, unlayered } from './css-rules.js'
+import { DRAWER_BACKDROP, base, ruleValue } from './styles.js'
 
 const dataviewsManifest = createRequire(import.meta.url).resolve('@wordpress/dataviews/package.json')
 
@@ -85,6 +85,12 @@ test('takes the canvas to the screen edges below 782px, with no margin, corners 
 	expect(canvas).toMatch(/border-radius:\s*0/)
 	expect(canvas).toMatch(/box-shadow:\s*none/)
 	expect(canvas, 'the gutter stays 24px down to 640px').not.toMatch(/--godmin-canvas-gutter/)
+})
+
+test('shows a new sidebar screen at once below 782px, with the 0s slide reduced motion gives it', () => {
+	const wrapper = ruleOf('.godmin-navigation__screen-wrapper', blockOf(`@media (max-width: ${EDGE_BREAKPOINT - 1}px)`))
+
+	expect(wrapper.replace(/\s+/g, ' ').trim()).toBe('animation-duration: 0s;')
 })
 
 test('narrows the canvas gutter at the dense breakpoint and leaves the edges to the wider block', () => {
@@ -302,7 +308,7 @@ test('sets the shade and the ring behind the label, faded in unless the reader a
 	expect(parts).toMatch(/border-radius:\s*var\(--wpds-border-radius-sm\)/)
 	expect(parts).toMatch(/opacity:\s*0/)
 	expect(parts).toMatch(/pointer-events:\s*none/)
-	expect(blockOf('@media not (prefers-reduced-motion)')).toMatch(/transition:\s*opacity 0\.1s linear/)
+	expect(blocksOf('@media not (prefers-reduced-motion)').join('\n')).toMatch(/transition:\s*opacity 0\.1s linear/)
 })
 
 test('leaves the arrow on the current page tab, as WordPress does on a selected tab', () => {
@@ -1203,11 +1209,68 @@ test('raises the drawer above the toast region', () => {
 	expect(Number(drawer?.[1])).toBeGreaterThan(Math.max(...toasts))
 })
 
+/** Returns the text of the one block of rules that moves the drawer while the reader allows motion. */
+function drawerMotion(): string {
+	const found = blocksOf('@media not (prefers-reduced-motion)').filter((body) => body.includes('godmin-layout__drawer'))
+
+	expect(found, 'one motion block moves the drawer').toHaveLength(1)
+
+	return found[0]
+}
+
+/** The backdrop of the drawer while a finger drags the drawer. */
+const SWIPED_BACKDROP = "[role='presentation'][data-swiping]:has(+ * > .godmin-layout__drawer)"
+
+test('moves the drawer and its backdrop in and out over the md motion time on ease-out, as the new admin does', () => {
+	const timing = 'transition-duration: var(--wpds-motion-duration-md); transition-timing-function: ease-out;'
+
+	for (const part of ['.godmin-layout__drawer', DRAWER_BACKDROP]) {
+		expect(ruleOf(part, drawerMotion()).replace(/\s+/g, ' ').trim(), part).toBe(timing)
+	}
+})
+
+test('ends a swipe of the drawer in its swipe strength times the md motion time', () => {
+	const ending = ruleOf('.godmin-layout__drawer[data-ending-style]', drawerMotion())
+
+	expect(ending.replace(/\s+/g, ' ').trim()).toBe(
+		'transition-duration: calc(var(--drawer-swipe-strength) * var(--wpds-motion-duration-md));',
+	)
+})
+
+test('lets the backdrop follow a finger that drags the drawer, and leaves the drawer itself to Base UI', () => {
+	expect(ruleOf(SWIPED_BACKDROP, drawerMotion()).replace(/\s+/g, ' ').trim()).toBe('transition-duration: 0ms;')
+	expect(base).not.toContain('.godmin-layout__drawer[data-swiping]')
+})
+
+test('moves the drawer and its backdrop only while the reader allows motion', () => {
+	const rest = base.replace(drawerMotion(), '')
+
+	for (const part of ['.godmin-layout__drawer', DRAWER_BACKDROP, '.godmin-layout__drawer:dir(rtl)']) {
+		expect(ruleOf(part, rest), part).not.toMatch(/transition/)
+	}
+})
+
+test('turns the drawer shadow onto its inner edge in a right to left page', () => {
+	expect(ruleOf('.godmin-layout__drawer')).toMatch(/box-shadow:\s*2px 0 8px rgba\(0, 0, 0, 0\.2\);/)
+	expect(ruleOf('.godmin-layout__drawer:dir(rtl)').replace(/\s+/g, ' ').trim()).toBe(
+		'box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);',
+	)
+	expect(unlayered('.godmin-layout__drawer:dir(rtl)')).toBe(false)
+})
+
 test('paints the chrome the frame is themed with', () => {
 	const layout = base.slice(base.indexOf('.godmin-layout {'))
 
 	expect(layout).toMatch(/background:\s*var\(--wpds-color-background-surface-neutral-weak\)/)
 	expect(layout).toMatch(/color:\s*var\(--wpds-color-foreground-content-neutral\)/)
+})
+
+test('gives the frame the height the browser leaves for the page, so on a phone it ends where the screen ends', () => {
+	expect(ruleOf('.godmin-layout')).toMatch(/(?:^|\s)height:\s*100dvh;/)
+})
+
+test('writes every window height in dvh alone, with no vh line for an older browser', () => {
+	expect(base).not.toMatch(/\b\d+vh\b/)
 })
 
 test('hides a loading screen for 200ms, then fades it in over 500ms on ease', () => {
@@ -1238,7 +1301,7 @@ test('centres a loading screen in the space its parent leaves', () => {
 })
 
 test('gives a loading screen outside the frame the height of the window', () => {
-	expect(ruleOf('.godmin-loading-screen')).toMatch(/(?:^|\s)min-block-size:\s*100vh;/)
+	expect(ruleOf('.godmin-loading-screen')).toMatch(/(?:^|\s)min-block-size:\s*100dvh;/)
 	expect(ruleOf('.godmin-layout .godmin-loading-screen')).toMatch(/(?:^|\s)min-block-size:\s*auto;/)
 })
 

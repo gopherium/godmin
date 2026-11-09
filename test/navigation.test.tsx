@@ -7,14 +7,17 @@ import {
 	createRootRoute,
 	createRouter,
 } from '@tanstack/react-router'
-import { act, screen, within } from '@testing-library/react'
+import { act, fireEvent, screen, within } from '@testing-library/react'
 import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
 import { lazy } from 'react'
 import type { ComponentType } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 
+import { DrilldownItem } from '../src/drilldown-item.js'
 import spanish from '../src/list-chrome/es-ES.js'
 import { Navigation } from '../src/navigation.js'
+import { NavigationList } from '../src/navigation-list.js'
+import { NavigationScreen } from '../src/navigation-screen.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 import { clickLink, laterModule, renderSidebarApp, screenWrapper } from './sidebar-app.js'
 
@@ -66,6 +69,14 @@ test('keeps the same screen when only the param of its route changes, with no sl
 	expect(wrapper.className).toBe(WRAPPER)
 })
 
+test('marks the row of the page on screen current inside the sub menu that page opens', async () => {
+	await renderSidebarApp('/things/two')
+
+	expect(screenTitle()).toBe('Thing')
+	expect(screen.getByRole('link', { name: 'Thing two' }).getAttribute('aria-current')).toBe('page')
+	expect(screen.getByRole('link', { name: 'A chat' }).hasAttribute('aria-current')).toBe(false)
+})
+
 test('goes back to the root screen when the address leaves every sub menu', async () => {
 	const router = await renderSidebarApp('/chats')
 
@@ -91,6 +102,30 @@ test('slides the root screen back in from the start after Back', async () => {
 
 	expect(screenTitle()).toBe('Acme')
 	expect(screenWrapper().className).toBe(`${WRAPPER} ${WRAPPER}--backward`)
+})
+
+/** Ends an animation on an element. */
+function endAnimation(element: Element): void {
+	fireEvent(element, new Event('webkitAnimationEnd', { bubbles: true }))
+}
+
+test('drops the direction class once the slide of the screen itself ends', async () => {
+	await renderSidebarApp('/posts')
+	await clickLink('Chats')
+
+	endAnimation(screenWrapper())
+
+	expect(screenTitle()).toBe('Chats')
+	expect(screenWrapper().className).toBe(WRAPPER)
+})
+
+test('keeps the direction class when an animation inside the screen ends', async () => {
+	await renderSidebarApp('/posts')
+	await clickLink('Chats')
+
+	endAnimation(screen.getByRole('link', { name: 'Back' }))
+
+	expect(screenWrapper().className).toBe(`${WRAPPER} ${WRAPPER}--forward`)
 })
 
 test('plays no slide on first load, after a navigation row, a link elsewhere or the browser Back', async () => {
@@ -173,16 +208,32 @@ test('moves no focus on a screen reached by a link elsewhere', async () => {
 	expect(document.activeElement).toBe(document.body)
 })
 
-test('leaves no direction behind after a drilldown row that opens no other screen', async () => {
-	const router = await renderSidebarApp('/things/one')
+/** Draws the sub menu of one thing with a drilldown row to another thing, which keeps the same screen. */
+function thingDrilldownScreen() {
+	return (
+		<NavigationScreen title="Thing">
+			<NavigationList>
+				<DrilldownItem to="/things/$thingId" params={{ thingId: 'two' }}>
+					Thing two
+				</DrilldownItem>
+			</NavigationList>
+		</NavigationScreen>
+	)
+}
+
+test('forgets the move of a drilldown row that keeps the screen, past a sub menu still loading', async () => {
+	const later = lazy(() => new Promise<{ default: ComponentType }>(() => undefined))
+	const router = await renderSidebarApp('/things/one', { thing: thingDrilldownScreen, later })
 	await clickLink('Thing two')
 	expect(router.state.location.pathname).toBe('/things/two')
+	await act(() => router.navigate({ to: '/later' }))
+	expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
 
-	await act(() => router.navigate({ to: '/chats' }))
+	await act(() => router.navigate({ to: '/things/$thingId', params: { thingId: 'two' } }))
 
-	expect(screenTitle()).toBe('Chats')
+	expect(screenTitle()).toBe('Thing')
 	expect(screenWrapper().className).toBe(WRAPPER)
-	expect(document.activeElement).not.toBe(screen.getByRole('link', { name: 'Back' }))
+	expect(document.activeElement).toBe(document.body)
 })
 
 /**

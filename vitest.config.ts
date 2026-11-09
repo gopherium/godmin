@@ -23,6 +23,27 @@ const doubleClickAt: BrowserCommand<[x: number, y: number, gap: number]> = async
 	await page.mouse.up({ clickCount: 2 })
 }
 
+/** Drags the mouse from one point of the test page to another in even steps a set gap apart, as a person swipes. */
+const drag: BrowserCommand<[x: number, y: number, toX: number, toY: number, steps: number, gap: number]> = async (
+	{ page, iframe },
+	x,
+	y,
+	toX,
+	toY,
+	steps,
+	gap,
+) => {
+	const frame = await iframe.owner().boundingBox()
+	const [left, top] = [frame?.x ?? 0, frame?.y ?? 0]
+	await page.mouse.move(left + x, top + y)
+	await page.mouse.down()
+	for (let step = 1; step <= steps; step += 1) {
+		await new Promise((done) => setTimeout(done, gap))
+		await page.mouse.move(left + x + ((toX - x) * step) / steps, top + y + ((toY - y) * step) / steps)
+	}
+	await page.mouse.up()
+}
+
 /** Holds a key down as a person does, the browser reading each press after the first as a repeat. */
 const holdKey: BrowserCommand<[key: string, repeats: number, gap: number]> = async ({ page }, key, repeats, gap) => {
 	for (let press = 0; press <= repeats; press += 1) {
@@ -89,7 +110,7 @@ export default defineConfig({
 					browser: {
 						...chromium(),
 						viewport: { width: 1280, height: 800 },
-						commands: { reduceMotion, doubleClickAt, holdKey },
+						commands: { reduceMotion, doubleClickAt, drag, holdKey },
 					},
 				},
 			},

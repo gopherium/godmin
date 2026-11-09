@@ -60,6 +60,16 @@ export function blockOf(prelude: string): string {
 	return bodyFrom(start + prelude.length + 2)
 }
 
+/** Returns the body of every block whose opening brace follows the exact prelude, in source order. */
+export function blocksOf(prelude: string): string[] {
+	const opener = `${prelude} {`
+	const bodies: string[] = []
+	for (let at = base.indexOf(opener); at > -1; at = base.indexOf(opener, at + 1)) {
+		bodies.push(bodyFrom(at + opener.length))
+	}
+	return bodies
+}
+
 /**
  * Returns the selectors of the reduced motion guard whose rule sets a declaration.
  * @param declaration - The pattern the declaration matches, such as `animation-delay:`.

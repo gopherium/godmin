@@ -1,8 +1,9 @@
 import { useRouterState } from '@tanstack/react-router'
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 
 import type { CanvasMode } from './frame.js'
 import { locationAddress } from './path-matching.js'
+import { RouteNotFound } from './route-not-found.js'
 
 export { DrilldownItem } from './drilldown-item.js'
 export type { DrilldownItemProps } from './drilldown-item.js'
@@ -59,9 +60,17 @@ export function useFrameLocation(): string {
 }
 
 /**
- * Returns the options a router spreads into createRouter, as WordPress's new admin sets them.
- * @returns Preload on intent, and no pending screen.
+ * Returns the path the router has finished showing, for a frame to speak the new screen's title on.
+ * @returns The pathname of the location the router has drawn, undefined until it has drawn one.
  */
-export function routerDefaults(): { defaultPreload: 'intent' } {
-	return { defaultPreload: 'intent' }
+export function useShownPath(): string | undefined {
+	return useRouterState({ select: (state) => state.resolvedLocation?.pathname })
+}
+
+/**
+ * Returns the options a router spreads into createRouter, as WordPress's new admin sets them.
+ * @returns Preload on intent and the Route not found screen, and no pending screen.
+ */
+export function routerDefaults(): { defaultPreload: 'intent'; defaultNotFoundComponent: () => ReactNode } {
+	return { defaultPreload: 'intent', defaultNotFoundComponent: RouteNotFound }
 }

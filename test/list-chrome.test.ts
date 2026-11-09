@@ -212,6 +212,20 @@ const WORDPRESS_SIDEBAR_WORDS: Record<string, Record<string, string>> = {
 	},
 }
 
+/** The tab title pattern and the not found screen's words as the WordPress Spanish and French catalogues give them. */
+const WORDPRESS_FRAME_WORDS: Record<string, Record<string, string>> = {
+	'es-ES': {
+		'%1$s ‹ %2$s': '%1$s ‹ %2$s',
+		'Route not found': 'Ruta no encontrada',
+		"The page you're looking for does not exist": 'La página que estás buscando no existe',
+	},
+	'fr-FR': {
+		'%1$s ‹ %2$s': '%1$s ‹ %2$s',
+		'Route not found': 'Route introuvable',
+		"The page you're looking for does not exist": "La page que vous cherchez n'existe pas",
+	},
+}
+
 /** The messages each godmin source file asks gettext for, by its path inside the source folder. */
 const SOURCE_MESSAGES = new Map(
 	readdirSync(resolve('src'), { recursive: true, encoding: 'utf8' })
@@ -226,6 +240,7 @@ const NO_RESULTS_MESSAGES = SOURCE_MESSAGES.get('list-empty.tsx') ?? []
 const SIDEBAR_MESSAGES = ['frame.tsx', 'navigation.tsx', 'navigation-screen.tsx'].flatMap(
 	(path) => SOURCE_MESSAGES.get(path) ?? [],
 )
+const FRAME_MESSAGES = ['screen-title.ts', 'route-not-found.tsx'].flatMap((path) => SOURCE_MESSAGES.get(path) ?? [])
 const OWN_MESSAGES = [...SOURCE_MESSAGES.values()].flat()
 
 /**
@@ -531,6 +546,20 @@ test('reads Back, Navigation and the open and close panel words from the sidebar
 test('words the sidebar parts as the WordPress Spanish and French catalogues do', () => {
 	for (const catalogue of CATALOGUES) {
 		for (const [key, words] of Object.entries(WORDPRESS_SIDEBAR_WORDS[catalogue.locale])) {
+			expect(catalogue.module[key], `${catalogue.locale} ${key}`).toEqual([words])
+		}
+	}
+})
+
+test('reads the tab title pattern from the screen titles and the two lines of the not found screen', () => {
+	expect(new Set(FRAME_MESSAGES.map(keyOf))).toEqual(
+		new Set(['%1$s ‹ %2$s', 'Route not found', "The page you're looking for does not exist"]),
+	)
+})
+
+test('words the tab title and the not found screen as the WordPress Spanish and French catalogues do', () => {
+	for (const catalogue of CATALOGUES) {
+		for (const [key, words] of Object.entries(WORDPRESS_FRAME_WORDS[catalogue.locale])) {
 			expect(catalogue.module[key], `${catalogue.locale} ${key}`).toEqual([words])
 		}
 	}

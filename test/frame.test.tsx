@@ -20,6 +20,7 @@ installTestEnvironment()
 
 afterEach(() => {
 	resetLocaleData()
+	document.documentElement.removeAttribute('dir')
 })
 
 /**
@@ -660,6 +661,55 @@ test('paints the backdrop of its own drawer alone, not the layer Base UI lays un
 
 	expect([...document.querySelectorAll(DRAWER_BACKDROP)]).toEqual([backdrop()])
 	expect(document.querySelector('[data-base-ui-inert]')?.matches(DRAWER_BACKDROP)).toBe(false)
+})
+
+/** Returns the side the open drawer opens from and swipes away to, as its swipe direction. */
+function drawerSide(): string | null {
+	return screen.getByRole('dialog').getAttribute('data-swipe-direction')
+}
+
+test('opens the drawer from the left edge of a left to right frame', async () => {
+	await openDrawerAt('/posts')
+
+	expect(drawerSide()).toBe('left')
+})
+
+test('opens the drawer from the right edge of a right to left frame, under its menu button', async () => {
+	document.documentElement.dir = 'rtl'
+
+	await openDrawerAt('/posts')
+
+	expect(drawerSide()).toBe('right')
+})
+
+test('keeps the drawer of a right to left frame on the right while it closes', async () => {
+	document.documentElement.dir = 'rtl'
+	await openDrawerAt('/posts')
+	const drawer = screen.getByRole('dialog')
+	const changes: string[] = []
+	const watch = new MutationObserver((records) => {
+		const names = records.map((record) => record.attributeName ?? '')
+		changes.push(...names.map((name) => `${name}=${drawer.getAttribute(name)}`))
+	})
+	watch.observe(drawer, { attributes: true })
+
+	await userEvent.setup().keyboard('{Escape}')
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	watch.disconnect()
+
+	expect(changes).toContain('data-closed=')
+	expect(changes.filter((change) => change.startsWith('data-swipe-direction='))).toEqual([])
+	expect(drawer.getAttribute('data-swipe-direction')).toBe('right')
+})
+
+test('reads a page turned right to left after the first render once the menu button opens the drawer', async () => {
+	setViewport({ matches: true })
+	await renderSidebarApp('/posts')
+	document.documentElement.dir = 'rtl'
+
+	fireEvent.click(screen.getByRole('button', { name: 'Open navigation' }))
+
+	expect((await screen.findByRole('dialog')).getAttribute('data-swipe-direction')).toBe('right')
 })
 
 test('collapses the sidebar region when a screen renders none', () => {

@@ -6,7 +6,10 @@ import { createRef } from 'react'
 import type { ReactNode } from 'react'
 import { afterEach, expect, test, vi } from 'vitest'
 
+import { LoadingScreen } from '../src/loading.js'
 import { ErrorNotice, LoadMore, Page, PageTitle, SectionTitle } from '../src/page.js'
+import { ScreenTitleContext, createScreenTitles } from '../src/screen-title.js'
+import type { ScreenTitles } from '../src/screen-title.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -610,4 +613,165 @@ test('error notices announce themselves to a screen reader', () => {
 	renderAdmin(<ErrorNotice>Reports could not be loaded.</ErrorNotice>)
 
 	expect(screen.getByRole('alert').textContent).toContain('Reports could not be loaded.')
+})
+
+/** A tree drawn inside the store of titles a frame holds: the store, and how to draw it again or remove it. */
+interface InFrame {
+	titles: ScreenTitles
+	rerender: (tree: ReactNode) => void
+	unmount: () => void
+}
+
+/** Renders a tree inside the store of titles a frame holds. */
+function renderInFrame(tree: ReactNode): InFrame {
+	const titles = createScreenTitles()
+	const frame = (inner: ReactNode) => <ScreenTitleContext.Provider value={titles}>{inner}</ScreenTitleContext.Provider>
+	const drawn = renderAdmin(frame(tree))
+	return { titles, rerender: (next) => drawn.rerender(frame(next)), unmount: drawn.unmount }
+}
+
+test('reports its title to the frame around it while mounted, and withdraws it once it leaves', () => {
+	const { titles, unmount } = renderInFrame(
+		<Page title="Contacts">
+			<p>rows</p>
+		</Page>,
+	)
+
+	expect(titles.deepest()).toEqual({ title: 'Contacts', depth: 1, waiting: false })
+	unmount()
+	expect(titles.deepest()).toBeUndefined()
+})
+
+test('reports to no frame when drawn outside one', () => {
+	const titles = createScreenTitles()
+	renderAdmin(
+		<>
+			<ScreenTitleContext.Provider value={titles}>
+				<p>Frame</p>
+			</ScreenTitleContext.Provider>
+			<Page title="Contacts">
+				<p>rows</p>
+			</Page>
+		</>,
+	)
+
+	expect(titles.deepest()).toBeUndefined()
+})
+
+test('reports a new title in place of the old one when its title changes', () => {
+	const { titles, rerender } = renderInFrame(
+		<Page title="Contact">
+			<p>details</p>
+		</Page>,
+	)
+
+	rerender(
+		<Page title="Maria Perez">
+			<p>details</p>
+		</Page>,
+	)
+
+	expect(titles.deepest()).toEqual({ title: 'Maria Perez', depth: 1, waiting: false })
+})
+
+test('lets the deepest of two nested Pages give the title', () => {
+	const { titles } = renderInFrame(
+		<Page title="Settings">
+			<Page title="General">
+				<p>fields</p>
+			</Page>
+		</Page>,
+	)
+
+	expect(titles.deepest()).toEqual({ title: 'General', depth: 2, waiting: false })
+})
+
+test('reports the text of a PageTitle drawn outside any Page, under every Page', () => {
+	const { titles } = renderInFrame(<PageTitle>Contacts</PageTitle>)
+
+	expect(titles.deepest()).toEqual({ title: 'Contacts', depth: 0, waiting: false })
+})
+
+test('reports nothing for a PageTitle whose child is not text', () => {
+	const { titles } = renderInFrame(
+		<PageTitle>
+			<span>Contacts</span>
+		</PageTitle>,
+	)
+
+	expect(titles.deepest()).toBeUndefined()
+})
+
+test('reports once for a Page, never for the PageTitle it draws or one inside it', () => {
+	const titles = createScreenTitles()
+	const report = vi.spyOn(titles, 'report')
+	renderAdmin(
+		<ScreenTitleContext.Provider value={titles}>
+			<Page title="Contacts">
+				<PageTitle level={2}>Inner</PageTitle>
+			</Page>
+		</ScreenTitleContext.Provider>,
+	)
+
+	expect(report.mock.calls).toEqual([[{ title: 'Contacts', depth: 1, waiting: false }]])
+})
+
+test('reports its title as waiting while its whole content is one LoadingScreen and it has no aside', () => {
+	const { titles } = renderInFrame(
+		<Page title="Contact">
+			<LoadingScreen label="Loading contact" />
+		</Page>,
+	)
+
+	expect(titles.deepest()).toEqual({ title: 'Contact', depth: 1, waiting: true })
+})
+
+test.each([
+	{
+		layout: 'beside other content',
+		page: (
+			<Page title="Contact">
+				<p>Notes</p>
+				<LoadingScreen label="Loading contact" />
+			</Page>
+		),
+	},
+	{
+		layout: 'beside an aside',
+		page: (
+			<Page title="Contact" aside={<p>Details</p>}>
+				<LoadingScreen label="Loading contact" />
+			</Page>
+		),
+	},
+	{
+		layout: 'inside a wrapper',
+		page: (
+			<Page title="Contact">
+				<div>
+					<LoadingScreen label="Loading contact" />
+				</div>
+			</Page>
+		),
+	},
+])('reports its title as not waiting for a LoadingScreen $layout', ({ page }) => {
+	const { titles } = renderInFrame(page)
+
+	expect(titles.deepest()).toEqual({ title: 'Contact', depth: 1, waiting: false })
+})
+
+test('reports the title no longer waiting once its LoadingScreen leaves', () => {
+	const { titles, rerender } = renderInFrame(
+		<Page title="Contact">
+			<LoadingScreen label="Loading contact" />
+		</Page>,
+	)
+
+	rerender(
+		<Page title="Maria Perez">
+			<p>184467235</p>
+		</Page>,
+	)
+
+	expect(titles.deepest()).toEqual({ title: 'Maria Perez', depth: 1, waiting: false })
 })

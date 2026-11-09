@@ -8,15 +8,24 @@ import {
 	createRootRoute,
 	createRoute,
 	createRouter,
+	lazyRouteComponent,
 } from '@tanstack/react-router'
 import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { expect, test, vi } from 'vitest'
+import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
+import { useEffect } from 'react'
+import type { ReactNode } from 'react'
+import { afterEach, expect, test, vi } from 'vitest'
 
-import { routerDefaults, useCanvas, useFrameLocation } from '../src/router.js'
+import spanish from '../src/list-chrome/es-ES.js'
+import { routerDefaults, useCanvas, useFrameLocation, useShownPath } from '../src/router.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
+
+afterEach(() => {
+	resetLocaleData()
+})
 
 /**
  * Renders a probe inside a router whose leaf declares the given canvas.
@@ -95,8 +104,141 @@ test('follows a move that changes only the search, so the drawer closes on it', 
 	expect(screen.getByTestId('location').textContent).toBe('/threads?status=trash')
 })
 
-test('routerDefaults asks for preload on intent and nothing else, so no pending screen shows', () => {
-	expect(routerDefaults()).toStrictEqual({ defaultPreload: 'intent' })
+test('routerDefaults asks for preload on intent and the not found screen, and no pending screen', () => {
+	expect(routerDefaults()).toStrictEqual({ defaultPreload: 'intent', defaultNotFoundComponent: expect.any(Function) })
+})
+
+/** The module a held code chunk of the slow route hands over. */
+interface Chunk {
+	default: () => ReactNode
+}
+
+/** What the shown path probe saw after one commit: the path, the path the frame location names, and the slow page. */
+interface ShownReading {
+	shown: string | undefined
+	location: string
+	slowDrawn: boolean
+}
+
+/** Returns a router whose root records the shown path after each commit, beside a route a loader or chunk holds. */
+function routerWithSlowRoute(slow: { loader?: () => Promise<void>; chunk?: Promise<Chunk> }, readings: ShownReading[]) {
+	function Shell() {
+		const shown = useShownPath()
+		const location = useFrameLocation()
+		useEffect(() => {
+			readings.push({ shown, location, slowDrawn: screen.queryByText('Slow page') !== null })
+		})
+		return (
+			<>
+				<span data-testid="shown">{shown}</span>
+				<Outlet />
+			</>
+		)
+	}
+	const rootRoute = createRootRoute({ component: Shell })
+	const threads = createRoute({
+		getParentRoute: () => rootRoute,
+		path: '/threads',
+		component: () => <p>Threads page</p>,
+	})
+	const { chunk } = slow
+	const component = chunk === undefined ? () => <p>Slow page</p> : lazyRouteComponent(() => chunk)
+	const slowRoute = createRoute({ getParentRoute: () => rootRoute, path: '/slow', loader: slow.loader, component })
+	return createRouter({
+		routeTree: rootRoute.addChildren([threads, slowRoute]),
+		history: createMemoryHistory({ initialEntries: ['/threads'] }),
+	})
+}
+
+/** Returns a promise and the function that settles it. */
+function held<T>(): { promise: Promise<T>; release: (value: T) => void } {
+	let release: (value: T) => void = () => {}
+	const promise = new Promise<T>((done) => {
+		release = done
+	})
+	return { promise, release }
+}
+
+test('reports the first path once the router has shown it', async () => {
+	renderAdmin(<RouterProvider router={routerWithSlowRoute({}, [])} />)
+
+	await screen.findByText('Threads page')
+	expect(screen.getByTestId('shown').textContent).toBe('/threads')
+})
+
+test('keeps the old path while a held loader waits, as the frame location already names the new one', async () => {
+	const readings: ShownReading[] = []
+	const loaded = held<void>()
+	const router = routerWithSlowRoute({ loader: () => loaded.promise }, readings)
+	renderAdmin(<RouterProvider router={router} />)
+	await screen.findByText('Threads page')
+
+	await act(async () => {
+		void router.navigate({ to: '/slow' })
+	})
+
+	expect(screen.getByText('Threads page')).not.toBeNull()
+	expect(readings.at(-1)).toEqual({ shown: '/threads', location: '/slow', slowDrawn: false })
+	await act(async () => {
+		loaded.release()
+	})
+	await waitFor(() => expect(screen.getByTestId('shown').textContent).toBe('/slow'))
+	expect(readings.filter((reading) => reading.shown === '/slow' && !reading.slowDrawn)).toEqual([])
+})
+
+test('keeps the old path while a held code chunk loads, and moves once the new screen has drawn', async () => {
+	const readings: ShownReading[] = []
+	const chunk = held<Chunk>()
+	const router = routerWithSlowRoute({ chunk: chunk.promise }, readings)
+	renderAdmin(<RouterProvider router={router} />)
+	await screen.findByText('Threads page')
+
+	await act(async () => {
+		void router.navigate({ to: '/slow' })
+	})
+
+	expect(screen.getByText('Threads page')).not.toBeNull()
+	expect(readings.at(-1)).toEqual({ shown: '/threads', location: '/slow', slowDrawn: false })
+	await act(async () => {
+		chunk.release({ default: () => <p>Slow page</p> })
+	})
+	await waitFor(() => expect(screen.getByTestId('shown').textContent).toBe('/slow'))
+	expect(readings.filter((reading) => reading.shown === '/slow' && !reading.slowDrawn)).toEqual([])
+})
+
+/** Draws a router spread with the defaults at an address no route serves, the root's own not found screen if any. */
+function renderUnknownAddress(notFound?: () => ReactNode) {
+	const rootRoute = createRootRoute({ component: () => <Outlet />, notFoundComponent: notFound })
+	const threads = createRoute({ getParentRoute: () => rootRoute, path: '/threads', component: () => <p>Threads</p> })
+	const router = createRouter({
+		routeTree: rootRoute.addChildren([threads]),
+		history: createMemoryHistory({ initialEntries: ['/gone'] }),
+		...routerDefaults(),
+	})
+	return renderAdmin(<RouterProvider router={router} />)
+}
+
+test('a router spread with the defaults draws Route not found for an address no route serves', async () => {
+	renderUnknownAddress()
+
+	expect(await screen.findByRole('heading', { level: 2, name: 'Route not found' })).not.toBeNull()
+	expect(screen.getByText("The page you're looking for does not exist")).not.toBeNull()
+	expect(screen.queryByText('Not Found')).toBeNull()
+})
+
+test('draws the not found screen in the reader language from the words godmin ships', async () => {
+	setLocaleData(spanish)
+	renderUnknownAddress()
+
+	expect(await screen.findByRole('heading', { name: 'Ruta no encontrada' })).not.toBeNull()
+	expect(screen.getByText('La página que estás buscando no existe')).not.toBeNull()
+})
+
+test('lets a not found screen a route draws itself win over the default', async () => {
+	renderUnknownAddress(() => <p>Own not found</p>)
+
+	expect(await screen.findByText('Own not found')).not.toBeNull()
+	expect(screen.queryByRole('heading', { name: 'Route not found' })).toBeNull()
 })
 
 test('a router spread with the defaults loads a hovered link before the click, as WordPress does', async () => {

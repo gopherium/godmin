@@ -2,10 +2,11 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The Spanish list chrome, list dates, sidebar and no results words, compiled from the es-ES.po source beside it. */
+/** The Spanish list chrome, list dates, sidebar, frame and no results words, compiled from es-ES.po beside it. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' },
 	'%1$s of %2$s Item': ['%1$s de %2$s elemento', '%1$s de %2$s elementos'],
+	'%1$s ‹ %2$s': ['%1$s ‹ %2$s'],
 	'%1$s, %2$s': ['%1$s, %2$s'],
 	'%1$s: %2$s': ['%1$s: %2$s'],
 	'%s Item': ['%s elemento', '%s elementos'],
@@ -178,6 +179,7 @@ const catalog: ListChromeCatalog = {
 	Reset: ['Restablecer'],
 	'Reset search': ['Restablecer la búsqueda'],
 	'Reset view': ['Restablecer vista'],
+	'Route not found': ['Ruta no encontrada'],
 	'Row %d': ['Fila %d'],
 	Sat: ['Sáb'],
 	Saturday: ['sábado'],
@@ -194,6 +196,7 @@ const catalog: ListChromeCatalog = {
 	Sun: ['Dom'],
 	Sunday: ['domingo'],
 	Table: ['Tabla'],
+	"The page you're looking for does not exist": ['La página que estás buscando no existe'],
 	Thu: ['Jue'],
 	Thursday: ['jueves'],
 	'Timezone: %s': ['Zona horaria: %s'],

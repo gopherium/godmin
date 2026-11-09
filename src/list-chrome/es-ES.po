@@ -15,6 +15,10 @@ msgstr[0] "%1$s de %2$s elemento"
 msgstr[1] "%1$s de %2$s elementos"
 
 #, fuzzy
+msgid "%1$s ‹ %2$s"
+msgstr "%1$s ‹ %2$s"
+
+#, fuzzy
 msgid "%1$s, %2$s"
 msgstr "%1$s, %2$s"
 
@@ -576,6 +580,10 @@ msgid "Reset view"
 msgstr "Restablecer vista"
 
 #, fuzzy
+msgid "Route not found"
+msgstr "Ruta no encontrada"
+
+#, fuzzy
 msgid "Row %d"
 msgstr "Fila %d"
 
@@ -639,6 +647,10 @@ msgstr "domingo"
 #, fuzzy
 msgid "Table"
 msgstr "Tabla"
+
+#, fuzzy
+msgid "The page you're looking for does not exist"
+msgstr "La página que estás buscando no existe"
 
 #, fuzzy
 msgid "Thu"

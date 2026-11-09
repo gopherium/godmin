@@ -1,9 +1,11 @@
 /* oxlint-disable react/only-export-components -- the page kit ships its parts
    beside the type they share. */
 import { Button, Notice, Stack, Text } from '@wordpress/ui'
-import { Children, createContext, useContext, useImperativeHandle, useRef } from 'react'
+import { Children, createContext, isValidElement, useContext, useImperativeHandle, useRef } from 'react'
 import type { ComponentProps, HTMLAttributes, ReactNode, Ref } from 'react'
 
+import { LoadingScreen } from './loading.js'
+import { useReportTitle } from './screen-title.js'
 import { useWideList } from './wide-list.js'
 
 type TextVariant = ComponentProps<typeof Text>['variant']
@@ -16,6 +18,9 @@ type HeadingTag = 'h1' | 'h2' | 'h3' | 'h4'
 
 /** The level of the title of the Page around a section title, 1 outside any Page. */
 const PageLevelContext = createContext<PageLevel>(1)
+
+/** How many Pages hold a part, 0 outside any Page. */
+const PageDepthContext = createContext(0)
 
 /**
  * Returns the heading element of a level.
@@ -35,7 +40,7 @@ export function useHeadingUnderPage(): HeadingTag {
 }
 
 /**
- * Renders a screen's title as the page heading.
+ * Renders a screen's title as the page heading, and reports its text to the frame when no Page holds it.
  * @param props - The title text, the type scale to render it at and its heading level, 1 when absent.
  * @returns The page title element.
  */
@@ -48,6 +53,8 @@ export function PageTitle({
 	variant?: TextVariant
 	level?: PageLevel
 }) {
+	const alone = useContext(PageDepthContext) === 0
+	useReportTitle(alone && typeof children === 'string' ? children : undefined, 0, false)
 	const Heading = headingTag(level)
 	return (
 		<Text variant={variant} render={<Heading />}>
@@ -179,7 +186,19 @@ function PageHeading({ title, level, breadcrumbs }: { title: string; level: Page
 }
 
 /**
- * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content.
+ * Tells whether a page waits for its record: its whole content is one LoadingScreen element and it has no aside.
+ * @param aside - The aside the page was given.
+ * @param children - The content the page was given.
+ * @returns Whether the page holds nothing but that LoadingScreen.
+ */
+function waitsForRecord(aside: ReactNode, children: ReactNode): boolean {
+	const content = Children.toArray(children)
+	return aside === undefined && content.length === 1 && isValidElement(content[0]) && content[0].type === LoadingScreen
+}
+
+/**
+ * Renders a screen: a header with the title, actions and subtitle, then optional tabs and the content, and
+ * reports its title to the frame, as waiting while it holds nothing but one LoadingScreen.
  * @param props - The title, subtitle, actions, tabs, aside and its name, breadcrumbs, list flag, list name and ref,
  * extra class, title level and content.
  * @returns The page element.
@@ -200,43 +219,47 @@ export function Page({
 	children,
 }: PageProps) {
 	const classes = className === undefined ? 'godmin-page' : `godmin-page ${className}`
+	const depth = useContext(PageDepthContext) + 1
+	useReportTitle(title, depth, waitsForRecord(aside, children))
 	return (
-		<PageLevelContext.Provider value={headingLevel}>
-			<Stack direction="column" gap="lg" className={classes}>
-				<Stack direction="column" render={<header />} className="godmin-page__header">
-					<Stack
-						direction="row"
-						wrap="wrap"
-						gap="md"
-						align="center"
-						justify="space-between"
-						className="godmin-page__head"
-					>
-						<PageHeading title={title} level={headingLevel} breadcrumbs={breadcrumbs} />
-						{actions !== undefined && (
-							<Stack direction="row" gap="sm" align="center">
-								{actions}
-							</Stack>
+		<PageDepthContext.Provider value={depth}>
+			<PageLevelContext.Provider value={headingLevel}>
+				<Stack direction="column" gap="lg" className={classes}>
+					<Stack direction="column" render={<header />} className="godmin-page__header">
+						<Stack
+							direction="row"
+							wrap="wrap"
+							gap="md"
+							align="center"
+							justify="space-between"
+							className="godmin-page__head"
+						>
+							<PageHeading title={title} level={headingLevel} breadcrumbs={breadcrumbs} />
+							{actions !== undefined && (
+								<Stack direction="row" gap="sm" align="center">
+									{actions}
+								</Stack>
+							)}
+						</Stack>
+						{subtitle !== undefined && (
+							<Text variant="body-md" render={<p />} className="godmin-page__subtitle">
+								{subtitle}
+							</Text>
 						)}
 					</Stack>
-					{subtitle !== undefined && (
-						<Text variant="body-md" render={<p />} className="godmin-page__subtitle">
-							{subtitle}
-						</Text>
-					)}
+					{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
+					<PageBody aside={aside} asideLabel={asideLabel}>
+						{list ? (
+							<ListRegion label={listLabel} listRef={listRef}>
+								{children}
+							</ListRegion>
+						) : (
+							children
+						)}
+					</PageBody>
 				</Stack>
-				{tabs !== undefined && <div className="godmin-page__tabs">{tabs}</div>}
-				<PageBody aside={aside} asideLabel={asideLabel}>
-					{list ? (
-						<ListRegion label={listLabel} listRef={listRef}>
-							{children}
-						</ListRegion>
-					) : (
-						children
-					)}
-				</PageBody>
-			</Stack>
-		</PageLevelContext.Provider>
+			</PageLevelContext.Provider>
+		</PageDepthContext.Provider>
 	)
 }
 

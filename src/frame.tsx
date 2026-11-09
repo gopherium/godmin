@@ -10,6 +10,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { SMALL_VIEWPORT } from './breakpoints.js'
 import { NavigationStateContext, createNavigationState, takeDrawerStays } from './navigation-state.js'
 import type { NavigationState } from './navigation-state.js'
+import { ScreenTitleContext, TitleWatch, createScreenTitles } from './screen-title.js'
 import { useMediaQuery } from './use-media-query.js'
 
 type ThemeColor = ComponentProps<typeof ThemeProvider>['color']
@@ -42,6 +43,10 @@ const FrameContext = createContext<FrameState>({
 export interface FrameRootProps {
 	children: ReactNode
 	location?: string
+	/** The path the router has finished showing, whose change speaks the new screen's title, nothing without it. */
+	shownPath?: string
+	/** The name of the app, which the tab title ends with. The tab title is left alone without it. */
+	appName?: string
 	/** The theme colour of the frame, a #26292b background when absent. */
 	chromeColor?: ThemeColor
 	/** The theme colour of the canvas, a #fcfcfc background when absent. */
@@ -49,25 +54,36 @@ export interface FrameRootProps {
 }
 
 /**
- * Frames an admin application, folding its sidebar away on a narrow viewport,
- * and holds the moves its sidebar parts share.
- * @param props - The regions, the current location, and the region colors.
+ * Frames an admin application, folding its sidebar away on a narrow viewport, holds the moves its sidebar
+ * parts share, and speaks the title of each new screen and sets the tab title from it.
+ * @param props - The regions, the current location, the shown path, the app name, and the region colors.
  * @returns The frame element.
  */
-function Root({ children, location, chromeColor = CHROME_COLOR, canvasColor = CANVAS_COLOR }: FrameRootProps) {
+function Root({
+	children,
+	location,
+	shownPath,
+	appName,
+	chromeColor = CHROME_COLOR,
+	canvasColor = CANVAS_COLOR,
+}: FrameRootProps) {
 	const small = useMediaQuery(SMALL_VIEWPORT)
 	const [layout, setLayout] = useState<HTMLElement | null>(null)
 	const [navigation] = useState(createNavigationState)
+	const [titles] = useState(createScreenTitles)
 	const classes = small ? 'godmin-layout godmin-layout--small' : 'godmin-layout'
 	return (
 		<ThemeProvider color={chromeColor}>
 			<FrameContext.Provider value={{ small, location, layout, navigation }}>
 				<NavigationStateContext.Provider value={navigation}>
-					<div ref={setLayout} className={classes}>
-						<CanvasColorContext.Provider value={canvasColor}>
-							{children}
-						</CanvasColorContext.Provider>
-					</div>
+					<ScreenTitleContext.Provider value={titles}>
+						<TitleWatch titles={titles} shownPath={shownPath} location={location} appName={appName} />
+						<div ref={setLayout} className={classes}>
+							<CanvasColorContext.Provider value={canvasColor}>
+								{children}
+							</CanvasColorContext.Provider>
+						</div>
+					</ScreenTitleContext.Provider>
 				</NavigationStateContext.Provider>
 			</FrameContext.Provider>
 		</ThemeProvider>
@@ -142,6 +158,15 @@ function Sidebar({
 }
 
 /**
+ * Returns the edge the drawer opens from and swipes away to, the start edge of the frame.
+ * @param layout - The frame element, null before it is drawn.
+ * @returns Right in a right-to-left frame, else left.
+ */
+function drawerSide(layout: HTMLElement | null): 'left' | 'right' {
+	return layout !== null && getComputedStyle(layout).direction === 'rtl' ? 'right' : 'left'
+}
+
+/**
  * Renders the narrow viewport chrome: a menu button opening the sidebar content in
  * a drawer, beside the brand. The drawer closes on a page change, unless a drilldown row or Back made it,
  * and ends in a close button only assistive technology meets, the name of WordPress's phone backdrop.
@@ -162,7 +187,7 @@ function TopBar({
 	}, [location, navigation])
 	return (
 		<div className="godmin-layout__topbar">
-			<Drawer.Root open={open} onOpenChange={setOpen}>
+			<Drawer.Root open={open} onOpenChange={setOpen} swipeDirection={drawerSide(layout)}>
 				<Drawer.Trigger render={<button type="button" className="godmin-layout__menu" aria-label={menuLabel} />}>
 					<Icon icon={menu} />
 				</Drawer.Trigger>
