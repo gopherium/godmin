@@ -145,8 +145,12 @@ shows how.
   that layout.
 - A `LoadingScreen` inside a wrapper of your own, or beside other
   content, holds nothing, so that page's title is spoken at once.
-- A screen with no `Page` says nothing until its `Page` shows. A bare
-  `LoadingScreen` has no title to give.
+- A screen with no `Page` of its own says the title of the `Page`
+  around it, if there is one, and nothing more once its own `Page`
+  shows. With no `Page` around it, it says nothing until its own
+  `Page` shows. A bare `LoadingScreen` has no title to give, so a
+  screen that loads draws its `Page` with the `LoadingScreen` as its
+  own child, as above.
 - The not found screen that `routerDefaults()` gives says "Route not
   found".
 - Two screens that show less than two animation frames apart, such as

@@ -176,6 +176,15 @@ function titleAppRouter(path: string, options: TitleAppOptions = {}) {
 	const child = (at: string, component: () => ReactNode) =>
 		createRoute({ getParentRoute: () => rootRoute, path: at, component })
 	const later = options.later ?? Promise.resolve({ default: titled('Later') })
+	const section = createRoute({
+		getParentRoute: () => rootRoute,
+		path: '/section',
+		component: () => (
+			<Page title="Section">
+				<Outlet />
+			</Page>
+		),
+	})
 	const routes = [
 		child('/', home === 'page' ? titled('Dashboard') : Landing),
 		child('/landing', Landing),
@@ -192,6 +201,10 @@ function titleAppRouter(path: string, options: TitleAppOptions = {}) {
 				</Page>
 			</Page>
 		)),
+		section.addChildren([
+			createRoute({ getParentRoute: () => section, path: 'one', component: titled('One') }),
+			createRoute({ getParentRoute: () => section, path: 'two', component: Bare }),
+		]),
 		child('/contacts/$contactId', Record),
 		createRoute({
 			getParentRoute: () => rootRoute,
@@ -510,6 +523,21 @@ test('speaks the title of the deepest of two nested Pages', async () => {
 	await moveTo(router, '/nested')
 
 	expect(spoken()).toEqual(['General'])
+})
+
+test('speaks the Page around a screen that shows a bare LoadingScreen, and not the Page it draws later', async () => {
+	const bare = held()
+	const router = await renderTitleApp('/section/one', { bare: bare.promise })
+	const spoken = listenAssertive()
+
+	await moveTo(router, '/section/two')
+	await act(async () => {
+		bare.release()
+	})
+	await screen.findByRole('heading', { name: 'Bare screen' })
+	await afterFrames()
+
+	expect(spoken()).toEqual(['Section'])
 })
 
 test('speaks the target of a redirect once', async () => {
