@@ -8,7 +8,7 @@ import { afterEach, expect, test, vi } from 'vitest'
 import spanish from '../src/list-chrome/es-ES.js'
 import { NavigationScreen } from '../src/navigation-screen.js'
 import { NavigationStateContext, ScreenContext, createNavigationState } from '../src/navigation-state.js'
-import type { NavigationState, ScreenState } from '../src/navigation-state.js'
+import type { Move, NavigationState, ScreenState } from '../src/navigation-state.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -190,6 +190,50 @@ test('lets a screen name Back itself', () => {
 	expect(screen.getByRole('link', { name: 'Back to sections' })).not.toBeNull()
 })
 
+test('takes the name the link the screen supplied gives before the name the screen gives Back', () => {
+	renderAdmin(
+		<NavigationScreen
+			title="Conversations"
+			back={<a href="#sections" aria-label="Back to sections" />}
+			backLabel="Back to the list"
+		>
+			<p>screen content</p>
+		</NavigationScreen>,
+	)
+
+	expect(screen.getByRole('link', { name: 'Back to sections' })).not.toBeNull()
+	expect(screen.queryByRole('link', { name: 'Back to the list' })).toBeNull()
+})
+
+test('draws Back as the link the screen supplied, its own class first and the class of that link after', () => {
+	renderFull(<a href="#inbox" className="mine" />)
+
+	expect(screen.getByRole('link', { name: 'Back' }).className).toBe('godmin-navigation-screen__back mine')
+})
+
+test('draws Back with its own class alone when the link the screen supplied has no class', () => {
+	renderFull()
+
+	expect(screen.getByRole('link', { name: 'Back' }).className).toBe('godmin-navigation-screen__back')
+})
+
+test('draws the chevron in place of what the link the screen supplied holds', () => {
+	renderFull(<a href="#inbox">Inbox</a>)
+
+	const back = screen.getByRole('link', { name: 'Back' })
+	expect(back.textContent).toBe('')
+	expect([...back.children].map((part) => part.tagName.toLowerCase())).toEqual(['svg'])
+	expect(back.querySelector('path')?.getAttribute('d')).toBe(LEFT_CHEVRON)
+})
+
+test('keeps the style and the data attributes of the link the screen supplied', () => {
+	renderFull(<a href="#inbox" style={{ color: 'red' }} data-section="inbox" />)
+
+	const back = screen.getByRole('link', { name: 'Back' })
+	expect(back.getAttribute('style')).toBe('color: red;')
+	expect(back.getAttribute('data-section')).toBe('inbox')
+})
+
 test('goes to the home of the Navigation around it when a sub screen names no back', () => {
 	renderInside(
 		{ isRoot: false, home: <a href="#home" /> },
@@ -228,13 +272,14 @@ test('draws no Back on the root screen of a Navigation, whatever back it names',
  * Renders a sub screen inside a frame's shared state and what a Navigation hands each screen.
  * @param back - The element Back renders through.
  * @param targetOf - Where the Navigation says a link moves the reader, the link's href when absent.
+ * @param state - The state of the frame.
  * @returns The state Back records its moves in.
  */
 function renderInNavigation(
 	back: ReactElement<Record<string, unknown>>,
 	targetOf: ScreenState['targetOf'] = (link) => String(link.props.href),
+	state = createNavigationState(),
 ): NavigationState {
-	const state = createNavigationState()
 	renderAdmin(
 		<NavigationStateContext.Provider value={state}>
 			<ScreenContext.Provider value={{ isRoot: false, targetOf }}>
@@ -254,6 +299,17 @@ test('records a backward move to where its link goes, and a drawer that stays th
 
 	expect(state.move).toEqual({ direction: 'backward', address: '#sections' })
 	expect(state.drawerStaysOn).toBe('#sections')
+})
+
+test('runs the click of the link Back renders through once, before it records the move', () => {
+	const state = createNavigationState()
+	const seen: (Move | undefined)[] = []
+	renderInNavigation(<a href="#sections" onClick={() => seen.push(state.move)} />, undefined, state)
+
+	fireEvent.click(screen.getByRole('link', { name: 'Back' }))
+
+	expect(seen).toEqual([undefined])
+	expect(state.move).toEqual({ direction: 'backward', address: '#sections' })
 })
 
 test('records nothing when Back goes to the address already open, which moves nowhere', () => {
