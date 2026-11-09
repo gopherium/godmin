@@ -1,16 +1,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
+import {
+	Outlet,
+	RouterProvider,
+	createMemoryHistory,
+	createRootRoute,
+	createRoute,
+	createRouter,
+} from '@tanstack/react-router'
 import { act, fireEvent, screen } from '@testing-library/react'
 import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
 import { post } from '@wordpress/icons'
 import type { ReactElement } from 'react'
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, expect, expectTypeOf, test } from 'vitest'
 
 import { DrilldownItem } from '../src/drilldown-item.js'
+import type { DrilldownItemProps } from '../src/drilldown-item.js'
 import { MenuCount } from '../src/menu-count.js'
-import { NavigationStateContext, createNavigationState } from '../src/navigation-state.js'
+import { NavigationItem } from '../src/navigation-item.js'
+import { NavigationStateContext, ScreenContext, createNavigationState } from '../src/navigation-state.js'
 import type { Move, NavigationState } from '../src/navigation-state.js'
-import { installTestEnvironment } from '../src/testing.js'
+import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 import { holdsEvery, renderRows } from './sidebar-routes.js'
 
 installTestEnvironment()
@@ -275,4 +285,93 @@ test('hides that row when no can reaches it, as capabilities fail closed', async
 	)
 
 	expect(screen.queryByRole('link', { name: 'Things' })).toBeNull()
+})
+
+test('never marks itself current, even on its own address, as a row that opens a sub menu', async () => {
+	await renderRows(
+		'/things',
+		<ul>
+			<DrilldownItem to="/things">Things</DrilldownItem>
+		</ul>,
+		holdsEvery,
+	)
+
+	const row = screen.getByRole('link', { name: 'Things' })
+	expect(row.hasAttribute('aria-current')).toBe(false)
+	expect(row.hasAttribute('data-status')).toBe(false)
+	expect(row.hasAttribute('disabled')).toBe(false)
+})
+
+test('adds no class active on its own address, beside the class its app gives', async () => {
+	await renderRows(
+		'/things',
+		<ul>
+			<DrilldownItem to="/things" className="mine">
+				Things
+			</DrilldownItem>
+		</ul>,
+		holdsEvery,
+	)
+
+	expect(screen.getByRole('link', { name: 'Things' }).className).toBe('godmin-navigation-item mine')
+})
+
+/** Returns a router, not drawn yet, with a posts row and a drilldown row to a section that loads until released. */
+function routerWithSlowSection(loaded: Promise<void>) {
+	const rootRoute = createRootRoute({
+		component: () => (
+			<ScreenContext.Provider value={{ can: holdsEvery }}>
+				<ul>
+					<NavigationItem to="/posts">Posts</NavigationItem>
+					<DrilldownItem to="/slow">Slow</DrilldownItem>
+				</ul>
+				<Outlet />
+			</ScreenContext.Provider>
+		),
+	})
+	const posts = createRoute({ getParentRoute: () => rootRoute, path: '/posts', component: () => <p>Posts page</p> })
+	const slow = createRoute({
+		getParentRoute: () => rootRoute,
+		path: '/slow',
+		staticData: { Sidebar: () => null },
+		loader: () => loaded,
+		component: () => <p>Slow page</p>,
+	})
+	return createRouter({
+		routeTree: rootRoute.addChildren([posts, slow]),
+		history: createMemoryHistory({ initialEntries: ['/posts'] }),
+	})
+}
+
+test('stays unmarked while the sub menu it opens still loads and the old page still shows', async () => {
+	let finish = () => {}
+	const loaded = new Promise<void>((done) => {
+		finish = done
+	})
+	const router = routerWithSlowSection(loaded)
+	renderAdmin(<RouterProvider router={router} />)
+	await screen.findByText('Posts page')
+
+	await act(async () => {
+		fireEvent.click(screen.getByRole('link', { name: 'Slow' }))
+	})
+
+	expect(router.state.location.pathname).toBe('/slow')
+	expect(screen.getByText('Posts page')).not.toBeNull()
+	const row = screen.getByRole('link', { name: 'Slow' })
+	expect(row.hasAttribute('aria-current')).toBe(false)
+	expect(row.hasAttribute('data-status')).toBe(false)
+	expect(row.className).toBe('godmin-navigation-item')
+	expect(document.querySelector('[aria-current]')).toBeNull()
+
+	await act(async () => {
+		finish()
+	})
+	expect(await screen.findByText('Slow page')).not.toBeNull()
+	expect(screen.getByRole('link', { name: 'Slow' }).hasAttribute('aria-current')).toBe(false)
+})
+
+test('takes neither the props of the current page nor the options that decide it, as it is never current', () => {
+	expectTypeOf<DrilldownItemProps>().not.toHaveProperty('activeProps')
+	expectTypeOf<DrilldownItemProps>().not.toHaveProperty('activeOptions')
 })

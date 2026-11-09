@@ -7,6 +7,7 @@ import { resolve } from 'node:path'
 import { expect, test } from 'vitest'
 
 import * as breakpoints from '../src/breakpoints'
+import { TITLE_WAIT } from '../src/screen-title'
 import { ruleOf } from './css-rules.js'
 import { dataviews, installedFile, ruleValue } from './styles.js'
 
@@ -47,6 +48,9 @@ const listsPage = readFileSync(resolve(import.meta.dirname, '../docs/lists.md'),
 
 /** The usage page of screens and the stylesheet helpers. */
 const screensPage = readFileSync(resolve(import.meta.dirname, '../docs/screens.md'), 'utf8')
+
+/** The usage page of the frame, its sidebar menu and its routes. */
+const framingPage = readFileSync(resolve(import.meta.dirname, '../docs/framing-an-application.md'), 'utf8')
 
 /** The module of the installed design system whose stylesheet draws the empty state. */
 const EMPTY_STATE_MODULE = '@wordpress/ui/build-module/empty-state/root.mjs'
@@ -284,8 +288,53 @@ const RECORDS: ValueTable = { page: 'record-pages.md', values: valuesOf([
 	['.godmin-form__row > *', 'flex', 'Forms on a page', 'starts from'],
 ]) }
 
+/** The rule that times the phone drawer while the reader allows motion, from the guard that opens it. */
+const DRAWER_MOTION = '@media not (prefers-reduced-motion) {\n\t\t.godmin-layout__drawer'
+
+/** The rule that lets the backdrop of the phone drawer follow a finger that drags the drawer. */
+const BACKDROP_SWIPING = "[role='presentation'][data-swiping]:has(+ * > .godmin-layout__drawer)"
+
+/** Each frame value the frame page gives. */
+const FRAME: ValueTable = { page: 'frame.md', values: valuesOf([
+	[':root', '--godmin-navigation-slide-distance', 'The sidebar slide', 'to one side'],
+	[':root', '--godmin-navigation-slide-duration', 'The sidebar slide', 'curve'],
+	['.godmin-navigation__screen-wrapper', 'animation-timing-function', 'The sidebar slide', 'curve'],
+	[DRAWER_MOTION, 'transition-duration', 'The drawer', 'from the start edge'],
+	[DRAWER_MOTION, 'transition-timing-function', 'The drawer', 'from the start edge'],
+	['.godmin-layout__drawer[data-ending-style]', 'transition-duration', 'The drawer', 'lets go'],
+	[BACKDROP_SWIPING, 'transition-duration', 'The drawer', 'drags'],
+	['.godmin-layout', 'height', 'The frame on a phone', 'the browser leaves'],
+]) }
+
+/** The section of the frame page on what a screen reader hears when the screen changes. */
+const SPOKEN = 'What a screen reader hears when the screen changes'
+
+/** The sections of other pages that speak of the frame, by page and heading, that point to the frame page instead. */
+const FRAME_LOOKS = [
+	['motion.md', 'The sidebar slide'],
+	['motion.md', 'The phone drawer'],
+	['motion.md', 'Reduced motion'],
+	['layout.md', 'The frame'],
+	['layout.md', 'Breakpoints'],
+	['layout.md', 'Right-to-left languages'],
+	['accessibility.md', 'Where focus goes'],
+	['accessibility.md', 'Landmarks and names'],
+	['accessibility.md', 'What a screen reader hears'],
+	['custom-properties.md', 'Public custom properties'],
+	['color.md', 'Raw colors on purpose'],
+	['radius-and-elevation.md', 'Elevation'],
+	['record-pages.md', 'While a record loads'],
+	['loading.md', 'Moving between pages'],
+	['loading.md', 'What a screen reader hears'],
+	['usage/framing-an-application.md', 'The sidebar menu'],
+	['usage/framing-an-application.md', 'What happens on a small screen'],
+	['usage/framing-an-application.md', 'Routes and the frame'],
+	['usage/screens.md', 'Page'],
+	['usage/screens.md', 'NavigationScreen'],
+]
+
 /** The value tables of the Design System pages that give values the stylesheet sets. */
-const VALUE_TABLES = [TOASTS, LOADING, LISTS, RECORDS]
+const VALUE_TABLES = [TOASTS, LOADING, LISTS, RECORDS, FRAME]
 
 /** The pixel values the lists page gives that no usage section on how a list looks may repeat. */
 const LIST_NUMBERS = [24, 48, 16, 8, 13, 12, 20, 64, 32, 4, 640, 782, 783, 280].map(
@@ -323,7 +372,7 @@ const LOADING_NUMBERS = [
 	/\b500ms\b/,
 	/\b0\.5\b/,
 	/\b1s\b/,
-	/\b100vh\b/,
+	/\b100dvh\b/,
 ]
 
 /** The motion tokens of the fade WordPress gives an image after its skeleton. */
@@ -377,7 +426,12 @@ interface ValueGiven extends PageValue {
 
 /** Each Design System page by file name and each usage page by `usage/` and file name, split by heading. */
 const sections = new Map(
-	[...pages, ['usage/lists.md', listsPage], ['usage/screens.md', screensPage]].map(([name, text]) => [
+	[
+		...pages,
+		['usage/lists.md', listsPage],
+		['usage/screens.md', screensPage],
+		['usage/framing-an-application.md', framingPage],
+	].map(([name, text]) => [
 		name,
 		new Map(text.split('\n## ').map((part) => [part.slice(0, part.indexOf('\n')), part])),
 	]),
@@ -463,6 +517,7 @@ test.each([
 	'lists.md',
 	'record-pages.md',
 	'dialogs.md',
+	'frame.md',
 ])('the Design System holds %s', (name) => {
 	expect([...pages.keys()]).toContain(name)
 })
@@ -888,4 +943,67 @@ test('the usage pages leave every dialog value to the dialogs page', () => {
 	})
 
 	expect(found.filter((line) => !line.endsWith(': '))).toEqual([])
+})
+
+/** Tells whether a value stands in a text as a whole word, spaces made single. */
+function standsIn(value: string, text: string): boolean {
+	const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+	return new RegExp(`(?<![\\w-])${escaped}(?![\\w-])`).test(text.replace(/\s+/g, ' '))
+}
+
+test('the value reader finds a value as a whole word only', () => {
+	expect(['0ms', '50px', 'ease-out'].map((value) => standsIn(value, 'over 200ms on `ease-in-out`, 150px'))).toEqual([
+		false,
+		false,
+		false,
+	])
+	expect(['0ms', '1 second'].map((value) => standsIn(value, 'takes `0ms` after 1\nsecond'))).toEqual([true, true])
+})
+
+test('the other pages leave every frame value, as the stylesheet sets it by selector, to the frame page', () => {
+	const parts = valuesGiven(FRAME).flatMap((given) => given.parts.filter((part) => part !== ''))
+	const values = [...new Set(parts), `${TITLE_WAIT / 1000} second`]
+	const found = FRAME_LOOKS.map(([page, heading]) => {
+		const section = sections.get(page)?.get(heading)
+		const given = section === undefined ? ['no such section'] : values.filter((value) => standsIn(value, section))
+		const unlinked = section !== undefined && !section.includes('frame.md#') ? ['no link to the frame page'] : []
+		return `${page} ${heading}: ${[...given, ...unlinked].join(' ')}`
+	})
+
+	expect(values, 'the frame values the guard looks for').toContain('100dvh')
+	expect(found.filter((line) => !line.endsWith(': '))).toEqual([])
+})
+
+test('the frame page gives how long a record may hold its title, as the screen title store sets it', () => {
+	const passage = passagesOf(sections.get('frame.md')?.get(SPOKEN)).find((text) =>
+		text.includes('loads after it opens'),
+	)
+
+	expect(passage, `the ${SPOKEN} section says nothing on a record that loads after it opens`).toBeDefined()
+	expect(passage).toContain(`${TITLE_WAIT / 1000} second`)
+})
+
+test('the frame page names the width the sidebar slide stops below, as the stylesheet opens its block', () => {
+	const stop = stylesheet.lastIndexOf('.godmin-navigation__screen-wrapper {')
+	const opens = stylesheet.lastIndexOf('@media (', stop)
+	const below = Number(groupOf(/^@media \(max-width: (\d+)px\)/.exec(stylesheet.slice(opens))))
+	const edge = Object.entries(breakpoints).find(([, value]) => value === below + 1)?.[0]
+	const section = (sections.get('frame.md')?.get('The sidebar slide') ?? '').replace(/\s+/g, ' ')
+
+	expect(stylesheet.slice(stop, stylesheet.indexOf('}', stop)), 'the last wrapper rule stops the slide').toMatch(
+		/animation-duration: 0s;/,
+	)
+	expect(edge, `no breakpoint is ${below + 1}, the first width the slide plays at`).toBeDefined()
+	expect(section).toContain(`\`${edge}\` (${below + 1}px)`)
+})
+
+test('the motion page points the tokens of the drawer motion to the frame page', () => {
+	const tokens = valuesGiven(FRAME).flatMap((given) => given.parts.filter((part) => part.startsWith('--wpds-motion-')))
+	const rows = (pages.get('motion.md') ?? '')
+		.split('\n')
+		.filter((line) => tokens.some((token) => line.startsWith(`| \`${token}\``)))
+	const pointed = '| The phone drawer, see [The drawer](./frame.md#the-drawer) |'
+
+	expect(rows.length, 'the motion page names the tokens of the drawer motion').toBeGreaterThan(0)
+	expect(rows.filter((row) => !row.endsWith(pointed))).toEqual([])
 })

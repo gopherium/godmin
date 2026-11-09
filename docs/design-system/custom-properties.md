@@ -16,7 +16,7 @@ to change. The internal ones are not yours to read or change.
 The canvas is the panel that shows the current screen.
 [The frame](./layout.md#the-frame) and [the canvas](./layout.md#the-canvas)
 give the four sizes below, and
-[the sidebar slide](./motion.md#the-sidebar-slide) gives the two slide
+[the sidebar slide](./frame.md#the-sidebar-slide) gives the two slide
 values. This table says where each one is set and what it changes.
 
 | Name | Set on | What it changes |
@@ -25,8 +25,8 @@ values. This table says where each one is set and what it changes.
 | `--godmin-canvas-margin` | `:root` | The space around the canvas |
 | `--godmin-canvas-gutter` | the canvas | The canvas padding left and right. A `Page` with `list` and no `aside` reaches out by it to the canvas edges. A record page's columns reach out by it too |
 | `--godmin-canvas-gutter-block` | the canvas | The canvas padding above and below. The band of notices above the screen keeps this space under it. A `Page` with `list` and no `aside` reaches down by it to the canvas bottom. A record page's columns reach down by it too |
-| `--godmin-navigation-slide-distance` | `:root` | How far a sidebar screen moves as it slides in |
-| `--godmin-navigation-slide-duration` | `:root` | How long that slide takes |
+| `--godmin-navigation-slide-distance` | `:root` | How far a sidebar screen moves as it slides in, on a window `EDGE_BREAKPOINT` wide or wider |
+| `--godmin-navigation-slide-duration` | `:root` | How long that slide takes, on the same windows |
 
 ## Where each one is set
 

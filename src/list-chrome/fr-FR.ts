@@ -2,9 +2,10 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The French list dates, dialog, sidebar and no results words, compiled from the fr-FR.po source beside it. */
+/** The French list dates, dialog, sidebar, frame and no results words, compiled from the fr-FR.po source beside it. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'fr-FR', 'plural-forms': 'nplurals=2; plural=(n > 1);' },
+	'%1$s ‹ %2$s': ['%1$s ‹ %2$s'],
 	AM: ['AM'],
 	April: ['avril'],
 	'April abbreviation\u0004Apr': ['Avr'],
@@ -42,6 +43,7 @@ const catalog: ListChromeCatalog = {
 	'October abbreviation\u0004Oct': ['Oct'],
 	'Open navigation panel': ['Ouvrir le panneau de navigation'],
 	PM: ['PM'],
+	'Route not found': ['Route introuvable'],
 	Sat: ['Sam'],
 	Saturday: ['samedi'],
 	'Scrollable section': ['Section défilable'],
@@ -49,6 +51,7 @@ const catalog: ListChromeCatalog = {
 	'September abbreviation\u0004Sep': ['Sep'],
 	Sun: ['Dim'],
 	Sunday: ['dimanche'],
+	"The page you're looking for does not exist": ["La page que vous cherchez n'existe pas"],
 	Thu: ['Jeu'],
 	Thursday: ['jeudi'],
 	"Try adjusting your search or filters to find what you're looking for.": [

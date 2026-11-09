@@ -21,7 +21,10 @@ one in a component of your own.
 
 `title` is required and becomes the page's heading, at the size of a
 WordPress page title. It is an `h1` unless you pass
-`headingLevel`, as [heading levels](#heading-levels) explains.
+`headingLevel`, as [heading levels](#heading-levels) explains. It is
+also what a screen reader hears when the screen opens, as
+[what a screen reader hears when the screen changes](./design-system/frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+says.
 `actions` renders top right,
 and `className` and `children` do what they always do. When the
 actions no longer fit beside the title, on a phone for example, they
@@ -85,7 +88,9 @@ hands the same ref to `useFocusBack`, which puts the focus back on
 the row a dialog opened from.
 
 A screen that fills the canvas edge to edge builds its own layout
-and uses `PageTitle` directly, so the page still gets its heading:
+and uses `PageTitle` directly, so the page still gets its heading.
+Give it plain text, since that text is also what a screen reader
+hears when the screen opens:
 
 ```tsx
 <PageTitle>Conversations</PageTitle>
@@ -241,8 +246,19 @@ then the content.
   `Navigation` it goes to the app's `home`. Pass `back`, a link
   element from your router, to send it somewhere else. The root
   screen has no Back.
+- Back draws the link you pass with the chevron in place of anything
+  the link holds. Its own class comes first and the link's class
+  after it. The link's `onClick` runs first, and Back records its
+  move only when that click did not call `preventDefault()`. The
+  link's `style` and data attributes stay.
 - `backLabel` names Back for assistive technology. It defaults to
-  "Back", translated by godmin.
+  "Back", translated by godmin. An `aria-label` on the link you pass
+  wins over it.
+- Back is your router's own link, so it carries the mark of the
+  current page, which a screen reader hears, while a slow `home`
+  loads. Let the loader of `home` answer fast, as
+  [the sidebar marks](./design-system/frame.md#the-sidebar-marks)
+  says.
 - `description` renders above the content, and `actions` at the end
   of the title row.
 - `footer` stays at the bottom of the screen while the rest scrolls.

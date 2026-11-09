@@ -93,14 +93,15 @@ layer.
   raised.
 - [Typography](./typography.md): the font, the text sizes and
   weights, and the heading outline.
-- [Motion](./motion.md): the motion tokens, the sidebar slide, and
-  what changes for a reader who asks for less motion.
+- [Motion](./motion.md): the motion tokens, the sidebar slide and
+  the phone drawer in short, and what changes for a reader who asks
+  for less motion.
 - [Accessibility](./accessibility.md): focus rings, where focus goes,
   landmarks, what a screen reader hears, and text length.
 - [Custom properties](./custom-properties.md): every godmin custom
   property, where it is set and what it changes.
 
-Five more pages cover a single part each, how it looks and how it
+Six more pages cover a single part each, how it looks and how it
 behaves:
 
 - [Toasts](./toasts.md): where a toast sits, how it looks, how long it
@@ -117,3 +118,7 @@ behaves:
 - [Dialogs](./dialogs.md): when an action asks first, how a confirm
   looks and moves, what happens while its write runs, where a failure
   shows, and what a keyboard or a screen reader meets.
+- [Frame](./frame.md): how the frame changes as the reader moves
+  between screens, the sidebar slide, the drawer, what a screen reader
+  hears, the sidebar marks, the frame on a phone, and why there is no
+  full canvas.

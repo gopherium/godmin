@@ -187,6 +187,31 @@ test('the router entry hands out the menu, which reads the matched routes', asyn
 	expect(packagesReachedFrom(join(source, 'navigation.tsx')).has('@tanstack/react-router')).toBe(true)
 })
 
+test('the router entry hands out the hook that reads the path the router has shown', async () => {
+	const router = (await import(join(source, 'router.ts'))) as Record<string, unknown>
+
+	expect(typeof router.useShownPath).toBe('function')
+})
+
+test.each(['frame.tsx', 'screen-title.ts'])('%s reaches no router, so the main entry speaks without one', (file) => {
+	expect(packagesReachedFrom(join(source, file)).has('@tanstack/react-router')).toBe(false)
+})
+
+test('the screen titles reach React, the announcer and the translations alone', () => {
+	expect([...packagesReachedFrom(join(source, 'screen-title.ts'))].sort()).toEqual([
+		'@wordpress/a11y',
+		'@wordpress/i18n',
+		'react',
+	])
+})
+
+test('neither entry hands out the not found screen, which only the router defaults give', async () => {
+	const router = (await import(join(source, 'router.ts'))) as Record<string, unknown>
+	const main = MainEntry as Record<string, unknown>
+
+	expect([router.RouteNotFound, main.RouteNotFound]).toEqual([undefined, undefined])
+})
+
 test('the state the sidebar parts share reaches React alone, so the main entry may read it without the router', () => {
 	expect([...packagesReachedFrom(join(source, 'navigation-state.ts'))]).toEqual(['react'])
 })

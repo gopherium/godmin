@@ -1,13 +1,25 @@
 import { __, isRTL } from '@wordpress/i18n'
 import { Icon, chevronLeft, chevronRight } from '@wordpress/icons'
-import { Link } from '@wordpress/ui'
-import { useContext } from 'react'
+import { cloneElement, useContext } from 'react'
 import type { MouseEvent, ReactElement, ReactNode } from 'react'
 
 import { NavigationStateContext, ScreenContext, isPlainClick, recordBack } from './navigation-state.js'
 
 /** The class of the title row, the Site Editor's name for it. */
 const TITLE_ROW = 'godmin-navigation-screen__title-icon'
+
+/** The class of Back. */
+const BACK = 'godmin-navigation-screen__back'
+
+/** What Back reads from the app's link before it draws it. */
+interface BackTargetProps {
+	/** The class of the app's link. */
+	className?: string
+	/** The click of the app's link. */
+	onClick?: (event: MouseEvent) => void
+	/** The name of the app's link. */
+	'aria-label'?: string
+}
 
 /** The class of the region holding the title row and the content. */
 const MAIN = 'godmin-navigation-screen__main'
@@ -42,21 +54,21 @@ function Region({ content, className, as: Tag = 'div' }: RegionProps) {
 function BackLink({ target, label }: { target: ReactElement<Record<string, unknown>>; label: string }) {
 	const state = useContext(NavigationStateContext)
 	const { targetOf } = useContext(ScreenContext)
+	const own = target.props as BackTargetProps
 	const onClick = (event: MouseEvent) => {
+		own.onClick?.(event)
 		if (state !== undefined && isPlainClick(event)) {
 			recordBack(state, targetOf?.(target))
 		}
 	}
-	return (
-		<Link
-			render={target}
-			variant="unstyled"
-			aria-label={label}
-			onClick={onClick}
-			className="godmin-navigation-screen__back"
-		>
-			<Icon icon={isRTL() ? chevronRight : chevronLeft} size={24} />
-		</Link>
+	return cloneElement(
+		target,
+		{
+			'aria-label': own['aria-label'] ?? label,
+			className: own.className === undefined ? BACK : `${BACK} ${own.className}`,
+			onClick,
+		},
+		<Icon icon={isRTL() ? chevronRight : chevronLeft} size={24} />,
 	)
 }
 

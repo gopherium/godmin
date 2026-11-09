@@ -20,7 +20,8 @@ same two names.
 
 A region exists because you render its element. There is no
 `showSidebar` flag, so an application without navigation simply does
-not render a `Frame.Sidebar`.
+not render a `Frame.Sidebar`. That frame is still not a full canvas,
+as [no full canvas](./design-system/frame.md#no-full-canvas) says.
 
 Every component's props interface is exported under its own name,
 `FrameRootProps`, `FrameSidebarProps` and `FrameCanvasProps`, for when
@@ -64,7 +65,7 @@ Put `Navigation` in the sidebar and give it your rows as data:
 ```tsx
 import { Link, Outlet } from '@tanstack/react-router'
 import { Frame } from '@gopherium/godmin'
-import { Navigation, useCanvas, useFrameLocation } from '@gopherium/godmin/router'
+import { Navigation, useCanvas, useFrameLocation, useShownPath } from '@gopherium/godmin/router'
 import type { MenuItem } from '@gopherium/godmin/router'
 import { can, useSession } from '@gopherium/react-auth'
 import { AccountPanel } from '@gopherium/react-auth/wpds'
@@ -79,7 +80,7 @@ const menu: MenuItem[] = [
 function Layout() {
 	const user = useSession().data
 	return (
-		<Frame.Root location={useFrameLocation()}>
+		<Frame.Root location={useFrameLocation()} shownPath={useShownPath()} appName="MyApp">
 			<Frame.Sidebar footer={<AccountPanel />}>
 				<Navigation
 					title="MyApp"
@@ -103,11 +104,17 @@ function Layout() {
 - `can` tells whether the reader holds a capability. See
   [hiding rows](#hiding-rows-a-reader-cannot-open).
 
+`shownPath` and `appName` on `Frame.Root` make the frame speak the
+title of each new screen and set the browser tab title, as
+[routes and the frame](#routes-and-the-frame) says.
+
 Each row is a link with its icon, a glyph from `@wordpress/icons`,
 then its label. A row with no icon keeps a blank in its place when
 other rows have one, so the labels line up. The row of the page on
 screen is highlighted, and it stays highlighted on every address
-under it, so Posts stays highlighted on `/posts/new`.
+under it, so Posts stays highlighted on `/posts/new`. A row that
+opens a sub menu never is, as
+[the sidebar marks](./design-system/frame.md#the-sidebar-marks) says.
 
 `Navigation` needs a `Frame.Root` above it, which holds what the
 sidebar parts share.
@@ -145,18 +152,28 @@ function ChatsMenu() {
 ```
 
 Nothing else is needed. The Chats row of `menu` opens that route, so
-it draws as a `DrilldownItem`, with a chevron. A click on it slides
-the sub menu in and moves the focus to Back. Back goes to `home`,
-slides the root screen in and puts the focus back on the Chats row.
+it draws as a `DrilldownItem`, with a chevron. A click on it opens
+the sub menu and moves the focus to Back. Back goes to `home`, brings
+the root screen back and puts the focus back on the Chats row. On a
+wide window each new sidebar screen slides in, as
+[the sidebar slide](./design-system/frame.md#the-sidebar-slide) says.
 In a right-to-left language the chevrons and the slide turn around.
 The slide does not play when the system asks for reduced motion.
 
+Point a drilldown row at the address its sub menu lands on. A row
+whose address sends the reader on to another one, such as `/chats`
+sending on to `/chats/inbox`, plays no slide and gives Back no focus.
+
 `NavigationList` draws the rows of `items` first, then the rows you
 draw yourself as its children. Draw a row yourself with
-`NavigationItem`, or with `DrilldownItem` when it opens a sub menu.
-Both take `icon` and the props of a TanStack `Link`, such as `to`,
-`params`, `className` and `onClick`. They draw their own list item,
-so put them inside a `NavigationList`. The screens page describes
+`NavigationItem`, or with `DrilldownItem` when it opens another sub
+menu. A row that points at the sub menu already shown is a
+`NavigationItem`, since a drilldown row never shows as current. Both
+take `icon` and the props of a TanStack `Link`, such as `to`,
+`params`, `className` and `onClick`. `DrilldownItem` takes neither
+`activeProps` nor `activeOptions`, since it is never current. They
+draw their own list item, so put them inside a `NavigationList`. The
+screens page describes
 [`NavigationScreen`](./screens.md#navigationscreen).
 
 ### Hiding rows a reader cannot open
@@ -243,9 +260,12 @@ the top bar and the drawer, and
 [the canvas](./design-system/layout.md#the-canvas) gives its padding.
 
 The drawer looks like the phone sidebar of WordPress's new admin and
-dims the page under it. It closes when the reader opens another page.
-It stays open when a sub menu opens or Back closes one, so the reader
-can pick a row in it.
+dims the page under it. It slides in from the start edge and back
+out, on a timing of its own, as
+[the drawer](./design-system/frame.md#the-drawer) gives. It closes
+when the reader opens another page. It stays open when a sub menu
+opens or Back closes one, so the reader can pick a row in it. On a
+phone a sub menu shows at once inside it, with no slide.
 
 Two `Frame.Sidebar` props exist for the top bar:
 
@@ -275,10 +295,13 @@ The frame and the sidebar draw a few words of their own: "Back",
 The last one names a close button at the end of the drawer, which
 only a screen reader meets. `ListNoResults` draws two more: "No
 results found" and the line under it, "Try adjusting your search or
-filters to find what you're looking for." godmin translates them in
-the WordPress `default` text domain, as the design system does. The
-Spanish and French catalogues that `listChromeCatalogFor` returns
-hold them, so load it as
+filters to find what you're looking for." The tab title puts the
+screen title and the app name together as `%1$s ‹ %2$s`, and the not
+found screen of `routerDefaults()` says "Route not found" with the
+line "The page you're looking for does not exist". godmin translates
+them in the WordPress `default` text domain, as the design system
+does. The Spanish and French catalogues that `listChromeCatalogFor`
+returns hold them, so load it as
 [the list chrome](./lists.md#the-list-chrome-in-spanish) shows.
 
 ## Coloring the regions
@@ -315,6 +338,9 @@ values:
 - `bleed` removes it, for a screen that manages its own edges, such
   as a full-height table or a two-pane chat view.
 
+There is no full canvas mode, as
+[no full canvas](./design-system/frame.md#no-full-canvas) says.
+
 ## Notices for the whole application
 
 `Frame.Canvas` takes `notices`, for messages that belong to the whole
@@ -346,18 +372,35 @@ drawer closes. It works for links a plugin added too, because nothing
 has to be registered. This is also why the main entry point imports
 no router.
 
-With TanStack Router, `@gopherium/godmin/router` gives you the string
+Two more props of `Frame.Root` tell the reader where they are:
+
+- `shownPath` is the path the router has finished showing, once the
+  new screen has been drawn. When it changes, the frame speaks the
+  title of the new screen, as
+  [what a screen reader hears when the screen changes](./design-system/frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+  says. Without it the frame speaks nothing.
+- `appName` is the name of your app. The frame sets the browser tab
+  title to the screen title and that name, as
+  [the tab title](./design-system/frame.md#the-tab-title) says.
+  Without it the frame leaves the tab title alone.
+
+The frame compares the path of `location` with `shownPath`. While the
+two differ, the reader is still on the way to the next screen, so the
+first load does not end then.
+
+With TanStack Router, `@gopherium/godmin/router` gives you the strings
 and lets each route declare the canvas it wants:
 
 ```tsx
 createRoute({ getParentRoute: () => rootRoute, path: 'threads/$id', staticData: { canvas: 'bleed' } })
 ```
 
-Read the declarations back with two hooks:
+Read them back with three hooks:
 
 ```tsx
 const mode = useCanvas()            // hand this to Frame.Canvas
 const pathname = useFrameLocation() // hand this to Frame.Root
+const shownPath = useShownPath()    // hand this to Frame.Root
 ```
 
 When routes nest, the deepest match that declares a canvas wins,
@@ -368,7 +411,8 @@ out. Only when no matched route declares anything does `useCanvas`
 fall back to `padded`.
 
 `useFrameLocation` answers the path followed by the search, so the
-drawer also closes when only the search changes.
+drawer also closes when only the search changes. `useShownPath`
+answers the path alone, so no title is spoken then.
 
 `routerDefaults()` returns the options WordPress's new admin gives
 the same router. Spread them into `createRouter`:
@@ -382,7 +426,14 @@ keyboard reaches it.
 [Moving between pages](./design-system/loading.md#moving-between-pages)
 says what the reader sees while it loads.
 
+An address no route serves then shows the not found screen of
+WordPress's new admin, a `Page` titled "Route not found" with the
+line "The page you're looking for does not exist". Its title is an
+`h2`, the level a `Page` takes beside the sidebar menu. A route's own
+`notFoundComponent` still wins.
+
 `@tanstack/react-router` is an optional peer dependency, any 1.x
 release from 1.170.44, needed only for this entry point. The main entry point
-never imports it, so an application on another router just passes
-`location` itself.
+never imports it, so an application on another router passes the
+strings itself: in `location` the address it is moving to, and in
+`shownPath` the path it shows once the new screen has drawn.

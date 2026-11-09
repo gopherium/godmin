@@ -56,7 +56,7 @@ function chatsScreen() {
 
 /**
  * Draws the sub menu of one thing: a drilldown row to a chat, whose address no root row has,
- * and one to another thing on the same screen.
+ * and a row to another thing on the same screen.
  * @returns The screen element.
  */
 function thingScreen() {
@@ -66,9 +66,9 @@ function thingScreen() {
 				<DrilldownItem to="/chats/$chatId" params={{ chatId: 'one' }}>
 					A chat
 				</DrilldownItem>
-				<DrilldownItem to="/things/$thingId" params={{ thingId: 'two' }}>
+				<NavigationItem to="/things/$thingId" params={{ thingId: 'two' }}>
 					Thing two
-				</DrilldownItem>
+				</NavigationItem>
 			</NavigationList>
 		</NavigationScreen>
 	)
@@ -97,17 +97,19 @@ export interface SidebarAppOptions {
 	label?: string
 	/** The sidebar screen of the later section. */
 	later?: ComponentType
+	/** The sidebar screen of a thing, a drilldown row to a chat and a row to another thing when absent. */
+	thing?: ComponentType
 }
 
 /**
  * Returns a router drawing a whole admin: a frame whose sidebar holds a Navigation over the root rows
  * with an account footer and a version note, and a canvas holding the page.
  * @param path - The address to start at.
- * @param options - The check, the region name and the later screen.
+ * @param options - The check, the region name, the later screen and the thing screen.
  * @returns The router, not drawn yet.
  */
 export function sidebarAppRouter(path: string, options: SidebarAppOptions = {}) {
-	const { can = holdsEvery, label, later = laterScreen } = options
+	const { can = holdsEvery, label, later = laterScreen, thing: thingSidebar = thingScreen } = options
 	const rootRoute = createRootRoute({
 		component: function Layout() {
 			return (
@@ -146,7 +148,7 @@ export function sidebarAppRouter(path: string, options: SidebarAppOptions = {}) 
 	const thing = createRoute({
 		getParentRoute: () => rootRoute,
 		path: '/things/$thingId',
-		staticData: { Sidebar: thingScreen },
+		staticData: { Sidebar: thingSidebar },
 		component: textPage('Thing page'),
 	})
 	const laterRoute = createRoute({ getParentRoute: () => rootRoute, path: '/later', staticData: { Sidebar: later } })
@@ -159,7 +161,7 @@ export function sidebarAppRouter(path: string, options: SidebarAppOptions = {}) 
 /**
  * Draws the whole admin of sidebarAppRouter and waits for its sidebar.
  * @param path - The address to start at.
- * @param options - The check, the region name and the later screen.
+ * @param options - The check, the region name, the later screen and the thing screen.
  * @returns The router, once the sidebar is drawn.
  */
 export async function renderSidebarApp(path: string, options: SidebarAppOptions = {}) {

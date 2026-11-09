@@ -182,6 +182,12 @@ every value of how it looks.
   one `LoadingScreen`, with no `aside`.
   [A screen](./loading.md#a-screen) gives how it looks. Breadcrumbs
   stay, and the title names the kind of record.
+- Make that `LoadingScreen` the `Page`'s own child, not one inside a
+  wrapper. Only then does the page hold its title while the record
+  loads, so a screen reader hears the record's name once it loads, or
+  the kind of record when it takes too long, as
+  [what a screen reader hears when the screen changes](./frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+  says.
 - A part that loads on its own shows its `LoadingScreen` in its
   column, at the top and centred across that column.
 - Show one `LoadingScreen` at a time, since each one speaks.

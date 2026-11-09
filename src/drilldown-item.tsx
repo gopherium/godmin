@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { useRouter } from '@tanstack/react-router'
-import type { AnyRouter, LinkComponentProps, RegisteredRouter } from '@tanstack/react-router'
+import { createLink, useRouter } from '@tanstack/react-router'
+import type { AnyRouter, LinkComponentProps, NavigateOptions, RegisteredRouter } from '@tanstack/react-router'
 import { isRTL } from '@wordpress/i18n'
 import { Icon, chevronLeftSmall, chevronRightSmall } from '@wordpress/icons'
 import { useContext } from 'react'
-import type { MouseEvent, ReactElement, ReactNode } from 'react'
+import type { ComponentProps, MouseEvent, ReactElement, ReactNode } from 'react'
 
 import { ROW_CLASS, Row, RowSuffix } from './navigation-item.js'
 import { NavigationStateContext, isPlainClick, recordDrilldown } from './navigation-state.js'
@@ -14,6 +14,37 @@ import { findMoveTarget, findRowRoutes } from './path-matching.js'
 /** The start of the id a drilldown row takes from its address. */
 const ID_PREFIX = 'godmin-drilldown-item-'
 
+/** The props TanStack's Link hands the anchor of a drilldown row. */
+interface AnchorProps extends ComponentProps<'a'> {
+	/** Whether the address is open. */
+	'data-status'?: string
+	/** Whether the link goes nowhere. */
+	disabled?: boolean
+}
+
+/**
+ * Renders the anchor of a drilldown row without the marks of the current page.
+ * @param props - The props TanStack's Link hands the anchor.
+ * @returns The anchor element.
+ */
+function UnmarkedAnchor({
+	'aria-current': _current,
+	'data-status': _status,
+	disabled: _disabled,
+	...anchor
+}: AnchorProps) {
+	return <a {...anchor} />
+}
+
+/** The router link of a drilldown row, never marked current. */
+const DrilldownLink = createLink(UnmarkedAnchor)
+
+/** The props TanStack adds to a drilldown row on its own address, none. */
+const NO_ACTIVE_PROPS = {}
+
+/** The TanStack Link props besides the address that a drilldown row takes, all but those of the current page. */
+type OtherLinkProps = Omit<LinkComponentProps, 'activeProps' | 'activeOptions' | keyof NavigateOptions>
+
 /** A row whose address opens a route that declares a Sidebar. Draws the chevron. Sits inside a NavigationList. */
 export type DrilldownItemProps<
 	TRouter extends AnyRouter = RegisteredRouter,
@@ -21,7 +52,7 @@ export type DrilldownItemProps<
 	TTo extends string | undefined = undefined,
 	TMaskFrom extends string = TFrom,
 	TMaskTo extends string = '',
-> = LinkComponentProps<'a', TRouter, TFrom, TTo, TMaskFrom, TMaskTo> & {
+> = NavigateOptions<TRouter, TFrom, TTo, TMaskFrom, TMaskTo> & OtherLinkProps & {
 	/** None, since the row takes its id from its address. */
 	id?: never
 	/** A glyph from `@wordpress/icons`, drawn at 24px. */
@@ -57,7 +88,8 @@ export function DrilldownItem<
 	}
 	return (
 		<Row
-			link={{ ...address, onClick }}
+			link={{ ...address, onClick, activeProps: NO_ACTIVE_PROPS }}
+			linkComponent={DrilldownLink}
 			routes={routes}
 			icon={icon}
 			className={ROW_CLASS}

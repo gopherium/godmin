@@ -156,6 +156,11 @@ function ScreenWrapper({ state, children }: { state: NavigationState; children: 
 			ref={wrapper}
 			tabIndex={-1}
 			className={direction === undefined ? WRAPPER : `${WRAPPER} ${WRAPPER}--${direction}`}
+			onAnimationEnd={(event) => {
+				if (event.target === event.currentTarget) {
+					setDirection(undefined)
+				}
+			}}
 		>
 			{children}
 		</div>

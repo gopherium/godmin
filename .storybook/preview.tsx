@@ -3,13 +3,16 @@
 import '../src/base.css'
 
 import type { Preview } from '@storybook/react-vite'
+import { setLocaleData } from '@wordpress/i18n'
 
 import { AdminRoot } from '../src/admin-root.js'
 
 const preview: Preview = {
 	decorators: [
 		(Story, { globals }) => {
-			document.documentElement.dir = globals.direction === 'rtl' ? 'rtl' : 'ltr'
+			const direction = globals.direction === 'rtl' ? 'rtl' : 'ltr'
+			document.documentElement.dir = direction
+			setLocaleData({ 'text direction\u0004ltr': [direction] })
 			return (
 				<AdminRoot cornerRadius={globals.cornerRadius || undefined}>
 					<Story />

@@ -156,7 +156,7 @@ body {
 
 	.godmin-layout {
 		display: flex;
-		height: 100vh;
+		height: 100dvh;
 		background: var(--wpds-color-background-surface-neutral-weak);
 		color: var(--wpds-color-foreground-content-neutral);
 		--wp-ui-drawer-z-index: 2;
@@ -227,6 +227,30 @@ body {
 		--backdrop-opacity: 0.5;
 		background-color: #000;
 		cursor: var(--wpds-cursor-control);
+	}
+
+	@media not (prefers-reduced-motion) {
+		.godmin-layout__drawer {
+			transition-duration: var(--wpds-motion-duration-md);
+			transition-timing-function: ease-out;
+		}
+
+		.godmin-layout__drawer[data-ending-style] {
+			transition-duration: calc(var(--drawer-swipe-strength) * var(--wpds-motion-duration-md));
+		}
+
+		[role='presentation']:has(+ * > .godmin-layout__drawer) {
+			transition-duration: var(--wpds-motion-duration-md);
+			transition-timing-function: ease-out;
+		}
+
+		[role='presentation'][data-swiping]:has(+ * > .godmin-layout__drawer) {
+			transition-duration: 0ms;
+		}
+	}
+
+	.godmin-layout__drawer:dir(rtl) {
+		box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
 	}
 
 	.godmin-sidebar__content {
@@ -1186,7 +1210,7 @@ body {
 		align-items: center;
 		justify-content: center;
 		box-sizing: border-box;
-		min-block-size: 100vh;
+		min-block-size: 100dvh;
 		padding: var(--wpds-dimension-padding-3xl);
 		opacity: 0;
 		animation: godmin-fade-in 500ms ease 200ms forwards;
@@ -1331,6 +1355,10 @@ body {
 			margin: 0;
 			border-radius: 0;
 			box-shadow: none;
+		}
+
+		.godmin-navigation__screen-wrapper {
+			animation-duration: 0s;
 		}
 	}
 

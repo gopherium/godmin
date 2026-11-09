@@ -9,6 +9,10 @@ msgstr ""
 "Language: fr-FR\n"
 
 #, fuzzy
+msgid "%1$s ‹ %2$s"
+msgstr "%1$s ‹ %2$s"
+
+#, fuzzy
 msgctxt "start of week"
 msgid "1"
 msgstr "1"
@@ -173,6 +177,10 @@ msgid "PM"
 msgstr "PM"
 
 #, fuzzy
+msgid "Route not found"
+msgstr "Route introuvable"
+
+#, fuzzy
 msgid "Sat"
 msgstr "Sam"
 
@@ -200,6 +208,10 @@ msgstr "Dim"
 #, fuzzy
 msgid "Sunday"
 msgstr "dimanche"
+
+#, fuzzy
+msgid "The page you're looking for does not exist"
+msgstr "La page que vous cherchez n'existe pas"
 
 #, fuzzy
 msgid "Thu"

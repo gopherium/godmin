@@ -71,7 +71,11 @@ sidebar moves focus in these cases only:
 | Opens a page with any other link | Nowhere. The sidebar moves no focus |
 | Closes the drawer with Escape or its close button | The menu button |
 
-The title of a sidebar screen never takes focus.
+The title of a sidebar screen never takes focus. A move to another
+screen moves no focus either. A screen reader hears the new screen's
+title instead, as
+[what a screen reader hears when the screen changes](./frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+says.
 
 Some parts go away, or turn inert, while they hold focus. godmin then
 moves focus to a part that stays, so the keyboard reader keeps their
@@ -164,7 +168,9 @@ picture such as an icon, is never the name:
 
 The current page carries `aria-current="page"`. A sidebar row draws
 its highlight from that mark, so what the eye sees and what a screen
-reader hears always match. A page tab draws its underline from its
+reader hears always match. A drilldown row never carries it, as
+[the sidebar marks](./frame.md#the-sidebar-marks) says. A page tab
+draws its underline from its
 `current` prop, which sets the same mark. A router link can set the
 mark on its own too, so [PageTabs](../screens.md#pagetabs) says how
 to keep the underline and the mark in step. A breadcrumb never carries
@@ -187,6 +193,7 @@ aloud when it changes.
 
 | Part | What a screen reader hears | Set up in |
 | --- | --- | --- |
+| A new screen | Its title, assertively, once the path changes. Nothing on the first load | [What a screen reader hears when the screen changes](./frame.md#what-a-screen-reader-hears-when-the-screen-changes) |
 | A toast | Its message, politely. Never its action | [What a screen reader hears](./toasts.md#what-a-screen-reader-hears) |
 | A loading screen | The `label` sentence, from a visually hidden status. The spinner is hidden | [What a screen reader hears](./loading.md#what-a-screen-reader-hears) |
 | A list that loads | Nothing on its first load, as in WordPress. A table or a grid is marked busy on a later load | [What a screen reader hears](./loading.md#what-a-screen-reader-hears) |
@@ -195,7 +202,8 @@ aloud when it changes.
 | An `ErrorNotice` | Its message, at once, as an alert | [ErrorNotice](../screens.md#errornotice) |
 
 Polite means the screen reader first finishes what it is saying. An
-alert breaks in at once. Keep `ErrorNotice` for a failure that has to
+alert breaks in at once, and so does an assertive title. Keep
+`ErrorNotice` for a failure that has to
 stay on screen until the reader acts, as
 [what goes in a toast](../loading-and-feedback.md#what-goes-in-a-toast)
 explains. [Announcements](../testing.md#announcements) shows how a
@@ -246,7 +254,7 @@ gives no label a fixed width:
 - The page tabs keep each label on one line. A tab row too long for
   its page scrolls and fades the edge it cuts.
 
-In a right-to-left language the chevrons, the sub menu slide and the
-fade of the tab row turn around, as
+In a right-to-left language the chevrons, the sub menu slide, the
+phone drawer and the fade of the tab row turn around, as
 [right-to-left languages](./layout.md#right-to-left-languages)
 explains.

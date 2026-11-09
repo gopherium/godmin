@@ -236,5 +236,10 @@ does.
 - A failure inside a dialog is spoken at once.
 - A toast under a dialog is still spoken, politely. Its action cannot
   be reached until the dialog goes.
+- A dialog that stays open while the screen under it changes, such as
+  after the browser's Back button, does not stop the title of the new
+  screen from being spoken, as
+  [what a screen reader hears when the screen changes](./frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+  says.
 - While a dialog is open, a `role="alert"` of your own with no
   `aria-live` is hidden. Use `speak`.
