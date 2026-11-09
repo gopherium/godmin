@@ -4,6 +4,31 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- `docs/design-system/frame.md` gives every value of the frame: the sidebar slide, the phone drawer, what a screen reader hears when the screen changes and the frame on a phone.
+- `Frame.Root` takes `shownPath` and speaks the new screen's `Page` title when the path changes, never on the first load or a list change.
+- `useShownPath` in `@gopherium/godmin/router` gives `Frame.Root` the path the router has finished showing.
+- `Frame.Root` takes `appName` and sets the tab title to the screen title and that name.
+- `routerDefaults()` gives a not found screen, a `Page` titled "Route not found", as WordPress's new admin does.
+- The Spanish and French catalogues translate the tab title and the not found screen.
+
+### Changed
+
+- The sidebar shows a sub menu at once below 782px, as the Site Editor holds its phone sidebar still.
+- The phone drawer and its backdrop move in and out over 200ms `ease-out`, and a swipe ends as fast as the finger let go.
+- In a right-to-left language the phone drawer opens at the right, under its menu button, with its shadow turned.
+- The frame and a loading screen outside it are `100dvh` tall, so on a phone the canvas no longer ends under the browser bar.
+- **Breaking.** `DrilldownItem` no longer takes `activeProps` or `activeOptions`.
+- **Breaking.** Back draws its chevron in place of any content of the `back` link it renders through.
+
+### Fixed
+
+- A drilldown row never shows as current, also while its sub menu loads.
+- Back draws its focus ring for the keyboard only, with rounded corners.
+
 ## [0.32.0] - 2026-11-08
 
 ### Added
