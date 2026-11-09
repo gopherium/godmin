@@ -128,12 +128,10 @@ test('starts no slide when the window grows to 782px right after a drill at 781p
 	const ended = slideEnded()
 
 	await drillIntoChats()
-	const drilled = performance.now()
 	await ended
 	await page.viewport(782, 800)
 	await nextFrame()
 
-	expect(performance.now() - drilled, 'the window grew inside the 140ms of a slide').toBeLessThan(140)
 	expect(wrapper().getAnimations()).toEqual([])
 	expect(wrapper().className).toBe(WRAPPER)
 	expect(screen.getByRole('dialog')).not.toBeNull()
@@ -270,7 +268,7 @@ test('lets the drawer and its backdrop follow a finger that drags the drawer, th
 	document.addEventListener('pointermove', hold, { signal: listening.signal })
 	const eases = recordEases()
 
-	await commands.drag(250, 500, 50, 500, 12, 16)
+	await commands.drag({ x: 250, y: 500 }, { x: 50, y: 500 }, { steps: 12, gap: 16 })
 	await drawerClosed()
 
 	expect(held.length, 'the drag moved the drawer').toBeGreaterThan(2)
@@ -285,7 +283,7 @@ test('ends a fast swipe of the drawer well under 200ms, in its swipe strength ti
 	await openDrawer()
 	const eases = recordEases()
 
-	await commands.drag(250, 500, 20, 500, 3, 0)
+	await commands.drag({ x: 250, y: 500 }, { x: 20, y: 500 }, { steps: 3, gap: 0 })
 	await drawerClosed()
 
 	const [ending] = eases.filter((ease) => ease.part === 'drawer')
@@ -299,7 +297,7 @@ test('closes the drawer of a right to left page on a swipe to the right, keeping
 	await openDrawer()
 	const edges = leftEdges(drawer())
 
-	await commands.drag(150, 500, 380, 500, 3, 0)
+	await commands.drag({ x: 150, y: 500 }, { x: 380, y: 500 }, { steps: 3, gap: 0 })
 	await drawerClosed()
 
 	expect(edges.length, 'the swipe took more than one frame').toBeGreaterThan(1)

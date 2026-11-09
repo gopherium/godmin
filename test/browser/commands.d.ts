@@ -5,7 +5,11 @@ declare module 'vitest/browser' {
 	interface BrowserCommands {
 		reduceMotion: (on: boolean) => Promise<void>
 		doubleClickAt: (x: number, y: number, gap: number) => Promise<void>
-		drag: (x: number, y: number, toX: number, toY: number, steps: number, gap: number) => Promise<void>
+		drag: (
+			from: { x: number; y: number },
+			to: { x: number; y: number },
+			motion: { steps: number; gap: number },
+		) => Promise<void>
 		holdKey: (key: string, repeats: number, gap: number) => Promise<void>
 	}
 }

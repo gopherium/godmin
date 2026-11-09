@@ -23,23 +23,32 @@ const doubleClickAt: BrowserCommand<[x: number, y: number, gap: number]> = async
 	await page.mouse.up({ clickCount: 2 })
 }
 
+/** A point of the test page, in pixels from its top left corner. */
+interface Point {
+	/** The distance from the left edge. */
+	x: number
+	/** The distance from the top edge. */
+	y: number
+}
+
+/** How a drag moves between its two points. */
+interface DragMotion {
+	/** The number of even steps from the first point to the second. */
+	steps: number
+	/** The wait before each step, in milliseconds. */
+	gap: number
+}
+
 /** Drags the mouse from one point of the test page to another in even steps a set gap apart, as a person swipes. */
-const drag: BrowserCommand<[x: number, y: number, toX: number, toY: number, steps: number, gap: number]> = async (
-	{ page, iframe },
-	x,
-	y,
-	toX,
-	toY,
-	steps,
-	gap,
-) => {
+const drag: BrowserCommand<[from: Point, to: Point, motion: DragMotion]> = async ({ page, iframe }, from, to, motion) => {
 	const frame = await iframe.owner().boundingBox()
 	const [left, top] = [frame?.x ?? 0, frame?.y ?? 0]
-	await page.mouse.move(left + x, top + y)
+	await page.mouse.move(left + from.x, top + from.y)
 	await page.mouse.down()
-	for (let step = 1; step <= steps; step += 1) {
-		await new Promise((done) => setTimeout(done, gap))
-		await page.mouse.move(left + x + ((toX - x) * step) / steps, top + y + ((toY - y) * step) / steps)
+	for (let step = 1; step <= motion.steps; step += 1) {
+		await new Promise((done) => setTimeout(done, motion.gap))
+		const share = step / motion.steps
+		await page.mouse.move(left + from.x + (to.x - from.x) * share, top + from.y + (to.y - from.y) * share)
 	}
 	await page.mouse.up()
 }
