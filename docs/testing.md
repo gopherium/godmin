@@ -61,6 +61,12 @@ expect(getAnnouncement()).toBe('Draft saved')
 `'assertive'` for urgent ones. `clearAnnouncements()` empties both,
 for a test that must assert nothing was announced.
 
+A frame given `shownPath` speaks the title of each new screen
+assertively, so a test that moves to another screen and then reads
+`'assertive'` meets that title, as
+[what a screen reader hears when the screen changes](./design-system/frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+says.
+
 ## Rendering inside the host
 
 `renderAdmin` renders a tree wrapped in `AdminRoot`, so components

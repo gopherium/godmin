@@ -107,7 +107,7 @@ show depth:
 | --- | --- |
 | The canvas | `0 1px 2px rgb(0 0 0 / 0.08)`. None below `EDGE_BREAKPOINT` |
 | A toast | The WordPress small elevation, the one the snackbar uses. [Colors, corners and shadow](./toasts.md#colors-corners-and-shadow) writes out its four layers |
-| The navigation drawer | `2px 0 8px rgba(0, 0, 0, 0.2)`, the shadow of the phone sidebar in WordPress's new admin |
+| The navigation drawer | `2px 0 8px rgba(0, 0, 0, 0.2)`, the shadow of the phone sidebar in WordPress's new admin. In a right-to-left language it turns to `-2px 0 8px rgba(0, 0, 0, 0.2)`, so it falls on the inner edge of the drawer, which opens at the right as [the drawer](./frame.md#the-drawer) says |
 
 A bleed canvas keeps the canvas shadow. The sidebar has no shadow.
 Dialogs, menus and popovers keep the shadow their design system

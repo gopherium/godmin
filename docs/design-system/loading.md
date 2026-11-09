@@ -71,9 +71,9 @@ When it shows and where it sits depend on what is around it:
   in the middle, and it keeps `--wpds-dimension-padding-3xl` (32px)
   free on every side.
 - Outside the frame, before the sidebar and the canvas are drawn, it
-  waits and fades in the same way. It is at least `100vh` tall, the
-  height of the window, as the frame is. So the spinner sits in the
-  middle of the window.
+  waits and fades in the same way. It is at least `100dvh` tall, the
+  window the browser shows, as the frame is. So the spinner sits in
+  the middle of the window.
 
 ## Before the script runs
 
@@ -130,6 +130,9 @@ These follow
   screen loading, as above.
 - The next page replaces the old one at once, with no fade and no
   slide.
+- Once the next page shows, a screen reader hears its title, as
+  [what a screen reader hears when the screen changes](./frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+  says.
 
 ## What a screen reader hears
 
@@ -137,6 +140,11 @@ These follow
   screen reader reads it politely. In the canvas and outside the
   frame the status is there during the wait too. The spinner itself
   is hidden.
+- A `Page` that holds nothing but one `LoadingScreen`, with no
+  `aside`, waits a moment for its record before a screen reader hears
+  its title, as
+  [what a screen reader hears when the screen changes](./frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+  says.
 - A list says nothing while it loads for the first time, as in
   WordPress. Its spinner is hidden from screen readers.
 - During a later load a table or a grid is marked busy. A screen

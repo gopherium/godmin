@@ -182,6 +182,12 @@ keyboard with the action.
   The region itself is not a live region, so nothing is read twice.
 - Never the action. A reader who moves into the toast finds the action
   by its label.
+- A click that raises a toast and opens another screen puts the
+  toast's message in the polite live region of `speak` first. Two
+  animation frames later the title of the new screen takes its place,
+  as
+  [what a screen reader hears when the screen changes](./frame.md#what-a-screen-reader-hears-when-the-screen-changes)
+  says.
 - A toast with no action is a button named by its message. After the
   name the screen reader reads the hint `dismissLabel`, which says
   "Dismiss this notice" unless your app passes its own words. No

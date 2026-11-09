@@ -11,9 +11,11 @@ a right-to-left language.
 
 ## The frame
 
-The frame is as tall as the window. On a wide screen it sets two
-areas side by side, with the names the WordPress Site Editor gives
-them:
+The frame is as tall as the window the browser shows, and the page
+itself never scrolls, as
+[the frame on a phone](./frame.md#the-frame-on-a-phone) says. On a
+wide screen it sets two areas side by side, with the names the
+WordPress Site Editor gives them:
 
 - The sidebar holds the menu. It is `--godmin-nav-sidebar-width`
   (300px) wide and never shrinks. Its menu scrolls on its own, above a
@@ -33,11 +35,13 @@ top bar takes the place of the sidebar, above the canvas:
   52px wide and 46px tall. The `brand` you give `Frame.Sidebar` comes
   8px after the button. The bar keeps 16px free at its end.
 - The menu button opens the drawer, a panel that slides in over the
-  page. It holds the same menu and footer as the sidebar. It runs the
-  full height of the window, as wide as the sidebar but never more
-  than 85% of the window width. A dark backdrop dims the page under
-  it. [Raw colors on purpose](./color.md#raw-colors-on-purpose) gives
-  its color.
+  page from the start edge. [The drawer](./frame.md#the-drawer) gives
+  how it moves. It holds the same menu and footer as the sidebar. It
+  runs the full height the browser shows, as wide as the sidebar but
+  never more than 85% of the window width. A dark backdrop dims the
+  page under it.
+  [Raw colors on purpose](./color.md#raw-colors-on-purpose) gives its
+  color.
 
 ## The canvas
 
@@ -58,8 +62,10 @@ is the padding between its edge and the screen inside it.
   and [Elevation](./radius-and-elevation.md#elevation) give the
   corners and the shadow.
 
-The canvas scrolls its screen inside itself. A DataViews list page and
-a record page keep their title and scroll a part of their own, as
+The canvas scrolls its screen inside itself. The page never scrolls,
+so on a phone the browser's bar stays where it is. A DataViews list
+page and a record page keep their title and scroll a part of their
+own, as
 [what scrolls](./record-pages.md#what-scrolls) gives for a record. A
 bleed canvas, which `canvas="bleed"` asks for, has no gutter at any width and hides what
 overflows it, so the screen scrolls its own parts. The default,
@@ -84,7 +90,7 @@ as wide. A rule for the screens below it asks for one pixel less, as
 | --- | --- | --- |
 | `HUGE_BREAKPOINT` | `1440` | Nothing in the frame. It is the WordPress huge breakpoint, for rules of your own |
 | `SIDEBAR_BREAKPOINT` | `1024` | The sidebar becomes the top bar and the drawer |
-| `EDGE_BREAKPOINT` | `782` | The canvas meets the screen edges. It is the WordPress medium breakpoint. A wide list table freezes its checkbox and title only above this width, as [a wide table](./lists.md#a-wide-table) shows |
+| `EDGE_BREAKPOINT` | `782` | The canvas meets the screen edges. It is the WordPress medium breakpoint. A wide list table freezes its checkbox and title only above this width, as [a wide table](./lists.md#a-wide-table) shows. A sub menu shows at once, with no slide, as [the sidebar slide](./frame.md#the-sidebar-slide) shows |
 | `DENSE_BREAKPOINT` | `640` | The canvas side gutter narrows to 16px. A list from `useListView` takes its phone layout, as [the view in the address](../lists.md#the-view-in-the-address) shows. A table inside `godmin-table-scroll` scrolls sideways, as [stylesheet helpers](../screens.md#stylesheet-helpers) shows |
 | `SHEET_BREAKPOINT` | `600` | Toasts widen to the screen, as [toasts](./toasts.md#size) show. It is the WordPress small breakpoint |
 | `TITLE_BREAKPOINT` | `404` | Nothing in the frame. The WordPress editor drops the document title from its header here, for an editor header of your own |
@@ -144,9 +150,11 @@ CSS has no logical form of a sideways slide, a gradient direction or a
 sideways shadow. Where godmin draws one that must turn around, a
 second rule under `:dir(rtl)`, the CSS selector for right-to-left
 text, turns it. That covers
-[the sidebar slide](./motion.md#the-sidebar-slide), the fade on the
-page tabs where a tab is cut off, and the edge line of a pinned
-actions column in a `godmin-table`.
+[the sidebar slide](./frame.md#the-sidebar-slide), the shadow of the
+drawer, the fade on the page tabs where a tab is cut off, and the
+edge line of a pinned actions column in a `godmin-table`. The drawer
+itself opens at the right edge, under the menu button, as
+[the drawer](./frame.md#the-drawer) says.
 
 Chevrons turn around too. A row that opens a sub menu ends in a
 chevron that points to the end, right in English and left in a
@@ -155,5 +163,5 @@ chevron with `isRTL()` from `@wordpress/i18n`, as WordPress does.
 
 The stylesheet and the chevrons read the direction from two places.
 The stylesheet follows the `dir="rtl"` your app sets on the page, such
-as on the `html` element. The chevrons follow the translation your app
-loads. Set both.
+as on the `html` element, and so does the side the drawer opens at.
+The chevrons follow the translation your app loads. Set both.
