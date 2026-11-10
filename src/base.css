@@ -1071,7 +1071,7 @@ body {
 	}
 
 	.godmin-dialog-popup {
-		overflow-wrap: anywhere;
+		overflow-wrap: break-word;
 	}
 
 	.godmin-form__row {

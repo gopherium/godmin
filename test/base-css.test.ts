@@ -641,8 +641,8 @@ test('keeps a button of a stacked form at its own width at the start of the colu
 	expect(ruleOf('.godmin-form > button')).toMatch(/align-self:\s*flex-start/)
 })
 
-test('breaks a long word in a dialog, so a token with no space stays in its card', () => {
-	expect(ruleOf(`.${POPUP_CLASS}`)).toMatch(/overflow-wrap:\s*anywhere;/)
+test('breaks only a word too long for a dialog card, so a token stays in the card and buttons keep their words', () => {
+	expect(ruleOf(`.${POPUP_CLASS}`)).toMatch(/overflow-wrap:\s*break-word;/)
 })
 
 test('sets the inputs and the controls of a repeated row on one line that wraps on a narrow list', () => {
