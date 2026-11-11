@@ -7,8 +7,13 @@ import { commands, page } from 'vitest/browser'
 
 import { ConfirmDialog, FormDialog } from '../../src/index.js'
 
-/** A link with no space in it, longer than any dialog card. */
-const LONG_LINK = `https://example.com/${'reports/finance/'.repeat(8)}latest`
+/** A word with no space or punctuation in it, longer than any dialog card. */
+const LONG_WORD = 'reportfinancelatest'.repeat(12)
+
+/** Returns the number of lines the long word takes inside an element. */
+function linesOfLongWord(element: Element): number {
+	return linesOfEachWord(element).find(([word]) => word.includes(LONG_WORD))?.[1] ?? 0
+}
 
 /** Returns the number of lines each word inside an element takes, keyed by the word. */
 function linesOfEachWord(element: Element): [string, number][] {
@@ -62,17 +67,19 @@ test('keeps every word of the labels of an app grid in a form dialog whole on a 
 			</div>
 		</FormDialog>,
 	)
-	await screen.findByRole('dialog')
+	const dialog = await screen.findByRole('dialog')
 	await settled()
 
-	expect(brokenWords(screen.getByTestId('grid'))).toEqual([])
+	const grid = screen.getByTestId('grid')
+	expect(brokenWords(grid)).toEqual([])
+	expect(grid.getBoundingClientRect().right).toBeLessThanOrEqual(dialog.getBoundingClientRect().right)
 })
 
-test('breaks a long link at the edge of a confirm card on a narrow phone', async () => {
+test('breaks a word longer than a confirm card at its edge on a narrow phone', async () => {
 	render(
 		<ConfirmDialog
 			title="Open the report?"
-			description={`It lives at ${LONG_LINK}.`}
+			description={`It lives at ${LONG_WORD}.`}
 			confirmLabel="Open"
 			cancelLabel="Cancel"
 			onConfirm={() => undefined}
@@ -83,11 +90,12 @@ test('breaks a long link at the edge of a confirm card on a narrow phone', async
 	await settled()
 
 	const description = screen.getByText(/It lives at/)
+	expect(linesOfLongWord(description)).toBeGreaterThan(1)
 	expect(description.scrollWidth).toBeLessThanOrEqual(description.clientWidth)
 	expect(description.getBoundingClientRect().right).toBeLessThanOrEqual(dialog.getBoundingClientRect().right)
 })
 
-test('breaks a long link at the edge of a form dialog card on a narrow phone', async () => {
+test('breaks a word longer than a form dialog card at its edge on a narrow phone', async () => {
 	render(
 		<FormDialog
 			title="Add link"
@@ -97,13 +105,14 @@ test('breaks a long link at the edge of a form dialog card on a narrow phone', a
 			onClose={() => undefined}
 		>
 			<InputControl label="Address" />
-			<p>{`The last one was ${LONG_LINK}.`}</p>
+			<p>{`The last one was ${LONG_WORD}.`}</p>
 		</FormDialog>,
 	)
 	const dialog = await screen.findByRole('dialog')
 	await settled()
 
 	const line = screen.getByText(/The last one was/)
+	expect(linesOfLongWord(line)).toBeGreaterThan(1)
 	expect(line.scrollWidth).toBeLessThanOrEqual(line.clientWidth)
 	expect(line.getBoundingClientRect().right).toBeLessThanOrEqual(dialog.getBoundingClientRect().right)
 })
