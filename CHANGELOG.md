@@ -29,6 +29,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - A drilldown row never shows as current, also while its sub menu loads.
 - Back draws its focus ring for the keyboard only, with rounded corners.
 - A dialog breaks only a word too long for its card, so the labels of a grid or a row of fields keep their words on a phone.
+- The package marks only its stylesheets as having side effects, so a bundler leaves out the parts an app does not import, such as the dialogs.
 
 ## [0.32.0] - 2026-11-08
 
