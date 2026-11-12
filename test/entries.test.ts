@@ -5,6 +5,7 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 
+import ts from 'typescript'
 import { expect, expectTypeOf, test } from 'vitest'
 
 import manifest from '../package.json'
@@ -77,6 +78,40 @@ function packagesReachedFrom(entry: string): Set<string> {
 function packageOf(specifier: string): string {
 	const parts = specifier.split('/')
 	return parts.slice(0, specifier.startsWith('@') ? 2 : 1).join('/')
+}
+
+/** The statements a module may hold at its top level without running anything when it is imported. */
+const QUIET_STATEMENTS = new Set([
+	ts.SyntaxKind.ImportDeclaration,
+	ts.SyntaxKind.ExportDeclaration,
+	ts.SyntaxKind.ExportAssignment,
+	ts.SyntaxKind.FunctionDeclaration,
+	ts.SyntaxKind.ClassDeclaration,
+	ts.SyntaxKind.InterfaceDeclaration,
+	ts.SyntaxKind.TypeAliasDeclaration,
+	ts.SyntaxKind.EnumDeclaration,
+	ts.SyntaxKind.VariableStatement,
+	ts.SyntaxKind.ModuleDeclaration,
+])
+
+/** Returns a line for each bare import, stylesheet import and top-level statement that runs when the module loads. */
+function importEffects(name: string, text: string): string[] {
+	const kind = name.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
+	const file = ts.createSourceFile(name, text, ts.ScriptTarget.Latest, false, kind)
+	return file.statements.flatMap((statement) => {
+		const at = `${name}:${file.getLineAndCharacterOfPosition(statement.getStart(file)).line + 1}`
+		if (!QUIET_STATEMENTS.has(statement.kind)) {
+			return [`${at} runs code`]
+		}
+		if (!ts.isImportDeclaration(statement)) {
+			return []
+		}
+		const from = (statement.moduleSpecifier as ts.StringLiteral).text
+		if (statement.importClause === undefined) {
+			return [`${at} imports ${from} for its effect`]
+		}
+		return from.endsWith('.css') ? [`${at} imports the stylesheet ${from}`] : []
+	})
 }
 
 test('the walk follows imports written with either quote', () => {
@@ -260,4 +295,32 @@ test('the components package is no peer, since no source file reaches it', () =>
 
 	expect(peers[componentsPackage]).toBeUndefined()
 	expect(meta[componentsPackage]).toBeUndefined()
+})
+
+test('the import check names a bare import, a stylesheet import and a statement that runs on load', () => {
+	const text = [
+		"import './register.js'",
+		"import styles from './style.css'",
+		"import { title } from './title.js'",
+		'document.title = title',
+		'export function quiet() {}',
+	].join('\n')
+
+	expect(importEffects('probe.ts', text)).toEqual([
+		'probe.ts:1 imports ./register.js for its effect',
+		'probe.ts:2 imports the stylesheet ./style.css',
+		'probe.ts:4 runs code',
+	])
+})
+
+test('no source file runs code, loads a module for its effect or loads a stylesheet when it is imported', () => {
+	const files = readdirSync(source, { recursive: true, encoding: 'utf8' }).filter((path) => /\.tsx?$/.test(path))
+	const effects = files.flatMap((path) => importEffects(path, readFileSync(join(source, path), 'utf8')))
+
+	expect(files.length).toBeGreaterThan(40)
+	expect(effects).toEqual([])
+})
+
+test('the package marks only its stylesheets as having side effects, so a bundler drops what an app leaves', () => {
+	expect((manifest as { sideEffects?: unknown }).sideEffects).toEqual(['**/*.css'])
 })
