@@ -73,6 +73,10 @@ test('keeps every word of the labels of an app grid in a form dialog whole on a 
 	const grid = screen.getByTestId('grid')
 	expect(brokenWords(grid)).toEqual([])
 	expect(grid.getBoundingClientRect().right).toBeLessThanOrEqual(dialog.getBoundingClientRect().right)
+	for (const label of [...grid.children] as HTMLElement[]) {
+		expect(label.scrollWidth, `${label.textContent} runs past its box`).toBeLessThanOrEqual(label.clientWidth)
+		expect(label.getBoundingClientRect().right).toBeLessThanOrEqual(grid.getBoundingClientRect().right)
+	}
 })
 
 test('breaks a word longer than a confirm card at its edge on a narrow phone', async () => {
