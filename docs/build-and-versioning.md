@@ -50,6 +50,10 @@ In one app with eight preloads it cut the blank page from 1.9s to
 nothing was queueing. It costs nothing at runtime, so leave it on
 and let it matter as your bundle grows.
 
+godmin marks only its stylesheets as having side effects, so your
+bundler leaves out every part you do not import, such as the dialogs
+on a screen that opens none.
+
 On a bundler that is not Vite or Rollup, the underlying functions
 `duplicateCopies` and `hoistStylesheet` are exported so you can wire
 both checks into whatever hooks it offers.
