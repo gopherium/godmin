@@ -110,11 +110,11 @@ test('keeps a frozen title at least 280px wide, with the 2xl padding at its end 
 	expect(line).toMatch(/background-color:\s*var\(--wpds-color-stroke-surface-neutral-weak\)/)
 })
 
-test('sizes the checkbox column to where the title starts, more specific than the DataViews column width rule', () => {
+test('sizes the checkbox column 40px as DataViews draws it, more specific than the DataViews column width rule', () => {
 	const column = ' col.dataviews-view-table__col-checkbox.dataviews-view-table__col-checkbox'
 
 	expect(ruleOf(frozenGate, blockOf(frozenQuery))).toMatch(
-		/--godmin-list-frozen-start:\s*calc\(var\(--wpds-dimension-padding-2xl\) \+ var\(--wpds-dimension-size-sm\)\)/,
+		/--godmin-list-frozen-start:\s*calc\(var\(--wpds-dimension-padding-2xl\) \+ var\(--wpds-dimension-size-2xs\)\)/,
 	)
 	expect(frozen(column)).toMatch(/inline-size:\s*var\(--godmin-list-frozen-start\)/)
 	expect(ruleOf(dataviewsColumns, dataviews)).toMatch(/width:\s*1%/)

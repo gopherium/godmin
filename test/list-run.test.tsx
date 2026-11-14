@@ -964,7 +964,7 @@ function RowsScreen({
 					</tbody>
 				</table>
 				{bar ? (
-					<div className="dataviews-bulk-actions-footer__container">
+					<div className="dataviews-bulk-actions">
 						<button type="button" onClick={startRun}>
 							Trash
 						</button>

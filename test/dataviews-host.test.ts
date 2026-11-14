@@ -28,6 +28,19 @@ function ruleIn(css: string, selector: string): string {
 	return css.slice(start + selector.length + 2, css.indexOf('}', start))
 }
 
+/** Returns the declarations of every rule a selector list opens in a stylesheet, joined in source order. */
+function rulesIn(css: string, selector: string): string {
+	const opener = `${selector} {`
+	const bodies: string[] = []
+	for (let at = css.indexOf(opener); at > -1; at = css.indexOf(opener, at + 1)) {
+		bodies.push(css.slice(at + opener.length, css.indexOf('}', at)))
+	}
+
+	expect(bodies, `the stylesheet has no ${selector} rule`).not.toEqual([])
+
+	return bodies.join('\n')
+}
+
 test('sets the background variable DataViews paints its list with', () => {
 	expect(ruleIn(dataviews, '.dataviews-wrapper,\n.dataviews-picker-wrapper')).toMatch(
 		/background-color:\s*var\(--wp-dataviews-color-background,/,
@@ -59,7 +72,7 @@ test('names only DataViews classes the installed table modules draw, the title c
 	const named = new Set([...frozen.matchAll(/\.((?:dataviews-|has-|is-)[\w-]+)/g)].map((found) => found[1]))
 	const drawn = (name: string) => new RegExp(`["\\s]${name}["\\s]`).test(`${tableModule}${primaryModule}`)
 	const row = tableModule.slice(tableModule.indexOf('function TableRow('), tableModule.indexOf('function ViewTable('))
-	const checkboxCell = row.indexOf('jsx("td", { className: "dataviews-view-table__checkbox-column"')
+	const checkboxCell = row.search(/jsx\("td", \{\s*className: "dataviews-view-table__checkbox-column"/)
 	const titleCell = row.search(/jsx\("td", \{ children: \/\* @__PURE__ \*\/ jsx\(\s*ColumnPrimary/)
 
 	expect(named).toContain('dataviews-title-field')
@@ -91,7 +104,7 @@ test('lets DataViews take its accents from the WordPress admin colour the root p
 })
 
 test('draws the table header like the DataViews header, at the extra small size in capitals', () => {
-	const header = ruleIn(dataviews, '.dataviews-view-table thead th')
+	const header = rulesIn(dataviews, '.dataviews-view-table thead th')
 	const own = ruleIn(base, '.godmin-table thead th')
 
 	expect(header).toMatch(/font-size:\s*11px/)

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { readdirSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
 
@@ -60,6 +60,9 @@ interface Handed {
 
 const require = createRequire(import.meta.url)
 const dataviewsBuild = join(dirname(require.resolve('@wordpress/dataviews/package.json')), 'build-module')
+
+/** The major version of the installed DataViews. */
+const DATAVIEWS_RELEASE = (require('@wordpress/dataviews/package.json') as { version: string }).version.split('.')[0]
 
 /**
  * Imports one module of the DataViews build.
@@ -252,6 +255,16 @@ function shapesThatDiffer(cases: Case[]): string[] {
 		}),
 	)
 }
+
+test('names the installed DataViews release wherever the guard or its usage page say whose rules they follow', () => {
+	const texts = ['../src/filter-offer.ts', '../docs/lists.md'].map((path) =>
+		readFileSync(join(import.meta.dirname, path), 'utf8'),
+	)
+	const named = texts.flatMap((text) => [...text.matchAll(/\bDataViews (\d+)\b/g)].map((found) => found[1]))
+
+	expect(named.length, 'neither names a DataViews release').toBeGreaterThan(0)
+	expect(named.filter((release) => release !== DATAVIEWS_RELEASE)).toEqual([])
+})
 
 test('reads DataViews field types, controls and operators from its build', () => {
 	expect(TYPES).toContain('text')

@@ -87,10 +87,10 @@ place:
   the screen does not scroll, as
   [running an action over the picked rows](../lists.md#running-an-action-over-the-picked-rows)
   says.
-- The table or the footer of a list, with its rows and the busy bulk
-  action button, which turn inert as a run reloads the list. The list
-  region takes the focus at once, where WordPress drops it to the
-  page, and the screen does not scroll either, as
+- The table, the bulk bar or the footer of a list, with its rows and
+  the busy bulk action button, which turn inert as a run reloads the
+  list. The list region takes the focus at once, where WordPress drops
+  it to the page, and the screen does not scroll either, as
   [after a write of your own](./lists.md#after-a-write-of-your-own)
   says. While the list reloads, the next Tab from the list region
   goes to the first control of the list, such as its search field.

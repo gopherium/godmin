@@ -90,7 +90,7 @@ whatever seeds you pick.
 - A toast with no action stays 6 seconds. `dismissAfter` changes it.
 - A toast with an action stays 10 seconds, time to read the message
   and then act. `actionDismissAfter` changes it.
-- WordPress's own snackbar in `@wordpress/components` 43.0.0 stays the
+- WordPress's own snackbar in `@wordpress/components` 44.0.0 stays the
   same 6 seconds with no action and 10 seconds with one.
 - Each toast keeps its own timer. So a toast a screen raises as it
   mounts leaves on time even under React strict mode, which mounts the

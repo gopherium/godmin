@@ -18,7 +18,10 @@ const TRIGGERS = {
 }
 
 /** Finds the bar DataViews draws the actions on the ticked items in. */
-const BULK_BAR = '.dataviews-bulk-actions-footer__container'
+const BULK_BAR = '.dataviews-bulk-actions'
+
+/** Finds the open menu button of the bulk bar, whose menu DataViews draws outside the bar on a narrow screen. */
+const BULK_MENU_OPEN = `${BULK_BAR} [aria-haspopup="menu"][aria-expanded="true"]`
 
 /** A trigger on a card or a row a dialog on its item opens from. */
 type ItemTrigger = keyof typeof TRIGGERS
@@ -35,12 +38,21 @@ export interface FocusBack {
 }
 
 /**
+ * Reports whether a control sits in a menu while the menu button of the bulk bar is open.
+ * @param control - The control.
+ * @returns Whether it does, as a bulk action chosen on a narrow screen does.
+ */
+function inBulkMenu(control: Element): boolean {
+	return control.closest('[role="menu"]') !== null && document.querySelector(BULK_MENU_OPEN) !== null
+}
+
+/**
  * Returns the trigger a control stands for.
  * @param control - The control.
  * @returns The bulk bar, the media, the title or the phone row holding the control, the actions menu otherwise.
  */
 function triggerAt(control: Element): Trigger {
-	if (control.closest(BULK_BAR) !== null) {
+	if (control.closest(BULK_BAR) !== null || inBulkMenu(control)) {
 		return 'bulk'
 	}
 	const triggers: ItemTrigger[] = ['media', 'title', 'row']

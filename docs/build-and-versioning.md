@@ -60,7 +60,9 @@ both checks into whatever hooks it offers.
 
 ## Lint your stylesheets
 
-`@wordpress/theme` ships three stylelint rules. This turns them on:
+`@wordpress/theme-build-tools` ships three stylelint rules. Add it
+to your `devDependencies`, next to `stylelint`. Then this turns the
+rules on:
 
 ```js
 export default { extends: ['@gopherium/godmin/stylelint'] }
@@ -68,13 +70,14 @@ export default { extends: ['@gopherium/godmin/stylelint'] }
 
 They catch design tokens that do not exist (a typo renders nothing,
 with no error), redefined `--wpds-` properties, and hand-typed
-fallback values.
+fallback values. The rule on tokens that do not exist reads its list
+from the `@wordpress/theme` your app installs.
 
 ## Design system versions
 
 Each godmin release supports one design system window, written out
 in full in its peer ranges as the first version it accepts and the
-first one it refuses, such as `>=0.25.0 <0.26.0`. The window moves
+first one it rejects, such as `>=0.26.0 <0.27.0`. The window moves
 forward with the design system and never widens, so no release
 accepts two incompatible generations at once.
 
@@ -95,8 +98,12 @@ needed only by `@gopherium/godmin/dates`. Install it next to godmin
 when you use that entry. Its window is in the same peer ranges.
 godmin never imports `@wordpress/components`.
 
+`@wordpress/theme-build-tools` is an optional peer too, needed only
+by `@gopherium/godmin/stylelint`. Its window is in the same peer
+ranges.
+
 `@wordpress/dataviews` is an optional peer as well, in the window
-`>=21.0.0 <22.0.0`. No godmin entry imports it, but `offeredView`
+`>=22.0.0 <23.0.0`. No godmin entry imports it, but `offeredView`
 follows the filter rules of that DataViews release. A list built on
 another release gets a peer warning when it installs godmin.
 

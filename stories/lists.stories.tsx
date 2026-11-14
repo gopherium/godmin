@@ -6,7 +6,7 @@ import '@wordpress/dataviews/build-style/style.css'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { DataViews, filterSortAndPaginate } from '@wordpress/dataviews'
 import type { Action, Field, View } from '@wordpress/dataviews'
-import { backup, page } from '@wordpress/icons'
+import { page } from '@wordpress/icons'
 import { Button } from '@wordpress/ui'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
@@ -65,6 +65,11 @@ const FIELDS: Field<Report>[] = [
 	...TEXT_FIELDS.map(([id, label, words]) => ({ id, label, getValue: () => words })),
 ]
 
+/** Leaves the header checkbox cell out of the empty header check, as DataViews hides it while its bulk bar shows. */
+const TICKED_ROW_A11Y = {
+	config: { rules: [{ id: 'empty-table-header', selector: 'th:not(.dataviews-view-table__checkbox-column)' }] },
+}
+
 /** The view the sample list opens on: a table of ten rows on its first page, showing only its title. */
 const VIEW: View = { type: 'table', titleField: 'title', page: 1, perPage: 10 }
 
@@ -88,7 +93,7 @@ const NO_REPORTS = (
 /** Returns the actions of a row: a primary one-click restore offered in bulk, and an edit in the menu. */
 function actionsOf(restore: (items: Report[]) => void): Action<Report>[] {
 	return [
-		{ id: 'restore', label: 'Restore', icon: backup, isPrimary: true, supportsBulk: true, callback: restore },
+		{ id: 'restore', label: 'Restore', isPrimary: true, supportsBulk: true, callback: restore },
 		{ id: 'edit', label: 'Edit', callback: () => {} },
 	]
 }
@@ -290,13 +295,17 @@ type Story = StoryObj<typeof meta>
 export const WideTable: Story = {
 	name: 'Wide table',
 	globals: { viewport: { value: 'desktop', isRotated: false } },
+	parameters: { a11y: TICKED_ROW_A11Y },
 	play: staysFrozen,
 }
 
 export const WideTableMedium: Story = {
 	name: 'Wide table, medium width',
 	globals: { viewport: { value: 'medium' } },
-	parameters: { argos: { modes: { desktop: { disabled: true }, medium: { viewport: 'medium' } } } },
+	parameters: {
+		a11y: TICKED_ROW_A11Y,
+		argos: { modes: { desktop: { disabled: true }, medium: { viewport: 'medium' } } },
+	},
 	play: staysFrozen,
 }
 

@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/**
- * The stylelint configuration turning on every design system rule the theme
- * package ships.
- */
+/** The stylelint configuration turning on every design system rule the build tools package ships. */
 const config = {
 	plugins: [
-		'@wordpress/theme/stylelint-plugins/no-unknown-ds-tokens',
-		'@wordpress/theme/stylelint-plugins/no-setting-wpds-custom-properties',
-		'@wordpress/theme/stylelint-plugins/no-token-fallback-values',
+		'@wordpress/theme-build-tools/stylelint-plugins/no-unknown-ds-tokens',
+		'@wordpress/theme-build-tools/stylelint-plugins/no-setting-wpds-custom-properties',
+		'@wordpress/theme-build-tools/stylelint-plugins/no-token-fallback-values',
 	],
 	rules: {
 		'plugin-wpds/no-unknown-ds-tokens': true,

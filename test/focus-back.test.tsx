@@ -9,7 +9,7 @@ import { expect, onTestFinished, test, vi } from 'vitest'
 
 import { focusedTrigger, useFocusBack } from '../src/index'
 import type { Trigger } from '../src/index'
-import { installTestEnvironment, renderAdmin } from '../src/testing.js'
+import { installTestEnvironment, renderAdmin, setViewport } from '../src/testing.js'
 
 installTestEnvironment()
 
@@ -198,6 +198,12 @@ const ROW_OF_THREE = 800
 
 /** A grid width DataViews lays one card across at its default preview size. */
 const ROW_OF_ONE = 400
+
+/** A window width below the medium breakpoint, where DataViews draws the bulk actions as one Actions menu. */
+const NARROW = 700
+
+/** Finds the bar DataViews draws the actions on the ticked items in. */
+const BULK_BAR = '.dataviews-bulk-actions'
 
 /**
  * Makes each grid DataViews mounts measure a width, and lets the test report another one, as a browser does.
@@ -664,12 +670,41 @@ test('reads a focus on a phone list row as the row', () => {
 test.each(['grid', 'table'] as const)('reads an action chosen in the bulk bar of a %s as the bar', async (layout) => {
 	const { handle } = renderList(layout)
 	await userEvent.click(within(holderOf('Hello')).getByRole('checkbox'))
-	const bar = document.querySelector('.dataviews-bulk-actions-footer__container') as HTMLElement
+	const bar = document.querySelector(BULK_BAR) as HTMLElement
 
 	await userEvent.click(within(bar).getByRole('button', { name: 'Rename' }))
 
 	expect(handle.clicked).toEqual(['bulk'])
 })
+
+test.each(['grid', 'table'] as const)(
+	'reads an action chosen in the bulk actions menu of a %s on a narrow screen as the bar',
+	async (layout) => {
+		setViewport({ width: NARROW })
+		const { handle } = renderList(layout)
+		await userEvent.click(within(holderOf('Hello')).getByRole('checkbox'))
+		const bar = document.querySelector(BULK_BAR) as HTMLElement
+		await userEvent.click(within(bar).getByRole('button', { name: 'Actions' }))
+
+		await userEvent.click(await screen.findByRole('menuitem', { name: 'Rename' }))
+
+		expect(handle.clicked).toEqual(['bulk'])
+	},
+)
+
+test.each(['grid', 'table'] as const)(
+	'reads an action chosen in the actions menu of a %s item on a narrow screen as that menu while an item is ticked',
+	async (layout) => {
+		setViewport({ width: NARROW })
+		const { handle } = renderList(layout)
+		await userEvent.click(within(holderOf('Hello')).getByRole('checkbox'))
+		await userEvent.click(within(holderOf('Harbor at dawn')).getByRole('button', { name: 'Actions' }))
+
+		await userEvent.click(await screen.findByRole('menuitem', { name: 'Rename' }))
+
+		expect(handle.clicked).toEqual(['actions'])
+	},
+)
 
 test.each(['grid', 'list', 'table'] as const)(
 	'reads an action chosen in the actions menu of a %s item as the actions menu',

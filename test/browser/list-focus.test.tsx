@@ -3,7 +3,6 @@
 import { render, screen, within } from '@testing-library/react'
 import { DataViews } from '@wordpress/dataviews'
 import type { Action, Field, View } from '@wordpress/dataviews'
-import { backup, trash } from '@wordpress/icons'
 import { useMemo, useState } from 'react'
 import { expect, onTestFinished, test } from 'vitest'
 import { page, userEvent } from 'vitest/browser'
@@ -128,14 +127,12 @@ function Reports({
 			{
 				id: 'trash',
 				label: 'Trash',
-				icon: trash,
 				supportsBulk: bulkActions,
 				callback: (items) => bulk(items, bench.call, WORDS),
 			},
 			{
 				id: 'restore',
 				label: 'Restore',
-				icon: backup,
 				isPrimary: primary === 'restore',
 				callback: (items) => bulk(items, bench.call, RESTORED),
 			},
@@ -343,6 +340,32 @@ function partOf(title: string, part: string): HTMLElement {
 	return holderOf(title).querySelector(part) as HTMLElement
 }
 
+/** Returns the bar DataViews draws the actions on the ticked rows in. */
+function bulkBar(): HTMLElement {
+	return document.querySelector<HTMLElement>('.dataviews-bulk-actions') as HTMLElement
+}
+
+/** Returns a button of the bulk bar. */
+function bulkControl(name: string): HTMLElement {
+	return within(bulkBar()).getByRole('button', { name })
+}
+
+/** Scrolls the rows of the real page to their end and returns them. */
+async function scrollRowsDown(): Promise<HTMLElement> {
+	const rows = document.querySelector<HTMLElement>('.dataviews-layout__container') as HTMLElement
+	rows.scrollTop = rows.scrollHeight
+	await frames(2)
+	return rows
+}
+
+/** Reaches a control of the bulk bar, which stays in view over the scrolled rows, with the Tab key and no scroll. */
+async function tabInBar(control: HTMLElement): Promise<void> {
+	control.focus({ preventScroll: true })
+	await userEvent.keyboard('{Shift>}{Tab}{/Shift}')
+	await userEvent.keyboard('{Tab}')
+	await frames(2)
+}
+
 test('keeps the focus on the list region, never on the page, while the calls of a bulk run end apart', async () => {
 	const bench = held()
 	render(
@@ -351,8 +374,8 @@ test('keeps the focus on the list region, never on the page, while the calls of 
 		</Toaster>,
 	)
 	const region = screen.getByRole('region', { name: 'Reports' })
-	const footer = document.querySelector<HTMLElement>('.dataviews-footer') as HTMLElement
-	const pressed = within(footer).getByRole('button', { name: 'Trash' })
+	const bar = bulkBar()
+	const pressed = within(bar).getByRole('button', { name: 'Trash' })
 	pressed.focus()
 	const focus = sampleFocus()
 	await userEvent.keyboard('{Enter}')
@@ -362,7 +385,7 @@ test('keeps the focus on the list region, never on the page, while the calls of 
 	await expect.poll(tableInert).toBe(true)
 	await frames(3)
 
-	expect(footer.hasAttribute('inert'), 'the footer is inert').toBe(true)
+	expect(bar.closest('[inert]'), 'the bulk bar is inert').not.toBeNull()
 	expect(document.activeElement, 'the focus as the list turned inert').toBe(region)
 	expect(region.matches(':focus-visible'), 'the ring as the list turned inert').toBe(true)
 	bench.ended.get('2')?.()
@@ -384,8 +407,7 @@ test('moves a focus on a row of the table to the list region as the first call t
 		</Toaster>,
 	)
 	const region = screen.getByRole('region', { name: 'Reports' })
-	const footer = document.querySelector<HTMLElement>('.dataviews-footer') as HTMLElement
-	within(footer).getByRole('button', { name: 'Trash' }).focus()
+	bulkControl('Trash').focus()
 	await userEvent.keyboard('{Enter}')
 	await expect.poll(() => bench.ended.size).toBe(2)
 	const row = screen.getByRole('checkbox', { name: 'Report 2' })
@@ -407,12 +429,13 @@ test('moves a focus on a row of the table to the list region as the first call t
 	expect(focus.seen.has(document.body), 'the focus fell to the page').toBe(false)
 })
 
-test('keeps the canvas where the reader left it as the list region takes the focus mid run', async () => {
+test('keeps the rows where the reader left them as the list region takes the focus mid run', async () => {
 	const bench = held()
-	const canvas = renderTall(bench)
+	await renderReal(bench, { ticked: TALL.map((row) => row.id) })
 	const region = screen.getByRole('region', { name: 'Reports' })
-	const footer = document.querySelector<HTMLElement>('.dataviews-footer') as HTMLElement
-	const left = await focusAtBottom(within(footer).getByRole('button', { name: 'Trash' }), canvas)
+	const rows = await scrollRowsDown()
+	await tabInBar(bulkControl('Trash'))
+	const left = rows.scrollTop
 	await userEvent.keyboard('{Enter}')
 	await expect.poll(() => bench.ended.size).toBe(TALL.length)
 
@@ -420,19 +443,19 @@ test('keeps the canvas where the reader left it as the list region takes the foc
 	await expect.poll(tableInert).toBe(true)
 	await frames(3)
 
-	expect(left, 'the canvas scrolled down to the footer').toBeGreaterThan(0)
+	expect(left, 'the rows scrolled down').toBeGreaterThan(0)
 	expect(document.activeElement, 'the focus as the list turned inert').toBe(region)
 	expect(region.matches(':focus-visible'), 'the ring as the list turned inert').toBe(true)
-	expect(canvas.scrollTop, 'the canvas as the list turned inert').toBe(left)
+	expect(rows.scrollTop, 'the rows as the list turned inert').toBe(left)
 	for (const end of bench.ended.values()) {
 		end()
 	}
 	await expect.poll(toastText).toBe('40 reports moved to the trash.')
 	await frames(3)
-	expect(canvas.scrollTop, 'the canvas as the run ended').toBe(left)
+	expect(rows.scrollTop, 'the rows as the run ended').toBe(left)
 	bench.reloaded()
 	await expect.poll(tableInert).toBe(false)
-	expect(canvas.scrollTop, 'the canvas once the list reloaded').toBe(left)
+	expect(rows.scrollTop, 'the rows once the list reloaded').toBe(left)
 })
 
 test('keeps the canvas still as a one row write from a low row ends and the list region takes the focus', async () => {
@@ -458,13 +481,14 @@ test('keeps the canvas still as a one row write from a low row ends and the list
 	expect(canvas.scrollTop, 'the canvas once the list reloaded').toBe(left)
 })
 
-test('keeps the canvas still as a run from a footer confirm ends and the list region takes the focus', async () => {
+test('keeps the rows still as a run from a bulk bar confirm ends and the list region takes the focus', async () => {
 	const bench = held()
-	const canvas = renderTall(bench)
+	await renderReal(bench, { ticked: TALL.map((row) => row.id) })
 	const region = screen.getByRole('region', { name: 'Reports' })
-	const footer = document.querySelector<HTMLElement>('.dataviews-footer') as HTMLElement
-	const opener = within(footer).getByRole('button', { name: 'Permanently delete' })
-	const left = await focusAtBottom(opener, canvas)
+	const rows = await scrollRowsDown()
+	const opener = bulkControl('Permanently delete')
+	await tabInBar(opener)
+	const left = rows.scrollTop
 	await userEvent.keyboard('{Enter}')
 	const confirm = await screen.findByRole('alertdialog')
 	within(confirm).getByRole('button', { name: 'Delete' }).focus()
@@ -478,14 +502,14 @@ test('keeps the canvas still as a run from a footer confirm ends and the list re
 	await expect.poll(() => confirm.isConnected).toBe(false)
 	await frames(3)
 
-	expect(left, 'the canvas scrolled down to the footer').toBeGreaterThan(0)
+	expect(left, 'the rows scrolled down').toBeGreaterThan(0)
 	expect(tableInert(), 'the table as the confirm closed').toBe(true)
 	expect(document.activeElement, 'the focus once the confirm closed').toBe(region)
-	expect(canvas.scrollTop, 'the canvas once the confirm closed').toBe(left)
+	expect(rows.scrollTop, 'the rows once the confirm closed').toBe(left)
 	bench.reloaded()
 	await expect.poll(tableInert).toBe(false)
 	expect(document.activeElement, 'the focus once the list reloaded').toBe(opener)
-	expect(canvas.scrollTop, 'the canvas once the list reloaded').toBe(left)
+	expect(rows.scrollTop, 'the rows once the list reloaded').toBe(left)
 })
 
 test('puts the focus on the box named after the row that took its place once a low Restore reloads', async () => {
@@ -505,7 +529,7 @@ test('puts the focus on the box named after the row that took its place once a l
 	await expect.poll(tableInert).toBe(false)
 	await frames(3)
 
-	const focused = document.activeElement as HTMLInputElement
+	const focused = document.activeElement as HTMLElement
 	expect(focused, 'the focus once the list reloaded').toBe(rowBox('Report 39'))
 	expect(focused.matches(':focus-visible'), 'the ring once the list reloaded').toBe(true)
 	await expect.element(focused, { message: 'the role a screen reader says' }).toHaveRole('checkbox')
@@ -513,7 +537,8 @@ test('puts the focus on the box named after the row that took its place once a l
 	await expect.element(focused, { message: 'the state a screen reader says' }).not.toBeChecked()
 	await userEvent.keyboard('{Enter}')
 	await frames(3)
-	expect([bench.ended.size, focused.checked], 'the calls and the box after a second Enter').toEqual([1, false])
+	const after = [bench.ended.size, focused.getAttribute('aria-checked')]
+	expect(after, 'the calls and the box after a second Enter').toEqual([1, 'false'])
 	await userEvent.keyboard('{Tab}')
 	expect(document.activeElement, 'the next Tab').toBe(rowButton('Report 39', 'Restore'))
 })
@@ -522,8 +547,7 @@ test('puts the focus back on the bulk button that stays after the reload, the ne
 	const bench = held()
 	await renderReal(bench, { ticked: ['36', '37', '38'] })
 	const region = screen.getByRole('region', { name: 'Reports' })
-	const footer = document.querySelector<HTMLElement>('.dataviews-footer') as HTMLElement
-	const pressed = within(footer).getByRole('button', { name: 'Trash' })
+	const pressed = bulkControl('Trash')
 	await tabTo(pressed)
 	await userEvent.keyboard('{Enter}')
 	await expect.poll(() => bench.ended.size).toBe(3)
@@ -541,8 +565,35 @@ test('puts the focus back on the bulk button that stays after the reload, the ne
 
 	expect(document.activeElement, 'the focus once the list reloaded').toBe(pressed)
 	await userEvent.keyboard('{Tab}')
-	const next = within(footer).getByRole('button', { name: 'Permanently delete' })
+	const next = bulkControl('Permanently delete')
 	expect(document.activeElement, 'the next Tab').toBe(next)
+})
+
+test('puts the focus back on the bulk Actions button at 700 once a Trash picked in its menu reloads', async () => {
+	await page.viewport(700, 800)
+	onTestFinished(async () => page.viewport(1280, 800))
+	const bench = held()
+	await renderReal(bench, { ticked: ['36', '37', '38'] })
+	const region = screen.getByRole('region', { name: 'Reports' })
+	await tabTo(bulkControl('Actions'))
+	await userEvent.keyboard('{Enter}')
+	const item = await screen.findByRole('menuitem', { name: 'Trash' })
+	item.focus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => bench.ended.size).toBe(3)
+
+	bench.ended.get('36')?.()
+	await expect.poll(tableInert).toBe(true)
+	bench.ended.get('37')?.(false)
+	bench.ended.get('38')?.()
+	await expect.poll(toastText).toBe('1 reports could not be moved to the trash.')
+	await frames(3)
+	expect(document.activeElement, 'the focus while the list reloads').toBe(region)
+	bench.reloaded(['36', '38'])
+	await expect.poll(tableInert).toBe(false)
+	await frames(3)
+
+	expect(document.activeElement, 'the focus once the list reloaded').toBe(bulkControl('Actions'))
 })
 
 test('puts the focus on the box of the row in its place once a run from a row menu reloads', async () => {
@@ -946,8 +997,8 @@ test('paints the focus style of the box in its place after a mouse run, no regio
 	const box = rowBox('Report 39')
 	expect(document.activeElement, 'the focus once the list reloaded').toBe(box)
 	expect(box.matches(':focus-visible'), 'the keyboard state of the box').toBe(false)
-	expect(getComputedStyle(box).boxShadow, 'the focus style of the box').not.toBe('none')
-	expect(getComputedStyle(rowBox('Report 40')).boxShadow, 'the style of an idle box').toBe('none')
+	expect(getComputedStyle(box).outlineStyle, 'the focus style of the box').not.toBe('none')
+	expect(getComputedStyle(rowBox('Report 40')).outlineStyle, 'the style of an idle box').toBe('none')
 	expect(rows.scrollTop, 'the rows once the list reloaded').toBe(0)
 })
 

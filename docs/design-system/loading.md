@@ -26,17 +26,17 @@ On the first load:
   and the bottom of the canvas. The search box and the filters stay
   on screen. The footer stays away until the first rows arrive.
 - This spinner is the one of `@wordpress/components`, which DataViews
-  draws: a quarter circle in the accent color that turns over a light
-  grey ring.
+  draws. It draws the `Spinner` of `@wordpress/ui`, the same half
+  circle a loading screen shows, as [a screen](#a-screen) gives.
 - The first rows replace the spinner at once.
 
 On a later load, such as another page, a search or a new sort:
 
-- The old rows and the footer stay on screen. Nobody can click them
-  or reach them with Tab until the next rows arrive.
-- After 400ms the rows and the footer pulse. Their opacity goes from
-  1 to `0.5` and back every 1s, on an `ease-in-out` curve. A load
-  that ends sooner shows no pulse.
+- The old rows, the bulk bar and the footer stay on screen. Nobody can
+  click them or reach them with Tab until the next rows arrive.
+- After 400ms the rows and the footer pulse, and in a table the bulk
+  bar too. Their opacity goes from 1 to `0.5` and back every 1s, on an
+  `ease-in-out` curve. A load that ends sooner shows no pulse.
 - When the last answer was empty, there are no old rows to keep. The
   empty state stays on screen and pulses the same way after 400ms.
 - The next rows replace the old ones at once.
@@ -158,8 +158,8 @@ reader who asks for less motion. While a list or a screen loads:
 
 - Both spinners keep turning, as WordPress keeps them. A spinner that
   stood still would look like a page that froze.
-- A list does not pulse. Its old rows and its footer stay at `0.5`
-  opacity until the next rows arrive.
+- A list does not pulse. Its old rows, its footer and the bulk bar of
+  a table stay at `0.5` opacity until the next rows arrive.
 - A loading screen in the canvas or outside the frame keeps its wait,
   since a wait is no motion, and then shows at once with no fade.
   Inside a `Page`, a sidebar screen or a dialog nothing changes, since

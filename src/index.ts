@@ -86,6 +86,6 @@ export type { GuardedField, OfferedView, ViewGuard } from './view-guard.js'
  * The design system version window this build was tested against.
  */
 export const SUPPORTED_WPDS = {
-	'@wordpress/ui': '>=0.25.0 <0.26.0',
-	'@wordpress/theme': '>=3.0.0 <4.0.0',
+	'@wordpress/ui': '>=0.26.0 <0.27.0',
+	'@wordpress/theme': '>=4.0.0 <5.0.0',
 } as const

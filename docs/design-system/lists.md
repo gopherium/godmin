@@ -27,6 +27,11 @@ up. This page gives every value of how a list looks.
   `--wpds-dimension-gap-lg`, so the two do not add up.
 - The footer rests on the bottom edge of the canvas. Only the rows
   scroll. The title, the tabs, the toolbar and the column headers stay.
+- The footer holds the item count and the page buttons. The select
+  all box sits in the table head. While a row is ticked, the bulk bar
+  covers the table head: the select all box, how many items are
+  ticked, the bulk actions and Cancel. In a grid the bar sits above
+  the cards. DataViews draws it.
 
 ## Columns
 
@@ -36,7 +41,7 @@ up. This page gives every value of how a list looks.
   columns in View options.
 - From `DENSE_BREAKPOINT` (640px) up to `EDGE_BREAKPOINT` itself the
   table keeps them too. There DataViews shows each row's actions in
-  its Actions menu only, and its bulk actions as icons.
+  its Actions menu only, and its bulk actions in one Actions menu.
 - Below `DENSE_BREAKPOINT` a list from `useListView` shows its phone
   layout, the DataViews list layout, with the fields `phoneFields`
   names.
@@ -55,9 +60,10 @@ are. `Page` marks such a list region `godmin-page__list--wide`.
   DataViews draws both.
 - Wider than `EDGE_BREAKPOINT`, a table with checkboxes keeps the
   checkbox column and the title column frozen at the start edge, as
-  in Jetpack Forms. The checkbox column is
-  `--wpds-dimension-padding-2xl` plus `--wpds-dimension-size-sm`
-  (24px) wide, 48px, and the title starts there.
+  in Jetpack Forms. The checkbox column is 40px wide, as DataViews
+  draws it: `--wpds-dimension-padding-2xl` (24px) plus
+  `--wpds-dimension-size-2xs` (16px). The title starts there, so it
+  lines up with the title of a table that fits.
 - The title column keeps at least 280px and
   `--wpds-dimension-padding-2xl` free at its end, where a line
   `--wpds-border-width-xs` (1px) wide in
@@ -130,7 +136,7 @@ When a run over the picked rows changes them, as
 [running an action over the picked rows](../lists.md#running-an-action-over-the-picked-rows)
 shows:
 
-- While the calls run, the bulk action button in the footer is busy.
+- While the calls run, the bulk action button in the bulk bar is busy.
   A row action with no dialog shows nothing yet, as in the WordPress
   Site Editor.
 - As the first call that works ends, the list starts to reload, as
@@ -139,12 +145,12 @@ shows:
   nobody can click them. If the reload takes longer than a moment,
   the rows pulse as on a later load. [A list](./loading.md#a-list)
   gives how long the list waits and how the pulse looks.
-- When the focus sat in the table or the footer, such as on the busy
-  button, the list region takes it as the list starts to reload, so a
-  keyboard reader stays on the list, and the screen does not scroll.
-  Here godmin goes beyond WordPress, which drops the focus to the
-  page. A focus in the search field or the filters stays where it is
-  while the calls run.
+- When the focus sat in the table, the bulk bar or the footer, such as
+  on the busy button, the list region takes it as the list starts to
+  reload, so a keyboard reader stays on the list, and the screen does
+  not scroll. Here godmin goes beyond WordPress, which drops the focus
+  to the page. A focus in the search field or the filters stays where
+  it is while the calls run.
 - As the last call ends, the toast shows, the busy button ends and a
   confirm closes, as
   [when a dialog closes](./dialogs.md#when-a-dialog-closes) says.
