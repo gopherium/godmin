@@ -18,7 +18,15 @@ async function lint(css: string): Promise<string[]> {
 	return result.results.flatMap((one) => one.warnings.map((warning) => warning.rule))
 }
 
-test('turns on every design system rule the theme package ships', () => {
+test('loads every design system rule from the build tools package', () => {
+	expect(config.plugins).toEqual([
+		'@wordpress/theme-build-tools/stylelint-plugins/no-unknown-ds-tokens',
+		'@wordpress/theme-build-tools/stylelint-plugins/no-setting-wpds-custom-properties',
+		'@wordpress/theme-build-tools/stylelint-plugins/no-token-fallback-values',
+	])
+})
+
+test('turns on every design system rule the build tools package ships', () => {
 	expect(Object.keys(config.rules)).toEqual([
 		'plugin-wpds/no-unknown-ds-tokens',
 		'plugin-wpds/no-setting-wpds-custom-properties',
