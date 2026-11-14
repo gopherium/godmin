@@ -14,6 +14,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `Frame.Root` takes `appName` and sets the tab title to the screen title and that name.
 - `routerDefaults()` gives a not found screen, a `Page` titled "Route not found", as WordPress's new admin does.
 - The Spanish and French catalogues translate the tab title and the not found screen.
+- `useRejectedField` puts a server's message under the field it rejected, moves the focus to the first field that fails and speaks the message, until the reader edits the field.
 
 ### Changed
 
