@@ -21,6 +21,9 @@
 		"docs",
 		"NOTICE"
 	],
+	"sideEffects": [
+		"**/*.css"
+	],
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
