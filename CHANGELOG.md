@@ -23,6 +23,9 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - The frame and a loading screen outside it are `100dvh` tall, so on a phone the canvas no longer ends under the browser bar.
 - **Breaking.** `DrilldownItem` no longer takes `activeProps` or `activeOptions`.
 - **Breaking.** Back draws its chevron in place of any content of the `back` link it renders through.
+- **Breaking.** The peer windows move to the `@wordpress` packages of 4 November: dataviews 22, icons 20, style-runtime 0.15, theme 4 and ui 0.26.
+- **Breaking.** `@gopherium/godmin/stylelint` loads its rules from `@wordpress/theme-build-tools`, a new optional peer. Add it to your `devDependencies` next to `stylelint`.
+- An action label carries no ellipsis, as DataViews 22 asks. `docs/design-system/dialogs.md` says so, and the examples in `docs/lists.md` read "Delete" and "Rename".
 
 ### Fixed
 
@@ -30,6 +33,9 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - Back draws its focus ring for the keyboard only, with rounded corners.
 - A dialog breaks only a word too long for its card, so the labels of a grid or a row of fields keep their words on a phone.
 - The package marks only its stylesheets as having side effects, so a bundler leaves out the parts an app does not import, such as the dialogs.
+- `focusedTrigger()` reads `bulk` for an action from the DataViews 22 bulk bar, its Actions menu at 782px and below included, so the focus goes back to the list and not to a row's actions menu.
+- The Spanish list chrome translates the lowercase item counts of DataViews 22, so a Spanish list no longer shows them in English.
+- A wide list's frozen checkbox column is 40px, as DataViews 22 draws it, so the frozen title no longer sits 8px past it and lines up with a list that fits.
 
 ## [0.32.0] - 2026-11-08
 
