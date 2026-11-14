@@ -62,11 +62,17 @@ const holdKey: BrowserCommand<[key: string, repeats: number, gap: number]> = asy
 	await page.keyboard.up(key)
 }
 
+/** The parts of a list DataViews pulses as it reloads, the bar inside its bulk bar overlay in place of the overlay. */
+const PULSING = [
+	'.dataviews-wrapper .is-refreshing:not(.dataviews-view-table__bulk-actions-overlay)',
+	'.dataviews-view-table__bulk-actions-overlay.is-refreshing > .dataviews-bulk-actions',
+].join(', ')
+
 /** The style Argos adds to a shot: no motion, spinners at rest, the list pulse dim, no pointer. */
 const SHOT_STYLE = [
 	'.godmin-toasts__item, .godmin-toast { animation: none; }',
 	'.godmin-loading-screen path, .components-spinner path { animation: none; }',
-	'.dataviews-wrapper .is-refreshing { animation: none !important; opacity: 0.5 !important; }',
+	`${PULSING} { animation: none !important; opacity: 0.5 !important; }`,
 	'[data-wp-compat-overlay-slot] * { transition: none }',
 	'[role="alertdialog"] button svg path, [role="dialog"] button svg path { animation: none }',
 	'* { pointer-events: none !important; }',
