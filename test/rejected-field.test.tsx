@@ -5,7 +5,7 @@ import { userEvent } from '@testing-library/user-event'
 import { speak } from '@wordpress/a11y'
 import { ValidatedInputControl, ValidatedTextareaControl } from '@wordpress/ui'
 import { StrictMode, memo, useLayoutEffect, useState } from 'react'
-import { beforeEach, expect, test, vi } from 'vitest'
+import { beforeEach, expect, onTestFinished, test, vi } from 'vitest'
 
 import { FormDialog, useRejectedField } from '../src/index'
 import type { DialogAnswer, RejectedField, RejectedValidity } from '../src/index'
@@ -323,6 +323,27 @@ test('answers no once the part holding the hook left, while the form stays', asy
 	expect(before).toBe(true)
 	expect(shown).toBe(false)
 	expect(speak).not.toHaveBeenCalledWith('An address on a field that left.', 'assertive')
+})
+
+test('answers no when the form is not on the page', async () => {
+	let reject: RejectedField['reject'] = () => true
+	const container = document.createElement('div')
+	render(
+		<form>
+			<RejectableEmail handOut={(handed) => (reject = handed)} />
+		</form>,
+		{ container },
+	)
+
+	let shown = true
+	act(() => {
+		shown = reject('An address in a form off the page.', SENT)
+	})
+	await settle()
+
+	expect(shown).toBe(false)
+	expect(container.querySelector('input')?.validity.customError).toBe(false)
+	expect(speak).not.toHaveBeenCalled()
 })
 
 /**
@@ -756,7 +777,8 @@ test('speaks again when a later answer rejects the same value', async () => {
 })
 
 test('hands out the same ref, reject and validity across renders', () => {
-	const form = document.createElement('form')
+	const form = document.body.appendChild(document.createElement('form'))
+	onTestFinished(() => form.remove())
 	const field = form.appendChild(document.createElement('input'))
 	const { result, rerender } = renderHook(({ held }) => useRejectedField(held), {
 		initialProps: { held: SENT },

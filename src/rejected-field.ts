@@ -45,19 +45,19 @@ interface Spoken {
 const toSpeak = new WeakMap<HTMLFormElement, Spoken[]>()
 
 /**
- * Returns the form a field sits in.
- * @param field - The field, null when it is not on the page.
+ * Returns the form a field sits in on the page.
+ * @param field - The field, null when it never mounted or left.
  * @returns The form, null when the field is not on the page or sits in no form.
  */
 function formOf(field: FieldElement | null): HTMLFormElement | null {
-	return field?.form ?? null
+	return field?.isConnected === true ? field.form : null
 }
 
 /**
  * Tells whether a server's message can stand under a field.
- * @param field - The field, null when it is not on the page.
+ * @param field - The field, null when it never mounted or left.
  * @param message - The server's message.
- * @returns True when there are words and the field sits in a form.
+ * @returns True when there are words and the field sits in a form on the page.
  */
 function canStand(field: FieldElement | null, message: string): boolean {
 	return message !== '' && formOf(field) !== null
