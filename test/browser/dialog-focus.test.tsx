@@ -3,11 +3,10 @@
 import { render, screen, within } from '@testing-library/react'
 import { DataViews } from '@wordpress/dataviews'
 import type { Action, Field, View } from '@wordpress/dataviews'
-import { backup } from '@wordpress/icons'
 import { InputControl } from '@wordpress/ui'
 import { useMemo, useState } from 'react'
-import { expect, test, vi } from 'vitest'
-import { commands, userEvent } from 'vitest/browser'
+import { expect, onTestFinished, test, vi } from 'vitest'
+import { commands, page, userEvent } from 'vitest/browser'
 
 import {
 	ConfirmDialog,
@@ -125,7 +124,7 @@ function ListBench({ writes }: { writes: Writes }) {
 	const actions = useMemo<Action<Report>[]>(() => {
 		const ask = (items: Report[]) => setAsked({ items, trigger: focusedTrigger() })
 		return [
-			{ id: 'restore', label: 'Restore', icon: backup, isPrimary: true, callback: ask },
+			{ id: 'restore', label: 'Restore', isPrimary: true, callback: ask },
 			{ id: 'delete', label: 'Delete', supportsBulk: true, callback: ask },
 			{ id: 'rename', label: 'Rename', callback: setRenaming },
 		]
@@ -211,10 +210,33 @@ function rowControl(title: string, role: 'button' | 'checkbox', name: string): H
 	return within(row).getByRole(role, { name })
 }
 
+/** A window width below the medium breakpoint, where DataViews draws the bulk actions as one Actions menu. */
+const NARROW = 700
+
+/** Returns a button of the bar DataViews draws the actions on the ticked rows in. */
+function bulkControl(name: string): HTMLElement {
+	const bar = document.querySelector('.dataviews-bulk-actions') as HTMLElement
+	return within(bar).getByRole('button', { name })
+}
+
 /** Returns the bulk button of the list. */
 function bulkButton(): HTMLElement {
-	const footer = document.querySelector('.dataviews-footer') as HTMLElement
-	return within(footer).getByRole('button', { name: 'Delete' })
+	return bulkControl('Delete')
+}
+
+/** Asks a confirm from the bulk Actions menu of a narrow screen by key. */
+async function askFromBulkMenuByKey(): Promise<void> {
+	bulkControl('Actions').focus()
+	await userEvent.keyboard('{Enter}')
+	const item = await screen.findByRole('menuitem', { name: 'Delete' })
+	item.focus()
+	await userEvent.keyboard('{Enter}')
+}
+
+/** Asks a confirm from the bulk Actions menu of a narrow screen by mouse. */
+async function askFromBulkMenuByMouse(): Promise<void> {
+	await userEvent.click(bulkControl('Actions'))
+	await userEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }))
 }
 
 /** Asks a confirm from the actions menu of Report 3 by key. */
@@ -461,6 +483,55 @@ test.each([
 	await expect.poll(rowsInert).toBe(false)
 	await frames(3)
 	expect(document.activeElement, 'the focus once the list reloaded').toBe(shape.landing())
+})
+
+test.each([
+	{ way: 'key', ask: askFromBulkMenuByKey },
+	{ way: 'mouse', ask: askFromBulkMenuByMouse },
+])('puts the focus on the list region after a bulk confirm at 700 by $way, the rows drawn anew', async (shape) => {
+	await page.viewport(NARROW, 800)
+	onTestFinished(async () => page.viewport(1280, 800))
+	renderList()
+	const opener = bulkControl('Actions')
+	await shape.ask()
+	const { popup } = await dialogInFocus('Change them')
+	pageControl('Draw rows anew').click()
+	await expect.poll(() => opener.isConnected).toBe(false)
+
+	await userEvent.keyboard('{Escape}')
+	await left(popup)
+
+	expect(document.activeElement, 'the focus once the dialog left').toBe(screen.getByRole('region', { name: 'Reports' }))
+})
+
+test.each([
+	{ way: 'key', ask: askFromBulkMenuByKey },
+	{ way: 'mouse', ask: askFromBulkMenuByMouse },
+])('puts the focus back on the bulk Actions button at 700 by $way while a row stays ticked', async (shape) => {
+	await page.viewport(NARROW, 800)
+	onTestFinished(async () => page.viewport(1280, 800))
+	const writes = renderList()
+	await shape.ask()
+	const cancelled = await dialogInFocus('Change them')
+	await userEvent.keyboard('{Escape}')
+	await left(cancelled.popup)
+	expect(document.activeElement, 'the focus after Escape').toBe(bulkControl('Actions'))
+
+	await shape.ask()
+	const { popup, confirm } = await dialogInFocus('Change them')
+	confirm.focus()
+	await userEvent.keyboard('{Enter}')
+	await expect.poll(() => writes.ended.size).toBe(2)
+	writes.ended.forEach((end) => end())
+	await left(popup)
+	expect(document.activeElement, 'the focus while the list reloads').toBe(
+		screen.getByRole('region', { name: 'Reports' }),
+	)
+
+	writes.reloaded(['1'])
+	await expect.poll(rowsInert).toBe(false)
+	await frames(3)
+	expect(document.activeElement, 'the focus once the list reloaded').toBe(bulkControl('Actions'))
 })
 
 test('lands the focus on the row as a row form leaves, once a reload that ended before its card left', async () => {
