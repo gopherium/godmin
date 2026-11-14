@@ -86,16 +86,16 @@ function speakOnce(form: HTMLFormElement, spoken: Spoken): void {
 /**
  * Shows the message of every field of a form that fails and speaks a server's message about one of them.
  * @param field - The field the server's message stands under, null once it left the page.
- * @param message - The server's message.
+ * @param validity - The custom validity holding the server's message.
  * @returns The field when its form was reported, undefined when it is not on the page in a form.
  */
-function report(field: FieldElement | null, message: string): FieldElement | undefined {
+function report(field: FieldElement | null, validity: RejectedValidity): FieldElement | undefined {
 	const form = formOf(field)
 	if (field === null || form === null) {
 		return undefined
 	}
 	form.reportValidity()
-	speakOnce(form, { field, message })
+	speakOnce(form, { field, message: validity.message })
 	return field
 }
 
@@ -140,7 +140,7 @@ function useReport(field: RefObject<FieldElement | null>, standing: Standing | u
 	})
 	useEffect(() => {
 		if (standing !== undefined) {
-			shownOn.current = report(field.current, standing.validity.message)
+			shownOn.current = report(field.current, standing.validity)
 		}
 	}, [field, standing])
 }
