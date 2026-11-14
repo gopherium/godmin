@@ -165,7 +165,9 @@ every value of how it looks.
   [what goes in a toast](../loading-and-feedback.md#what-goes-in-a-toast)
   says. Name what failed, then give the server's words, as in
   `Could not save the invoice. The customer is closed.`
-- A server message about one field shows under that field.
+- A server message about one field shows under that field, as
+  [a server message under a field](../screens.md#a-server-message-under-a-field)
+  shows.
 - A check made before sending shows under its field. Move the focus
   to the first field that failed, so it comes into view inside its
   column.

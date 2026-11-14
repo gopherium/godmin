@@ -162,6 +162,13 @@ test('the main entry hands out the confirm, the form and the rename dialogs', ()
 	])
 })
 
+test('the main entry hands out the rejected field hook, which reaches React and the announcer alone', async () => {
+	const own = (await import(join(source, 'rejected-field.ts'))) as Record<string, unknown>
+
+	expect(MainEntry.useRejectedField).toBe(own.useRejectedField)
+	expect([...packagesReachedFrom(join(source, 'rejected-field.ts'))].sort()).toEqual(['@wordpress/a11y', 'react'])
+})
+
 test('the package publishes no dialogs entry, since the main one hands the dialogs out', () => {
 	expect(Object.keys(manifest.exports)).not.toContain('./dialogs')
 })

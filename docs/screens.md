@@ -410,6 +410,81 @@ letters such as ß and ø are spelled in plain a to z. When the key is
 already in `taken`, the first free number is added, so `birthDate`
 becomes `birthDate2`.
 
+## A server message under a field
+
+Some values only the server can reject, such as an email address
+another account already uses. Its words then go under the field they
+are about, the way a check made before sending would.
+`useRejectedField` holds those words for one field.
+
+Here `invite` answers the server's words about the email, or nothing
+when it worked.
+
+```tsx
+const [email, setEmail] = useState('')
+const rejectedEmail = useRejectedField(email)
+const toaster = useToaster()
+const send = async () => {
+	const sent = email
+	const words = await invite(sent.trim())
+	if (words === undefined || rejectedEmail.reject(words, sent)) {
+		return
+	}
+	toaster.show(`Could not send the invitation. ${words}`)
+}
+
+return (
+	<form
+		className="godmin-form"
+		onSubmit={(event) => {
+			event.preventDefault()
+			void send()
+		}}
+	>
+		<ValidatedInputControl
+			ref={rejectedEmail.ref}
+			label="Email"
+			type="email"
+			value={email}
+			onChange={(event) => setEmail(event.target.value)}
+			customValidity={rejectedEmail.validity}
+		/>
+		<Button type="submit">Send</Button>
+	</form>
+)
+```
+
+- Pass what the words are about. In most forms that is the value of
+  the field, as the field holds it. Trim only what goes to the
+  server. When the answer also depends on another field, join both
+  into one string, such as `${kind}:${value}`, and send the same
+  string to `reject`.
+- Hand `ref` to the field's `ref` and `validity` to its
+  `customValidity`. Both fit the WPDS validated fields. The hook finds
+  the form through the field.
+- `reject(message, sent)` puts the words under the field and answers
+  `true`. It answers `false` when there are no words, when the field
+  changed while the send was on its way, or when the field is not on
+  the page inside a form. Say it another way then, in a toast on a
+  page.
+- The focus moves to the first field that fails, and a screen reader
+  hears the server's words at once.
+- The words go at the first edit. Typing the rejected value again does
+  not bring them back, so the reader may send it again.
+- While the words stand, the browser holds the form back from
+  sending. A form with `noValidate` sends anyway, and the words are
+  spoken again when the server rejects the value again.
+- Give each field its own hook. When one answer rejects several, the
+  focus goes to the first, and only one set of words is spoken.
+- Call `reject` once the answer came, never while rendering, and never
+  in an answer that also leaves the screen.
+- In a `FormDialog`, answer `{ close: false }` when `reject` answers
+  `true`, so the dialog stays open on the words, and
+  `{ error: words }` when it answers `false`.
+
+[Announcements](./testing.md#announcements) shows how a test reads
+what was spoken.
+
 ## Stylesheet helpers
 
 `base.css` ships a few classes for layout jobs every admin screen
