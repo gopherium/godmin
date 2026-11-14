@@ -8,6 +8,10 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 ### Added
 
+- A busy dialog stops waiting on its write once the time limit `AdminRoot` sets runs out, frees Cancel, the close icon and Escape, and shows WordPress's words for a write with no answer, in Spanish and French too.
+- `onConfirm` and `onSubmit` get an `AbortSignal` as their last argument, which fires at the time limit, to pass to the write.
+- `renderAdmin` takes `writeTimeout`, and sets no limit when it is left out.
+- `docs/build-and-versioning.md` lists every change an app upgrading from 0.32.0 makes.
 - `docs/design-system/frame.md` gives every value of the frame: the sidebar slide, the phone drawer, what a screen reader hears when the screen changes and the frame on a phone.
 - `Frame.Root` takes `shownPath` and speaks the new screen's `Page` title when the path changes, never on the first load or a list change.
 - `useShownPath` in `@gopherium/godmin/router` gives `Frame.Root` the path the router has finished showing.
@@ -26,6 +30,8 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - **Breaking.** Back draws its chevron in place of any content of the `back` link it renders through.
 - **Breaking.** The peer windows move to the `@wordpress` packages of 4 November: dataviews 22, icons 20, style-runtime 0.15, theme 4 and ui 0.26.
 - **Breaking.** `@gopherium/godmin/stylelint` loads its rules from `@wordpress/theme-build-tools`, a new optional peer. Add it to your `devDependencies` next to `stylelint`.
+- **Breaking.** `AdminRoot` takes a required `writeTimeout`, how long in milliseconds a busy dialog waits on its write, or `Infinity` for no limit, and throws as it renders on 0, a negative number, `NaN` or more than 2147483647. Read it from your app's own settings.
+- **Breaking.** The write of `useDialogRun` takes the dialog's signal as its fourth argument, and a call still running when it fires counts as failed.
 - An action label carries no ellipsis, as DataViews 22 asks. `docs/design-system/dialogs.md` says so, and the examples in `docs/lists.md` read "Delete" and "Rename".
 
 ### Fixed
