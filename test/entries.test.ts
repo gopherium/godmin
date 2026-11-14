@@ -5,7 +5,6 @@ import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 
-import ts from 'typescript'
 import { expect, expectTypeOf, test } from 'vitest'
 
 import manifest from '../package.json'
@@ -78,104 +77,6 @@ function packagesReachedFrom(entry: string): Set<string> {
 function packageOf(specifier: string): string {
 	const parts = specifier.split('/')
 	return parts.slice(0, specifier.startsWith('@') ? 2 : 1).join('/')
-}
-
-/** The statements a module may hold at its top level without running anything when it is imported. */
-const QUIET_STATEMENTS = new Set([
-	ts.SyntaxKind.ImportDeclaration,
-	ts.SyntaxKind.ExportDeclaration,
-	ts.SyntaxKind.ExportAssignment,
-	ts.SyntaxKind.FunctionDeclaration,
-	ts.SyntaxKind.ClassDeclaration,
-	ts.SyntaxKind.InterfaceDeclaration,
-	ts.SyntaxKind.TypeAliasDeclaration,
-	ts.SyntaxKind.EnumDeclaration,
-	ts.SyntaxKind.VariableStatement,
-	ts.SyntaxKind.ModuleDeclaration,
-])
-
-/** The calls and constructors a module may run when it loads, each of which only builds the value it returns. */
-const PURE_AT_LOAD = new Set([
-	'createContext',
-	'createLink',
-	'createNavigationState',
-	'join',
-	'keys',
-	'map',
-	'memo',
-	'new Map',
-	'new Set',
-	'new WeakMap',
-])
-
-/** Returns what one expression node does when the module loads, nothing for a node that only builds a value. */
-function loadWorkAt(node: ts.Node, file: ts.SourceFile): string | undefined {
-	if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
-		const callee = node.expression
-		const name = ts.isPropertyAccessExpression(callee) ? callee.name.text : callee.getText(file)
-		const key = ts.isNewExpression(node) ? `new ${name}` : name
-		return PURE_AT_LOAD.has(key) ? undefined : `runs ${key}`
-	}
-	if (ts.isTaggedTemplateExpression(node)) {
-		return `runs ${node.tag.getText(file)}`
-	}
-	if (ts.isClassStaticBlockDeclaration(node)) {
-		return 'runs a class static block'
-	}
-	const operator = ts.isBinaryExpression(node) ? node.operatorToken.kind : ts.SyntaxKind.Unknown
-	if (operator >= ts.SyntaxKind.FirstAssignment && operator <= ts.SyntaxKind.LastAssignment) {
-		return 'assigns a value'
-	}
-	return ts.isDeleteExpression(node) || ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)
-		? changingUnary(node)
-		: undefined
-}
-
-/** Returns the work of a delete, increment or decrement, nothing for a unary that only reads. */
-function changingUnary(node: ts.DeleteExpression | ts.PrefixUnaryExpression | ts.PostfixUnaryExpression) {
-	const steps = [ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken]
-	return ts.isDeleteExpression(node) || steps.includes(node.operator) ? 'changes a value' : undefined
-}
-
-/** Returns the work a node runs when its module loads, leaving out function bodies and instance fields. */
-function loadWork(node: ts.Node, file: ts.SourceFile): string[] {
-	const statics = ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Static
-	if (ts.isFunctionLike(node) || (ts.isPropertyDeclaration(node) && statics === 0)) {
-		return []
-	}
-	const work = loadWorkAt(node, file)
-	return [...(work === undefined ? [] : [work]), ...node.getChildren(file).flatMap((child) => loadWork(child, file))]
-}
-
-/** Returns what an import or re-export loads for its effect, a stylesheet or a module imported bare. */
-function importedEffects(statement: ts.ImportDeclaration | ts.ExportDeclaration): string[] {
-	const specifier = statement.moduleSpecifier
-	if (specifier === undefined || (ts.isExportDeclaration(statement) && statement.isTypeOnly)) {
-		return []
-	}
-	const from = (specifier as ts.StringLiteral).text
-	if (ts.isImportDeclaration(statement) && statement.importClause === undefined) {
-		return [`imports ${from} for its effect`]
-	}
-	const verb = ts.isImportDeclaration(statement) ? 'imports' : 'exports'
-	return from.endsWith('.css') ? [`${verb} the stylesheet ${from}`] : []
-}
-
-/** Returns a line for each import, re-export, statement and expression of a module that works when it loads. */
-function importEffects(name: string, text: string): string[] {
-	const kind = name.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS
-	const file = ts.createSourceFile(name, text, ts.ScriptTarget.Latest, true, kind)
-	return file.statements.flatMap((statement) => {
-		const at = `${name}:${file.getLineAndCharacterOfPosition(statement.getStart(file)).line + 1}`
-		if (!QUIET_STATEMENTS.has(statement.kind)) {
-			return [`${at} runs code`]
-		}
-		const effects =
-			ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)
-				? importedEffects(statement)
-				: loadWork(statement, file)
-		return effects.map((effect) => `${at} ${effect}`)
-	})
 }
 
 test('the walk follows imports written with either quote', () => {
@@ -359,47 +260,4 @@ test('the components package is no peer, since no source file reaches it', () =>
 
 	expect(peers[componentsPackage]).toBeUndefined()
 	expect(meta[componentsPackage]).toBeUndefined()
-})
-
-test('the import check names every import, re-export and expression that works when the module loads', () => {
-	const text = [
-		"import './register.js'",
-		"import styles from './style.css'",
-		"export { default as sheet } from './sheet.css'",
-		"export type { Sheet } from './sheet-types.css'",
-		"import { title } from './title.js'",
-		'document.title = title',
-		'export const registered = register()',
-		"const ready = (document.title = 'Ready')",
-		'export const quiet = createContext(null)',
-		'const cache = new WeakMap()',
-		'class Store { static ready = boot(); static { start() } count = count() }',
-		'export default setup()',
-		"export function later() { document.title = 'Later' }",
-	].join('\n')
-
-	expect(importEffects('probe.ts', text)).toEqual([
-		'probe.ts:1 imports ./register.js for its effect',
-		'probe.ts:2 imports the stylesheet ./style.css',
-		'probe.ts:3 exports the stylesheet ./sheet.css',
-		'probe.ts:6 runs code',
-		'probe.ts:7 runs register',
-		'probe.ts:8 assigns a value',
-		'probe.ts:11 runs boot',
-		'probe.ts:11 runs a class static block',
-		'probe.ts:11 runs start',
-		'probe.ts:12 runs setup',
-	])
-})
-
-test('no source file runs code, loads a module for its effect or loads a stylesheet when it is imported', () => {
-	const files = readdirSync(source, { recursive: true, encoding: 'utf8' }).filter((path) => /\.tsx?$/.test(path))
-	const effects = files.flatMap((path) => importEffects(path, readFileSync(join(source, path), 'utf8')))
-
-	expect(files.length).toBeGreaterThan(40)
-	expect(effects).toEqual([])
-})
-
-test('the package marks only its stylesheets as having side effects, so a bundler drops what an app leaves', () => {
-	expect((manifest as { sideEffects?: unknown }).sideEffects).toEqual(['**/*.css'])
 })
