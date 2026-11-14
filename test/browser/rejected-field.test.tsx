@@ -2,7 +2,7 @@
 
 import { render, screen } from '@testing-library/react'
 import { ValidatedInputControl } from '@wordpress/ui'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
 
@@ -17,22 +17,21 @@ const SENT = 'taken@example.com'
  * @returns The form.
  */
 function EmailBench({ words }: { words: string }) {
-	const form = useRef<HTMLFormElement>(null)
 	const [email, setEmail] = useState('')
-	const rejected = useRejectedField(form, email)
+	const rejected = useRejectedField(email)
 	const send = async (sent: string) => {
 		await Promise.resolve()
 		rejected.reject(words, sent)
 	}
 	return (
 		<form
-			ref={form}
 			onSubmit={(event) => {
 				event.preventDefault()
 				void send(email)
 			}}
 		>
 			<ValidatedInputControl
+				ref={rejected.ref}
 				label="Email"
 				value={email}
 				onChange={(event) => setEmail(event.target.value)}

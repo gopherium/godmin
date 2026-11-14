@@ -4,13 +4,12 @@ import { act, fireEvent, render, renderHook, screen } from '@testing-library/rea
 import { userEvent } from '@testing-library/user-event'
 import { speak } from '@wordpress/a11y'
 import { ValidatedInputControl, ValidatedTextareaControl } from '@wordpress/ui'
-import { StrictMode, createRef, memo, useLayoutEffect, useRef, useState } from 'react'
-import type { RefObject } from 'react'
+import { StrictMode, memo, useLayoutEffect, useState } from 'react'
 import { beforeEach, expect, test, vi } from 'vitest'
 
-import { useRejectedField } from '../src/index'
-import type { RejectedField } from '../src/index'
-import { getAnnouncement, installTestEnvironment } from '../src/testing.js'
+import { FormDialog, useRejectedField } from '../src/index'
+import type { DialogAnswer, RejectedField, RejectedValidity } from '../src/index'
+import { getAnnouncement, installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 vi.mock('@wordpress/a11y', async (importOriginal) => {
 	const actual = await importOriginal<typeof import('@wordpress/a11y')>()
@@ -66,16 +65,14 @@ async function settle(): Promise<void> {
  * @returns The form.
  */
 function EmailBench({ answer, onRejected = () => undefined, sentAs, noValidate = false }: BenchProps) {
-	const form = useRef<HTMLFormElement>(null)
 	const [email, setEmail] = useState('')
-	const rejected = useRejectedField(form, email)
+	const rejected = useRejectedField(email)
 	const send = async (sent: string) => {
 		await Promise.resolve()
 		onRejected(rejected.reject(answer(sent), sentAs ?? sent))
 	}
 	return (
 		<form
-			ref={form}
 			noValidate={noValidate}
 			onSubmit={(event) => {
 				event.preventDefault()
@@ -83,6 +80,7 @@ function EmailBench({ answer, onRejected = () => undefined, sentAs, noValidate =
 			}}
 		>
 			<ValidatedInputControl
+				ref={rejected.ref}
 				label="Email"
 				value={email}
 				onChange={(event) => setEmail(event.target.value)}
@@ -236,16 +234,44 @@ test.each([
 	expect(speak).not.toHaveBeenCalled()
 })
 
-test('answers no when the form never mounted', () => {
-	const { result } = renderHook(() => useRejectedField(createRef<HTMLFormElement>(), SENT))
+test('answers no when the field never mounted', () => {
+	const { result } = renderHook(() => useRejectedField(SENT))
 
 	let shown = true
 	act(() => {
-		shown = result.current.reject('An address no form holds.', SENT)
+		shown = result.current.reject('An address no field holds.', SENT)
 	})
 
 	expect(shown).toBe(false)
 	expect(result.current.validity).toBeUndefined()
+})
+
+/**
+ * Renders an email field that sits in no form.
+ * @param props - Where the bench hands out the field's reject call.
+ * @returns The field.
+ */
+function FormlessBench({ handOut }: { handOut: (reject: RejectedField['reject']) => void }) {
+	const rejected = useRejectedField(SENT)
+	handOut(rejected.reject)
+	return (
+		<ValidatedInputControl ref={rejected.ref} label="Email" value={SENT} readOnly customValidity={rejected.validity} />
+	)
+}
+
+test('answers no when the field sits in no form', async () => {
+	let reject: RejectedField['reject'] = () => true
+	render(<FormlessBench handOut={(handed) => (reject = handed)} />)
+
+	let shown = true
+	act(() => {
+		shown = reject('An address outside any form.', SENT)
+	})
+	await settle()
+
+	expect(shown).toBe(false)
+	expect(emailField().validity.valid).toBe(true)
+	expect(speak).not.toHaveBeenCalled()
 })
 
 /**
@@ -254,11 +280,10 @@ test('answers no when the form never mounted', () => {
  * @returns The form.
  */
 function ToggledBench({ handOut }: { handOut: (reject: RejectedField['reject']) => void }) {
-	const form = useRef<HTMLFormElement>(null)
 	const [shown, setShown] = useState(true)
 	return (
-		<form ref={form}>
-			{shown ? <RejectableEmail form={form} handOut={handOut} /> : null}
+		<form>
+			{shown ? <RejectableEmail handOut={handOut} /> : null}
 			<button type="button" onClick={() => setShown(false)}>
 				Hide
 			</button>
@@ -268,19 +293,15 @@ function ToggledBench({ handOut }: { handOut: (reject: RejectedField['reject']) 
 
 /**
  * Renders an email field holding the sent address and hands out its reject call.
- * @param props - The form it sits in and where it hands out its reject call.
+ * @param props - Where it hands out its reject call.
  * @returns The field.
  */
-function RejectableEmail({
-	form,
-	handOut,
-}: {
-	form: RefObject<HTMLFormElement | null>
-	handOut: (reject: RejectedField['reject']) => void
-}) {
-	const rejected = useRejectedField(form, SENT)
+function RejectableEmail({ handOut }: { handOut: (reject: RejectedField['reject']) => void }) {
+	const rejected = useRejectedField(SENT)
 	handOut(rejected.reject)
-	return <ValidatedInputControl label="Email" value={SENT} readOnly customValidity={rejected.validity} />
+	return (
+		<ValidatedInputControl ref={rejected.ref} label="Email" value={SENT} readOnly customValidity={rejected.validity} />
+	)
 }
 
 test('answers no once the part holding the hook left, while the form stays', async () => {
@@ -310,12 +331,17 @@ test('answers no once the part holding the hook left, while the form stays', asy
  * @returns The form.
  */
 function SameCommitBench({ onRejected }: { onRejected: (shown: boolean) => void }) {
-	const form = useRef<HTMLFormElement>(null)
 	const [email, setEmail] = useState('')
-	const rejected = useRejectedField(form, email)
+	const rejected = useRejectedField(email)
 	return (
-		<form ref={form}>
-			<ValidatedInputControl label="Email" value={email} readOnly customValidity={rejected.validity} />
+		<form>
+			<ValidatedInputControl
+				ref={rejected.ref}
+				label="Email"
+				value={email}
+				readOnly
+				customValidity={rejected.validity}
+			/>
 			<LayoutRejection value={email} reject={rejected.reject} onRejected={onRejected} />
 			<button type="button" onClick={() => setEmail(SENT)}>
 				Fill
@@ -365,11 +391,10 @@ type FirstControl = 'input' | 'textarea'
  * @returns The form.
  */
 function TwoFieldBench({ first, words }: { first: FirstControl; words: [string, string] }) {
-	const form = useRef<HTMLFormElement>(null)
 	const [name, setName] = useState('Reserved Name')
 	const [email, setEmail] = useState(SENT)
-	const rejectedEmail = useRejectedField(form, email)
-	const rejectedName = useRejectedField(form, name)
+	const rejectedEmail = useRejectedField(email)
+	const rejectedName = useRejectedField(name)
 	const send = async () => {
 		await Promise.resolve()
 		rejectedEmail.reject(words[1], email)
@@ -378,18 +403,26 @@ function TwoFieldBench({ first, words }: { first: FirstControl; words: [string, 
 	const nameProps = { label: 'Name', value: name, customValidity: rejectedName.validity }
 	return (
 		<form
-			ref={form}
 			onSubmit={(event) => {
 				event.preventDefault()
 				void send()
 			}}
 		>
 			{first === 'textarea' ? (
-				<ValidatedTextareaControl {...nameProps} onChange={(event) => setName(event.target.value)} />
+				<ValidatedTextareaControl
+					{...nameProps}
+					ref={rejectedName.ref}
+					onChange={(event) => setName(event.target.value)}
+				/>
 			) : (
-				<ValidatedInputControl {...nameProps} onChange={(event) => setName(event.target.value)} />
+				<ValidatedInputControl
+					{...nameProps}
+					ref={rejectedName.ref}
+					onChange={(event) => setName(event.target.value)}
+				/>
 			)}
 			<ValidatedInputControl
+				ref={rejectedEmail.ref}
 				label="Email"
 				value={email}
 				onChange={(event) => setEmail(event.target.value)}
@@ -442,27 +475,90 @@ test('clears the invalid mark of the field it rejected when two fields hold the 
 })
 
 /**
+ * Renders a form of two email fields holding the same address, both rejected with the same words on one send.
+ * @param props - The words each field is rejected with.
+ * @returns The form.
+ */
+function TwinBench({ words }: { words: string }) {
+	const [primary, setPrimary] = useState(SENT)
+	const [backup, setBackup] = useState(SENT)
+	const rejectedPrimary = useRejectedField(primary)
+	const rejectedBackup = useRejectedField(backup)
+	const send = async () => {
+		await Promise.resolve()
+		rejectedPrimary.reject(words, primary)
+		rejectedBackup.reject(words, backup)
+	}
+	return (
+		<form
+			onSubmit={(event) => {
+				event.preventDefault()
+				void send()
+			}}
+		>
+			<ValidatedInputControl
+				ref={rejectedPrimary.ref}
+				label="Primary email"
+				value={primary}
+				onChange={(event) => setPrimary(event.target.value)}
+				customValidity={rejectedPrimary.validity}
+			/>
+			<ValidatedInputControl
+				ref={rejectedBackup.ref}
+				label="Backup email"
+				value={backup}
+				onChange={(event) => setBackup(event.target.value)}
+				customValidity={rejectedBackup.validity}
+			/>
+			<button type="submit">Send</button>
+		</form>
+	)
+}
+
+test('keeps the mark of a field holding the same value and words when the other one is edited', async () => {
+	const words = 'This address is already in use.'
+	const user = userEvent.setup()
+	render(<TwinBench words={words} />)
+	await user.click(screen.getByRole('button', { name: 'Send' }))
+	await settle()
+	const backup = screen.getByRole('textbox', { name: 'Backup email' }) as HTMLInputElement
+	await user.click(backup)
+	await user.keyboard('{Enter}')
+	await settle()
+	expect(backup.getAttribute('aria-invalid')).toBe('true')
+
+	await user.click(backup)
+	await user.keyboard('m')
+	await settle()
+
+	const primary = screen.getByRole('textbox', { name: 'Primary email' }) as HTMLInputElement
+	expect(backup.hasAttribute('aria-invalid')).toBe(false)
+	expect(backup.validity.valid).toBe(true)
+	expect(primary.validity.customError).toBe(true)
+	expect(descriptionOf(primary)).toContain(words)
+})
+
+/**
  * Renders an email form whose words are about the address joined with the kind of address.
  * @param props - The server's words about every send.
  * @returns The form.
  */
 function JoinedBench({ words }: { words: string }) {
-	const form = useRef<HTMLFormElement>(null)
 	const [email, setEmail] = useState('')
-	const rejected = useRejectedField(form, `work:${email}`)
+	const rejected = useRejectedField(`work:${email}`)
 	const send = async (sent: string) => {
 		await Promise.resolve()
 		rejected.reject(words, `work:${sent}`)
 	}
 	return (
 		<form
-			ref={form}
 			onSubmit={(event) => {
 				event.preventDefault()
 				void send(email)
 			}}
 		>
 			<ValidatedInputControl
+				ref={rejected.ref}
 				label="Email"
 				value={email}
 				onChange={(event) => setEmail(event.target.value)}
@@ -506,16 +602,14 @@ const OwnName = memo(function OwnName() {
  * @returns The form.
  */
 function SharedWordsBench() {
-	const form = useRef<HTMLFormElement>(null)
 	const [email, setEmail] = useState('')
-	const rejected = useRejectedField(form, `work:${email}`)
+	const rejected = useRejectedField(`work:${email}`)
 	const send = async (sent: string) => {
 		await Promise.resolve()
 		rejected.reject(OWN_WORDS.message, `work:${sent}`)
 	}
 	return (
 		<form
-			ref={form}
 			noValidate
 			onSubmit={(event) => {
 				event.preventDefault()
@@ -524,6 +618,7 @@ function SharedWordsBench() {
 		>
 			<OwnName />
 			<ValidatedInputControl
+				ref={rejected.ref}
 				label="Email"
 				value={email}
 				onChange={(event) => setEmail(event.target.value)}
@@ -534,7 +629,7 @@ function SharedWordsBench() {
 	)
 }
 
-test('never clears another field that shows the same words when it cannot tell which field it rejected', async () => {
+test('never clears another field that shows the same words of its own', async () => {
 	const user = userEvent.setup()
 	render(<SharedWordsBench />)
 	await user.type(emailField(), SENT)
@@ -550,22 +645,66 @@ test('never clears another field that shows the same words when it cannot tell w
 	expect(name.validationMessage).toBe(OWN_WORDS.message)
 })
 
+/** An email field that renders again only when its props change. */
+const SteadyEmail = memo(function SteadyEmail({
+	fieldRef,
+	validity,
+}: {
+	fieldRef: RejectedField['ref']
+	validity: RejectedValidity
+}) {
+	return (
+		<ValidatedInputControl
+			ref={fieldRef}
+			label="Email"
+			value={SENT}
+			onChange={() => undefined}
+			customValidity={validity}
+		/>
+	)
+})
+
+/**
+ * Renders a form whose steady email field shows a check of its own while no server words stand.
+ * @returns The form.
+ */
+function OwnCheckBench() {
+	const [renders, setRenders] = useState(0)
+	const rejected = useRejectedField(SENT)
+	return (
+		<form>
+			<SteadyEmail fieldRef={rejected.ref} validity={rejected.validity ?? OWN_WORDS} />
+			<button type="button" onClick={() => setRenders(renders + 1)}>
+				Render again
+			</button>
+		</form>
+	)
+}
+
+test("leaves a field's own check alone while no server words stand", async () => {
+	render(<OwnCheckBench />)
+
+	fireEvent.click(screen.getByRole('button', { name: 'Render again' }))
+	await settle()
+
+	expect(emailField().validity.customError).toBe(true)
+	expect(emailField().validationMessage).toBe(OWN_WORDS.message)
+})
+
 /**
  * Renders a form whose blank required name fails its own check while the server rejects the email.
  * @param props - The words of the name's own check and the server's words about the email.
  * @returns The form.
  */
 function EarlierFailureBench({ own, server }: { own: string; server: string }) {
-	const form = useRef<HTMLFormElement>(null)
 	const [email, setEmail] = useState(SENT)
-	const rejected = useRejectedField(form, email)
+	const rejected = useRejectedField(email)
 	const send = async () => {
 		await Promise.resolve()
 		rejected.reject(server, email)
 	}
 	return (
 		<form
-			ref={form}
 			noValidate
 			onSubmit={(event) => {
 				event.preventDefault()
@@ -580,6 +719,7 @@ function EarlierFailureBench({ own, server }: { own: string; server: string }) {
 				customValidity={{ type: 'invalid', message: own }}
 			/>
 			<ValidatedInputControl
+				ref={rejected.ref}
 				label="Email"
 				value={email}
 				onChange={(event) => setEmail(event.target.value)}
@@ -615,19 +755,22 @@ test('speaks again when a later answer rejects the same value', async () => {
 	expect(getAnnouncement('assertive')).toBe(`${words}${REPEAT_MARK}`)
 })
 
-test('hands out the same reject and the same validity across renders', () => {
-	const form = { current: document.createElement('form') }
-	const { result, rerender } = renderHook(({ held }) => useRejectedField(form, held), {
+test('hands out the same ref, reject and validity across renders', () => {
+	const form = document.createElement('form')
+	const field = form.appendChild(document.createElement('input'))
+	const { result, rerender } = renderHook(({ held }) => useRejectedField(held), {
 		initialProps: { held: SENT },
 	})
 	act(() => {
+		result.current.ref(field)
 		result.current.reject('Words that stand across renders.', SENT)
 	})
-	const { reject, validity } = result.current
+	const { ref, reject, validity } = result.current
 
 	rerender({ held: SENT })
 
 	expect(validity).toEqual({ type: 'invalid', message: 'Words that stand across renders.' })
+	expect(result.current.ref).toBe(ref)
 	expect(result.current.reject).toBe(reject)
 	expect(result.current.validity).toBe(validity)
 })
@@ -637,10 +780,9 @@ test('hands out the same reject and the same validity across renders', () => {
  * @returns The form.
  */
 function FailingAtMountBench() {
-	const form = useRef<HTMLFormElement>(null)
-	const rejected = useRejectedField(form, SENT)
+	const rejected = useRejectedField(SENT)
 	return (
-		<form ref={form}>
+		<form>
 			<ValidatedInputControl
 				label="Name"
 				required
@@ -648,7 +790,13 @@ function FailingAtMountBench() {
 				onChange={() => undefined}
 				customValidity={{ type: 'invalid', message: 'Please enter a name at mount.' }}
 			/>
-			<ValidatedInputControl label="Email" value={SENT} readOnly customValidity={rejected.validity} />
+			<ValidatedInputControl
+				ref={rejected.ref}
+				label="Email"
+				value={SENT}
+				readOnly
+				customValidity={rejected.validity}
+			/>
 		</form>
 	)
 }
@@ -667,17 +815,64 @@ test('stays still on a StrictMode mount, also beside a field that fails', async 
 })
 
 /**
+ * Renders a form dialog whose send the server answers with words about the email.
+ * @param props - The server's words about every send.
+ * @returns The dialog.
+ */
+function DialogBench({ words }: { words: string }) {
+	const [email, setEmail] = useState(SENT)
+	const rejected = useRejectedField(email)
+	const send = async (): Promise<DialogAnswer> => {
+		const sent = email
+		await Promise.resolve()
+		return rejected.reject(words, sent) ? { close: false } : { error: words }
+	}
+	return (
+		<FormDialog title="Invite" submitLabel="Send" onSubmit={send} onClose={() => undefined}>
+			<ValidatedInputControl
+				ref={rejected.ref}
+				label="Email"
+				value={email}
+				onChange={(event) => setEmail(event.target.value)}
+				customValidity={rejected.validity}
+			/>
+		</FormDialog>
+	)
+}
+
+test('puts the words under a field of a form dialog that stays open', async () => {
+	const words = 'An account already holds this address.'
+	renderAdmin(<DialogBench words={words} />)
+	await screen.findByRole('dialog')
+
+	await act(async () => {
+		fireEvent.click(screen.getByRole('button', { name: 'Send' }))
+	})
+	await settle()
+
+	expect(screen.getByRole('dialog')).toBeDefined()
+	expect(emailField().validity.customError).toBe(true)
+	expect(descriptionOf(emailField())).toContain(words)
+	expect(speak).toHaveBeenCalledWith(words, 'assertive')
+})
+
+/**
  * Renders a form that a send both rejects and removes in one update.
  * @param props - The listener for what `reject` answered.
  * @returns The form while it stays.
  */
 function LeavingBench({ onRejected }: { onRejected: (shown: boolean) => void }) {
-	const form = useRef<HTMLFormElement>(null)
 	const [open, setOpen] = useState(true)
-	const rejected = useRejectedField(form, SENT)
+	const rejected = useRejectedField(SENT)
 	return open ? (
-		<form ref={form}>
-			<ValidatedInputControl label="Email" value={SENT} readOnly customValidity={rejected.validity} />
+		<form>
+			<ValidatedInputControl
+				ref={rejected.ref}
+				label="Email"
+				value={SENT}
+				readOnly
+				customValidity={rejected.validity}
+			/>
 			<button
 				type="button"
 				onClick={() => {

@@ -12,16 +12,18 @@ export interface RejectedValidity {
 	message: string
 }
 
+/** A form control that holds a validity message of its own. */
+type FieldElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+
 /** What a field takes from the hook, and the way to put a server's message under it. */
 export interface RejectedField {
+	/** The ref the field takes, so the hook knows the field it rejects. */
+	ref: (field: FieldElement | null) => void
 	/** The custom validity the field takes, none while no message stands. */
 	validity: RejectedValidity | undefined
 	/** Puts the message under the field and answers true, or answers false so the caller says it another way. */
 	reject: (message: string, sent: string) => boolean
 }
-
-/** A form control that holds a validity message of its own. */
-type FieldElement = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
 
 /** A server's message standing under a field, and the value it is about. */
 interface Standing {
@@ -31,117 +33,140 @@ interface Standing {
 	value: string
 }
 
+/** A server's message waiting to be spoken, and the field it stands under. */
+interface Spoken {
+	/** The field the message stands under. */
+	field: FieldElement
+	/** The words of the message. */
+	message: string
+}
+
 /** The server messages each form shows in the current commit, so only one is spoken. */
-const toSpeak = new WeakMap<HTMLFormElement, string[]>()
+const toSpeak = new WeakMap<HTMLFormElement, Spoken[]>()
 
 /**
- * Tells whether an element is a form control with a validity message.
- * @param element - The element to check.
- * @returns True for an input, a textarea or a select.
+ * Returns the form a field sits in.
+ * @param field - The field, null when it is not on the page.
+ * @returns The form, null when the field is not on the page or sits in no form.
  */
-function isField(element: Element | null): element is FieldElement {
-	return (
-		element instanceof HTMLInputElement ||
-		element instanceof HTMLTextAreaElement ||
-		element instanceof HTMLSelectElement
-	)
+function formOf(field: FieldElement | null): HTMLFormElement | null {
+	return field?.form ?? null
 }
 
 /**
- * Returns the message of the field of a form that holds the focus.
- * @param form - The form the field sits in.
- * @returns The message, empty when the focus is on no field of the form.
+ * Tells whether a server's message can stand under a field.
+ * @param field - The field, null when it is not on the page.
+ * @param message - The server's message.
+ * @returns True when there are words and the field sits in a form.
  */
-function focusedMessage(form: HTMLFormElement): string {
-	const focused = document.activeElement
-	return isField(focused) && form.contains(focused) ? focused.validationMessage : ''
+function canStand(field: FieldElement | null, message: string): boolean {
+	return message !== '' && formOf(field) !== null
 }
 
 /**
  * Speaks one server message for a form once every report of the commit ran, the focused field's when it is one.
  * @param form - The form that was reported.
- * @param message - The server's message about one of its fields.
+ * @param spoken - The server's message and the field it stands under.
  */
-function speakOnce(form: HTMLFormElement, message: string): void {
+function speakOnce(form: HTMLFormElement, spoken: Spoken): void {
 	const queued = toSpeak.get(form)
 	if (queued !== undefined) {
-		queued.push(message)
+		queued.push(spoken)
 		return
 	}
-	const messages = [message]
-	toSpeak.set(form, messages)
+	const all = [spoken]
+	toSpeak.set(form, all)
 	queueMicrotask(() => {
 		toSpeak.delete(form)
-		const focused = focusedMessage(form)
-		speak(messages.includes(focused) ? focused : message, 'assertive')
+		const focused = all.find((entry) => entry.field === document.activeElement) ?? spoken
+		speak(focused.message, 'assertive')
 	})
 }
 
 /**
- * Returns the field of a form that holds a server's message, the one holding the value it is about when several do.
- * @param form - The form the rejected field sits in.
- * @param standing - The server's message and the value it is about.
- * @returns The field, or undefined when none holds the message or several do and none holds the value.
+ * Shows the message of every field of a form that fails and speaks a server's message about one of them.
+ * @param field - The field the server's message stands under, null once it left the page.
+ * @param message - The server's message.
+ * @returns The field when its form was reported, undefined when it is not on the page in a form.
  */
-function holderOf(form: HTMLFormElement, standing: Standing): FieldElement | undefined {
-	const holding = Array.from(form.elements).filter(
-		(element): element is FieldElement =>
-			isField(element) && element.validity.customError && element.validationMessage === standing.validity.message,
-	)
-	return holding.find((field) => field.value === standing.value) ?? (holding.length === 1 ? holding[0] : undefined)
-}
-
-/**
- * Shows the message of every field of a form that fails, speaks a server's message and finds the field holding it.
- * @param form - The form the rejected field sits in.
- * @param standing - The server's message and the value it is about.
- * @returns The field holding the message as its custom validity, or undefined when none is found.
- */
-function report(form: HTMLFormElement, standing: Standing): FieldElement | undefined {
+function report(field: FieldElement | null, message: string): FieldElement | undefined {
+	const form = formOf(field)
+	if (field === null || form === null) {
+		return undefined
+	}
 	form.reportValidity()
-	speakOnce(form, standing.validity.message)
-	return holderOf(form, standing)
+	speakOnce(form, { field, message })
+	return field
 }
 
 /**
- * Holds a server's message about one field under it, until what the message is about changes.
- * @param form - The form the field sits in.
- * @param held - What the message is about now, the value of the field in most forms.
- * @returns The custom validity the field takes and the way to reject what was sent.
+ * Holds a server's message about a value, forgetting it once the value changes.
+ * @param held - What the message is about now.
+ * @returns The message standing and the way to put one.
  */
-export function useRejectedField(form: RefObject<HTMLFormElement | null>, held: string): RejectedField {
+function useStanding(held: string): [Standing | undefined, (standing: Standing) => void] {
 	const [standing, setStanding] = useState<Standing>()
 	if (standing !== undefined && standing.value !== held) {
 		setStanding(undefined)
 	}
-	const holding = useRef<string | undefined>(held)
-	const shownOn = useRef<FieldElement | undefined>(undefined)
+	return [standing, setStanding]
+}
+
+/**
+ * Keeps what a field held in the last commit.
+ * @param held - What the field holds now.
+ * @returns The ref holding it.
+ */
+function useHolding(held: string): RefObject<string> {
+	const holding = useRef(held)
 	useInsertionEffect(() => {
 		holding.current = held
+	})
+	return holding
+}
+
+/**
+ * Reports a server's message once it stands under a field, and takes it off the field once it goes.
+ * @param field - The field the message stands under.
+ * @param standing - The message standing, none once it went.
+ */
+function useReport(field: RefObject<FieldElement | null>, standing: Standing | undefined): void {
+	const shownOn = useRef<FieldElement | undefined>(undefined)
+	useInsertionEffect(() => {
 		if (standing === undefined && shownOn.current !== undefined) {
 			shownOn.current.setCustomValidity('')
 			shownOn.current = undefined
 		}
-		return () => {
-			holding.current = undefined
-		}
 	})
 	useEffect(() => {
-		const target = form.current
-		if (standing === undefined || target === null) {
-			return
+		if (standing !== undefined) {
+			shownOn.current = report(field.current, standing.validity.message)
 		}
-		shownOn.current = report(target, standing)
-	}, [form, standing])
+	}, [field, standing])
+}
+
+/**
+ * Holds a server's message about one field under it, until what the message is about changes.
+ * @param held - What the message is about now, the value of the field in most forms.
+ * @returns The ref and the custom validity the field takes, and the way to reject what was sent.
+ */
+export function useRejectedField(held: string): RejectedField {
+	const [standing, setStanding] = useStanding(held)
+	const holding = useHolding(held)
+	const field = useRef<FieldElement | null>(null)
+	useReport(field, standing)
+	const ref = useCallback((element: FieldElement | null) => {
+		field.current = element
+	}, [])
 	const reject = useCallback(
 		(message: string, sent: string) => {
-			if (message === '' || form.current === null || holding.current !== sent) {
+			if (holding.current !== sent || !canStand(field.current, message)) {
 				return false
 			}
 			setStanding({ validity: { type: 'invalid', message }, value: sent })
 			return true
 		},
-		[form],
+		[holding, setStanding],
 	)
-	return { validity: standing?.validity, reject }
+	return { ref, validity: standing?.validity, reject }
 }
