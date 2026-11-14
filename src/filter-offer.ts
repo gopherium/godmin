@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/** How DataViews 20 filters a field of one type. */
+/** How DataViews 22 filters a field of one type. */
 export interface TypeOffer {
 	/** The operators a field of the type filters with when it names none. */
 	defaults: readonly string[]
@@ -10,7 +10,7 @@ export interface TypeOffer {
 	control: boolean
 }
 
-/** The operators DataViews 20 picks one value with. */
+/** The operators DataViews 22 picks one value with. */
 export const SINGLE_OPERATORS: readonly string[] = [
 	'is',
 	'isNot',
@@ -29,7 +29,7 @@ export const SINGLE_OPERATORS: readonly string[] = [
 	'notOn',
 ]
 
-/** Every operator DataViews 20 knows. */
+/** Every operator DataViews 22 knows. */
 const ALL_OPERATORS = ['isAny', 'isNone', 'isAll', 'isNotAll', 'between', 'inThePast', 'over', ...SINGLE_OPERATORS]
 
 /** The operators a text field may name. */
@@ -44,17 +44,17 @@ const MOMENT = ['on', 'notOn', 'before', 'after', 'beforeInc', 'afterInc']
 /** The operators a date and time field takes. */
 const DATETIME = [...MOMENT, 'inThePast', 'over']
 
-/** How DataViews 20 filters a text field. */
+/** How DataViews 22 filters a text field. */
 const TEXT: TypeOffer = { defaults: ['isAny', 'isNone'], valid: TEXT_VALID, control: true }
 
-/** How DataViews 20 filters a number field. */
+/** How DataViews 22 filters a number field. */
 const NUMBER: TypeOffer = {
 	defaults: NUMBER_DEFAULTS,
 	valid: [...NUMBER_DEFAULTS, 'isAny', 'isNone', 'isNotAll'],
 	control: true,
 }
 
-/** How DataViews 20 filters each field type it knows, by type name. */
+/** How DataViews 22 filters each field type it knows, by type name. */
 const TYPE_OFFERS = new Map<string | undefined, TypeOffer>([
 	['text', TEXT],
 	['email', TEXT],
@@ -72,13 +72,13 @@ const TYPE_OFFERS = new Map<string | undefined, TypeOffer>([
 	['password', { defaults: [], valid: [], control: true }],
 ])
 
-/** How DataViews 20 filters a field of no type, or of a type it does not know. */
+/** How DataViews 22 filters a field of no type, or of a type it does not know. */
 const UNTYPED: TypeOffer = { defaults: ['is', 'isNot'], valid: ALL_OPERATORS, control: false }
 
-/** The field types DataViews 20 knows. */
+/** The field types DataViews 22 knows. */
 export const TYPE_NAMES = [...TYPE_OFFERS.keys()]
 
-/** The controls DataViews 20 draws, by the name a field's Edit gives. */
+/** The controls DataViews 22 draws, by the name a field's Edit gives. */
 export const CONTROLS: readonly string[] = [
 	'adaptiveSelect',
 	'array',
@@ -103,7 +103,7 @@ export const CONTROLS: readonly string[] = [
 ]
 
 /**
- * Returns how DataViews 20 filters a field of the given type.
+ * Returns how DataViews 22 filters a field of the given type.
  * @param type - The field type, none when undefined.
  * @returns The offer of the type, the untyped one for a type DataViews does not know.
  */

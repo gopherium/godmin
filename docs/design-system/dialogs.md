@@ -34,8 +34,8 @@ page gives every value of how they look and behave.
 - The confirm button names the action, such as "Delete permanently".
   The other button reads "Cancel".
 - Never write "Are you sure" on an action that cannot be undone.
-- A menu label ends with an ellipsis when it opens a dialog, such as
-  "Delete…", and has none when it runs at once, such as "Trash".
+- An action label carries no ellipsis, as DataViews asks, whether it
+  opens a dialog, such as "Delete", or runs at once, such as "Trash".
 
 ## Size and place
 

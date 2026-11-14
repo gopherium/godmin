@@ -144,6 +144,27 @@ const LAYOUT_MODULE = '@wordpress/dataviews/build-module/components/dataviews-la
 /** The module of the installed DataViews that waits before a later load pulses. */
 const DELAY_MODULE = '@wordpress/dataviews/build-module/hooks/use-delayed-loading.mjs'
 
+/** The module of the installed DataViews that draws the table, the bulk bar over its head included. */
+const TABLE_MODULE = '@wordpress/dataviews/build-module/components/dataviews-layouts/table/index.mjs'
+
+/** The module of the installed DataViews that draws the footer under a list. */
+const FOOTER_MODULE = '@wordpress/dataviews/build-module/components/dataviews-footer/index.mjs'
+
+/** The module of the installed DataViews that draws the select all box, the bulk actions and their Actions menu. */
+const BULK_MODULE = '@wordpress/dataviews/build-module/components/dataviews-bulk-actions/index.mjs'
+
+/** The types of the installed DataViews, where it says how to write an action label. */
+const DATAVIEWS_TYPES = '@wordpress/dataviews/build-types/types/dataviews.d.ts'
+
+/** The module of the installed components package that draws the WordPress snackbar. */
+const SNACKBAR_MODULE = '@wordpress/components/build-module/snackbar/index.mjs'
+
+/** The module of the installed components package that draws the spinner DataViews shows on a first load. */
+const SPINNER_MODULE = '@wordpress/components/build-module/spinner/index.mjs'
+
+/** The bulk bar of a table while its list reloads, as the installed DataViews sheet selects it. */
+const BULK_BAR_REFRESHING = '.dataviews-view-table__bulk-actions-overlay.is-refreshing > .dataviews-bulk-actions'
+
 /** How the installed DataViews sheet opens a rule that runs only when the reader allows motion. */
 const MOTION_ALLOWED = '@media not (prefers-reduced-motion) {\n  '
 
@@ -609,6 +630,30 @@ test('the loading page gives the waits and the pulse of a list as the installed 
 	expect(loading.get('Reduced motion')).toContain(`\`${groupOf(/opacity: ([\d.]+)/.exec(still))}\``)
 })
 
+test('the loading page pulses the bulk bar with the rows and the footer, as the installed DataViews sheet does', () => {
+	const pulse = ruleOf(`${MOTION_ALLOWED}.dataviews-view-table.is-refreshing`, dataviews)
+	const bar = ruleOf(`${MOTION_ALLOWED}${BULK_BAR_REFRESHING}`, dataviews)
+	const still = ruleOf(BULK_BAR_REFRESHING, dataviews)
+	const list = (loading.get('A list') ?? '').replace(/\s+/g, ' ')
+
+	expect(bar, 'the bulk bar pulses as the table does').toBe(pulse)
+	expect(still).toMatch(/opacity: 0\.5;/)
+	expect(dataviews, 'the bulk bar of a grid pulses').not.toContain('.dataviews-view-grid__bulk-actions-header.is-')
+	expect(list).toContain('The old rows, the bulk bar and the footer stay on screen.')
+	expect(list).toContain('the rows and the footer pulse, and in a table the bulk bar too.')
+	expect(loading.get('Reduced motion')?.replace(/\s+/g, ' ')).toContain('its footer and the bulk bar of a table stay')
+})
+
+test('the loading page says the first load spinner of a list is the ui Spinner the installed components draw', () => {
+	const spinner = installedFile(SPINNER_MODULE)
+	const drawn = groupOf(/import \{ Spinner as (\S+) \} from "@wordpress\/ui";/.exec(spinner))
+	const first = passagesOf(loading.get('A list')).find((text) => text.includes('`@wordpress/components`')) ?? ''
+
+	expect(spinner).toContain(`return /* @__PURE__ */ jsx(${drawn}, {`)
+	expect(first).toContain('the `Spinner` of `@wordpress/ui`')
+	expect(first).not.toMatch(/quarter circle|accent color|grey ring/)
+})
+
 test('the loading page names the size and color the installed design system spinner draws with', () => {
 	const spinner = installedFile('@wordpress/ui/build-module/spinner/spinner.mjs')
 	const tokens = [/[{;]height:var\((--wpds-[\w-]+)/, /[{;]color:var\((--wpds-[\w-]+)/].map((found) =>
@@ -664,6 +709,20 @@ test('the motion and corner pages leave every toast timing and the toast preset 
 
 test('the toasts page gives the hint a plain toast speaks, as the toaster sets it', () => {
 	expect(pages.get('toasts.md') ?? '').toContain(`"${toastHint()}"`)
+})
+
+test('the toasts page gives how long the snackbar of the installed components release stays', () => {
+	const snackbar = installedFile(SNACKBAR_MODULE)
+	const { version } = JSON.parse(installedFile('@wordpress/components/package.json')) as { version: string }
+	const seconds = ['NOTICE_TIMEOUT', 'NOTICE_TIMEOUT_WITH_ACTIONS'].map(
+		(name) => `${Number(groupOf(new RegExp(`const ${name} = ([\\d.e]+);`).exec(snackbar))) / 1000} seconds`,
+	)
+	const passage = passagesOf(sections.get('toasts.md')?.get('How long a toast stays')).find((text) =>
+		text.includes("WordPress's own snackbar"),
+	)
+
+	expect(passage, 'the toasts page says nothing on the WordPress snackbar').toBeDefined()
+	expect([`\`@wordpress/components\` ${version}`, ...seconds].filter((part) => !passage?.includes(part))).toEqual([])
 })
 
 test('the usage page leaves every toast value to the toasts page', () => {
@@ -802,6 +861,49 @@ test('the lists page leaves the reload timing to the loading page', () => {
 	expect(LOADING_NUMBERS.filter((value) => value.test(section))).toEqual([])
 })
 
+test('the lists pages put the bulk bar over the table head and the count in the footer, as DataViews does', () => {
+	const footer = installedFile(FOOTER_MODULE)
+	const overlay = /"dataviews-view-table__bulk-actions-overlay"[\s\S]*?jsx\(BulkActionToolbar\b/
+	const listPage = passagesOf(sections.get('lists.md')?.get('A list page'))
+	const filling = passagesOf(sections.get('usage/lists.md')?.get('The list fills the page'))
+	const bar = listPage.find((text) => text.includes('bulk bar')) ?? ''
+	const fills = filling.find((text) => text.includes('footer')) ?? ''
+
+	expect(installedFile(TABLE_MODULE)).toMatch(overlay)
+	expect(footer).toMatch(/jsx\(DataViewsItemCount\b/)
+	expect(footer).not.toMatch(/\bBulk(?:ActionToolbar|SelectionCheckbox)\b/)
+	expect(bar).toContain('covers the table head')
+	expect(fills).toContain('item count')
+	expect(fills).not.toMatch(/select all/i)
+})
+
+test('the pages name the bulk bar among the parts of a list that DataViews makes inert as it reloads', () => {
+	const overlay = /"dataviews-view-table__bulk-actions-overlay"[\s\S]*?inert: inertValue\(([^)]+)\)/
+	const passages = [...pages.values(), listsPage].flatMap(passagesOf)
+	const inert = passages.filter((text) => /\binert\b/.test(text) && /\bfooter\b/.test(text))
+
+	expect(groupOf(overlay.exec(installedFile(TABLE_MODULE)))).toBe('!!isLoading')
+	expect(inert.length, 'no page says what turns inert').toBeGreaterThan(0)
+	expect(inert.filter((text) => !text.includes('bulk bar'))).toEqual([])
+	expect(passages.filter((text) => /\btable (?:or|and) the footer\b/.test(text))).toEqual([])
+})
+
+test('the lists pages put the bulk actions of a narrow list in one Actions menu, as DataViews does', () => {
+	const bulk = installedFile(BULK_MODULE)
+	const narrow = passagesOf(sections.get('lists.md')?.get('Columns')).find((text) =>
+		text.startsWith('From `DENSE_BREAKPOINT`'),
+	)
+	const columns = sections.get('usage/lists.md')?.get('Columns')?.replace(/\s+/g, ' ')
+	const back = passagesOf(sections.get('usage/lists.md')?.get('Putting the focus back on a row')).find((text) =>
+		text.includes('reads `bulk`'),
+	)
+
+	expect(bulk).toContain('const isMobile = useViewportMatch("medium", "<");')
+	expect(bulk).toMatch(/isMobile \? actionsToShow\.length > 0 && \/\* @__PURE__ \*\/ jsxs\(Menu\.Root\b/)
+	expect(bulk).toContain('children: [__("Actions"),')
+	expect([narrow, columns, back].filter((text) => !text?.includes('one Actions menu'))).toEqual([])
+})
+
 /** Returns the passage of a dialogs page section that holds some words, spaces single, empty when none does. */
 function dialogPassage(heading: DialogSection, phrase: string): string {
 	return passagesOf(sections.get('dialogs.md')?.get(heading)).find((passage) => passage.includes(phrase)) ?? ''
@@ -865,7 +967,8 @@ test('the dialogs page gives the gap between the buttons of a confirm, as the in
 })
 
 test('the dialogs page gives the Cancel of a confirm, as the installed alert dialog draws it', () => {
-	const close = /_AlertDialog\.Close,\s*\{\s*render: [^\n]*jsx\(Button, \{ variant: "minimal", tone: "neutral" \}\)/
+	const close =
+		/\b_?AlertDialog\.Close,\s*\{\s*render: [^\n]*jsx\(Button, \{\s*variant: "minimal",\s*tone: "neutral"\s*\}\)/
 
 	expect(installedFile(CONFIRM_MODULE)).toMatch(close)
 	expect(dialogPassage('Inside the card', 'In a confirm Cancel')).toContain('no border and takes the neutral tone')
@@ -876,9 +979,9 @@ type ConfirmText = 'title' | 'description' | 'failure'
 
 /** The patterns finding the text variant the installed alert dialog gives each text of a confirm. */
 const VARIANT_OF: Record<ConfirmText, RegExp> = {
-	title: /variant: "([\w-]+)",\s*render: [^\n]*_AlertDialog\.Title\b/,
-	description: /variant: "([\w-]+)",\s*render: [^\n]*_AlertDialog\.Description\b/,
-	failure: /variant: "([\w-]+)",\s*className: style_default2\["error-message"\]/,
+	title: /variant: "([\w-]+)",\s*render: [^\n]*\b_?AlertDialog\.Title\b/,
+	description: /variant: "([\w-]+)",\s*render: [^\n]*\b_?AlertDialog\.Description\b/,
+	failure: /variant: "([\w-]+)",\s*className: style_\w+(?:\$\d+)?\["error-message"\]/,
 }
 
 /** Returns the variant the installed alert dialog gives a text of a confirm, and that variant's font size token. */
@@ -898,7 +1001,7 @@ test('the dialogs page gives the text sizes of a confirm, as the installed alert
 
 test('the dialogs page gives the width of the one size the installed alert dialog draws', () => {
 	const popup = installedFile(CONFIRM_MODULE)
-	const classes = /className: clsx\(\s*style_default\.popup,\s*className,\s*style_default\["([\w-]+)"\]\s*\)/
+	const classes = /className: clsx\(\s*style_\w+(?:\$\d+)?\.popup,\s*className,\s*style_\w+(?:\$\d+)?\["([\w-]+)"\]\s*\)/
 	const size = groupOf(classes.exec(popup))
 	const token = groupOf(new RegExp(`__${size}\\{max-width:var\\((--wpds-[\\w-]+)`).exec(popup))
 
@@ -913,7 +1016,8 @@ test('the dialogs page gives the gap between the fields of a form dialog, as the
 })
 
 test('the dialogs page gives a form dialog the width of a confirm, the default of the installed dialog', () => {
-	const sized = /className: clsx\(\s*style_default\.popup,\s*className,\s*style_default\["is-([\w-]+)"\]\s*\)/
+	const sized =
+		/className: clsx\(\s*style_\w+(?:\$\d+)?\.popup,\s*className,\s*style_\w+(?:\$\d+)?\["is-([\w-]+)"\]\s*\)/
 	const confirm = groupOf(sized.exec(installedFile(CONFIRM_MODULE)))
 
 	expect(formDialog).not.toMatch(/<Dialog\.Popup[^>]*\bsize=/)
@@ -933,6 +1037,14 @@ test('the dialogs page says unsaved work asks in red, and that a save that leave
 test('the dialogs page gives the Cancel of a form dialog, as the form draws it', () => {
 	expect(formDialog).toMatch(/<Dialog\.Action variant="outline" tone="neutral"/)
 	expect(dialogPassage('Inside the card', 'In a form dialog Cancel')).toContain('an outline and takes the neutral tone')
+})
+
+test('the dialogs page gives the rule the installed DataViews states for an action label, with no ellipsis', () => {
+	const words = passagesOf(sections.get('dialogs.md')?.get('The words'))
+
+	expect(installedFile(DATAVIEWS_TYPES)).toContain('Provide the label without an ellipsis.')
+	expect(words.filter((passage) => passage.includes('label carries no ellipsis'))).toHaveLength(1)
+	expect(words.filter((passage) => passage.includes('ends with an ellipsis'))).toEqual([])
 })
 
 test('the usage pages leave every dialog value to the dialogs page', () => {

@@ -24,10 +24,17 @@ const root = resolve(import.meta.dirname, '../docs')
 /** The README npm shows beside the package. */
 const readme = pageAt(resolve(import.meta.dirname, '../README.md'))
 
+/** The package manifest, with the files it publishes and the peer ranges it asks for. */
+const manifest = JSON.parse(readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf8')) as {
+	files: string[]
+	peerDependencies: Record<string, string>
+}
+
 /** The files the package publishes. */
-const published = (
-	JSON.parse(readFileSync(resolve(import.meta.dirname, '../package.json'), 'utf8')) as { files: string[] }
-).files
+const published = manifest.files
+
+/** Finds an action label in an example that ends in an ellipsis, such as `label: 'Delete…'`. */
+const LABEL_WITH_ELLIPSIS = /\blabel:\s*(['"`])(?:(?!\1).)*?(?:…|\.{3})\1/g
 
 /** Every page, by its path inside the docs folder. */
 const pages = new Map(
@@ -152,6 +159,26 @@ test.each([...pages])('%s spells capabilities in its examples with underscores, 
 	const misspelled = /\bcapability\s*:\s*(['"`])(?![a-z]+(?:_[a-z]+)*\1).*?\1/g
 
 	expect(code.flatMap((value) => value.match(misspelled) ?? [])).toEqual([])
+})
+
+test.each([...pages, ['README.md', readme] as const])(
+	'%s writes every action label of its examples with no ellipsis at the end, as DataViews asks',
+	(_path, page) => {
+		const code = page.nodes.flatMap((node) => (node.type === 'code' ? [node.value] : []))
+
+		expect(code.flatMap((value) => value.match(LABEL_WITH_ELLIPSIS) ?? [])).toEqual([])
+	},
+)
+
+test('the build page gives every design system window as the peer ranges write it', () => {
+	const page = (pages.get('build-and-versioning.md')?.text ?? '').replace(/\s+/g, ' ')
+	const windows = (page.match(/`>=[^`]+`/g) ?? []).map((found) => found.slice(1, -1))
+	const ranges = new Set(Object.values(manifest.peerDependencies))
+	const dataviews = manifest.peerDependencies['@wordpress/dataviews']
+
+	expect(windows.length, 'the build page names no window').toBeGreaterThan(0)
+	expect(windows.filter((window) => !ranges.has(window))).toEqual([])
+	expect(page).toContain(`\`@wordpress/dataviews\` is an optional peer as well, in the window \`${dataviews}\``)
 })
 
 test('every local link of the README reaches a page and heading in the docs', () => {

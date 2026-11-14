@@ -164,7 +164,7 @@ field of type `media` or `password` sorts only when it says
 `enableSorting: true`.
 
 A filter stays when DataViews offers it. `offeredView` reads the
-field as DataViews 20 does:
+field as DataViews 22 does:
 
 - The field does not say `filterBy: false`.
 - The operator is one the field names in `filterBy.operators` and its
@@ -200,11 +200,14 @@ empty when nothing stayed.
 ## The list fills the page
 
 A list page fills the canvas from the title down to the bottom edge.
-The DataViews footer, with the item count and the select all box,
+The DataViews footer, with the item count and the page buttons,
 rests on the bottom edge of the canvas, the way the list already
 reaches the side edges. With a few rows, the rows sit at the top,
 the empty space sits under them, and no line closes the last row.
 The next line is the footer's own, at the bottom.
+
+The select all box and the bulk actions sit at the top of the list,
+as [a list page](./design-system/lists.md#a-list-page) shows.
 
 When the list is longer than the screen, only the rows scroll. The
 title, the tabs, the search box and the column headers stay where
@@ -234,9 +237,8 @@ Draw a muted cell with a weak text color, such as
 A cell with less than full opacity paints over the frozen columns as
 it scrolls under them.
 
-Give every bulk action an `icon`. At `EDGE_BREAKPOINT` and below,
-DataViews shows bulk actions as icon buttons and leaves out an action
-with no icon.
+At `EDGE_BREAKPOINT` and below, DataViews puts the bulk actions in
+one Actions menu, each by its label. A bulk action needs no `icon`.
 
 ## Tabs above a list
 
@@ -617,7 +619,7 @@ function OrdersScreen() {
 	const bulk = useBulkRun<Order>(run, refresh)
 	const [deleting, setDeleting] = useState<Order[]>()
 	const actions = useMemo<Action<Order>[]>(
-		() => [{ id: 'delete', label: 'Delete…', supportsBulk: true, callback: setDeleting }],
+		() => [{ id: 'delete', label: 'Delete', supportsBulk: true, callback: setDeleting }],
 		[],
 	)
 	return (
@@ -665,14 +667,14 @@ ends. Pass it to DataViews beside the list's own loading state, as
 reload as WordPress does
 [after a write of your own](./design-system/lists.md#after-a-write-of-your-own).
 
-DataViews then makes the table and the footer inert. A focus in
-either, such as on a row or the busy bulk button, would fall to the
-page, as it does in WordPress, where no control holds it and no ring
-shows. So once DataViews drew the list inert, the list region takes
-that focus in the same render, before the browser drops it, and here
-too the screen does not scroll. A focus anywhere else, such as in the
-search field or outside the list, stays where it is while the calls
-run.
+DataViews then makes the table, the bulk bar and the footer inert. A
+focus in any of them, such as on a row or the busy bulk button, would
+fall to the page, as it does in WordPress, where no control holds it
+and no ring shows. So once DataViews drew the list inert, the list
+region takes that focus in the same render, before the browser drops
+it, and here too the screen does not scroll. A focus anywhere else,
+such as in the search field or outside the list, stays where it is
+while the calls run.
 Pass `refreshing` to DataViews in the render that reads it, never
 through an effect, so the region can take the focus in time.
 
@@ -1015,7 +1017,7 @@ function PostsScreen() {
 	const write = useDialogRun<Post>(run, refresh)
 	const [renaming, setRenaming] = useState<Post>()
 	const actions = useMemo<Action<Post>[]>(
-		() => [{ id: 'rename', label: 'Rename…', callback: ([post]) => setRenaming(post) }],
+		() => [{ id: 'rename', label: 'Rename', callback: ([post]) => setRenaming(post) }],
 		[],
 	)
 	return (
@@ -1185,9 +1187,13 @@ layout has no such trigger, such as a title in the phone list, it
 focuses the row's actions menu. When the item left the list, or its
 row has no actions menu, the list region takes the focus.
 
-An action chosen in the bulk bar reads `bulk` from `focusedTrigger()`.
-The bar goes away once the selection clears, so the list region
-takes the focus.
+An action chosen in the bulk bar reads `bulk` from `focusedTrigger()`
+at every width. At `EDGE_BREAKPOINT` and below, DataViews puts the
+bulk actions in one Actions menu, and an action picked there reads
+`bulk` too. While the bar still shows, the dialog gives the focus back
+to the button that opened it, such as that Actions menu button. The
+bar goes away once the selection clears, so the list region takes the
+focus.
 
 The hook only moves a focus the page lost. When WordPress already put
 the focus back, or the reader moved it, it stays where it is. While
