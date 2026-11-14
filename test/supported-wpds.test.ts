@@ -7,8 +7,25 @@ import { SUPPORTED_WPDS } from '../src/index'
 const numeric = { numeric: true }
 
 test('names the design system window this build was tested against', () => {
-	expect(SUPPORTED_WPDS['@wordpress/ui']).toBe('>=0.25.0 <0.26.0')
-	expect(SUPPORTED_WPDS['@wordpress/theme']).toBe('>=3.0.0 <4.0.0')
+	expect(SUPPORTED_WPDS['@wordpress/ui']).toBe('>=0.26.0 <0.27.0')
+	expect(SUPPORTED_WPDS['@wordpress/theme']).toBe('>=4.0.0 <5.0.0')
+})
+
+test('every declared window is the peer range the package asks for', async () => {
+	const manifest = await import('../package.json')
+	const peers: Record<string, string> = manifest.default.peerDependencies
+	const asked = Object.fromEntries(Object.keys(SUPPORTED_WPDS).map((name) => [name, peers[name]]))
+
+	expect(asked).toEqual(SUPPORTED_WPDS)
+})
+
+test('the build tools package is an optional peer, needed only by the stylelint entry', async () => {
+	const manifest = await import('../package.json')
+	const peers: Record<string, string> = manifest.default.peerDependencies
+	const meta = manifest.default.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
+
+	expect(peers['@wordpress/theme-build-tools']).toBe('>=1.0.0 <2.0.0')
+	expect(meta['@wordpress/theme-build-tools']?.optional).toBe(true)
 })
 
 test('every declared window is a longhand range rather than a caret', () => {
@@ -34,6 +51,7 @@ test.each([
 	'@wordpress/icons',
 	'@wordpress/style-runtime',
 	'@wordpress/theme',
+	'@wordpress/theme-build-tools',
 	'@wordpress/ui',
 ])(
 	'pins %s inside its peer window',

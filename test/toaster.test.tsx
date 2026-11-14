@@ -196,7 +196,7 @@ test('asks the application for the announcer, so the page keeps one live region'
 	const peers: Record<string, string> = manifest.peerDependencies
 
 	expect(peers['@wordpress/a11y']).toBe('>=5.0.0 <6.0.0')
-	expect(manifest.devDependencies['@wordpress/a11y']).toBe('5.0.0')
+	expect(manifest.devDependencies['@wordpress/a11y']).toBe('5.1.0')
 })
 
 test('leaves the toast region silent, since the live region already spoke', () => {
