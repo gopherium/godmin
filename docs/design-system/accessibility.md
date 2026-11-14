@@ -200,6 +200,7 @@ aloud when it changes.
 | A list after a run | The control the focus went back to. After the pressed row left, the checkbox of the row now in its place, by that row's title. With no checkbox, that row's title or actions menu button, and nothing new when the region keeps the focus | [Where focus goes](#where-focus-goes) |
 | A count beside a row | The `label` sentence, in place of the bare number | [A count beside a row](../framing-an-application.md#a-count-beside-a-row) |
 | An `ErrorNotice` | Its message, at once, as an alert | [ErrorNotice](../screens.md#errornotice) |
+| A server message under a field | The server's words, at once, as the focus moves to the first field that fails | [A server message under a field](../screens.md#a-server-message-under-a-field) |
 
 Polite means the screen reader first finishes what it is saying. An
 alert breaks in at once, and so does an assertive title. Keep
