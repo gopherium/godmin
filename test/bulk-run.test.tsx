@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, cleanup, fireEvent, screen } from '@testing-library/react'
-import { expect, onTestFinished, test, vi } from 'vitest'
+import { act, cleanup, fireEvent, screen, waitFor } from '@testing-library/react'
+import { expect, expectTypeOf, onTestFinished, test, vi } from 'vitest'
 
 import { ConfirmDialog, Page, Toaster, useBulkRun, useDialogRun, useListRun } from '../src/index'
 import type { BulkFailure, BulkRun, BulkWords, DialogAnswer, DialogRun, ListRun } from '../src/index'
@@ -32,6 +32,15 @@ const WORDS: BulkWords<Post> = {
 	failed: (failures, asked) => `Not moved to the trash: ${failures.length} of ${asked}.`,
 }
 
+/** The words a dialog shows for a write past its time limit, those of WordPress. */
+const NO_RESPONSE = 'Could not get a valid response from the server.'
+
+/** The reason a dialog fires its signal with once its write ran past the time limit. */
+const TIME_OUT = new DOMException(NO_RESPONSE, 'TimeoutError')
+
+/** A write time limit in milliseconds short enough for a test to run past it. */
+const SHORT_LIMIT = 20
+
 /** What the screen runs and what it hands back to the test. */
 interface Bench {
 	/** The items the Trash button runs over. */
@@ -42,6 +51,8 @@ interface Bench {
 	refresh: (items: Post[]) => Promise<unknown>
 	/** The words the run reports its outcome in. */
 	words: BulkWords<Post>
+	/** The signal the Rename button hands its dialog run, as a dialog hands the time limit's signal. */
+	signal: AbortSignal
 	/** The runs the Trash button started, in order. */
 	runs: Promise<void>[]
 	/** What each dialog run the Rename button started answers its dialog, in order. */
@@ -90,7 +101,10 @@ function TrashScreen({ bench }: { bench: Bench }) {
 				<button type="button" onClick={() => bench.runs.push(bulk(bench.items, bench.call, bench.words))}>
 					Trash
 				</button>
-				<button type="button" onClick={() => bench.answers.push(write(bench.items, bench.call, bench.words))}>
+				<button
+					type="button"
+					onClick={() => bench.answers.push(write(bench.items, bench.call, bench.words, bench.signal))}
+				>
 					Rename
 				</button>
 			</div>
@@ -109,6 +123,7 @@ function renderTrash(bench: Partial<Bench> = {}): Bench {
 		call: vi.fn(async () => undefined),
 		refresh: vi.fn(async () => undefined),
 		words: WORDS,
+		signal: new AbortController().signal,
 		runs: [],
 		answers: [],
 		reloads: [],
@@ -822,14 +837,21 @@ test.each([
 })
 
 /**
- * Presses Rename, focused first as a pointer press leaves it, and waits for what its dialog run answers.
+ * Presses Rename, focused first as a pointer press leaves it.
+ */
+function pressRename(): void {
+	const button = screen.getByRole('button', { name: 'Rename' })
+	button.focus()
+	fireEvent.click(button)
+}
+
+/**
+ * Presses Rename and waits for what its dialog run answers.
  * @param bench - The bench whose dialog run to wait for.
  * @returns What the run answered its dialog.
  */
 async function rename(bench: Bench): Promise<DialogAnswer | undefined> {
-	const button = screen.getByRole('button', { name: 'Rename' })
-	button.focus()
-	fireEvent.click(button)
+	pressRename()
 	let answer: DialogAnswer | undefined
 	await act(async () => {
 		answer = await bench.answers.at(-1)
@@ -898,4 +920,270 @@ test('answers its dialog before the reload ends', async () => {
 	expect(answering.state).toBe('resolved')
 	expect(held.refresh).toHaveBeenCalledOnce()
 	await act(async () => held.reload())
+})
+
+test('asks a dialog run for the signal as its last argument, and leaves the bulk run as it was', () => {
+	expectTypeOf<DialogRun<Post>>().parameters.toEqualTypeOf<
+		[Post[], (item: Post) => Promise<unknown>, BulkWords<Post>, AbortSignal]
+	>()
+	expectTypeOf<BulkRun<Post>>().parameters.toEqualTypeOf<[Post[], (item: Post) => Promise<unknown>, BulkWords<Post>]>()
+})
+
+/**
+ * Returns a signal the test fires by hand, as a dialog fires it once its write ran past the time limit.
+ * @returns The signal, and what fires it with the time-out reason and lets the run answer.
+ */
+function handFired() {
+	const controller = new AbortController()
+	const fire = async () => {
+		await act(async () => controller.abort(TIME_OUT))
+		await drain()
+	}
+	return { signal: controller.signal, fire }
+}
+
+/**
+ * Starts a call that never ends and never listens to a signal, as one the network dropped does.
+ * @returns The call, still running.
+ */
+async function neverEnds(): Promise<unknown> {
+	return new Promise(() => {})
+}
+
+/**
+ * Returns a call that never ends on its own and rejects with an abort of its own once the signal fires.
+ * @param signal - The signal the call listens to.
+ * @returns The call.
+ */
+function honouring(signal: AbortSignal): () => Promise<unknown> {
+	return () =>
+		new Promise((_, fail) => {
+			signal.addEventListener('abort', () => fail(new DOMException('The call stopped.', 'AbortError')))
+		})
+}
+
+/**
+ * Tells whether an error is the very reason the dialog fired its signal with.
+ * @param error - The error of a failure.
+ * @returns Whether it is the time-out reason itself.
+ */
+function isTimeOut(error: unknown): boolean {
+	return error === TIME_OUT
+}
+
+/**
+ * Returns the trash words with failure words that record the error of each failure.
+ * @param errors - Where the error of each failure goes, in the order the run gives them.
+ * @returns The words.
+ */
+function recordingWords(errors: unknown[]): BulkWords<Post> {
+	return {
+		...WORDS,
+		failed: (failures, asked) => {
+			errors.push(...failures.map((failure) => failure.error))
+			return WORDS.failed(failures, asked)
+		},
+	}
+}
+
+test('fails one item still running as the signal fires with its reason, and answers the failure words', async () => {
+	const fired = handFired()
+	const errors: unknown[] = []
+	const bench = renderTrash({ items: [POSTS[0]], call: neverEnds, words: recordingWords(errors), signal: fired.signal })
+	pressRename()
+	const answering = watch(bench.answers[0])
+	await drain()
+	const before = answering.state
+
+	await fired.fire()
+
+	expect([before, answering.state]).toEqual(['pending', 'resolved'])
+	expect(await bench.answers[0]).toEqual({ error: 'Not moved to the trash: 1 of 1.' })
+	expect(errors.map(isTimeOut)).toEqual([true])
+	expect(toasts()).toEqual([])
+})
+
+test('counts a call that honours the signal and one that ignores it both as failed, and toasts both', async () => {
+	const fired = handFired()
+	const errors: unknown[] = []
+	const honours = honouring(fired.signal)
+	const bench = renderTrash({
+		call: async (post) => (post === POSTS[0] ? honours() : neverEnds()),
+		words: recordingWords(errors),
+		signal: fired.signal,
+	})
+	pressRename()
+	const answering = watch(bench.answers[0])
+	await drain()
+
+	await fired.fire()
+
+	expect(answering.state).toBe('resolved')
+	expect(await bench.answers[0]).toBeUndefined()
+	expect(toasts()).toEqual(['Not moved to the trash: 2 of 2.'])
+	expect(errors.map(isTimeOut)).toEqual([true, true])
+	expect(bench.reloads).not.toContain(true)
+})
+
+test('fails a call that rejects with its own abort as the signal fires with the signal reason', async () => {
+	const fired = handFired()
+	const errors: unknown[] = []
+	const bench = renderTrash({
+		items: [POSTS[0]],
+		call: honouring(fired.signal),
+		words: recordingWords(errors),
+		signal: fired.signal,
+	})
+	pressRename()
+	await drain()
+
+	await fired.fire()
+
+	expect(errors.map(isTimeOut)).toEqual([true])
+	expect(await bench.answers[0]).toEqual({ error: 'Not moved to the trash: 1 of 1.' })
+})
+
+test('ends the reload of a run the signal stopped, and a call that answers late changes nothing', async () => {
+	const fired = handFired()
+	const calls = heldCalls()
+	const held = heldRefresh()
+	const bench = renderTrash({ call: calls.call, refresh: held.refresh, signal: fired.signal })
+	pressRename()
+	const answering = watch(bench.answers[0])
+	await calls.end(POSTS[0])
+	const marked = bench.reloads.at(-1)
+
+	await fired.fire()
+	const answered = answering.state
+	await act(async () => held.reload())
+	await drain()
+	await calls.end(POSTS[1])
+
+	expect([marked, answered, bench.reloads.at(-1)]).toEqual([true, 'resolved', false])
+	expect(await bench.answers[0]).toBeUndefined()
+	expect(toasts()).toEqual(['Not moved to the trash: 1 of 2.'])
+	expect(held.refresh).toHaveBeenCalledExactlyOnceWith(POSTS)
+})
+
+test('fails each call at once and starts none when the run is handed a signal that already fired', async () => {
+	const call = vi.fn(neverEnds)
+	const errors: unknown[] = []
+	const bench = renderTrash({ call, words: recordingWords(errors), signal: AbortSignal.abort(TIME_OUT) })
+	pressRename()
+	const answering = watch(bench.answers[0])
+	await drain()
+
+	expect(answering.state).toBe('resolved')
+	expect(toasts()).toEqual(['Not moved to the trash: 2 of 2.'])
+	expect(errors.map(isTimeOut)).toEqual([true, true])
+	expect(call).not.toHaveBeenCalled()
+})
+
+test('fails a call that throws with what it threw, and hears no rejection as the signal fires later', async () => {
+	const reasons = heardRejections()
+	const thrown = new Error('rejected')
+	const fired = handFired()
+	const errors: unknown[] = []
+	const bench = renderTrash({
+		call: (post) => {
+			if (post === POSTS[0]) {
+				throw thrown
+			}
+			return Promise.resolve()
+		},
+		words: recordingWords(errors),
+		signal: fired.signal,
+	})
+
+	await rename(bench)
+	await fired.fire()
+	await drain()
+
+	expect(errors).toEqual([thrown])
+	expect(toasts()).toEqual(['Not moved to the trash: 1 of 2.'])
+	expect(reasons).toEqual([])
+})
+
+/** What a confirm on the short time limit runs over, and what it makes for each item. */
+interface Timed {
+	/** The items the confirm's dialog run is over. */
+	items: Post[]
+	/** The call made for each item, handed the signal of the time limit. */
+	call: (post: Post, signal: AbortSignal) => Promise<unknown>
+	/** Runs once the confirm left. */
+	onClose: () => void
+}
+
+/**
+ * Renders a list whose confirm hands its dialog run the signal of the time limit.
+ * @param props - The items, the call made for each and what runs once the confirm left.
+ * @returns The page with the confirm.
+ */
+function TimedTrash({ items, call, onClose }: Timed) {
+	const { run, region } = useListRun('post publish', () => {})
+	const write = useDialogRun<Post>(run, async () => undefined)
+	return (
+		<Page title="Posts" list listLabel="Posts" listRef={region}>
+			<ConfirmDialog
+				title="Move these posts to the trash?"
+				confirmLabel="Trash"
+				cancelLabel="Cancel"
+				onConfirm={async (signal) => write(items, async (post) => call(post, signal), WORDS, signal)}
+				onClose={onClose}
+			/>
+		</Page>
+	)
+}
+
+/**
+ * Renders the timed confirm under a toaster on the short time limit, and presses Trash.
+ * @param timed - The items and the call made for each.
+ * @returns The close spy.
+ */
+async function trashTimed(timed: Omit<Timed, 'onClose'>) {
+	const onClose = vi.fn()
+	renderAdmin(
+		<Toaster>
+			<TimedTrash {...timed} onClose={onClose} />
+		</Toaster>,
+		{ writeTimeout: SHORT_LIMIT },
+	)
+	const confirm = await screen.findByRole('button', { name: 'Trash' })
+	await act(async () => {
+		fireEvent.click(confirm)
+	})
+	return { onClose }
+}
+
+/**
+ * Starts a call that rejects with the reason of its signal once the signal fires, as a fetch does.
+ * @param _post - The item the call is made for.
+ * @param signal - The signal the dialog handed its run.
+ * @returns The call, still running.
+ */
+async function stopsOnSignal(_post: Post, signal: AbortSignal): Promise<unknown> {
+	return new Promise((_, fail) => {
+		signal.addEventListener('abort', () => fail(signal.reason))
+	})
+}
+
+test('shows the failure words of one item inside the confirm once its write runs past the time limit', async () => {
+	const { onClose } = await trashTimed({ items: [POSTS[0]], call: neverEnds })
+
+	expect(await screen.findByText('Not moved to the trash: 1 of 1.')).not.toBeNull()
+	expect(screen.queryByRole('alertdialog')).not.toBeNull()
+	expect(screen.queryByText(NO_RESPONSE)).toBeNull()
+	expect(toasts()).toEqual([])
+	expect(onClose).not.toHaveBeenCalled()
+})
+
+test('closes the confirm with the failed toast once a run over several items runs past the time limit', async () => {
+	const { onClose } = await trashTimed({
+		items: POSTS,
+		call: async (post, signal) => (post === POSTS[0] ? stopsOnSignal(post, signal) : neverEnds()),
+	})
+
+	await waitFor(() => expect(onClose).toHaveBeenCalledOnce())
+	expect(toasts()).toEqual(['Not moved to the trash: 2 of 2.'])
+	expect(screen.queryByText(NO_RESPONSE)).toBeNull()
 })
