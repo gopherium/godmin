@@ -632,7 +632,7 @@ function OrdersScreen() {
 					description="This action cannot be undone."
 					confirmLabel="Delete"
 					cancelLabel="Cancel"
-					onConfirm={() => bulk(deleting, (order) => deleteOrder(order.id), words)}
+					onConfirm={(signal) => bulk(deleting, (order) => deleteOrder(order.id, signal), words)}
 					onClose={() => setDeleting(undefined)}
 				/>
 			) : null}
@@ -845,7 +845,9 @@ goes, and the list takes it from there once a row moved. This needs
 godmin 0.32.0 or later.
 
 A confirm whose `onConfirm` returns the run stays open until the run
-ends, then closes as the toast shows.
+ends, then closes as the toast shows. `onConfirm` gets the dialog's
+signal, so hand it to each call, as `deleteOrder` takes it. A call
+that stops on it fails, and the run reports it in the toast.
 
 `listLabel` and `listRef` make the list a region with a name, which
 a screen reader announces, and give the focus its target. The region
@@ -943,9 +945,14 @@ shows:
   once it has gone, and the list takes the focus once the run moved a
   row, while the focus is still on that button. A reader who moved to
   another control or opened another dialog by then keeps their place.
+  No time limit applies, since the dialog no longer waits.
 - Return the write's promise, and the dialog stays open while it
   runs, with a spinner on its confirm button. When the promise ends,
   the dialog closes. A run over the picked rows works this way.
+  `onConfirm` gets the dialog's signal. Pass it to your write, so the
+  write stops once the time limit of `AdminRoot` runs out, as
+  [while a write runs](./design-system/dialogs.md#while-a-write-runs)
+  says.
 - Answer `{ error: 'words' }`, at once or as the promise ends, and the
   dialog stays open and shows the words inside. Do this when trying
   again is the next step. Answer `{ close: false }` to stay open and
@@ -964,8 +971,8 @@ try again:
 	description="New items will use it."
 	confirmLabel="Make default"
 	cancelLabel="Cancel"
-	onConfirm={() =>
-		makeDefault(item.id).then(
+	onConfirm={(signal) =>
+		makeDefault(item.id, signal).then(
 			() => toaster.show(`"${item.name}" is now the default.`),
 			(failure: Error) => ({ error: failure.message }),
 		)
@@ -1030,7 +1037,9 @@ function PostsScreen() {
 					fieldLabel="Name"
 					submitLabel="Save"
 					cancelLabel="Cancel"
-					onSubmit={(title) => write([renaming], (post) => renamePost(post.id, title), nameWords)}
+					onSubmit={(title, signal) =>
+						write([renaming], (post) => renamePost(post.id, title, signal), nameWords, signal)
+					}
 					onClose={() => setRenaming(undefined)}
 				/>
 			) : null}
@@ -1048,13 +1057,14 @@ Save stays on, even with the field blank, as in the WordPress rename.
 The field is required and must hold more than spaces, so the browser
 refuses a blank name in its own words and sends nothing. A name left
 as it was still sends. Enter in the field does what Save does.
-`onSubmit` gets the name exactly as typed.
+`onSubmit` gets the name exactly as typed, then the dialog's signal.
 
 `onSubmit` answers the dialog as the one of
 [a form dialog](#a-form-dialog) does. Through `useDialogRun`, the
 dialog stays open while the write runs, with a spinner on Save and
 the field read-only. It closes when the write works, and stays with
-the words of `failed` and the typed name when it fails, as
+the words of `failed` and the typed name when it fails or runs past
+the time limit, as
 [a failure from a dialog](#a-failure-from-a-dialog) shows.
 
 A rename that closes at once, by returning nothing from `onSubmit`
@@ -1084,8 +1094,8 @@ function AddProjectDialog({ onClose }: { onClose: () => void }) {
 			submitLabel="Add"
 			cancelLabel="Cancel"
 			canSubmit={name.trim() !== ''}
-			onSubmit={() =>
-				addProject(name).then(
+			onSubmit={(signal) =>
+				addProject(name, signal).then(
 					() => void toaster.show(`"${name}" added.`),
 					(failure: Error) => ({ error: `Could not add the project. ${failure.message}` }),
 				)
@@ -1125,9 +1135,10 @@ nothing to close at once, or the write's promise to keep the dialog
 open with a spinner until it ends. Answer `{ error }` to stay open and
 say why, or `{ close: false }` to stay open with nothing said, as
 [when a dialog closes](./design-system/dialogs.md#when-a-dialog-closes)
-says. godmin closes the dialog itself, so call nothing to close it.
-`onClose` runs once the card has left, and that is where you take the
-dialog away.
+says. `onSubmit` gets the dialog's signal, and `addProject` takes it,
+so the write stops once the time limit of `AdminRoot` runs out. godmin
+closes the dialog itself, so call nothing to close it. `onClose` runs
+once the card has left, and that is where you take the dialog away.
 
 While the write runs, Cancel, the close icon, Escape and a click on
 the dimmed page close nothing. Pass a function as the children to
@@ -1223,8 +1234,8 @@ that closes says how its write went in a toast, as
 the failure into words and answer them as `{ error }`:
 
 ```tsx
-onSubmit={() =>
-	save(values).then(
+onSubmit={(signal) =>
+	save(values, signal).then(
 		() => undefined,
 		(failure: Error) => ({ error: `Could not save the project. ${failure.message}` }),
 	)
@@ -1239,8 +1250,18 @@ reads the same answers. Answer `{ close: false }` when the words go
 somewhere else, such as a server message about one field under that
 field.
 
-A write that rejects with nothing caught also leaves the dialog open,
-with no words, and its error goes on to your app.
+A write that rejects before the time limit with nothing caught also
+leaves the dialog open, with no words, and its error goes on to your
+app.
+
+Hand the dialog's signal to your write, as `save` takes it here. Once
+the time limit of `AdminRoot` runs out, the signal fires and the write
+rejects. `fetch` rejects with the signal's own reason, and `apiFetch`
+from `@wordpress/api-fetch` with an error of its own, and the
+`message` of both holds the time-out words. Caught as here, those
+words follow yours. Left uncaught, the dialog shows them alone, as
+[while a write runs](./design-system/dialogs.md#while-a-write-runs)
+says, whatever error the write rejects with.
 
 Many GraphQL clients answer a failed write with an object in `error`
 instead of rejecting, as [bulk actions](#bulk-actions) says. Only
@@ -1267,7 +1288,7 @@ const tagWords: BulkWords<Post> = {
 	title="Add tag"
 	submitLabel="Add"
 	cancelLabel="Cancel"
-	onSubmit={() => write(tagging, (post) => addTag(post.id, tag), tagWords)}
+	onSubmit={(signal) => write(tagging, (post) => addTag(post.id, tag, signal), tagWords, signal)}
 	onClose={() => setTagging(undefined)}
 >
 	<InputControl label="Tag" value={tag} onChange={(event) => setTag(event.target.value)} />
@@ -1287,6 +1308,15 @@ The action's `callback` stores the rows in `tagging`, as
 - The promise ends before the reload ends, so the dialog closes
   without waiting for the list.
 
+Pass the dialog's signal as the fourth argument of `write`. A call
+still running when the signal fires counts as failed at once, and its
+error is the signal's reason, whose `message` holds the time-out
+words. So one item stays with your `failed` words, and several items
+close the dialog with the toast. The run does not hand the signal to
+`call`, so pass it on yourself, as `addTag` takes it. A call that
+ignores the signal still counts as failed, but its write may still
+reach your server.
+
 A run moves the focus to the list, so write through `useDialogRun`
 only from a dialog that closes when its write works. A dialog that
 stays open after a run that worked would leave the focus behind it.
@@ -1295,8 +1325,8 @@ Do not catch a failure as a separate step and then return the first
 promise:
 
 ```tsx
-onSubmit={() => {
-	const saving = save(values)
+onSubmit={(signal) => {
+	const saving = save(values, signal)
 	saving.catch((failure) => toaster.show(failure.message))
 	return saving
 }}
@@ -1388,7 +1418,7 @@ It sets it on the document root, so menus and modals that render
 outside your tree follow it too.
 
 ```tsx
-<AdminRoot color={{ primary: '#c9356e' }}>
+<AdminRoot color={{ primary: '#c9356e' }} writeTimeout={settings.writeTimeout}>
 	<App />
 </AdminRoot>
 ```

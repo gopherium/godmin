@@ -107,6 +107,70 @@ ranges.
 follows the filter rules of that DataViews release. A list built on
 another release gets a peer warning when it installs godmin.
 
+## Upgrading from godmin 0.32.0
+
+godmin 0.33.0 gives the write a busy dialog waits on a time limit, and
+moves to the WordPress packages of 4 November. Change your code in
+these places:
+
+- `AdminRoot` takes a required `writeTimeout`, how long in
+  milliseconds a busy dialog waits on its write before it gives up.
+  Read it from your app's own settings and pass it where you render
+  `AdminRoot`, such as
+  `<AdminRoot writeTimeout={settings.writeTimeout}>`. godmin sets no
+  limit of its own. Pass `Infinity` for no limit. 0, a negative
+  number, `NaN` or more than 2147483647 makes `AdminRoot` throw as it
+  renders. Once a write runs past it, the dialog stops
+  waiting, shows WordPress's words for a write with no answer and
+  frees Cancel, the close icon and Escape, as
+  [while a write runs](./design-system/dialogs.md#while-a-write-runs)
+  says.
+- `onConfirm` and `onSubmit` get an `AbortSignal` as their last
+  argument, and the `onSubmit` of `RenameDialog` gets it after the
+  name. It fires once the limit runs out. Pass it to the write the
+  dialog waits on, such as `fetch(url, { signal })`, so the write
+  itself stops too.
+- The write that `useDialogRun` hands out takes the dialog's signal as
+  its fourth argument, as `write(items, call, words, signal)`. A call
+  still running when the signal fires counts as failed. The run does
+  not hand the signal to `call`, so pass it on to each write yourself.
+- `renderAdmin` from `@gopherium/godmin/testing` takes `writeTimeout`
+  too, and sets no limit when you leave it out. A test harness of your
+  own that renders `AdminRoot` passes one.
+- A test that waits on a write that never ends, such as to read a busy
+  dialog, now meets the time-out once the limit runs out. The words
+  show, and Escape and Cancel close the dialog again. Leave
+  `writeTimeout` out of `renderAdmin`, give your own harness a limit
+  longer than the test, or read the busy dialog before the limit runs
+  out. A test on fake timers that moves its clock past the limit meets
+  the time-out too.
+- Move the `@wordpress` packages your app installs to the releases of
+  4 November: `@wordpress/dataviews` 22, `@wordpress/icons` 20,
+  `@wordpress/style-runtime` 0.15, `@wordpress/theme` 4 and
+  `@wordpress/ui` 0.26.
+  [Design system versions](#design-system-versions) gives each window.
+  DataViews 22 asks for an action label with no ellipsis, so write
+  "Delete" in place of "Delete…".
+- `@gopherium/godmin/stylelint` loads its rules from
+  `@wordpress/theme-build-tools`, a new optional peer. Add it to your
+  `devDependencies`, next to `stylelint`, as
+  [lint your stylesheets](#lint-your-stylesheets) shows.
+- `DrilldownItem` no longer takes `activeProps` or `activeOptions`,
+  since a drilldown row is never current. Drop them. A row that points
+  at the sub menu already shown is a `NavigationItem`, as
+  [sub menus](./framing-an-application.md#sub-menus) says.
+- Back draws its chevron in place of anything inside the `back` link
+  you pass, so drop any icon or words you put there. Name it with
+  `backLabel`, or with an `aria-label` on the link, as
+  [`NavigationScreen`](./screens.md#navigationscreen) says.
+
+TypeScript points at each `AdminRoot` without `writeTimeout`, each
+`write` of `useDialogRun` with three arguments, and each `activeProps`
+or `activeOptions` on a `DrilldownItem`. A handler that takes no
+signal still type checks, so find each write a dialog waits on
+yourself. The rest changes what the reader sees, what a test meets and
+what your app installs.
+
 ## Upgrading from godmin 0.31.0
 
 godmin 0.32.0 draws `ConfirmDialog` on the alert dialog of the design

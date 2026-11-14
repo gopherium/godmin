@@ -298,8 +298,11 @@ results found" and the line under it, "Try adjusting your search or
 filters to find what you're looking for." The tab title puts the
 screen title and the app name together as `%1$s ‹ %2$s`, and the not
 found screen of `routerDefaults()` says "Route not found" with the
-line "The page you're looking for does not exist". godmin translates
-them in the WordPress `default` text domain, as the design system
+line "The page you're looking for does not exist". A dialog whose
+write ran past its time limit says WordPress's words, "Could not get
+a valid response from the server.", or "Unable to connect. Please
+check your Internet connection." while the browser is offline.
+godmin translates them in the WordPress `default` text domain, as the design system
 does. The Spanish and French catalogues that `listChromeCatalogFor`
 returns hold them, so load it as
 [the list chrome](./lists.md#the-list-chrome-in-spanish) shows.

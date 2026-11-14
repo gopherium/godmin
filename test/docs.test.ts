@@ -33,6 +33,9 @@ const manifest = JSON.parse(readFileSync(resolve(import.meta.dirname, '../packag
 /** The files the package publishes. */
 const published = manifest.files
 
+/** The changelog, with what each release changed and what is still unreleased. */
+const changelog = readFileSync(resolve(import.meta.dirname, '../CHANGELOG.md'), 'utf8')
+
 /** Finds an action label in an example that ends in an ellipsis, such as `label: 'Delete…'`. */
 const LABEL_WITH_ELLIPSIS = /\blabel:\s*(['"`])(?:(?!\1).)*?(?:…|\.{3})\1/g
 
@@ -81,6 +84,39 @@ function anchorsOf(page: Page): Set<string> {
  */
 function linksOf(page: Page): string[] {
 	return page.nodes.flatMap((node) => (node.type === 'link' || node.type === 'definition' ? [node.url] : []))
+}
+
+/**
+ * Returns the code examples of a page.
+ * @param page - The page.
+ * @returns The text of each code block.
+ */
+function codeOf(page: Page): string[] {
+	return page.nodes.flatMap((node) => (node.type === 'code' ? [node.value] : []))
+}
+
+/**
+ * Returns the names a line gives in code spans.
+ * @param line - The line, such as a changelog entry.
+ * @returns The names without their backticks, such as `AdminRoot`.
+ */
+function namesOf(line: string): string[] {
+	return [...line.matchAll(/`([^`]+)`/g)].map(([, name]) => name)
+}
+
+/**
+ * Returns a section of a Markdown text by its heading, up to the next heading of the second level.
+ * @param text - The Markdown text.
+ * @param heading - The heading line, such as `## [Unreleased]`.
+ * @returns The section with its heading, empty when the text has no such heading.
+ */
+function sectionOf(text: string, heading: string): string {
+	const start = text.indexOf(`\n${heading}\n`)
+	if (start === -1) {
+		return ''
+	}
+	const end = text.indexOf('\n## ', start + 1)
+	return text.slice(start, end === -1 ? undefined : end)
 }
 
 /**
@@ -180,6 +216,46 @@ test('the build page gives every design system window as the peer ranges write i
 	expect(windows.filter((window) => !ranges.has(window))).toEqual([])
 	expect(page).toContain(`\`@wordpress/dataviews\` is an optional peer as well, in the window \`${dataviews}\``)
 })
+
+test('the upgrade notes open with the last release and name what each Breaking line of Unreleased names', () => {
+	const page = pages.get('build-and-versioning.md')?.text ?? ''
+	const heading = `## Upgrading from godmin ${/\n## \[(\d+\.\d+\.\d+)\]/.exec(changelog)?.[1]}`
+	const section = sectionOf(page, heading).replace(/\s+/g, ' ')
+	const breaking = sectionOf(changelog, '## [Unreleased]')
+		.split('\n')
+		.filter((line) => line.startsWith('- **Breaking.** '))
+	const missing = breaking.flatMap((line) =>
+		namesOf(line)
+			.filter((name) => !section.includes(`\`${name}\``))
+			.map((name) => `\`${name}\` of ${line}`),
+	)
+
+	expect(breaking.filter((line) => namesOf(line).length === 0), 'a Breaking line names nothing').toEqual([])
+	expect(breaking.length === 0 || page.indexOf('\n## Upgrading from ') === page.indexOf(`\n${heading}\n`), heading).toBe(
+		true,
+	)
+	expect(missing).toEqual([])
+})
+
+test.each([...pages, ['README.md', readme] as const])(
+	'%s passes writeTimeout to every AdminRoot its examples render',
+	(_path, page) => {
+		const roots = codeOf(page).flatMap((value) => value.match(/<AdminRoot\b[^>]*>/g) ?? [])
+
+		expect(roots.filter((root) => !/\bwriteTimeout=\{/.test(root))).toEqual([])
+	},
+)
+
+test.each([...pages, ['README.md', readme] as const])(
+	'%s takes the signal in every dialog handler its examples write as an arrow',
+	(_path, page) => {
+		const handlers = codeOf(page)
+			.flatMap((value) => [...value.matchAll(/\bon(?:Confirm|Submit)=\{\(([^)]*)\) =>/g)])
+			.filter(([, parameters]) => parameters !== 'event')
+
+		expect(handlers.filter(([, parameters]) => !/\bsignal$/.test(parameters)).map(([handler]) => handler)).toEqual([])
+	},
+)
 
 test('every local link of the README reaches a page and heading in the docs', () => {
 	const links = linksOf(readme).filter(local)

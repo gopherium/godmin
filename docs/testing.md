@@ -75,6 +75,29 @@ accepts the usual testing library options plus the host theme
 settings, and returns the normal render result. It supplies the
 wrapper itself, so do not pass a `wrapper` of your own.
 
+It also takes `writeTimeout`, the time limit `AdminRoot` gives a
+busy dialog's write. Leave it out and the test has no limit, so a
+write that never ends keeps its dialog busy for as long as the test
+reads it. Pass a short limit to check what a dialog shows once its
+write runs past it:
+
+```tsx
+import { renderAdmin } from '@gopherium/godmin/testing'
+
+const SHORT_LIMIT = 20
+
+test('says the server gave no answer when the rename never ends', async () => {
+	renderAdmin(<RenamePostDialog post={post} rename={() => new Promise(() => {})} />, { writeTimeout: SHORT_LIMIT })
+	await user.click(screen.getByRole('button', { name: 'Save' }))
+	expect(await screen.findByText('Could not get a valid response from the server.')).toBeVisible()
+})
+```
+
+The limit runs on the real clock, so keep it short. A test on fake
+timers moves its clock past the limit instead.
+[While a write runs](./design-system/dialogs.md#while-a-write-runs)
+says what the dialog shows and frees.
+
 ## Simulating a small screen
 
 jsdom evaluates no media queries, so a component asking "is this a
