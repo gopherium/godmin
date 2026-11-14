@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { composeStories } from '@storybook/react-vite'
-import { render } from '@testing-library/react'
+import { render, within } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { page } from 'vitest/browser'
+import { page, userEvent } from 'vitest/browser'
 
 import * as stories from '../../stories/lists.stories.js'
 import { backgroundOf, boxOf, edgesOf, find, middleAcross, middleDown, onTop } from '../../stories/measure.js'
@@ -102,10 +102,32 @@ test('keeps the checkbox and title frozen and the actions pinned at 1920', async
 	expect([backgroundOf(ticked.checkbox.cell), backgroundOf(ticked.title.cell)]).toEqual([tint, tint])
 })
 
-test('keeps the header row over the frozen cells as the rows scroll down', async () => {
+test('starts the frozen title at 1920 where a table that fits starts it, before and after a scroll', async () => {
+	await page.viewport(1920, 1080)
+	const fitting = render(<WideTable columns={2} />)
+	const plain = edgesOf('Report 1')
+	const start = plain.title.box.left - plain.checkbox.box.left
+	fitting.unmount()
+	render(<WideTable />)
+	await wideRegion()
+	const before = edgesOf('Report 1')
+
+	find(SCROLLER).scrollLeft = SHIFT
+	const after = edgesOf('Report 1')
+
+	expect(start, 'the title of a table that fits starts after its checkbox column').toBeGreaterThan(0)
+	near(before.title.box.left - before.checkbox.box.left, start, 'the frozen title')
+	near(before.titleHeader.box.left - before.checkbox.box.left, start, 'the frozen title header')
+	near(after.title.box.left - after.checkbox.box.left, start, 'the frozen title once scrolled')
+})
+
+test('keeps the header row over the frozen cells as the rows scroll down with no row ticked', async () => {
 	await page.viewport(1280, 600)
 	render(<WideTable />)
 	await wideRegion()
+	const overlay = find('.dataviews-view-table__bulk-actions-overlay')
+	await userEvent.click(within(overlay).getByRole('button', { name: 'Cancel' }))
+	await expect.poll(() => overlay.hidden, { message: 'the bulk bar once the tick is cleared' }).toBe(true)
 	const scroller = find(SCROLLER)
 	const row = edgesOf('Report 1').title.box.height
 	expect(scroller.scrollHeight - scroller.clientHeight, 'the rows scroll down by a row').toBeGreaterThan(row)
