@@ -34,20 +34,23 @@ const QUIET_STATEMENTS = new Set([
 ])
 
 /** The calls and constructors a module may run when it loads, each of which only builds the value it returns. */
-const PURE_AT_LOAD = new Set([
+const PURE_CALLS = new Set([
 	'createContext',
 	'createLink',
 	'createNavigationState',
-	'join',
-	'keys',
-	'map',
 	'memo',
 	'new Map',
 	'new Set',
 	'new WeakMap',
 ])
 
-/** The calls that run the function they are handed straight away, so its body runs when the module loads. */
+/** The array methods that only build a value, accepted on a chain that starts at an array literal. */
+const ARRAY_READS = new Set(['join', 'map'])
+
+/** The method calls on a named value of the source folder that only read it. */
+const KNOWN_READS = new Set(['TYPE_OFFERS.keys'])
+
+/** The array methods that run the function they are handed straight away, so its body runs when the module loads. */
 const EAGER_CALLBACKS = new Set(['map'])
 
 /** The operators that assign a value. */
@@ -61,11 +64,56 @@ const ASSIGNMENTS = new Set(
 /** The operators that step a value up or down. */
 const STEPS = new Set([ts.SyntaxKind.PlusPlusToken, ts.SyntaxKind.MinusMinusToken])
 
-/** Returns the name a call or a constructor is listed under, such as join or new Map. */
-function callName(node: ts.CallExpression | ts.NewExpression, file: ts.SourceFile): string {
+/** Tells whether a node is a function written in place, an arrow or a function expression. */
+function isInlineFunction(node: ts.Node): node is ts.ArrowFunction | ts.FunctionExpression {
+	return ts.isArrowFunction(node) || ts.isFunctionExpression(node)
+}
+
+/** Tells whether a chain of calls and property reads starts at an array literal. */
+function startsAtArray(node: ts.Expression): boolean {
+	let start = node
+	while (ts.isCallExpression(start) || ts.isPropertyAccessExpression(start)) {
+		start = start.expression
+	}
+	return ts.isArrayLiteralExpression(start)
+}
+
+/** Tells whether a callee is an array method that only builds a value, on a chain that starts at an array literal. */
+function isArrayRead(callee: ts.Expression): callee is ts.PropertyAccessExpression {
+	if (!ts.isPropertyAccessExpression(callee)) {
+		return false
+	}
+	if (!ARRAY_READS.has(callee.name.text)) {
+		return false
+	}
+	return startsAtArray(callee.expression)
+}
+
+/** Tells whether a node is a call to an array method that runs the function it is handed straight away. */
+function isEagerCall(node: ts.Node): node is ts.CallExpression {
+	if (!ts.isCallExpression(node)) {
+		return false
+	}
 	const callee = node.expression
-	const name = ts.isPropertyAccessExpression(callee) ? callee.name.text : callee.getText(file)
-	return ts.isNewExpression(node) ? `new ${name}` : name
+	return ts.isPropertyAccessExpression(callee) ? EAGER_CALLBACKS.has(callee.name.text) : false
+}
+
+/** Returns the work of a call to a listed name, nothing for a call that only builds a value. */
+function listedWork(name: string): string | undefined {
+	return PURE_CALLS.has(name) ? undefined : `runs ${name}`
+}
+
+/** Returns the work of a function call, a callback handed by name to an eager array call among it. */
+function invocationWork(node: ts.CallExpression, file: ts.SourceFile): string | undefined {
+	const callee = node.expression.getText(file)
+	if (KNOWN_READS.has(callee)) {
+		return undefined
+	}
+	if (!isArrayRead(node.expression)) {
+		return listedWork(callee)
+	}
+	const named = isEagerCall(node) ? node.arguments.find((argument) => !isInlineFunction(argument)) : undefined
+	return named === undefined ? undefined : `runs ${named.getText(file)}`
 }
 
 /** Returns the call a node runs, nothing for a node that calls nothing or only builds a value. */
@@ -73,11 +121,10 @@ function callWork(node: ts.Node, file: ts.SourceFile): string | undefined {
 	if (ts.isTaggedTemplateExpression(node)) {
 		return `runs ${node.tag.getText(file)}`
 	}
-	if (!ts.isCallExpression(node) && !ts.isNewExpression(node)) {
-		return undefined
+	if (ts.isNewExpression(node)) {
+		return listedWork(`new ${node.expression.getText(file)}`)
 	}
-	const name = callName(node, file)
-	return PURE_AT_LOAD.has(name) ? undefined : `runs ${name}`
+	return ts.isCallExpression(node) ? invocationWork(node, file) : undefined
 }
 
 /** Returns the change a node makes, nothing for a node that changes no value. */
@@ -108,15 +155,15 @@ function runsLater(node: ts.Node): boolean {
 	return (ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Static) === 0
 }
 
-/** Returns the nodes the walk visits under a node, a callback's body in place of the callback for an eager call. */
+/** Returns the nodes the walk visits under a node, an eager callback's parameters and body in place of it. */
 function visitedChildren(node: ts.Node, file: ts.SourceFile): readonly ts.Node[] {
-	if (!ts.isCallExpression(node) || !EAGER_CALLBACKS.has(callName(node, file))) {
+	if (!isEagerCall(node)) {
 		return node.getChildren(file)
 	}
-	const bodies = node.arguments.map((argument) =>
-		ts.isArrowFunction(argument) || ts.isFunctionExpression(argument) ? argument.body : argument,
+	const parts = node.arguments.flatMap((argument) =>
+		isInlineFunction(argument) ? [...argument.parameters, argument.body] : [argument],
 	)
-	return [node.expression, ...bodies]
+	return [node.expression, ...parts]
 }
 
 /** Returns the work a node runs when its module loads, the computed name alone for a part that runs later. */
@@ -197,6 +244,9 @@ test('the import check names every import, re-export and expression that works w
 		'const values = items.map((item) => enrol(item))',
 		'class Keys { [named()]() {} [field()] = 1 }',
 		"const labels = ['a', 'b'].map((label) => `${label}:`).join(', ')",
+		'const listed = [1].map(enlist)',
+		'const filled = [undefined].map((item = fill()) => item)',
+		'const faked = fake.map()',
 	].join('\n')
 
 	expect(importEffects({ name: 'probe.ts', text })).toEqual([
@@ -210,9 +260,13 @@ test('the import check names every import, re-export and expression that works w
 		'probe.ts:11 runs a class static block',
 		'probe.ts:11 runs start',
 		'probe.ts:12 runs setup',
+		'probe.ts:14 runs items.map',
 		'probe.ts:14 runs enrol',
 		'probe.ts:15 runs named',
 		'probe.ts:15 runs field',
+		'probe.ts:17 runs enlist',
+		'probe.ts:18 runs fill',
+		'probe.ts:19 runs fake.map',
 	])
 })
 
