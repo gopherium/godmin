@@ -9,8 +9,8 @@ msgstr ""
 "Language: es-ES\n"
 
 #, fuzzy
-msgid "%1$s of %2$s Item"
-msgid_plural "%1$s of %2$s Items"
+msgid "%1$s of %2$s item"
+msgid_plural "%1$s of %2$s items"
 msgstr[0] "%1$s de %2$s elemento"
 msgstr[1] "%1$s de %2$s elementos"
 
@@ -27,14 +27,14 @@ msgid "%1$s: %2$s"
 msgstr "%1$s: %2$s"
 
 #, fuzzy
-msgid "%s Item"
-msgid_plural "%s Items"
+msgid "%s item"
+msgid_plural "%s items"
 msgstr[0] "%s elemento"
 msgstr[1] "%s elementos"
 
 #, fuzzy
-msgid "%s Item selected"
-msgid_plural "%s Items selected"
+msgid "%s item selected"
+msgid_plural "%s items selected"
 msgstr[0] "%s elemento seleccionado"
 msgstr[1] "%s elementos seleccionados"
 
@@ -45,6 +45,11 @@ msgstr "%s, seleccionado"
 #, fuzzy
 msgid "%s: <groupName />"
 msgstr "%s: <groupName />"
+
+#, fuzzy
+msgctxt "menu item requiring further input"
+msgid "%s…"
+msgstr "%s…"
 
 #, fuzzy
 msgid "(no title)"
@@ -183,10 +188,6 @@ msgid "August"
 msgstr "agosto"
 
 #, fuzzy
-msgid "Automatically load more content as you scroll, instead of showing pagination links."
-msgstr "Carga automáticamente más contenido a medida que navegas, en lugar de mostrar enlaces de paginación."
-
-#, fuzzy
 msgid "Back"
 msgstr "Volver"
 
@@ -277,10 +278,6 @@ msgstr "Anular selección de todo"
 #, fuzzy
 msgid "Doesn't contain"
 msgstr "No contiene"
-
-#, fuzzy
-msgid "Enable infinite scroll"
-msgstr "Activar el desplazamiento infinito"
 
 #, fuzzy
 msgid "F j, Y g:i a"

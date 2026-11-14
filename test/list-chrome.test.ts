@@ -134,8 +134,6 @@ const WORDPRESS_DATE_FILTER_WORDS: Record<string, string> = {
 
 /** The WordPress Spanish words of list chrome messages outside the filters, by lookup key. */
 const WORDPRESS_LIST_WORDS: Record<string, string> = {
-	'Automatically load more content as you scroll, instead of showing pagination links.':
-		'Carga automáticamente más contenido a medida que navegas, en lugar de mostrar enlaces de paginación.',
 	'Density option for DataView layout\u0004Balanced': 'Equilibrado',
 	'Density option for DataView layout\u0004Comfortable': 'Cómodo',
 	'Density option for DataView layout\u0004Compact': 'Compacto',
@@ -145,6 +143,7 @@ const WORDPRESS_LIST_WORDS: Record<string, string> = {
 	'No results': 'No hay resultados',
 	'Reset view': 'Restablecer vista',
 	'View is used as a noun\u0004View options': 'Ver opciones',
+	'menu item requiring further input\u0004%s…': '%s…',
 }
 
 /** The WordPress Spanish words of each message the list dates ask for, by lookup key. */
@@ -678,6 +677,8 @@ test('answers the list chrome in Spanish through the i18n runtime DataViews read
 	expect(i18n.__('Search')).toBe('Buscar')
 	expect(i18n._x('View options', 'View is used as a noun')).toBe('Ver opciones')
 	expect(i18n._x('Filter', 'verb')).toBe('Filtrar')
-	expect(i18n._n('%s Item', '%s Items', 1)).toBe('%s elemento')
-	expect(i18n._n('%s Item', '%s Items', 3)).toBe('%s elementos')
+	expect(i18n._n('%s item', '%s items', 1)).toBe('%s elemento')
+	expect(i18n._n('%s item', '%s items', 3)).toBe('%s elementos')
+	expect(i18n._n('%s item selected', '%s items selected', 3)).toBe('%s elementos seleccionados')
+	expect(i18n._n('%1$s of %2$s item', '%1$s of %2$s items', 1)).toBe('%1$s de %2$s elemento')
 })
