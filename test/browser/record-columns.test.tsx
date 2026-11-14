@@ -21,6 +21,9 @@ import * as records from '../../stories/records.stories.js'
 const { LongRecord, Record } = composeStories(records)
 const { WideTable } = composeStories(lists)
 
+/** A write time limit in milliseconds no test here runs into. */
+const PATIENT_LIMIT = 60_000
+
 /** One window width, the page width the frame leaves there, and whether the columns sit side by side. */
 interface Fit {
 	width: number
@@ -148,7 +151,7 @@ function stackedInOneBox() {
 /** Returns a record with the given details and main work inside a real admin root. */
 function recordOf(aside: ReactNode, children: ReactNode) {
 	return (
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<RecordPage aside={aside}>{children}</RecordPage>
 		</AdminRoot>
 	)
@@ -215,7 +218,7 @@ function SectionList() {
 /** Renders a record with the given breadcrumb links and actions. */
 function HeaderRecord({ links, actions }: { links: string[]; actions: string[] }) {
 	return (
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<Admin>
 				<Page
 					title="Invoice 1042"
@@ -305,7 +308,7 @@ test('leaves where the columns sit to the page width alone, whatever takes room 
 test('folds at its own width on a bleed canvas, with the content inside the title', async () => {
 	await page.viewport(BLEED_WINDOW, 800)
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<RecordPage canvas="bleed" aside={<div>Invoice details</div>}>
 				<div>Lines</div>
 			</RecordPage>
@@ -475,7 +478,7 @@ test('brings a field into view when it takes the focus', async () => {
 
 test('scrolls the canvas on a page with no aside', async () => {
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<Admin>
 				<Page title="Reports">
 					<div style={{ blockSize: TALL }} />
@@ -495,7 +498,7 @@ test('scrolls the canvas on a page with no aside', async () => {
 
 test('grows a record inside a wrapper and leaves the scroll to the canvas', () => {
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<Admin>
 				<div>
 					<Page title="Invoice 1042" aside={<div>Details</div>}>
@@ -514,7 +517,7 @@ test('grows a record inside a wrapper and leaves the scroll to the canvas', () =
 
 test('grows a record outside any frame', () => {
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<Page title="Invoice 1042" aside={<div>Details</div>}>
 				<div style={{ blockSize: TALL }} />
 			</Page>
@@ -527,7 +530,7 @@ test('grows a record outside any frame', () => {
 
 test('draws no second line under tabs', async () => {
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<Admin>
 				<Page title="Invoice 1042" tabs={<div>Tabs</div>} aside={<div>Details</div>}>
 					<div>Lines</div>

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { speak } from '@wordpress/a11y'
 import { InputControl } from '@wordpress/ui'
@@ -28,6 +28,18 @@ const DESCRIPTION = 'A page holds one piece of writing.'
 
 /** The words a write that failed answers. */
 const FAILURE = 'Could not add the page. The server is busy.'
+
+/** A write time limit in milliseconds short enough for a test to run past it. */
+const SHORT_LIMIT = 20
+
+/** A wait in milliseconds well past the short write time limit. */
+const PAST_LIMIT = SHORT_LIMIT * 5
+
+/** The words a write past its time limit shows, those of WordPress. */
+const NO_RESPONSE = 'Could not get a valid response from the server.'
+
+/** The words a write past its time limit shows while the browser is offline, those of WordPress. */
+const OFFLINE = 'Unable to connect. Please check your Internet connection.'
 
 /** How a test opens the dialog, what it does on send, and whether the title is needed. */
 type Opening = Partial<Pick<FormDialogProps, 'description' | 'cancelLabel' | 'canSubmit' | 'onSubmit'>> & {
@@ -76,16 +88,17 @@ function AddPage({ onClose, titleRequired = false, ...opening }: Opening & { onC
 /**
  * Renders the opener and opens the dialog from it, as a pointer press does.
  * @param opening - The help sentence, the Cancel label, the send gate, the send and the needed title.
- * @returns The send spy, the close spy and the opener.
+ * @param writeTimeout - The write time limit of the admin root in milliseconds, none when left out.
+ * @returns The send spy, the close spy, the opener and what takes the page away.
  */
-async function openDialog(opening: Opening = {}) {
+async function openDialog(opening: Opening = {}, writeTimeout?: number) {
 	const onSubmit = vi.fn(opening.onSubmit ?? (() => undefined))
 	const onClose = vi.fn()
-	renderAdmin(<AddPage {...opening} onSubmit={onSubmit} onClose={onClose} />)
+	const { unmount } = renderAdmin(<AddPage {...opening} onSubmit={onSubmit} onClose={onClose} />, { writeTimeout })
 	const opener = screen.getByRole('button', { name: 'Add Page' })
 	await userEvent.setup().click(opener)
 	await screen.findByRole('dialog')
-	return { onSubmit, onClose, opener }
+	return { onSubmit, onClose, opener, leave: unmount }
 }
 
 /**
@@ -188,6 +201,21 @@ async function pressEscape(): Promise<void> {
 	await act(async () => {
 		fireEvent.keyDown(field(), { key: 'Escape', code: 'Escape' })
 	})
+}
+
+/**
+ * Starts a write that never ends, as one the network dropped does.
+ * @returns The write, still running.
+ */
+async function neverEnds(): Promise<void> {
+	return new Promise(() => {})
+}
+
+/**
+ * Lets the real clock run well past the short write time limit.
+ */
+async function waitPastLimit(): Promise<void> {
+	await act(async () => new Promise((done) => setTimeout(done, PAST_LIMIT)))
 }
 
 test('opens a dialog named by its title, with a close icon', async () => {
@@ -381,11 +409,12 @@ test.each([
 
 /**
  * Returns the notice that says why the last write failed, none while there is none.
+ * @param words - The words the notice says, the failure of these tests by default.
  * @returns The notice, the last child of the form.
  */
-function notice(): HTMLElement | null {
+function notice(words: string = FAILURE): HTMLElement | null {
 	const last = form().lastElementChild as HTMLElement
-	return within(last).queryByText(FAILURE) === null ? null : last
+	return within(last).queryByText(words) === null ? null : last
 }
 
 /**
@@ -565,4 +594,189 @@ test('gives the focus back to the button that opened it once closed', async () =
 
 	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
 	await waitFor(() => expect(document.activeElement).toBe(opener))
+})
+
+/**
+ * Waits for the notice that says the write ran past its time limit.
+ * @param words - The time-out words, those of a browser online by default.
+ */
+async function timedOut(words: string = NO_RESPONSE): Promise<void> {
+	await waitFor(() => expect(notice(words)).not.toBeNull())
+}
+
+test('hands the send a signal that has not fired', async () => {
+	const signals: AbortSignal[] = []
+	await openDialog({
+		onSubmit: (signal: AbortSignal) => {
+			signals.push(signal)
+		},
+	})
+
+	await press('Add')
+
+	expect(signals).toHaveLength(1)
+	expect(signals[0]).toBeInstanceOf(AbortSignal)
+	expect(signals[0].aborted).toBe(false)
+})
+
+test('fires the signal it handed the send once the write runs past the time limit', async () => {
+	const signals: AbortSignal[] = []
+	await openDialog(
+		{
+			onSubmit: async (signal: AbortSignal) => {
+				signals.push(signal)
+				return neverEnds()
+			},
+		},
+		SHORT_LIMIT,
+	)
+
+	await press('Add')
+
+	await waitFor(() => expect(signals[0].aborted).toBe(true))
+})
+
+test('says the time-out at the end of the form once the write runs past the time limit, and speaks it', async () => {
+	const { onClose } = await openDialog({ onSubmit: neverEnds }, SHORT_LIMIT)
+	await userEvent.setup().type(field(), 'Hello')
+
+	await press('Add')
+	await timedOut()
+
+	expect(speak).toHaveBeenCalledExactlyOnceWith(NO_RESPONSE, 'assertive')
+	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
+})
+
+test('keeps what was typed and the focus where it was once the write runs past the time limit', async () => {
+	await openDialog({ onSubmit: neverEnds }, SHORT_LIMIT)
+	await userEvent.setup().type(field(), 'Hello')
+	await waitFor(() => expect(document.activeElement).toBe(field()))
+
+	await press('Add')
+	await timedOut()
+
+	expect(field().value).toBe('Hello')
+	expect(document.activeElement).toBe(field())
+})
+
+test('ends the spinner and frees the send, Cancel and the close icon past the time limit', async () => {
+	await openDialog({ onSubmit: neverEnds }, SHORT_LIMIT)
+
+	await press('Add')
+	await timedOut()
+
+	expect(submit().getAttribute('aria-disabled')).not.toBe('true')
+	expect(submit().className).not.toMatch(/is-loading/)
+	expect(screen.getByRole('button', { name: 'Cancel' }).getAttribute('aria-disabled')).not.toBe('true')
+	expect(screen.getByRole('button', { name: 'Close' }).getAttribute('aria-disabled')).not.toBe('true')
+})
+
+test('scrolls the body to its end once the write runs past the time limit', async () => {
+	await openDialog({ onSubmit: neverEnds }, SHORT_LIMIT)
+	const places = scrollsOfBody(640)
+
+	await press('Add')
+	await timedOut()
+
+	expect(places).toEqual([640])
+})
+
+test.each([
+	['Cancel', async () => press('Cancel')],
+	['Escape', pressEscape],
+	['a click on the dimmed page', clickOutside],
+	['its close icon', async () => press('Close')],
+])('closes on %s once the write ran past the time limit', async (_way, close) => {
+	const { onClose } = await openDialog({ onSubmit: neverEnds }, SHORT_LIMIT)
+	await press('Add')
+	await timedOut()
+
+	await close()
+
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
+})
+
+test('changes nothing on an answer the write gives once the time-out showed', async () => {
+	const held = heldSend()
+	const { onClose } = await openDialog({ onSubmit: held.send }, SHORT_LIMIT)
+	await press('Add')
+	await timedOut()
+
+	await act(async () => held.fulfil())
+
+	expect(dialog()).not.toBeNull()
+	expect(onClose).not.toHaveBeenCalled()
+	expect(notice(NO_RESPONSE)).not.toBeNull()
+	expect(speak).toHaveBeenCalledOnce()
+})
+
+test('says and speaks the offline words when the browser is offline as the limit runs out', async () => {
+	const offline = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+	onTestFinished(() => offline.mockRestore())
+	await openDialog({ onSubmit: neverEnds }, SHORT_LIMIT)
+
+	await press('Add')
+	await timedOut(OFFLINE)
+
+	expect(speak).toHaveBeenCalledExactlyOnceWith(OFFLINE, 'assertive')
+})
+
+test('sends again with a signal of its own once the time-out showed, and clears the words', async () => {
+	const signals: AbortSignal[] = []
+	const { onSubmit } = await openDialog(
+		{
+			onSubmit: (signal: AbortSignal) => {
+				signals.push(signal)
+				return signals.length === 1 ? neverEnds() : { close: false }
+			},
+		},
+		SHORT_LIMIT,
+	)
+	await press('Add')
+	await timedOut()
+
+	await press('Add')
+
+	expect(onSubmit).toHaveBeenCalledTimes(2)
+	expect(signals[1]).not.toBe(signals[0])
+	expect(signals[1].aborted).toBe(false)
+	expect(notice(NO_RESPONSE)).toBeNull()
+})
+
+test('still fires the signal at the limit and speaks nothing once the app took the busy dialog away', async () => {
+	const signals: AbortSignal[] = []
+	const { leave } = await openDialog(
+		{
+			onSubmit: async (signal: AbortSignal) => {
+				signals.push(signal)
+				return neverEnds()
+			},
+		},
+		SHORT_LIMIT,
+	)
+	vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+	onTestFinished(() => {
+		vi.useRealTimers()
+	})
+
+	await press('Add')
+	leave()
+	await vi.advanceTimersByTimeAsync(PAST_LIMIT)
+
+	expect(signals[0].aborted).toBe(true)
+	expect(speak).not.toHaveBeenCalled()
+})
+
+test('sets no limit on a dialog outside any admin root', async () => {
+	render(<AddPage onSubmit={neverEnds} onClose={() => undefined} />)
+	await userEvent.setup().click(screen.getByRole('button', { name: 'Add Page' }))
+	await screen.findByRole('dialog')
+
+	await press('Add')
+	await waitPastLimit()
+
+	expect(submit().getAttribute('aria-disabled')).toBe('true')
+	expect(notice(NO_RESPONSE)).toBeNull()
 })

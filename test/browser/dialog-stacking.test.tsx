@@ -13,6 +13,9 @@ import { userEvent } from 'vitest/browser'
 import { AdminRoot } from '../../src/admin-root.js'
 import { ConfirmDialog, FormDialog, Toaster, useToaster } from '../../src/index.js'
 
+/** A write time limit in milliseconds no test here runs into. */
+const PATIENT_LIMIT = 60_000
+
 /** Loads the WordPress components stylesheet an app loads for DataViews, for the running test only. */
 async function loadComponentsSheet(): Promise<void> {
 	await new Promise((loaded, failed) => {
@@ -29,7 +32,7 @@ async function loadComponentsSheet(): Promise<void> {
 /** Draws a bench as an app draws its screens, inside the admin root and with the components stylesheet. */
 async function draw(ui: ReactNode): Promise<RenderResult> {
 	await loadComponentsSheet()
-	return render(<AdminRoot>{ui}</AdminRoot>)
+	return render(<AdminRoot writeTimeout={PATIENT_LIMIT}>{ui}</AdminRoot>)
 }
 
 /** Waits for the browser to draw the given number of frames. */

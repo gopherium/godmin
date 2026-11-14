@@ -243,6 +243,10 @@ msgid "Coordinated Universal Time"
 msgstr "Hora universal coordinada"
 
 #, fuzzy
+msgid "Could not get a valid response from the server."
+msgstr "No se pudo obtener una respuesta válida del servidor."
+
+#, fuzzy
 msgid "Current page"
 msgstr "Página actual"
 
@@ -684,6 +688,10 @@ msgstr "Mar"
 #, fuzzy
 msgid "Tuesday"
 msgstr "martes"
+
+#, fuzzy
+msgid "Unable to connect. Please check your Internet connection."
+msgstr "No se puede conectar. Revisa tu conexión a Internet."
 
 #, fuzzy
 msgid "Unknown status for %1$s"

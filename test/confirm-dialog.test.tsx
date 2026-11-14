@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { useState } from 'react'
 import type { ComponentProps } from 'react'
@@ -9,7 +9,7 @@ import { expect, onTestFinished, test, vi } from 'vitest'
 import { POPUP_CLASS } from '../src/dialog-open.js'
 import { ConfirmDialog } from '../src/index'
 import type { DialogAnswer } from '../src/index'
-import { installTestEnvironment, renderAdmin, stubLayout } from '../src/testing.js'
+import { getAnnouncement, installTestEnvironment, renderAdmin, stubLayout } from '../src/testing.js'
 
 installTestEnvironment()
 
@@ -21,6 +21,18 @@ const DESCRIPTION = 'It stays there for 30 days.'
 
 /** The words a write that failed answers. */
 const FAILURE = 'Could not move "Hello" to the trash.'
+
+/** A write time limit in milliseconds short enough for a test to run past it. */
+const SHORT_LIMIT = 20
+
+/** A wait in milliseconds well past the short write time limit. */
+const PAST_LIMIT = SHORT_LIMIT * 5
+
+/** The words a write past its time limit shows, those of WordPress. */
+const NO_RESPONSE = 'Could not get a valid response from the server.'
+
+/** The words a write past its time limit shows while the browser is offline, those of WordPress. */
+const OFFLINE = 'Unable to connect. Please check your Internet connection.'
 
 /** What a test changes on the dialog. */
 type Opening = Partial<Pick<ComponentProps<typeof ConfirmDialog>, 'description' | 'intent' | 'onConfirm'>>
@@ -62,16 +74,20 @@ function TrashButton({
 /**
  * Renders the opener and asks the dialog from it.
  * @param opening - What the test changes on the dialog.
- * @returns The action spy, the close spy, the opener and the region.
+ * @param writeTimeout - The write time limit of the admin root in milliseconds, none when left out.
+ * @returns The action spy, the close spy, the opener, the region and what takes the page away.
  */
-async function openDialog(opening: Opening = {}) {
+async function openDialog(opening: Opening = {}, writeTimeout?: number) {
 	const onConfirm = vi.fn(opening.onConfirm ?? (() => undefined))
 	const onClose = vi.fn()
-	renderAdmin(<TrashButton {...opening} onConfirm={onConfirm} onClose={onClose} />)
+	const { unmount } = renderAdmin(<TrashButton {...opening} onConfirm={onConfirm} onClose={onClose} />, {
+		writeTimeout,
+	})
 	const opener = screen.getByRole('button', { name: 'Ask' })
 	await userEvent.setup().click(opener)
 	await screen.findByRole('alertdialog')
-	return { onConfirm, onClose, opener, region: screen.getByRole('region', { name: 'Posts', hidden: true }) }
+	const region = screen.getByRole('region', { name: 'Posts', hidden: true })
+	return { onConfirm, onClose, opener, region, leave: unmount }
 }
 
 /**
@@ -147,6 +163,32 @@ async function pressEscape(): Promise<void> {
  */
 function spinning(): boolean {
 	return /is-loading/.test(button('Trash').className)
+}
+
+/**
+ * Starts a write that never ends, as one the network dropped does.
+ * @returns The write, still running.
+ */
+async function neverEnds(): Promise<unknown> {
+	return new Promise(() => {})
+}
+
+/**
+ * Starts a write that rejects with the reason of its signal once the signal fires, as a fetch does.
+ * @param signal - The signal the dialog handed it.
+ * @returns The write, still running.
+ */
+async function stopsOnSignal(signal: AbortSignal): Promise<unknown> {
+	return new Promise((_, fail) => {
+		signal.addEventListener('abort', () => fail(signal.reason))
+	})
+}
+
+/**
+ * Lets the real clock run well past the short write time limit.
+ */
+async function waitPastLimit(): Promise<void> {
+	await act(async () => new Promise((done) => setTimeout(done, PAST_LIMIT)))
 }
 
 test('names an alert dialog by its title and describes it by its description', async () => {
@@ -436,4 +478,185 @@ test('leaves the focus where the action moved it', async () => {
 
 	expect(dialog()).toBeNull()
 	expect(document.activeElement).toBe(moved.region)
+})
+
+test('hands the action a signal that has not fired', async () => {
+	const signals: AbortSignal[] = []
+	await openDialog({
+		onConfirm: (signal: AbortSignal) => {
+			signals.push(signal)
+		},
+	})
+
+	await press('Trash')
+
+	expect(signals).toHaveLength(1)
+	expect(signals[0]).toBeInstanceOf(AbortSignal)
+	expect(signals[0].aborted).toBe(false)
+})
+
+test('fires the signal it handed the action once the write runs past the time limit', async () => {
+	const signals: AbortSignal[] = []
+	await openDialog(
+		{
+			onConfirm: async (signal: AbortSignal) => {
+				signals.push(signal)
+				return neverEnds()
+			},
+		},
+		SHORT_LIMIT,
+	)
+
+	await press('Trash')
+
+	await waitFor(() => expect(signals[0].aborted).toBe(true))
+})
+
+test('shows and speaks the time-out words under the buttons once the write runs past the time limit', async () => {
+	const { onClose } = await openDialog({ onConfirm: neverEnds }, SHORT_LIMIT)
+
+	await press('Trash')
+
+	const words = await screen.findByText(NO_RESPONSE)
+	expect(words.previousElementSibling?.contains(button('Trash'))).toBe(true)
+	expect(getAnnouncement('assertive')).toContain(NO_RESPONSE)
+	expect(onClose).not.toHaveBeenCalled()
+	expect(dialog()).not.toBeNull()
+})
+
+test('ends the spinner and frees both buttons once the write runs past the time limit', async () => {
+	await openDialog({ onConfirm: neverEnds }, SHORT_LIMIT)
+
+	await press('Trash')
+	await screen.findByText(NO_RESPONSE)
+
+	expect(spinning()).toBe(false)
+	expect(button('Trash').getAttribute('aria-disabled')).not.toBe('true')
+	expect(button('Keep').getAttribute('aria-disabled')).not.toBe('true')
+})
+
+test.each([
+	['Cancel', async () => press('Keep')],
+	['Escape', pressEscape],
+])('closes on %s once the write ran past the time limit', async (_way, close) => {
+	stubLayout()
+	const { onClose } = await openDialog({ onConfirm: neverEnds }, SHORT_LIMIT)
+	await waitFor(() => expect(document.activeElement).toBe(button('Keep')))
+	await press('Trash')
+	await screen.findByText(NO_RESPONSE)
+
+	await close()
+
+	await waitFor(() => expect(dialog()).toBeNull())
+	expect(onClose).toHaveBeenCalledOnce()
+})
+
+test('changes nothing on an answer the write gives once the time-out showed', async () => {
+	const held = heldWrite()
+	const { onClose } = await openDialog({ onConfirm: held.write }, SHORT_LIMIT)
+	await press('Trash')
+	await screen.findByText(NO_RESPONSE)
+
+	await act(async () => held.end())
+
+	expect(onClose).not.toHaveBeenCalled()
+	expect(dialog()).not.toBeNull()
+	expect(screen.getByText(NO_RESPONSE)).not.toBeNull()
+	expect(spinning()).toBe(false)
+})
+
+test('shows and speaks the offline words when the browser is offline as the limit runs out', async () => {
+	const offline = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false)
+	onTestFinished(() => offline.mockRestore())
+	await openDialog({ onConfirm: neverEnds }, SHORT_LIMIT)
+
+	await press('Trash')
+
+	expect(await screen.findByText(OFFLINE)).not.toBeNull()
+	expect(getAnnouncement('assertive')).toContain(OFFLINE)
+})
+
+test('shows the time-out for a write that rejects with the abort it was handed, and hands nothing on', async () => {
+	const reasons = heardRejections()
+	const logged = vi.spyOn(console, 'error')
+	onTestFinished(() => logged.mockRestore())
+	await openDialog({ onConfirm: stopsOnSignal }, SHORT_LIMIT)
+
+	await press('Trash')
+	await screen.findByText(NO_RESPONSE)
+	await waitPastLimit()
+
+	expect(reasons).toEqual([])
+	expect(logged).not.toHaveBeenCalled()
+})
+
+test('shows the words a write answers as it stops on the signal, in place of the time-out', async () => {
+	const stops = async (signal: AbortSignal) =>
+		new Promise((done) => {
+			signal.addEventListener('abort', () => done({ error: FAILURE }))
+		})
+	await openDialog({ onConfirm: stops }, SHORT_LIMIT)
+
+	await press('Trash')
+
+	expect(await screen.findByText(FAILURE)).not.toBeNull()
+	expect(screen.queryByText(NO_RESPONSE)).toBeNull()
+})
+
+test('sends again with a signal of its own once the time-out showed, and clears the words', async () => {
+	const signals: AbortSignal[] = []
+	const { onConfirm } = await openDialog(
+		{
+			onConfirm: (signal: AbortSignal) => {
+				signals.push(signal)
+				return signals.length === 1 ? neverEnds() : { close: false }
+			},
+		},
+		SHORT_LIMIT,
+	)
+	await press('Trash')
+	await screen.findByText(NO_RESPONSE)
+
+	await press('Trash')
+
+	expect(onConfirm).toHaveBeenCalledTimes(2)
+	expect(signals[1]).not.toBe(signals[0])
+	expect(signals[1].aborted).toBe(false)
+	expect(screen.queryByText(NO_RESPONSE)).toBeNull()
+})
+
+test('still fires the signal at the limit and speaks nothing once the app took the busy dialog away', async () => {
+	const signals: AbortSignal[] = []
+	const { leave } = await openDialog(
+		{
+			onConfirm: async (signal: AbortSignal) => {
+				signals.push(signal)
+				return neverEnds()
+			},
+		},
+		SHORT_LIMIT,
+	)
+	vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+	onTestFinished(() => {
+		vi.useRealTimers()
+	})
+
+	await press('Trash')
+	leave()
+	await vi.advanceTimersByTimeAsync(PAST_LIMIT)
+
+	expect(signals[0].aborted).toBe(true)
+	expect(getAnnouncement('assertive')).toBe('')
+})
+
+test('sets no limit on a dialog outside any admin root', async () => {
+	render(<TrashButton onConfirm={neverEnds} onClose={() => undefined} />)
+	await userEvent.setup().click(screen.getByRole('button', { name: 'Ask' }))
+	await screen.findByRole('alertdialog')
+
+	await press('Trash')
+	await waitPastLimit()
+
+	expect(spinning()).toBe(true)
+	expect(screen.queryByText(NO_RESPONSE)).toBeNull()
 })

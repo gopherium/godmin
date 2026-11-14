@@ -21,8 +21,8 @@ export interface RenameDialogProps {
 	submitLabel: string
 	/** The label of the button that closes the dialog. */
 	cancelLabel: string
-	/** Writes the name as typed. Return nothing to close at once, the write to hold the dialog, or an answer to stay. */
-	onSubmit: (name: string) => void | DialogAnswer | PromiseLike<unknown>
+	/** Writes the typed name with the time limit's signal. Return nothing to close, the write to hold it, or an answer. */
+	onSubmit: (name: string, signal: AbortSignal) => void | DialogAnswer | PromiseLike<unknown>
 	/** Takes the dialog away, once its card has left the page. */
 	onClose: () => void
 }
@@ -47,7 +47,7 @@ export function RenameDialog({
 			title={title}
 			submitLabel={submitLabel}
 			cancelLabel={cancelLabel}
-			onSubmit={() => onSubmit(value)}
+			onSubmit={(signal) => onSubmit(value, signal)}
 			onClose={onClose}
 		>
 			{(busy) => (

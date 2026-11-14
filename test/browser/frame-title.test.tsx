@@ -19,6 +19,9 @@ import { Page } from '../../src/page.js'
 import { routerDefaults, useFrameLocation, useShownPath } from '../../src/router.js'
 import { Toaster, useToaster } from '../../src/toaster.js'
 
+/** A write time limit in milliseconds no test here runs into. */
+const PATIENT_LIMIT = 60_000
+
 /** What the two live regions hold at one layout. */
 interface Regions {
 	polite: string
@@ -135,7 +138,7 @@ function adminRouter() {
 
 test('lets a layout show the toast of a delete before the title of the list it opens empties it', async () => {
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<RouterProvider router={adminRouter()} />
 		</AdminRoot>,
 	)

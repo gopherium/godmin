@@ -12,15 +12,22 @@ installTestEnvironment()
 /** The name the item carries when the dialog opens. */
 const NAME = 'Hello'
 
+/** A write time limit in milliseconds short enough for a test to run past it. */
+const SHORT_LIMIT = 20
+
+/** The words a write past its time limit shows, those of WordPress. */
+const NO_RESPONSE = 'Could not get a valid response from the server.'
+
 /** What a test changes on the dialog. */
 type Opening = Partial<Pick<RenameDialogProps, 'name' | 'onSubmit'>>
 
 /**
  * Renders the rename dialog over an item, with the send and the close spies.
  * @param opening - The name the item carries and the send.
+ * @param writeTimeout - The write time limit of the admin root in milliseconds, none when left out.
  * @returns The send spy and the close spy.
  */
-async function openRename(opening: Opening = {}) {
+async function openRename(opening: Opening = {}, writeTimeout?: number) {
 	const onSubmit = vi.fn(opening.onSubmit ?? (() => undefined))
 	const onClose = vi.fn()
 	renderAdmin(
@@ -33,6 +40,7 @@ async function openRename(opening: Opening = {}) {
 			onSubmit={onSubmit}
 			onClose={onClose}
 		/>,
+		{ writeTimeout },
 	)
 	await screen.findByRole('dialog', { name: 'Rename' })
 	return { onSubmit, onClose }
@@ -112,7 +120,7 @@ test('sends the name the item already has, as the WordPress Rename does', async 
 
 	await pressSave()
 
-	expect(onSubmit).toHaveBeenCalledExactlyOnceWith(NAME)
+	expect(onSubmit).toHaveBeenCalledExactlyOnceWith(NAME, expect.any(AbortSignal))
 })
 
 test('sends the name as typed, the spaces around it kept', async () => {
@@ -121,7 +129,43 @@ test('sends the name as typed, the spaces around it kept', async () => {
 
 	await pressSave()
 
-	expect(onSubmit).toHaveBeenCalledExactlyOnceWith('  Maria Perez  ')
+	expect(onSubmit).toHaveBeenCalledExactlyOnceWith('  Maria Perez  ', expect.any(AbortSignal))
+})
+
+test('hands the send a signal that has not fired, after the name', async () => {
+	const signals: AbortSignal[] = []
+	await openRename({
+		onSubmit: (_name: string, signal: AbortSignal) => {
+			signals.push(signal)
+		},
+	})
+
+	await pressSave()
+
+	expect(signals).toHaveLength(1)
+	expect(signals[0].aborted).toBe(false)
+})
+
+test('says the time-out, frees the field and keeps the typed name past the time limit', async () => {
+	const signals: AbortSignal[] = []
+	const { onClose } = await openRename(
+		{
+			onSubmit: async (_name: string, signal: AbortSignal) => {
+				signals.push(signal)
+				return new Promise(() => {})
+			},
+		},
+		SHORT_LIMIT,
+	)
+	retype('Maria Perez')
+
+	await pressSave()
+
+	expect(await screen.findByText(NO_RESPONSE)).not.toBeNull()
+	expect(signals[0].aborted).toBe(true)
+	expect(field().readOnly).toBe(false)
+	expect(field().value).toBe('Maria Perez')
+	expect(onClose).not.toHaveBeenCalled()
 })
 
 test('keeps the field read only while the write runs, then closes once it ends', async () => {

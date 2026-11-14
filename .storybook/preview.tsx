@@ -7,14 +7,18 @@ import { setLocaleData } from '@wordpress/i18n'
 
 import { AdminRoot } from '../src/admin-root.js'
 
+/** The write time limit in milliseconds of a story that sets none, an hour, longer than anyone looks at one. */
+const PATIENT_LIMIT = 60 * 60 * 1000
+
 const preview: Preview = {
 	decorators: [
-		(Story, { globals }) => {
+		(Story, { globals, parameters }) => {
 			const direction = globals.direction === 'rtl' ? 'rtl' : 'ltr'
 			document.documentElement.dir = direction
 			setLocaleData({ 'text direction\u0004ltr': [direction] })
+			const writeTimeout = (parameters.writeTimeout as number | undefined) ?? PATIENT_LIMIT
 			return (
-				<AdminRoot cornerRadius={globals.cornerRadius || undefined}>
+				<AdminRoot cornerRadius={globals.cornerRadius || undefined} writeTimeout={writeTimeout}>
 					<Story />
 				</AdminRoot>
 			)
