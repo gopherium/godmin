@@ -421,9 +421,8 @@ Here `invite` answers the server's words about the email, or nothing
 when it worked.
 
 ```tsx
-const form = useRef<HTMLFormElement>(null)
 const [email, setEmail] = useState('')
-const rejectedEmail = useRejectedField(form, email)
+const rejectedEmail = useRejectedField(email)
 const toaster = useToaster()
 const send = async () => {
 	const sent = email
@@ -436,7 +435,6 @@ const send = async () => {
 
 return (
 	<form
-		ref={form}
 		className="godmin-form"
 		onSubmit={(event) => {
 			event.preventDefault()
@@ -444,6 +442,7 @@ return (
 		}}
 	>
 		<ValidatedInputControl
+			ref={rejectedEmail.ref}
 			label="Email"
 			type="email"
 			value={email}
@@ -455,17 +454,19 @@ return (
 )
 ```
 
-- Pass the form, and what the words are about. In most forms that
-  is the value of the field, as the field holds it. Trim only what
-  goes to the server. When the answer also depends on another
-  field, join both into one string, such as `${kind}:${value}`, and
-  send the same string to `reject`.
-- Hand `validity` to the field's `customValidity`. It fits the WPDS
-  validated fields.
+- Pass what the words are about. In most forms that is the value of
+  the field, as the field holds it. Trim only what goes to the
+  server. When the answer also depends on another field, join both
+  into one string, such as `${kind}:${value}`, and send the same
+  string to `reject`.
+- Hand `ref` to the field's `ref` and `validity` to its
+  `customValidity`. Both fit the WPDS validated fields. The hook finds
+  the form through the field.
 - `reject(message, sent)` puts the words under the field and answers
   `true`. It answers `false` when there are no words, when the field
-  changed while the send was on its way, or when the form left the
-  page. Say it another way then, in a toast on a page.
+  changed while the send was on its way, or when the field is not on
+  the page inside a form. Say it another way then, in a toast on a
+  page.
 - The focus moves to the first field that fails, and a screen reader
   hears the server's words at once.
 - The words go at the first edit. Typing the rejected value again does
@@ -477,8 +478,9 @@ return (
   focus goes to the first, and only one set of words is spoken.
 - Call `reject` once the answer came, never while rendering, and never
   in an answer that also leaves the screen.
-- The hook needs the form element. A `FormDialog` does not hand out
-  its form yet, so the hook does not run inside one.
+- In a `FormDialog`, answer `{ close: false }` when `reject` answers
+  `true`, so the dialog stays open on the words, and
+  `{ error: words }` when it answers `false`.
 
 [Announcements](./testing.md#announcements) shows how a test reads
 what was spoken.
