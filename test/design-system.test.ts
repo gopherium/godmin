@@ -1083,6 +1083,14 @@ test('the dialogs page says a dialog taken off the page keeps the limit of its w
 	expect(section).toContain('shows what the write answered while it was hidden')
 })
 
+test('the dialogs page says the signal stops the request while the server may still finish the write', () => {
+	const section = (sections.get('dialogs.md')?.get('While a write runs') ?? '').replace(/\s+/g, ' ')
+
+	expect(section).toContain('so the request stops once the time limit runs out')
+	expect(section).toContain('The server may still finish a write it already received')
+	expect(section).toContain('make a write safe to send twice')
+})
+
 test('the dialogs page reads any rejection after the signal fired as the time-out', () => {
 	const section = (sections.get('dialogs.md')?.get('While a write runs') ?? '').replace(/\s+/g, ' ')
 

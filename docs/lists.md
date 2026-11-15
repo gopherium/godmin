@@ -950,7 +950,7 @@ shows:
   runs, with a spinner on its confirm button. When the promise ends,
   the dialog closes. A run over the picked rows works this way.
   `onConfirm` gets the dialog's signal. Pass it to your write, so the
-  write stops once the time limit of `AdminRoot` runs out, as
+  request stops once the time limit of `AdminRoot` runs out, as
   [while a write runs](./design-system/dialogs.md#while-a-write-runs)
   says.
 - Answer `{ error: 'words' }`, at once or as the promise ends, and the
@@ -1136,7 +1136,7 @@ open with a spinner until it ends. Answer `{ error }` to stay open and
 say why, or `{ close: false }` to stay open with nothing said, as
 [when a dialog closes](./design-system/dialogs.md#when-a-dialog-closes)
 says. `onSubmit` gets the dialog's signal, and `addProject` takes it,
-so the write stops once the time limit of `AdminRoot` runs out. godmin
+so the request stops once the time limit of `AdminRoot` runs out. godmin
 closes the dialog itself, so call nothing to close it. `onClose` runs
 once the card has left, and that is where you take the dialog away.
 

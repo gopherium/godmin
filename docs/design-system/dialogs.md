@@ -133,9 +133,11 @@ a setting left empty.
 The handler gets an `AbortSignal` as its last argument:
 `onConfirm(signal)` on a confirm, `onSubmit(signal)` on a form dialog
 and `onSubmit(name, signal)` on a rename. A signal is how the browser
-tells a write to stop. Pass it to your write, such as
-`fetch(url, { signal })`, so the write stops once the time limit runs
-out. A handler that takes no argument still works.
+tells a request to stop. Pass it to your write, such as
+`fetch(url, { signal })`, so the request stops once the time limit runs
+out. That stops only the browser's side. The server may still finish a
+write it already received, so make a write safe to send twice, or
+cancel it on the server. A handler that takes no argument still works.
 
 When the time limit runs out:
 

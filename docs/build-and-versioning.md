@@ -128,8 +128,9 @@ these places:
 - `onConfirm` and `onSubmit` get an `AbortSignal` as their last
   argument, and the `onSubmit` of `RenameDialog` gets it after the
   name. It fires once the limit runs out. Pass it to the write the
-  dialog waits on, such as `fetch(url, { signal })`, so the write
-  itself stops too.
+  dialog waits on, such as `fetch(url, { signal })`, so the request
+  stops too. The server may still finish a write it already received,
+  so make a write safe to send twice.
 - The write that `useDialogRun` hands out takes the dialog's signal as
   its fourth argument, as `write(items, call, words, signal)`. A call
   still running when the signal fires counts as failed. The run does

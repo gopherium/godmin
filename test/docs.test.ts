@@ -238,6 +238,13 @@ test('the upgrade notes open with the last release and name what each Breaking l
 })
 
 test.each([...pages, ['README.md', readme] as const])(
+	'%s says the signal stops the request, never the write a server may still finish',
+	(_path, page) => {
+		expect(page.text.replace(/\s+/g, ' ')).not.toMatch(/\bwrite (?:itself )?stops\b|\btells a write to stop\b/)
+	},
+)
+
+test.each([...pages, ['README.md', readme] as const])(
 	'%s passes writeTimeout to every AdminRoot its examples render',
 	(_path, page) => {
 		const roots = codeOf(page).flatMap((value) => value.match(/<AdminRoot\b[^>]*>/g) ?? [])
