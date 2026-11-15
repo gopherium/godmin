@@ -332,18 +332,20 @@ export function buttonClasses(
 /**
  * Renders the given tree inside the design system host.
  * @param ui - The tree to render.
- * @param options - The testing library options, plus the host theme settings.
+ * @param options - The testing library options, the host theme settings and a write time limit, none when left out.
  * @returns The testing library render result.
  */
 export function renderAdmin(
 	ui: ReactNode,
-	options: RenderOptions & Omit<AdminRootProps, 'children'> = {},
+	options: RenderOptions &
+		Omit<AdminRootProps, 'children' | 'writeTimeout'> &
+		Partial<Pick<AdminRootProps, 'writeTimeout'>> = {},
 ): RenderResult {
-	const { color, cursor, cornerRadius, as, ...renderOptions } = options
+	const { color, cursor, cornerRadius, as, writeTimeout = Infinity, ...renderOptions } = options
 	return render(ui, {
 		...renderOptions,
 		wrapper: function Host({ children }) {
-			return <AdminRoot {...{ color, cursor, cornerRadius, as }}>{children}</AdminRoot>
+			return <AdminRoot {...{ color, cursor, cornerRadius, as, writeTimeout }}>{children}</AdminRoot>
 		},
 	})
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
-/** Names the reduced motion switch, double click, drag and held key the browser project adds to the test commands. */
+/** Names the reduced motion switch, double click, drag, held key and time offline the browser project adds. */
 declare module 'vitest/browser' {
 	interface BrowserCommands {
 		reduceMotion: (on: boolean) => Promise<void>
@@ -11,6 +11,7 @@ declare module 'vitest/browser' {
 			motion: { steps: number; gap: number },
 		) => Promise<void>
 		holdKey: (key: string, repeats: number, gap: number) => Promise<void>
+		goOfflineFor: (span: number) => Promise<void>
 	}
 }
 

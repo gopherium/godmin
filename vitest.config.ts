@@ -62,6 +62,13 @@ const holdKey: BrowserCommand<[key: string, repeats: number, gap: number]> = asy
 	await page.keyboard.up(key)
 }
 
+/** Takes the test browser off the network for a set time, then puts it back on before it answers the test. */
+const goOfflineFor: BrowserCommand<[span: number]> = async ({ page }, span) => {
+	await page.context().setOffline(true)
+	await new Promise((done) => setTimeout(done, span))
+	await page.context().setOffline(false)
+}
+
 /** The parts of a list DataViews pulses as it reloads, the bar inside its bulk bar overlay in place of the overlay. */
 const PULSING = [
 	'.dataviews-wrapper .is-refreshing:not(.dataviews-view-table__bulk-actions-overlay)',
@@ -125,7 +132,7 @@ export default defineConfig({
 					browser: {
 						...chromium(),
 						viewport: { width: 1280, height: 800 },
-						commands: { reduceMotion, doubleClickAt, drag, holdKey },
+						commands: { reduceMotion, doubleClickAt, drag, holdKey, goOfflineFor },
 					},
 				},
 			},

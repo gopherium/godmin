@@ -1,6 +1,6 @@
 ---
 title: Dialogs
-description: When an action asks first, how a confirm and a form dialog look and move, what happens while a write runs, where a failure shows, and what a keyboard or a screen reader meets.
+description: When an action asks first, how a confirm and a form dialog look and move, what happens while a write runs and when it runs out of time, where a failure shows, and what a keyboard or a screen reader meets.
 ---
 
 A dialog stops the page to ask one thing. godmin draws two kinds on
@@ -103,14 +103,13 @@ page gives every value of how they look and behave.
 ## While a write runs
 
 When `onConfirm` or `onSubmit` returns a promise, the dialog stays
-open until it ends.
+open until it ends, or until the time limit runs out.
 
 - The main button shows a spinner over its hidden label and keeps its
   width. No dialog shows a word such as "Deleting…" or "Saving…".
 - Cancel and the close icon turn grey and stay reachable with Tab.
 - Escape and the dimmed page close nothing, wherever the focus sits,
-  so a failure always has a place to show. Give a write that can hang
-  a timeout.
+  so a failure always has a place to show.
 - The fields stay as you drew them. If one must wait, pass a function
   as the children of `FormDialog`. It gets `busy`, so set the field
   `readOnly` while the write runs. Never set it `disabled`, since a
@@ -120,15 +119,66 @@ open until it ends.
   once. A press or an Enter after the dialog started to close sends
   nothing.
 
+The time limit is the `writeTimeout` of `AdminRoot`, in milliseconds.
+Your app sets it once, from its own settings. godmin holds no limit
+of its own, and a dialog outside any `AdminRoot` waits as long as the
+write takes. A handler that returns nothing, or answers at once,
+starts no clock. `writeTimeout` takes a number above 0 and up to
+2147483647, about 25 days, the longest a browser timer waits. Pass
+`Infinity` to set no limit. Any other value makes `AdminRoot` throw as
+it renders, in every build, so a broken setting shows the first time
+the admin loads. That includes 0, which is what `Number('')` gives for
+a setting left empty.
+
+The handler gets an `AbortSignal` as its last argument:
+`onConfirm(signal)` on a confirm, `onSubmit(signal)` on a form dialog
+and `onSubmit(name, signal)` on a rename. A signal is how the browser
+tells a request to stop. Pass it to your write, such as
+`fetch(url, { signal })`, so the request stops once the time limit runs
+out. That stops only the browser's side. The server may still finish a
+write it already received, so make a write safe to send twice, or
+cancel it on the server. A handler that takes no argument still works.
+
+When the time limit runs out:
+
+- godmin fires the signal and stops waiting. The write has until the
+  browser's next task to answer. A write that stops on the signal and
+  answers, such as a run of `useDialogRun`, keeps its own answer.
+- Otherwise the dialog shows "Could not get a valid response from the
+  server.", or "Unable to connect. Please check your Internet
+  connection." when the browser is offline at that moment. These are
+  the words of WordPress's `apiFetch`, and godmin's Spanish and French
+  catalogues translate them.
+- The words show where `{ error }` shows, as
+  [a failed write](#a-failed-write) says, and they are spoken at once.
+- The spinner ends. Cancel, the close icon and Escape close the dialog
+  again, and so does the dimmed page on a form dialog. The main button
+  sends again, with a new signal.
+- The fields keep what the reader typed, and the focus stays where it
+  was.
+- An answer that comes later changes nothing. Once the signal fired,
+  any rejection counts as the time-out and does not reach your app,
+  whatever error it carries. So a write through `apiFetch`, or through
+  a wrapper of your own that turns the abort into an error of its own,
+  shows the time-out words too.
+
+When your app takes a dialog off the page while its write runs, the
+write keeps its time limit, and the signal still fires once it runs
+out. Nothing the write answers is shown or spoken. A rejection before
+the limit still goes on to your app. A dialog that React hides and
+shows again, such as inside `<Activity>`, shows what the write
+answered while it was hidden.
+
 ## When a dialog closes
 
 | What `onConfirm` or `onSubmit` does | The dialog |
 | --- | --- |
 | Returns nothing | Closes at once, and the write runs behind it |
 | Returns a promise | Shows the spinner, then closes when the promise ends |
+| Returns a promise still running at the time limit | Fires the signal, then stays and shows the time-out, unless the write answers the signal at once |
 | Answers `{ error }`, at once or when its promise ends | Stays and says why |
 | Answers `{ close: false }`, at once or when its promise ends | Stays and says nothing |
-| Throws, or returns a promise that rejects | Stays, and the error goes on to your app |
+| Throws, or returns a promise that rejects before the limit runs out | Stays, and the error goes on to your app |
 
 Any other answer, such as the saved item, closes the dialog. godmin
 closes it itself, so call nothing from your handler to close it, and
@@ -153,6 +203,8 @@ does.
 - In a confirm `{ error }` draws the words under the buttons, at the
   end, in `--wpds-typography-font-size-sm` (12px). They go on the next
   press of the confirm button.
+- A write past the time limit shows the time-out in the same place,
+  and it goes the same way.
 - A form dialog over several items closes, and one toast says how the
   run went, since a run can half work. A form over one item that
   failed stays and says why. `useDialogRun` does both.
@@ -237,7 +289,7 @@ does.
 - A confirm is an `alertdialog` and a form dialog a `dialog`. The
   title names it, and its description describes it.
 - A busy button says "Loading" once.
-- A failure inside a dialog is spoken at once.
+- A failure inside a dialog, the time-out included, is spoken at once.
 - A toast under a dialog is still spoken, politely. Its action cannot
   be reached until the dialog goes.
 - A dialog that stays open while the screen under it changes, such as

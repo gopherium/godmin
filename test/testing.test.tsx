@@ -3,9 +3,11 @@
 import { setup, speak } from '@wordpress/a11y'
 import { render, screen } from '@testing-library/react'
 import { Badge, Button, Text } from '@wordpress/ui'
+import { useContext } from 'react'
 import type { ReactElement } from 'react'
-import { afterEach, beforeAll, expect, test, vi } from 'vitest'
+import { afterEach, beforeAll, expect, onTestFinished, test, vi } from 'vitest'
 
+import { WriteTimeoutContext, answered } from '../src/dialog-open.js'
 import {
 	WPDS_IGNORE_SELECTOR,
 	assertElementPatched,
@@ -98,6 +100,40 @@ test('passes host theme settings through to the rendered tree', () => {
 
 	expect(container.firstElementChild?.tagName).toBe('MAIN')
 	expect(container.querySelector('[style*="--wpds"]')).not.toBeNull()
+})
+
+/** The write time limit in milliseconds a test hands the host. */
+const TEST_LIMIT = 30_000
+
+/**
+ * Notes the write time limit the host hands down, on each render.
+ * @param props - Where the limit goes.
+ * @returns Nothing.
+ */
+function LimitProbe({ seen }: { seen: (number | undefined)[] }) {
+	seen.push(useContext(WriteTimeoutContext))
+	return null
+}
+
+test('hands the write time limit it is given down to the tree', () => {
+	const seen: (number | undefined)[] = []
+
+	renderAdmin(<LimitProbe seen={seen} />, { writeTimeout: TEST_LIMIT })
+
+	expect(seen.at(-1)).toBe(TEST_LIMIT)
+})
+
+test('sets no write time limit when given none, so a write never times out', () => {
+	const seen: (number | undefined)[] = []
+	renderAdmin(<LimitProbe seen={seen} />)
+	vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+	onTestFinished(() => {
+		vi.useRealTimers()
+	})
+
+	void answered(async () => new Promise(() => {}), seen.at(-1))
+
+	expect(vi.getTimerCount()).toBe(0)
 })
 
 test('reports an empty announcement when the region is absent', () => {

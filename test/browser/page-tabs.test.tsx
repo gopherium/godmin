@@ -9,6 +9,9 @@ import { AdminRoot } from '../../src/admin-root.js'
 import { PageTab, PageTabs } from '../../src/page-tabs.js'
 import { ROUNDING_SLACK } from '../../src/size-watch.js'
 
+/** A write time limit in milliseconds no test here runs into. */
+const PATIENT_LIMIT = 60_000
+
 /** The tab under test on the page, and the same tab as WordPress draws it. */
 const PAGE_TAB = '.godmin-page-tabs__tab'
 const WORDPRESS_TAB = '[role="tab"]'
@@ -39,7 +42,7 @@ const EDGES = ['top', 'bottom', 'left', 'right'] as const
 /** Renders a row of WordPress's minimal tabs above a row of page tabs with the same labels. */
 function BothRows() {
 	return (
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<Tabs.Root defaultValue="drafts">
 				<Tabs.List variant="minimal">
 					<Tabs.Tab value="drafts">Drafts</Tabs.Tab>
@@ -154,7 +157,7 @@ test('underlines the current tab as wide as its label, in the colour of the Word
 test('keeps the row of a narrow window scrolling, with the ring inside the tab', async () => {
 	await page.viewport(240, 600)
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<PageTabs label="Status">
 				<PageTab href="#one" current>
 					Published posts and pages
@@ -173,7 +176,7 @@ test('keeps the row of a narrow window scrolling, with the ring inside the tab',
 test('opens a row too wide for its space on its current tab', async () => {
 	await page.viewport(240, 600)
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<PageTabs label="Status">
 				<PageTab href="#one">Published posts and pages</PageTab>
 				<PageTab href="#two" current>
@@ -193,7 +196,7 @@ test('opens a row too wide for its space on its current tab', async () => {
 test('shows the current tab once a row narrows past it', async () => {
 	await page.viewport(900, 600)
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<PageTabs label="Status">
 				<PageTab href="#one">Published posts and pages</PageTab>
 				<PageTab href="#two" current>

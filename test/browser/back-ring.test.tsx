@@ -8,6 +8,9 @@ import { userEvent } from 'vitest/browser'
 import { AdminRoot } from '../../src/admin-root.js'
 import { sidebarAppRouter } from '../sidebar-app.js'
 
+/** A write time limit in milliseconds no test here runs into. */
+const PATIENT_LIMIT = 60_000
+
 /** What Back paints around itself. */
 interface Ring {
 	style: string
@@ -19,7 +22,7 @@ interface Ring {
 /** Draws the sidebar app on the posts page and waits for its canvas. */
 async function renderApp() {
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<RouterProvider router={sidebarAppRouter('/posts')} />
 		</AdminRoot>,
 	)

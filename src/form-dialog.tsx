@@ -5,7 +5,14 @@ import { Button, Dialog, Notice, Stack } from '@wordpress/ui'
 import { useId, useLayoutEffect, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 
-import { POPUP_CLASS, answered, isThenable, refuseSecondClick, useDialogOpen, useFinalFocus } from './dialog-open.js'
+import {
+	POPUP_CLASS,
+	isThenable,
+	refuseSecondClick,
+	useAnswering,
+	useDialogOpen,
+	useFinalFocus,
+} from './dialog-open.js'
 import type { DialogAnswer } from './dialog-open.js'
 
 /** The props of a form dialog opened from a button outside a list row. */
@@ -22,8 +29,8 @@ export interface FormDialogProps {
 	cancelLabel?: string
 	/** Whether the form may be sent now, false while a needed field is empty, true when left out. */
 	canSubmit?: boolean
-	/** Sends the form. Return nothing to close at once, the write to hold the dialog until it ends, or an answer. */
-	onSubmit: () => void | DialogAnswer | PromiseLike<unknown>
+	/** Sends the form with the time limit's signal. Return nothing to close, the write to hold it, or an answer. */
+	onSubmit: (signal: AbortSignal) => void | DialogAnswer | PromiseLike<unknown>
 	/** Takes the dialog away, once its card has left the page. */
 	onClose: () => void
 }
@@ -45,6 +52,7 @@ export function FormDialog({
 }: FormDialogProps) {
 	const { open, change, exitWatch } = useDialogOpen(onClose)
 	const finalFocus = useFinalFocus()
+	const answering = useAnswering()
 	const [busy, setBusy] = useState(false)
 	const [failure, setFailure] = useState<string>()
 	const [failures, setFailures] = useState(0)
@@ -78,7 +86,7 @@ export function FormDialog({
 			return
 		}
 		clear()
-		const answer = answered(onSubmit)
+		const answer = answering(onSubmit)
 		if (!isThenable(answer)) {
 			settle(answer)
 			return

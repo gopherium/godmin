@@ -36,11 +36,15 @@ import '@gopherium/godmin/base.css'
 import { AdminRoot } from '@gopherium/godmin'
 
 createRoot(document.getElementById('app')!).render(
-    <AdminRoot>
+    <AdminRoot writeTimeout={settings.writeTimeout}>
         <YourApp />
     </AdminRoot>,
 )
 ```
+
+`writeTimeout` is how long, in milliseconds, a busy dialog waits on its write
+before it gives up. Read it from your app's own settings, here
+`settings.writeTimeout`. GodMin sets no limit of its own.
 
 That is the whole host setup. See [the overview](docs/overview.md) for what
 those two lines do for you.
@@ -65,11 +69,13 @@ drawer's close button, which only a screen reader meets, and "No results
 found" with the line under it, which `ListNoResults` shows. It also gives
 the words of the tab title, the screen title then the app name as
 `%1$s ‹ %2$s`, and of the not found screen `routerDefaults` gives, "Route
-not found" with the line "The page you're looking for does not exist". It
-translates them in the WordPress `default` text domain, as `@wordpress/ui`
-translates its own, so `@wordpress/i18n` is a required peer. Every app
-already has it, since
-`@wordpress/ui` depends on it.
+not found" with the line "The page you're looking for does not exist". A
+dialog whose write ran past its time limit says WordPress's words, "Could not
+get a valid response from the server.", or "Unable to connect. Please check
+your Internet connection." while the browser is offline. It translates them
+in the WordPress `default` text domain, as `@wordpress/ui` translates its
+own, so `@wordpress/i18n` is a required peer. Every app already has it,
+since `@wordpress/ui` depends on it.
 
 `listChromeCatalogFor` returns the catalogue GodMin ships for a language,
 Spanish and French today. Both hold these words and the list dates, and the

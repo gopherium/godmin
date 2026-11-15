@@ -4,9 +4,9 @@ import { AlertDialog } from '@wordpress/ui'
 
 import {
 	POPUP_CLASS,
-	answered,
 	refuseRepeatedEnter,
 	refuseSecondClick,
+	useAnswering,
 	useDialogOpen,
 	useFinalFocus,
 } from './dialog-open.js'
@@ -24,8 +24,8 @@ export interface ConfirmDialogProps {
 	confirmLabel: string
 	/** The label of the button that closes the dialog. */
 	cancelLabel: string
-	/** Carries the action out. Return nothing to close at once, the write to stay busy, or an answer to stay open. */
-	onConfirm: () => void | DialogAnswer | PromiseLike<unknown>
+	/** Runs the action with the time limit's signal. Return nothing to close, the write to stay busy, or an answer. */
+	onConfirm: (signal: AbortSignal) => void | DialogAnswer | PromiseLike<unknown>
 	/** Takes the dialog away, once its card has left the page. */
 	onClose: () => void
 }
@@ -46,8 +46,9 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
 	const { open, change, exitWatch } = useDialogOpen(onClose)
 	const finalFocus = useFinalFocus()
+	const answering = useAnswering()
 	return (
-		<AlertDialog.Root open={open} onOpenChange={change} onConfirm={() => answered(onConfirm)}>
+		<AlertDialog.Root open={open} onOpenChange={change} onConfirm={() => answering(onConfirm)}>
 			<AlertDialog.Popup
 				className={POPUP_CLASS}
 				intent={intent}

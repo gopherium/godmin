@@ -69,7 +69,7 @@ roundness. One preset sets all five radius steps:
 Without the prop the preset is `subtle`.
 
 ```tsx
-<AdminRoot cornerRadius="moderate">
+<AdminRoot cornerRadius="moderate" writeTimeout={settings.writeTimeout}>
 	<YourApp />
 </AdminRoot>
 ```

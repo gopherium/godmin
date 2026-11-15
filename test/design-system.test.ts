@@ -67,6 +67,9 @@ const formDialog = readFileSync(resolve(import.meta.dirname, '../src/form-dialog
 /** The source of the dialog that asks before a move leaves unsaved work. */
 const unsavedDialog = readFileSync(resolve(import.meta.dirname, '../src/unsaved-changes-dialog.tsx'), 'utf8')
 
+/** The source of the parts every dialog shares, where the words of a write past its time limit are set. */
+const dialogOpen = readFileSync(resolve(import.meta.dirname, '../src/dialog-open.tsx'), 'utf8')
+
 /** The module of the installed design system that turns the gap of a stack into a design token. */
 const STACK_MODULE = '@wordpress/ui/build-module/stack/stack.mjs'
 
@@ -1045,6 +1048,76 @@ test('the dialogs page gives the rule the installed DataViews states for an acti
 	expect(installedFile(DATAVIEWS_TYPES)).toContain('Provide the label without an ellipsis.')
 	expect(words.filter((passage) => passage.includes('label carries no ellipsis'))).toHaveLength(1)
 	expect(words.filter((passage) => passage.includes('ends with an ellipsis'))).toEqual([])
+})
+
+/** Returns the words a dialog shows once its write ran past the time limit, online then offline, as the source asks. */
+function timeOutWords(): [string, string] {
+	const found = /navigator\.onLine\s*\?\s*__\('([^']+)'\)\s*:\s*__\('([^']+)'\)/.exec(dialogOpen)
+	if (found === null) {
+		throw new Error('the dialogs pick no time-out words by navigator.onLine')
+	}
+	return [found[1], found[2]]
+}
+
+test('the dialogs page gives the time-out words online and offline as the dialogs ask for them', () => {
+	const [online, offline] = timeOutWords()
+	const passages = passagesOf(sections.get('dialogs.md')?.get('While a write runs'))
+	const saying = (words: string) => passages.filter((passage) => passage.includes(`"${words}"`))
+
+	expect(saying(online), 'the page never gives the online words').not.toEqual([])
+	expect(saying(offline).filter((passage) => passage.includes('offline')), 'no offline words').not.toEqual([])
+})
+
+test('the dialogs page takes the time limit from AdminRoot and hands the signal to the write', () => {
+	const section = (sections.get('dialogs.md')?.get('While a write runs') ?? '').replace(/\s+/g, ' ')
+
+	expect(section).toContain('`writeTimeout` of `AdminRoot`')
+	expect(section).toContain('`fetch(url, { signal })`')
+})
+
+test('the dialogs page says a dialog taken off the page keeps the limit of its write and speaks nothing', () => {
+	const section = (sections.get('dialogs.md')?.get('While a write runs') ?? '').replace(/\s+/g, ' ')
+
+	expect(section).toContain('takes a dialog off the page while its write runs, the write keeps its time limit')
+	expect(section).toContain('Nothing the write answers is shown or spoken')
+	expect(section).toContain('shows what the write answered while it was hidden')
+})
+
+test('the dialogs page says the signal stops the request while the server may still finish the write', () => {
+	const section = (sections.get('dialogs.md')?.get('While a write runs') ?? '').replace(/\s+/g, ' ')
+
+	expect(section).toContain('so the request stops once the time limit runs out')
+	expect(section).toContain('The server may still finish a write it already received')
+	expect(section).toContain('make a write safe to send twice')
+})
+
+test('the dialogs page reads any rejection after the signal fired as the time-out', () => {
+	const section = (sections.get('dialogs.md')?.get('While a write runs') ?? '').replace(/\s+/g, ' ')
+
+	expect(section).toContain('Once the signal fired, any rejection counts as the time-out')
+	expect(section).not.toContain('Any other rejection still goes on to your app')
+})
+
+test('the dialogs page gives Infinity as no limit and says any other value no timer holds throws', () => {
+	const section = (sections.get('dialogs.md')?.get('While a write runs') ?? '').replace(/\s+/g, ' ')
+
+	expect(section).toContain('Pass `Infinity` to set no limit')
+	expect(section).toContain('makes `AdminRoot` throw as it renders, in every build')
+})
+
+test('the dialogs page gives a row for a write past the time limit in the table of when a dialog closes', () => {
+	const rows = (sections.get('dialogs.md')?.get('When a dialog closes') ?? '').split('\n')
+
+	expect(rows.filter((row) => row.startsWith('| ') && row.includes('time limit'))).toHaveLength(1)
+})
+
+test("the frame usage page names the time-out words among godmin's own words", () => {
+	const section = (sections.get('usage/framing-an-application.md')?.get("godmin's own words") ?? '').replace(
+		/\s+/g,
+		' ',
+	)
+
+	expect(timeOutWords().filter((words) => !section.includes(`"${words}"`))).toEqual([])
 })
 
 test('the usage pages leave every dialog value to the dialogs page', () => {

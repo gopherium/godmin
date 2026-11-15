@@ -28,6 +28,18 @@ const LONG_WORD = 'token'.repeat(55)
 /** Leaves the dialog where it is, since a story never takes it away. */
 const stay = () => {}
 
+/** A write time limit in milliseconds short enough for a story to run past it on a real clock. */
+const SHORT_LIMIT = 500
+
+/** How long a story waits for the time-out to show, well past the short limit. */
+const PAST_LIMIT = { timeout: SHORT_LIMIT * 5 }
+
+/** The words a write past its time limit shows, those of WordPress. */
+const NO_RESPONSE = 'Could not get a valid response from the server.'
+
+/** Never answers, as a write does once the network drops. */
+const hangs = async () => new Promise(() => {})
+
 /** Renders an empty list page under a confirm. */
 function ConfirmOver(props: ComponentProps<typeof ConfirmDialog>) {
 	return (
@@ -212,6 +224,22 @@ export const ConfirmThatFailed: Story = {
 	},
 }
 
+export const ConfirmThatTimedOut: Story = {
+	name: 'Confirm that timed out',
+	parameters: { writeTimeout: SHORT_LIMIT },
+	args: { onConfirm: hangs },
+	play: async ({ userEvent }) => {
+		await settled(CARD)
+		await userEvent.click(button('Delete permanently'))
+		await waitFor(() => expect(button('Cancel')).toHaveAttribute('aria-disabled', 'true'))
+		await waitFor(() => expect(find(OVERLAY_CARD)).toHaveTextContent(NO_RESPONSE), PAST_LIMIT)
+		await expect(button('Delete permanently')).toHaveAttribute('aria-disabled', 'false')
+		await expect(button('Delete permanently').querySelector('svg')).toBeNull()
+		await expect(button('Cancel')).toHaveAttribute('aria-disabled', 'false')
+		await expect(button('Delete permanently')).toHaveFocus()
+	},
+}
+
 export const FormThatAdds: Story = {
 	name: 'Form dialog',
 	render: () => <FormOver />,
@@ -241,6 +269,24 @@ export const FormThatFailed: Story = {
 		await userEvent.click(button('Add'))
 		await waitFor(() => expect(inCard('form').lastElementChild).toHaveTextContent(FORM_FAILURE))
 		await expect(firstField()).toHaveValue('Maria Perez')
+	},
+}
+
+export const FormThatTimedOut: Story = {
+	name: 'Form dialog that timed out',
+	parameters: { writeTimeout: SHORT_LIMIT },
+	render: () => <FormOver onSubmit={hangs} />,
+	play: async ({ userEvent }) => {
+		await formSettled(CARD)
+		await userEvent.type(firstField(), 'Maria Perez')
+		await userEvent.click(button('Add'))
+		await waitFor(() => expect(button('Cancel')).toHaveAttribute('aria-disabled', 'true'))
+		await waitFor(() => expect(inCard('form').lastElementChild).toHaveTextContent(NO_RESPONSE), PAST_LIMIT)
+		await expect(button('Add')).not.toHaveAttribute('aria-disabled', 'true')
+		await expect(button('Cancel')).not.toHaveAttribute('aria-disabled', 'true')
+		await expect(inCard('[data-wp-ui-dialog-close-icon]')).not.toHaveAttribute('aria-disabled', 'true')
+		await expect(firstField()).toHaveValue('Maria Perez')
+		await expect(button('Add')).toHaveFocus()
 	},
 }
 

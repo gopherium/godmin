@@ -62,7 +62,7 @@ import '@gopherium/godmin/base.css'
 import { AdminRoot } from '@gopherium/godmin'
 
 createRoot(document.getElementById('app')!).render(
-	<AdminRoot>
+	<AdminRoot writeTimeout={settings.writeTimeout}>
 		<YourApp />
 	</AdminRoot>,
 )
@@ -83,6 +83,12 @@ That is the whole setup. Here is what those two lines do for you:
 - Give the page the design system's own blue as its accent, the
   color of primary buttons, selected rows and focus rings. Pass
   your own `color` to use another one.
+- Give every busy dialog a time limit for its write. `writeTimeout`
+  is required and takes it in milliseconds. Read it from your app's
+  own settings, here `settings.writeTimeout`, since godmin sets no
+  limit of its own.
+  [While a write runs](./design-system/dialogs.md#while-a-write-runs)
+  says what a dialog does when the limit runs out.
 
 `AdminRoot` also accepts the `color`, `cursor` and `cornerRadius`
 theme settings, which it hands to the design system theme provider,

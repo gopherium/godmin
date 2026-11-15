@@ -8,6 +8,9 @@ import { commands, page, userEvent } from 'vitest/browser'
 import { AdminRoot } from '../../src/admin-root.js'
 import { sidebarAppRouter } from '../sidebar-app.js'
 
+/** A write time limit in milliseconds no test here runs into. */
+const PATIENT_LIMIT = 60_000
+
 /** The class of the keyed wrapper a sidebar screen slides in. */
 const WRAPPER = 'godmin-navigation__screen-wrapper'
 
@@ -39,7 +42,7 @@ afterEach(() => {
 async function renderAppAt(width: number) {
 	await page.viewport(width, 800)
 	render(
-		<AdminRoot>
+		<AdminRoot writeTimeout={PATIENT_LIMIT}>
 			<RouterProvider router={sidebarAppRouter('/posts')} />
 		</AdminRoot>,
 	)

@@ -174,7 +174,7 @@ function ListBench({ writes }: { writes: Writes }) {
 					title="Rename report"
 					submitLabel="Save"
 					cancelLabel="Cancel"
-					onSubmit={async () => write(renaming, writes.call, WORDS)}
+					onSubmit={async (signal) => write(renaming, writes.call, WORDS, signal)}
 					onClose={() => setRenaming(undefined)}
 				>
 					<InputControl label="Name" />
@@ -920,5 +920,5 @@ test('sends nothing on Enter in a rename field that holds only spaces, and sends
 	await userEvent.fill(name, 'Report 5')
 	await userEvent.keyboard('{Enter}')
 	await expect.poll(() => onSubmit.mock.calls.length).toBe(1)
-	expect(onSubmit).toHaveBeenCalledWith('Report 5')
+	expect(onSubmit).toHaveBeenCalledWith('Report 5', expect.any(AbortSignal))
 })

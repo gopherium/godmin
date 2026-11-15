@@ -16,21 +16,23 @@ export type BulkRun<Item> = (
 	words: BulkWords<Item>,
 ) => Promise<void>
 
-/** Runs a dialog's write over one item or several, and answers the dialog what to do next. */
+/** Runs a dialog's write over one item or several until the dialog's signal fires, and answers what to do next. */
 export type DialogRun<Item> = (
 	items: Item[],
 	call: (item: Item) => Promise<unknown>,
 	words: BulkWords<Item>,
+	signal: AbortSignal,
 ) => Promise<DialogAnswer | undefined>
 
 /** Reports what a run reached once its last call ended, and gives what the run answers. */
 type RunReport<Item, Answer> = (items: Item[], outcome: BulkOutcome<Item>, words: BulkWords<Item>) => Answer
 
-/** Runs one call over each item of a list and answers what its report gives. */
+/** Runs one call over each item of a list, until the signal fires if given, and answers what its report gives. */
 type ListWrite<Item, Answer> = (
 	items: Item[],
 	call: (item: Item) => Promise<unknown>,
 	words: BulkWords<Item>,
+	signal?: AbortSignal,
 ) => Promise<Answer>
 
 /** What marks the list reloading once in a run, and what ends that reload. */
@@ -54,6 +56,27 @@ function reloadOnce(list: ListRun): RunReload {
 		},
 		end: () => ended?.(),
 	}
+}
+
+/**
+ * Returns the call on one item that fails with the signal's reason once it fires, never started when it fired already.
+ * @param call - The action on one item.
+ * @param signal - The signal that stops the run, none for a run that waits for every call.
+ * @returns The call that stops on the signal, the given call itself when there is none.
+ */
+function stopping<Item>(
+	call: (item: Item) => Promise<unknown>,
+	signal: AbortSignal | undefined,
+): (item: Item) => Promise<unknown> {
+	if (signal === undefined) {
+		return call
+	}
+	return async (item) =>
+		new Promise((settle, fail) => {
+			signal.throwIfAborted()
+			signal.addEventListener('abort', () => fail(signal.reason), { once: true })
+			void Promise.resolve(call(item)).then(settle, fail)
+		})
 }
 
 /**
@@ -127,11 +150,11 @@ function useListWrite<Item, Answer>(
 	report: RunReport<Item, Answer>,
 ): ListWrite<Item, Answer> {
 	return useCallback<ListWrite<Item, Answer>>(
-		async (given, call, words) => {
+		async (given, call, words, signal) => {
 			const items = given.filter(() => true)
 			const settle = list.onStart()
 			const reload = reloadOnce(list)
-			const outcome = await runEach(items, reporting(call, reload.mark))
+			const outcome = await runEach(items, reporting(stopping(call, signal), reload.mark))
 			void Promise.resolve()
 				.then(() => refresh(items))
 				.then(reload.end, reload.end)

@@ -2,7 +2,7 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The French list dates, dialog, sidebar, frame and no results words, compiled from the fr-FR.po source beside it. */
+/** The French list dates, dialog, sidebar, frame, no results and time-out words, compiled from fr-FR.po beside it. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'fr-FR', 'plural-forms': 'nplurals=2; plural=(n > 1);' },
 	'%1$s ‹ %2$s': ['%1$s ‹ %2$s'],
@@ -14,6 +14,7 @@ const catalog: ListChromeCatalog = {
 	Back: ['Retour'],
 	Close: ['Fermer'],
 	'Close navigation panel': ['Fermer le panneau de navigation'],
+	'Could not get a valid response from the server.': ['Impossible d’obtenir du serveur une réponse valide.'],
 	December: ['décembre'],
 	'December abbreviation\u0004Dec': ['Déc'],
 	'F j, Y g:i a': ['d F Y G\\hi'],
@@ -59,6 +60,9 @@ const catalog: ListChromeCatalog = {
 	],
 	Tue: ['Mar'],
 	Tuesday: ['mardi'],
+	'Unable to connect. Please check your Internet connection.': [
+		'Impossible de se connecter. Veuillez vérifier votre connexion Internet.',
+	],
 	Wed: ['Mer'],
 	Wednesday: ['mercredi'],
 	am: ['am'],

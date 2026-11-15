@@ -225,6 +225,20 @@ const WORDPRESS_FRAME_WORDS: Record<string, Record<string, string>> = {
 	},
 }
 
+/** The two time-out messages of a busy dialog as the WordPress Spanish and French catalogues give them. */
+const WORDPRESS_TIME_OUT_WORDS: Record<string, Record<string, string>> = {
+	'es-ES': {
+		'Could not get a valid response from the server.': 'No se pudo obtener una respuesta válida del servidor.',
+		'Unable to connect. Please check your Internet connection.':
+			'No se puede conectar. Revisa tu conexión a Internet.',
+	},
+	'fr-FR': {
+		'Could not get a valid response from the server.': 'Impossible d’obtenir du serveur une réponse valide.',
+		'Unable to connect. Please check your Internet connection.':
+			'Impossible de se connecter. Veuillez vérifier votre connexion Internet.',
+	},
+}
+
 /** The messages each godmin source file asks gettext for, by its path inside the source folder. */
 const SOURCE_MESSAGES = new Map(
 	readdirSync(resolve('src'), { recursive: true, encoding: 'utf8' })
@@ -240,6 +254,7 @@ const SIDEBAR_MESSAGES = ['frame.tsx', 'navigation.tsx', 'navigation-screen.tsx'
 	(path) => SOURCE_MESSAGES.get(path) ?? [],
 )
 const FRAME_MESSAGES = ['screen-title.ts', 'route-not-found.tsx'].flatMap((path) => SOURCE_MESSAGES.get(path) ?? [])
+const TIME_OUT_MESSAGES = SOURCE_MESSAGES.get('dialog-open.tsx') ?? []
 const OWN_MESSAGES = [...SOURCE_MESSAGES.values()].flat()
 
 /**
@@ -559,6 +574,33 @@ test('reads the tab title pattern from the screen titles and the two lines of th
 test('words the tab title and the not found screen as the WordPress Spanish and French catalogues do', () => {
 	for (const catalogue of CATALOGUES) {
 		for (const [key, words] of Object.entries(WORDPRESS_FRAME_WORDS[catalogue.locale])) {
+			expect(catalogue.module[key], `${catalogue.locale} ${key}`).toEqual([words])
+		}
+	}
+})
+
+test('ships every message the godmin parts ask for, in each language', () => {
+	expect(OWN_MESSAGES.length, 'the reader found no message in the godmin parts').toBeGreaterThan(50)
+	for (const catalogue of CATALOGUES) {
+		const ships = new Set(catalogue.messages.map(signatureOf))
+		for (const message of OWN_MESSAGES) {
+			expect(ships.has(signatureOf(message)), `${catalogue.locale} ships no ${keyOf(message)}`).toBe(true)
+		}
+	}
+})
+
+test('reads the two time-out messages from the time limit of a busy dialog', () => {
+	expect(new Set(TIME_OUT_MESSAGES.map(keyOf))).toEqual(
+		new Set([
+			'Could not get a valid response from the server.',
+			'Unable to connect. Please check your Internet connection.',
+		]),
+	)
+})
+
+test('words the time-out of a busy dialog as the WordPress Spanish and French catalogues do', () => {
+	for (const catalogue of CATALOGUES) {
+		for (const [key, words] of Object.entries(WORDPRESS_TIME_OUT_WORDS[catalogue.locale])) {
 			expect(catalogue.module[key], `${catalogue.locale} ${key}`).toEqual([words])
 		}
 	}

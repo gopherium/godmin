@@ -2,7 +2,7 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The Spanish list chrome, list dates, sidebar, frame and no results words, compiled from es-ES.po beside it. */
+/** The Spanish list chrome, list dates, sidebar, frame, no results and time-out words, compiled from es-ES.po. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' },
 	'%1$s of %2$s item': ['%1$s de %2$s elemento', '%1$s de %2$s elementos'],
@@ -92,6 +92,7 @@ const catalog: ListChromeCatalog = {
 	Conditions: ['Condiciones'],
 	Contains: ['Contiene'],
 	'Coordinated Universal Time': ['Hora universal coordinada'],
+	'Could not get a valid response from the server.': ['No se pudo obtener una respuesta válida del servidor.'],
 	'Current page': ['Página actual'],
 	'Date calendar': ['Calendario de fechas'],
 	'Date range calendar': ['Calendario de rango de fechas'],
@@ -204,6 +205,7 @@ const catalog: ListChromeCatalog = {
 	],
 	Tue: ['Mar'],
 	Tuesday: ['martes'],
+	'Unable to connect. Please check your Internet connection.': ['No se puede conectar. Revisa tu conexión a Internet.'],
 	'Unknown status for %1$s': ['Estado desconocido para %1$s'],
 	'View is used as a noun\u0004View options': ['Ver opciones'],
 	Wed: ['Mié'],

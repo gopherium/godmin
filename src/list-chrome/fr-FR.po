@@ -52,6 +52,10 @@ msgid "Close navigation panel"
 msgstr "Fermer le panneau de navigation"
 
 #, fuzzy
+msgid "Could not get a valid response from the server."
+msgstr "Impossible d’obtenir du serveur une réponse valide."
+
+#, fuzzy
 msgctxt "December abbreviation"
 msgid "Dec"
 msgstr "Déc"
@@ -232,6 +236,10 @@ msgstr "Mar"
 #, fuzzy
 msgid "Tuesday"
 msgstr "mardi"
+
+#, fuzzy
+msgid "Unable to connect. Please check your Internet connection."
+msgstr "Impossible de se connecter. Veuillez vérifier votre connexion Internet."
 
 #, fuzzy
 msgid "Wed"
