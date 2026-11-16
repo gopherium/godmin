@@ -148,7 +148,9 @@ these places:
 - Move the `@wordpress` packages your app installs to the releases of
   4 November: `@wordpress/dataviews` 22, `@wordpress/icons` 20,
   `@wordpress/style-runtime` 0.15, `@wordpress/theme` 4 and
-  `@wordpress/ui` 0.26.
+  `@wordpress/ui` 0.26. Move `@wordpress/a11y` to 5.1 or later,
+  `@wordpress/date` to 6.1 or later and `@wordpress/i18n` to 7.1 or
+  later too, since DataViews 22 and ui 0.26 ask for them.
   [Design system versions](#design-system-versions) gives each window.
   DataViews 22 asks for an action label with no ellipsis, so write
   "Delete" in place of "Delete…".

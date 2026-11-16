@@ -131,7 +131,7 @@ test('the date package is an optional peer, needed only by the dates entry', () 
 test('the i18n package is a required peer, which every app already has through the design system', () => {
 	const meta = manifest.peerDependenciesMeta as Record<string, { optional?: boolean } | undefined>
 
-	expect(manifest.peerDependencies[i18nPackage]).toBe('>=7.0.0 <8.0.0')
+	expect(manifest.peerDependencies[i18nPackage]).toBe('>=7.1.0 <8.0.0')
 	expect(meta[i18nPackage]).toBeUndefined()
 })
 
