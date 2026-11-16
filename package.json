@@ -69,10 +69,10 @@
 	"peerDependencies": {
 		"@tanstack/react-router": "^1.170.44",
 		"@testing-library/react": "^16.3.2",
-		"@wordpress/a11y": ">=5.0.0 <6.0.0",
+		"@wordpress/a11y": ">=5.1.0 <6.0.0",
 		"@wordpress/dataviews": ">=22.0.0 <23.0.0",
-		"@wordpress/date": ">=6.0.0 <7.0.0",
-		"@wordpress/i18n": ">=7.0.0 <8.0.0",
+		"@wordpress/date": ">=6.1.0 <7.0.0",
+		"@wordpress/i18n": ">=7.1.0 <8.0.0",
 		"@wordpress/icons": ">=20.0.0 <21.0.0",
 		"@wordpress/style-runtime": ">=0.15.0 <0.16.0",
 		"@wordpress/theme": ">=4.0.0 <5.0.0",
