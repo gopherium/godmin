@@ -28,7 +28,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - The frame and a loading screen outside it are `100dvh` tall, so on a phone the canvas no longer ends under the browser bar.
 - **Breaking.** `DrilldownItem` no longer takes `activeProps` or `activeOptions`.
 - **Breaking.** Back draws its chevron in place of any content of the `back` link it renders through.
-- **Breaking.** The peer windows move to the `@wordpress` packages of 4 November: dataviews 22, icons 20, style-runtime 0.15, theme 4 and ui 0.26.
+- **Breaking.** The peer windows move to the `@wordpress` packages of 4 November: dataviews 22, icons 20, style-runtime 0.15, theme 4 and ui 0.26. `@wordpress/a11y` starts at 5.1.0, `@wordpress/date` at 6.1.0 and `@wordpress/i18n` at 7.1.0, as DataViews 22 and ui 0.26 ask.
 - **Breaking.** `@gopherium/godmin/stylelint` loads its rules from `@wordpress/theme-build-tools`, a new optional peer. Add it to your `devDependencies` next to `stylelint`.
 - **Breaking.** `AdminRoot` takes a required `writeTimeout`, how long in milliseconds a busy dialog waits on its write, or `Infinity` for no limit, and throws as it renders on 0, a negative number, `NaN` or more than 2147483647. Read it from your app's own settings.
 - **Breaking.** The write of `useDialogRun` takes the dialog's signal as its fourth argument, and a call still running when it fires counts as failed.
