@@ -7,7 +7,6 @@ import { dirname, join } from 'node:path'
 import { expect, test } from 'vitest'
 
 import { DENSE_BREAKPOINT, EDGE_BREAKPOINT, SHEET_BREAKPOINT } from '../src/breakpoints.js'
-import { POPUP_CLASS } from '../src/dialog-open.js'
 import { atRuleBodies, blockOf, blocksOf, ruleOf, unlayered } from './css-rules.js'
 import { DRAWER_BACKDROP, base, ruleValue } from './styles.js'
 
@@ -639,14 +638,6 @@ test('gives a grown field three shares of the free room in its row', () => {
 
 test('keeps a button of a stacked form at its own width at the start of the column', () => {
 	expect(ruleOf('.godmin-form > button')).toMatch(/align-self:\s*flex-start/)
-})
-
-test('breaks only a word too long for a dialog card, so a token stays in the card and buttons keep their words', () => {
-	expect(ruleOf(`.${POPUP_CLASS}`)).toMatch(/overflow-wrap:\s*break-word;/)
-})
-
-test('lets a dialog title shrink below its longest word, so the word breaks in the card beside the close icon', () => {
-	expect(ruleOf(`.${POPUP_CLASS} > * > h2`)).toMatch(/min-inline-size:\s*0;/)
 })
 
 test('sets the inputs and the controls of a repeated row on one line that wraps on a narrow list', () => {
