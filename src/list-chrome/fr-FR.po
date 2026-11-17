@@ -155,6 +155,10 @@ msgid "No results found"
 msgstr "Aucun résultat trouvé"
 
 #, fuzzy
+msgid "Notifications"
+msgstr "Notifications"
+
+#, fuzzy
 msgctxt "November abbreviation"
 msgid "Nov"
 msgstr "Nov"

@@ -2,7 +2,7 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The Spanish list chrome, list dates, sidebar, frame, no results and time-out words, compiled from es-ES.po. */
+/** The Spanish list chrome, list dates, sidebar, frame, no results, time-out and live region words, from es-ES.po. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' },
 	'%1$s of %2$s item': ['%1$s de %2$s elemento', '%1$s de %2$s elementos'],
@@ -155,6 +155,7 @@ const catalog: ListChromeCatalog = {
 	'No results': ['No hay resultados'],
 	'No results found': ['No se encontraron resultados'],
 	'Not on': ['No el'],
+	Notifications: ['Avisos'],
 	November: ['noviembre'],
 	'November abbreviation\u0004Nov': ['Nov'],
 	October: ['octubre'],

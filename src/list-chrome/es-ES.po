@@ -495,6 +495,10 @@ msgid "Not on"
 msgstr "No el"
 
 #, fuzzy
+msgid "Notifications"
+msgstr "Avisos"
+
+#, fuzzy
 msgctxt "November abbreviation"
 msgid "Nov"
 msgstr "Nov"
