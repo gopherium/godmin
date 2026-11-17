@@ -15,6 +15,9 @@ const REACT_B = '/app/node_modules/.pnpm/react@18.3.1/node_modules/react/index.j
 const THEME = '/app/node_modules/.pnpm/@wordpress+theme@1.1.0/node_modules/@wordpress/theme/index.mjs'
 const AUTH_A = '/app/node_modules/.pnpm/@gopherium+react-auth@0.3.0/node_modules/@gopherium/react-auth/index.js'
 const AUTH_B = '/app/node_modules/.pnpm/@gopherium+react-auth@0.2.0/node_modules/@gopherium/react-auth/index.js'
+const GODMIN_STORE = '/app/node_modules/.pnpm/@gopherium+godmin@0.33.0'
+const GODMIN_APP = `${GODMIN_STORE}_1f6fa3d11b6dd121224ce12190c4e941/node_modules/@gopherium/godmin/dist/index.js`
+const GODMIN_SDK = `${GODMIN_STORE}_f942865ca095ab1eb0b3222b6958a1a6/node_modules/@gopherium/godmin/dist/toaster.js`
 const OWN = '/app/src/main.tsx'
 
 test('lists the packages that break when duplicated', () => {
@@ -42,6 +45,26 @@ test('reports the auth client when it resolves twice', () => {
 
 	expect([...found.keys()]).toEqual(['@gopherium/react-auth'])
 	expect(found.get('@gopherium/react-auth')).toHaveLength(2)
+})
+
+test('watches godmin itself, whose toaster a second copy would not share', () => {
+	expect(godminDedupe).toContain('@gopherium/godmin')
+})
+
+test('reports godmin when two workspace packages install the same release with different optional peers', () => {
+	const found = duplicateCopies([GODMIN_APP, GODMIN_SDK, AUTH_A], godminDedupe)
+
+	expect([...found.keys()]).toEqual(['@gopherium/godmin'])
+	expect(found.get('@gopherium/godmin')).toEqual([
+		GODMIN_APP.replace(/dist\/index\.js$/, ''),
+		GODMIN_SDK.replace(/dist\/toaster\.js$/, ''),
+	])
+})
+
+test('fails the build when godmin itself resolves twice', () => {
+	const context = { getModuleIds: () => [GODMIN_APP, GODMIN_SDK, OWN][Symbol.iterator]() }
+
+	expect(() => godminSingleCopy().buildEnd.call(context)).toThrow(/@gopherium\/godmin resolved to 2 copies/)
 })
 
 test('reports nothing when every watched package resolves once', () => {

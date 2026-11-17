@@ -13,6 +13,7 @@ export const godminDedupe = [
 	'@wordpress/theme',
 	'@wordpress/ui',
 	'@gopherium/react-auth',
+	'@gopherium/godmin',
 ]
 
 /**
