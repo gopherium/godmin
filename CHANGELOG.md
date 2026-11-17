@@ -18,6 +18,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `Frame.Root` takes `appName` and sets the tab title to the screen title and that name.
 - `routerDefaults()` gives a not found screen, a `Page` titled "Route not found", as WordPress's new admin does.
 - The Spanish and French catalogues translate the tab title and the not found screen.
+- `AdminRoot` writes Notifications, the hidden text `@wordpress/a11y` puts before the live regions of godmin's announcements, in the loaded language, and the Spanish and French catalogues translate it.
 - `useRejectedField` puts a server's message under the field it rejected, moves the focus to the first field that fails and speaks the message, until the reader edits the field.
 
 ### Changed
@@ -33,6 +34,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - **Breaking.** `AdminRoot` takes a required `writeTimeout`, how long in milliseconds a busy dialog waits on its write, or `Infinity` for no limit, and throws as it renders on 0, a negative number, `NaN` or more than 2147483647. Read it from your app's own settings.
 - **Breaking.** The write of `useDialogRun` takes the dialog's signal as its fourth argument, and a call still running when it fires counts as failed.
 - An action label carries no ellipsis, as DataViews 22 asks. `docs/design-system/dialogs.md` says so, and the examples in `docs/lists.md` read "Delete" and "Rename".
+- `godminDedupe` lists `@gopherium/godmin`, so an app whose workspace packages install godmin twice bundles one copy, and `godminSingleCopy()` catches a second.
 
 ### Fixed
 
