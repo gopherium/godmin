@@ -97,7 +97,8 @@ if (catalogue !== undefined) {
 Duplicate packages break the application, and nothing points at the cause.
 Two copies of React throw on the first hook. Two copies of `@wordpress/theme`
 render unthemed components with no error. Spread `godminDedupe` into
-`resolve.dedupe` and add the `godminSingleCopy()` plugin.
+`resolve.dedupe` and add the `godminSingleCopy()` plugin. The list holds
+godmin itself, since a second copy splits the toaster.
 [Build configuration](docs/build-and-versioning.md) covers both, and lists the
 design system versions each release supports.
 
