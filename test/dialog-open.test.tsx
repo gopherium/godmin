@@ -668,6 +668,25 @@ test('runs a write under the time limit of the nearest admin root', async () => 
 	expect(followed).toEqual({ came: true, value: { error: NO_RESPONSE } })
 })
 
+test('runs each write under the time limit in force as it starts, though the limit changes after', async () => {
+	holdClock()
+	let limit = Number.POSITIVE_INFINITY
+	const { result, rerender } = renderHook(() => useAnswering(), {
+		wrapper: ({ children }: { children: ReactNode }) => (
+			<WriteTimeoutContext.Provider value={limit}>{children}</WriteTimeoutContext.Provider>
+		),
+	})
+	const before = follow(result.current(neverEnds))
+
+	limit = SHORT_LIMIT
+	rerender()
+	const after = follow(result.current(neverEnds))
+	await pastLimit()
+
+	expect(before).toEqual({ came: false })
+	expect(after).toEqual({ came: true, value: { error: NO_RESPONSE } })
+})
+
 test('keeps the clock of a write once the dialog that started it left the page, and drops its answer', async () => {
 	holdClock()
 	const signals: AbortSignal[] = []

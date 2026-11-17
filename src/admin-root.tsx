@@ -4,6 +4,7 @@ import { ThemeProvider } from '@wordpress/theme'
 import { useEnableWpCompatOverlaySlot } from '@wordpress/ui'
 import type { ComponentProps, ElementType, ReactNode } from 'react'
 
+import { useAnnouncerHeading } from './announcer-heading.js'
 import { WriteTimeoutContext, checkedWriteTimeout } from './dialog-open.js'
 
 type ThemeSettings = Pick<
@@ -34,6 +35,7 @@ export function AdminRoot({
 	...theme
 }: AdminRootProps) {
 	useEnableWpCompatOverlaySlot()
+	useAnnouncerHeading()
 	return (
 		<Root style={{ isolation: 'isolate' }}>
 			<ThemeProvider color={color} {...theme} isRoot>

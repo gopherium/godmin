@@ -33,6 +33,10 @@ hook. Two copies of these fail with no error:
   [configured transport](https://docs.gopherium.org/authentication/react-integration/#one-setting-for-the-whole-module)
   that half the app cannot see.
 
+`godminDedupe` lists godmin itself too, since two workspace packages
+of your app can install it twice, and a `useToaster` in one copy then
+finds no `Toaster` from the other.
+
 The config handles this twice:
 
 - `godminDedupe` makes Vite resolve each listed package once.
@@ -118,9 +122,11 @@ these places:
   Read it from your app's own settings and pass it where you render
   `AdminRoot`, such as
   `<AdminRoot writeTimeout={settings.writeTimeout}>`. godmin sets no
-  limit of its own. Pass `Infinity` for no limit. 0, a negative
-  number, `NaN` or more than 2147483647 makes `AdminRoot` throw as it
-  renders. Once a write runs past it, the dialog stops
+  limit of its own. Pass `Infinity` for no limit. The value may change
+  after the first render, such as `Infinity` while your settings still
+  load, and each write takes the value in force when it starts. 0, a
+  negative number, `NaN` or more than 2147483647 makes `AdminRoot`
+  throw as it renders. Once a write runs past it, the dialog stops
   waiting, shows WordPress's words for a write with no answer and
   frees Cancel, the close icon and Escape, as
   [while a write runs](./design-system/dialogs.md#while-a-write-runs)
@@ -130,7 +136,11 @@ these places:
   name. It fires once the limit runs out. Pass it to the write the
   dialog waits on, such as `fetch(url, { signal })`, so the request
   stops too. The server may still finish a write it already received,
-  so make a write safe to send twice.
+  so make a write safe to send twice. A wrapper around your writes
+  that turns a failure into `{ error }` shows its own words even when
+  the limit ran out. Have it reject once `signal.aborted` is true, so
+  the dialog shows WordPress's words for the time-out. A wrapper that
+  rejects gets them already.
 - The write that `useDialogRun` hands out takes the dialog's signal as
   its fourth argument, as `write(items, call, words, signal)`. A call
   still running when the signal fires counts as failed. The run does
@@ -154,10 +164,27 @@ these places:
   [Design system versions](#design-system-versions) gives each window.
   DataViews 22 asks for an action label with no ellipsis, so write
   "Delete" in place of "Delete…".
+- DataViews 22 changes what a test of a list meets. The bulk actions
+  sit in `.dataviews-bulk-actions__actions`, and at 782px and below
+  they all move into an Actions menu. Sort by is no longer a native
+  `select`, and ArrowDown opens its list. The count reads "1 item
+  selected", in lowercase. A row checkbox is a `span` with the
+  checkbox role, so read its `aria-checked`, not `checked`. An idle
+  bulk button carries `aria-disabled="false"`, and the spinner draws
+  on a 24 `viewBox`. On screen, the footer drops its select all
+  checkbox and reads "N items", or "20 of 45 items" when the list has
+  more than one page. A grid gains a Select all row above its cards,
+  and the checkbox of a row that takes no bulk action no longer looks
+  greyed out. godmin keeps each of these as WordPress draws it.
 - `@gopherium/godmin/stylelint` loads its rules from
   `@wordpress/theme-build-tools`, a new optional peer. Add it to your
   `devDependencies`, next to `stylelint`, as
   [lint your stylesheets](#lint-your-stylesheets) shows.
+- `@wordpress/theme` 4 no longer exports its Vite plugin. An app that
+  imports `vite-ds-token-fallbacks` from `@wordpress/theme` imports it
+  from `@wordpress/theme-build-tools/vite-plugins/vite-ds-token-fallbacks`
+  now, with `@wordpress/theme-build-tools` in its `devDependencies`.
+  The old path stops the build.
 - `DrilldownItem` no longer takes `activeProps` or `activeOptions`,
   since a drilldown row is never current. Drop them. A row that points
   at the sub menu already shown is a `NavigationItem`, as

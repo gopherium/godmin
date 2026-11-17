@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { render, renderHook, screen } from '@testing-library/react'
+import { act, render, renderHook, screen } from '@testing-library/react'
+import { setup } from '@wordpress/a11y'
+import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
 import { useContext } from 'react'
 import type { ReactNode } from 'react'
 import { beforeEach, expect, expectTypeOf, onTestFinished, test, vi } from 'vitest'
 
 import { WriteTimeoutContext } from '../src/dialog-open.js'
-import { AdminRoot } from '../src/index'
+import { AdminRoot, LIST_CHROME_DOMAIN, listChromeCatalogFor } from '../src/index'
 import type { AdminRootProps } from '../src/index'
 
 interface CompatWindow extends Window {
@@ -18,6 +20,89 @@ const APP_LIMIT = 30_000
 
 beforeEach(() => {
 	delete (window as CompatWindow).__wpUiCompatOverlaySlotEnabled
+})
+
+/** Returns the heading @wordpress/a11y gives the live region a screen reader hears. */
+function announcerHeading(): string | null | undefined {
+	return document.getElementById('a11y-speak-intro-text')?.textContent
+}
+
+/** Gives the page a fresh live region heading in English, then puts the default language back after the test. */
+function englishAnnouncer() {
+	document.getElementById('a11y-speak-intro-text')?.remove()
+	setup()
+	onTestFinished(() => {
+		resetLocaleData()
+	})
+}
+
+test('writes the live region heading in the language loaded before it mounts', async () => {
+	englishAnnouncer()
+	setLocaleData(await listChromeCatalogFor('es-ES'), LIST_CHROME_DOMAIN)
+
+	const { unmount } = render(<AdminRoot writeTimeout={APP_LIMIT}><p>admin content</p></AdminRoot>)
+	onTestFinished(unmount)
+
+	expect(announcerHeading()).toBe('Avisos')
+})
+
+test('writes the live region heading again when the language changes', async () => {
+	englishAnnouncer()
+	const spanish = await listChromeCatalogFor('es-ES')
+	const { unmount } = render(<AdminRoot writeTimeout={APP_LIMIT}><p>admin content</p></AdminRoot>)
+	onTestFinished(unmount)
+	expect(announcerHeading()).toBe('Notifications')
+
+	act(() => {
+		setLocaleData(spanish, LIST_CHROME_DOMAIN)
+	})
+
+	expect(announcerHeading()).toBe('Avisos')
+})
+
+test('writes the live region heading a page adds after it mounts', async () => {
+	englishAnnouncer()
+	const spanish = await listChromeCatalogFor('es-ES')
+	const heading = document.getElementById('a11y-speak-intro-text') as HTMLElement
+	heading.remove()
+	const { unmount } = render(<AdminRoot writeTimeout={APP_LIMIT}><p>admin content</p></AdminRoot>)
+	onTestFinished(unmount)
+	expect(announcerHeading()).toBeUndefined()
+
+	document.body.append(heading)
+	act(() => {
+		setLocaleData(spanish, LIST_CHROME_DOMAIN)
+	})
+
+	expect(announcerHeading()).toBe('Avisos')
+})
+
+test('leaves the live region heading alone once it unmounts', async () => {
+	englishAnnouncer()
+	setLocaleData(await listChromeCatalogFor('es-ES'), LIST_CHROME_DOMAIN)
+	const { unmount } = render(<AdminRoot writeTimeout={APP_LIMIT}><p>admin content</p></AdminRoot>)
+	onTestFinished(unmount)
+	expect(announcerHeading()).toBe('Avisos')
+
+	unmount()
+	resetLocaleData()
+
+	expect(announcerHeading()).toBe('Avisos')
+})
+
+test('keeps the live region heading in the loaded language while a second admin root stays mounted', async () => {
+	englishAnnouncer()
+	const spanish = await listChromeCatalogFor('es-ES')
+	const staying = render(<AdminRoot writeTimeout={APP_LIMIT}><p>admin content</p></AdminRoot>)
+	onTestFinished(staying.unmount)
+	const leaving = render(<AdminRoot writeTimeout={APP_LIMIT}><p>admin content</p></AdminRoot>)
+
+	leaving.unmount()
+	act(() => {
+		setLocaleData(spanish, LIST_CHROME_DOMAIN)
+	})
+
+	expect(announcerHeading()).toBe('Avisos')
 })
 
 test('renders its children', () => {

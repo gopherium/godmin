@@ -83,7 +83,8 @@ page gives every value of how they look and behave.
   and the send button is solid in your accent color. A close icon
   sits beside the title. A confirm has no close icon.
 - A word too long for the card, such as a long link in a server
-  message, breaks at the card's edge. Every other word stays whole,
+  message or a file name in the title, breaks at the card's edge, and
+  the close icon stays in the card. Every other word stays whole,
   so the labels of a grid or a row of fields keep their words.
 - A button wraps as WordPress's buttons do. On a narrow phone a long
   label takes two lines, and a word wider than its button breaks

@@ -1074,6 +1074,10 @@ body {
 		overflow-wrap: break-word;
 	}
 
+	.godmin-dialog-popup > * > h2 {
+		min-inline-size: 0;
+	}
+
 	.godmin-form__row {
 		display: flex;
 		flex-wrap: wrap;

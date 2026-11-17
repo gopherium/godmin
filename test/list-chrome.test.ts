@@ -48,6 +48,7 @@ const besideDataViews = createRequire(dataviewsManifest)
 const dataviewsBuild = join(dirname(dataviewsManifest), 'build-module')
 const componentsBuild = join(dirname(besideDataViews.resolve('@wordpress/components/package.json')), 'build-module')
 const uiBuild = join(dirname(besideDataViews.resolve('@wordpress/ui/package.json')), 'build-module')
+const a11yBuild = join(dirname(require.resolve('@wordpress/a11y/package.json')), 'build-module')
 
 const QUOTED = String.raw`"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'`
 const CALL = new RegExp(String.raw`\b(__|_x|_n)\(\s*(${QUOTED})(?:\s*,\s*(${QUOTED}))?`, 'g')
@@ -237,6 +238,12 @@ const WORDPRESS_TIME_OUT_WORDS: Record<string, Record<string, string>> = {
 		'Unable to connect. Please check your Internet connection.':
 			'Impossible de se connecter. Veuillez vérifier votre connexion Internet.',
 	},
+}
+
+/** The live region heading of godmin's announcements, as the WordPress Spanish and French catalogues give it. */
+const WORDPRESS_ANNOUNCER_WORDS: Record<string, Record<string, string>> = {
+	'es-ES': { Notifications: 'Avisos' },
+	'fr-FR': { Notifications: 'Notifications' },
 }
 
 /** The messages each godmin source file asks gettext for, by its path inside the source folder. */
@@ -516,13 +523,14 @@ test('compiles each catalogue from the PO source beside it', () => {
 	}
 })
 
-test('ships only messages the DataViews build, the components it renders with or the godmin parts ask for', () => {
+test('ships only messages DataViews, the components it renders with, the announcer or the godmin parts ask for', () => {
 	const asked = new Set(
 		[
 			...messagesIn(dataviewsBuild, () => true),
 			...messagesIn(componentsBuild, rendersInList),
 			...messagesIn(uiBuild, drawsCalendar),
 			...messagesIn(uiBuild, drawsButton),
+			...messagesIn(a11yBuild, () => true),
 			...OWN_MESSAGES,
 		].map(signatureOf),
 	)
@@ -585,6 +593,26 @@ test('ships every message the godmin parts ask for, in each language', () => {
 		const ships = new Set(catalogue.messages.map(signatureOf))
 		for (const message of OWN_MESSAGES) {
 			expect(ships.has(signatureOf(message)), `${catalogue.locale} ships no ${keyOf(message)}`).toBe(true)
+		}
+	}
+})
+
+test('ships every word the announcer speaks, the heading of its live region among them, in each language', () => {
+	const spoken = messagesIn(a11yBuild, () => true)
+
+	expect(spoken.length, 'the reader found no message in the announcer').toBeGreaterThan(0)
+	for (const catalogue of CATALOGUES) {
+		const ships = new Set(catalogue.messages.map(signatureOf))
+		for (const message of spoken) {
+			expect(ships.has(signatureOf(message)), `${catalogue.locale} ships no ${keyOf(message)}`).toBe(true)
+		}
+	}
+})
+
+test('words the heading of the live region as the WordPress Spanish and French catalogues do', () => {
+	for (const catalogue of CATALOGUES) {
+		for (const [key, words] of Object.entries(WORDPRESS_ANNOUNCER_WORDS[catalogue.locale])) {
+			expect(catalogue.module[key], `${catalogue.locale} ${key}`).toEqual([words])
 		}
 	}
 })

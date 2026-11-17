@@ -81,13 +81,20 @@ const FORM_FAILURE = 'Could not add "Maria Perez". The phone 184467235 is alread
 /** How many fields the tall form holds, more than a window shows. */
 const TALL_FIELDS = 30
 
-/** Renders an empty list page under a form dialog asking for a contact, its fields as given. */
-function FormOver({ onSubmit = stay, fields = 2 }: { onSubmit?: FormDialogProps['onSubmit']; fields?: number }) {
+/** The props of a form dialog story: what its write answers, its title and how many fields it holds. */
+interface FormOverProps {
+	onSubmit?: FormDialogProps['onSubmit']
+	title?: string
+	fields?: number
+}
+
+/** Renders an empty list page under a form dialog asking for a contact, its title and fields as given. */
+function FormOver({ onSubmit = stay, title = 'Add contact', fields = 2 }: FormOverProps) {
 	return (
 		<>
 			<ListPage>{null}</ListPage>
 			<FormDialog
-				title="Add contact"
+				title={title}
 				description="The contact joins your list."
 				submitLabel="Add"
 				cancelLabel="Cancel"
@@ -121,6 +128,23 @@ function firstField(): HTMLInputElement {
 async function formSettled(width: number) {
 	await cardAtRest(width)
 	await waitFor(() => expect(firstField()).toHaveFocus())
+}
+
+/** Returns the box of each line the text inside an element takes. */
+function lineBoxesOf(element: Element): DOMRect[] {
+	const range = document.createRange()
+	range.selectNodeContents(element)
+	return [...range.getClientRects()].filter((rect) => rect.width > 0)
+}
+
+/** Checks the title breaks its long word and every line of the title and the description ends inside the card. */
+async function wordsInCard() {
+	const card = boxOf(OVERLAY_CARD)
+	const title = lineBoxesOf(inCard('h2'))
+	await expect(new Set(title.map((line) => line.top)).size, 'the title breaks its long word').toBeGreaterThan(1)
+	for (const line of [...title, ...lineBoxesOf(inCard('p'))]) {
+		await expect(line.right, 'a line runs past the card').toBeLessThanOrEqual(card.right)
+	}
 }
 
 const meta = {
@@ -203,12 +227,7 @@ export const ConfirmWithALongWord: Story = {
 	args: { title: `Delete "${LONG_WORD}"?`, description: `It holds ${LONG_WORD}.` },
 	play: async () => {
 		await settled(CARD)
-		const card = find(OVERLAY_CARD)
-		const words = [...card.querySelectorAll<HTMLElement>('h2, p')]
-		await expect(words.length, 'the title and the description').toBeGreaterThan(1)
-		for (const line of words) {
-			await expect(line.scrollWidth, 'a line runs past its box').toBeLessThanOrEqual(line.clientWidth)
-		}
+		await wordsInCard()
 	},
 }
 
@@ -248,6 +267,18 @@ export const FormThatAdds: Story = {
 		await expect(inCard('[data-wp-ui-dialog-close-icon]')).toBeVisible()
 		await expect(button('Cancel').className).toMatch(/outline/)
 		await expect(inCard('footer')).toContainElement(button('Add'))
+	},
+}
+
+export const FormWithALongWord: Story = {
+	name: 'Form dialog with a long word',
+	parameters: { argos: { modes: NO_SHOT } },
+	render: () => <FormOver title={`Add "${LONG_WORD}"`} />,
+	play: async () => {
+		await formSettled(CARD)
+		await wordsInCard()
+		const close = inCard('[data-wp-ui-dialog-close-icon]').getBoundingClientRect()
+		await expect(close.right, 'the close icon runs past the card').toBeLessThanOrEqual(boxOf(OVERLAY_CARD).right)
 	},
 }
 
