@@ -1563,7 +1563,12 @@ The Spanish one covers every word DataViews shows around a list: the
 search box, the view options, the filters, the column menus, the
 paging and the bulk bar. It also covers the two words
 `@wordpress/components` shows inside a list, the search reset button
-and the modal close button. It does not cover DataForm.
+and the modal close button. It does not cover DataForm. Both
+catalogues also cover Notifications, the hidden text `@wordpress/a11y`
+puts before the live regions that godmin's announcements fill. That
+text is written before your app loads any catalogue, so `AdminRoot`
+writes it again in the loaded language, and again each time the
+language changes.
 
 The translations are machine made. They stay marked fuzzy in the
 sources, `src/list-chrome/es-ES.po` and `src/list-chrome/fr-FR.po`
