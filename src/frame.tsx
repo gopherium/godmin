@@ -97,7 +97,7 @@ export interface FrameSidebarProps {
 	brand?: ReactNode
 	/** The name of the menu button, godmin's translated "Open navigation panel" when absent. */
 	menuLabel?: string
-	/** The name of the region the column is, godmin's translated "Navigation" when absent. */
+	/** The name of the column's nav and of the drawer, godmin's translated "Admin" when absent. */
 	label?: string
 	/** What sits under the menu and never moves, such as the account panel. */
 	footer?: ReactNode
@@ -123,16 +123,16 @@ function SidebarFooter({ footer, footerNote }: Pick<FrameSidebarProps, 'footer' 
 }
 
 /**
- * Renders the navigation region, as a sidebar when there is room and as a top bar
+ * Renders the admin nav, as a sidebar when there is room and as a top bar
  * with a drawer when there is not, its content above its footer in both.
- * @param props - The sidebar content, the brand, the menu button label, the region name, the footer and its note.
+ * @param props - The sidebar content, the brand, the menu button label, the nav name, the footer and its note.
  * @returns The sidebar element.
  */
 function Sidebar({
 	children,
 	brand,
 	menuLabel = __('Open navigation panel'),
-	label = __('Navigation'),
+	label = __('Admin'),
 	footer,
 	footerNote,
 }: FrameSidebarProps) {
@@ -145,13 +145,13 @@ function Sidebar({
 	)
 	if (!small) {
 		return (
-			<div className="godmin-layout__sidebar" role="region" aria-label={label} tabIndex={-1}>
+			<nav className="godmin-layout__sidebar" aria-label={label}>
 				{content}
-			</div>
+			</nav>
 		)
 	}
 	return (
-		<TopBar brand={brand} menuLabel={menuLabel}>
+		<TopBar brand={brand} menuLabel={menuLabel} label={label}>
 			{content}
 		</TopBar>
 	)
@@ -170,14 +170,15 @@ function drawerSide(layout: HTMLElement | null): 'left' | 'right' {
  * Renders the narrow viewport chrome: a menu button opening the sidebar content in
  * a drawer, beside the brand. The drawer closes on a page change, unless a drilldown row or Back made it,
  * and ends in a close button only assistive technology meets, the name of WordPress's phone backdrop.
- * @param props - The sidebar content, the brand, and the menu button label.
+ * @param props - The sidebar content, the brand, the menu button label, and the drawer name.
  * @returns The top bar element.
  */
 function TopBar({
 	children,
 	brand,
 	menuLabel,
-}: Required<Pick<FrameSidebarProps, 'children' | 'menuLabel'>> & { brand?: ReactNode }) {
+	label,
+}: Required<Pick<FrameSidebarProps, 'children' | 'menuLabel' | 'label'>> & { brand?: ReactNode }) {
 	const { location, layout, navigation } = useContext(FrameContext)
 	const [open, setOpen] = useState(false)
 	useEffect(() => {
@@ -192,7 +193,7 @@ function TopBar({
 					<Icon icon={menu} />
 				</Drawer.Trigger>
 				<Drawer.Popup className="godmin-layout__drawer" portal={<Drawer.Portal container={layout} />}>
-					<VisuallyHidden render={<Drawer.Title />}>{__('Navigation')}</VisuallyHidden>
+					<VisuallyHidden render={<Drawer.Title />}>{label}</VisuallyHidden>
 					{children}
 					<VisuallyHidden render={<Drawer.Action variant="unstyled" tabIndex={-1} />}>
 						{__('Close navigation panel')}

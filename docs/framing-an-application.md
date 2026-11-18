@@ -39,10 +39,10 @@ width. Two props fill the bottom of the sidebar:
 - `footerNote` is one short line of small grey text under the footer,
   such as the version.
 
-On a wide screen the sidebar is one region named "Navigation", as in
-the WordPress Site Editor, so a screen reader can jump to it. Pass
-`label` to give it another name. On a small screen the drawer is
-named "Navigation" whatever `label` says.
+On a wide screen the sidebar is one `nav` named "Admin", as WordPress's
+new admin names its menu, so a screen reader can jump to it. On a small
+screen the drawer carries the same name. Pass `label` to give both
+another name.
 
 ## The sidebar menu
 
@@ -290,8 +290,8 @@ const sheet = useMediaQuery(`(max-width: ${SHEET_BREAKPOINT - 1}px)`)
 
 ## godmin's own words
 
-The frame and the sidebar draw a few words of their own: "Back",
-"Navigation", "Open navigation panel" and "Close navigation panel".
+The frame and the sidebar draw a few words of their own: "Admin",
+"Back", "Open navigation panel" and "Close navigation panel".
 The last one names a close button at the end of the drawer, which
 only a screen reader meets. `ListNoResults` draws two more: "No
 results found" and the line under it, "Try adjusting your search or

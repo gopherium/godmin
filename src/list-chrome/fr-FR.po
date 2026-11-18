@@ -22,6 +22,10 @@ msgid "AM"
 msgstr "AM"
 
 #, fuzzy
+msgid "Admin"
+msgstr "Administration"
+
+#, fuzzy
 msgctxt "April abbreviation"
 msgid "Apr"
 msgstr "Avr"
@@ -145,10 +149,6 @@ msgstr "Lun"
 #, fuzzy
 msgid "Monday"
 msgstr "lundi"
-
-#, fuzzy
-msgid "Navigation"
-msgstr "Navigation"
 
 #, fuzzy
 msgid "No results found"

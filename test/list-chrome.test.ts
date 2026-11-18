@@ -201,13 +201,11 @@ const WORDPRESS_SIDEBAR_WORDS: Record<string, Record<string, string>> = {
 	'es-ES': {
 		Back: 'Volver',
 		'Close navigation panel': 'Cerrar el panel de navegación',
-		Navigation: 'Navegación',
 		'Open navigation panel': 'Abrir el panel de navegación',
 	},
 	'fr-FR': {
 		Back: 'Retour',
 		'Close navigation panel': 'Fermer le panneau de navigation',
-		Navigation: 'Navigation',
 		'Open navigation panel': 'Ouvrir le panneau de navigation',
 	},
 }
@@ -559,9 +557,9 @@ test('ships the words a WordPress dialog, its buttons and its close icon speak, 
 	}
 })
 
-test('reads Back, Navigation and the open and close panel words from the sidebar parts that speak them', () => {
+test('reads Admin, Back and the open and close panel words from the sidebar parts that speak them', () => {
 	expect(new Set(SIDEBAR_MESSAGES.map(keyOf))).toEqual(
-		new Set(['Back', 'Close navigation panel', 'Navigation', 'Open navigation panel']),
+		new Set(['Admin', 'Back', 'Close navigation panel', 'Open navigation panel']),
 	)
 })
 

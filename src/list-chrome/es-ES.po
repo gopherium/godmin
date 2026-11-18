@@ -158,6 +158,10 @@ msgid "Add filter"
 msgstr "Añadir filtro"
 
 #, fuzzy
+msgid "Admin"
+msgstr "Administración"
+
+#, fuzzy
 msgid "After"
 msgstr "Después"
 
@@ -461,10 +465,6 @@ msgstr "Mover a la derecha"
 #, fuzzy
 msgid "Navigate to item"
 msgstr "Navegar hasta el elemento"
-
-#, fuzzy
-msgid "Navigation"
-msgstr "Navegación"
 
 #, fuzzy
 msgid "Navigation bar"

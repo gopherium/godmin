@@ -145,8 +145,8 @@ jump straight to one.
 | Part | Role | Name |
 | --- | --- | --- |
 | The canvas | `main` | None |
-| The sidebar on a wide screen, menu and footer together | `region` | "Navigation", or the `label` of `Frame.Sidebar` |
-| The drawer on a small screen | `dialog` | "Navigation", whatever `label` says |
+| The sidebar on a wide screen, menu and footer together | `navigation` | "Admin", or the `label` of `Frame.Sidebar` |
+| The drawer on a small screen | `dialog` | "Admin", or the `label` of `Frame.Sidebar` |
 | The tabs of a page | `navigation` | The `label` of [`PageTabs`](../screens.md#pagetabs) |
 | The list of a list page | `region` | The `listLabel` of [`Page`](../screens.md#page), when given |
 | The details of a record page | `region` | The `asideLabel` of [`Page`](../screens.md#page), when given |

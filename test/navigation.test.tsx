@@ -285,24 +285,24 @@ test('draws no Back on the root screen', async () => {
 	expect(screen.queryByRole('link', { name: 'Back' })).toBeNull()
 })
 
-test('draws no landmark of its own, as the Site Editor draws none inside the region of its sidebar', async () => {
+test('draws no landmark of its own, so the column nav named Admin is the only navigation around it', async () => {
 	await renderSidebarApp('/posts')
 
 	const menu = screenWrapper().parentElement as Element
 	expect(menu.className).toBe('godmin-navigation')
 	expect(menu.tagName).toBe('DIV')
 	expect(menu.hasAttribute('aria-label')).toBe(false)
-	expect(screen.queryByRole('navigation')).toBeNull()
+	expect(screen.getAllByRole('navigation')).toEqual([screen.getByRole('navigation', { name: 'Admin' })])
 })
 
-test('leaves the name Navigation to the one region around the column, in every language', async () => {
+test('leaves the name Admin to the one nav around the column, in every language', async () => {
 	setLocaleData(spanish)
 	await renderSidebarApp('/posts')
 
-	const region = screen.getByRole('region', { name: 'Navegación' })
-	expect(region.contains(screenWrapper())).toBe(true)
-	expect(screen.getAllByRole('region', { name: 'Navegación' })).toHaveLength(1)
-	expect(screen.queryByRole('navigation', { name: 'Navegación' })).toBeNull()
+	const column = screen.getByRole('navigation', { name: 'Administración' })
+	expect(column.contains(screenWrapper())).toBe(true)
+	expect(screen.getAllByRole('navigation', { name: 'Administración' })).toHaveLength(1)
+	expect(screen.queryByRole('region', { name: 'Administración' })).toBeNull()
 })
 
 test('hands the can it is given to the rows the app draws on a sub screen', async () => {

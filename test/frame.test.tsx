@@ -104,12 +104,12 @@ test('hides the menu glyph from assistive technology, since the button name says
 	expect(glyph?.getAttribute('focusable')).toBe('false')
 })
 
-test('names the menu button Open navigation panel, as WordPress does, and the drawer Navigation', async () => {
+test('names the menu button Open navigation panel and the drawer Admin, as the new admin names its menu', async () => {
 	renderUnnamedMenu()
 
 	fireEvent.click(screen.getByRole('button', { name: 'Open navigation panel' }))
 
-	expect(await screen.findByRole('dialog', { name: 'Navigation' })).not.toBeNull()
+	expect(await screen.findByRole('dialog', { name: 'Admin' })).not.toBeNull()
 })
 
 test('names the menu button and the drawer in the reader language from the words godmin ships', async () => {
@@ -118,10 +118,10 @@ test('names the menu button and the drawer in the reader language from the words
 
 	fireEvent.click(screen.getByRole('button', { name: 'Abrir el panel de navegación' }))
 
-	expect(await screen.findByRole('dialog', { name: 'Navegación' })).not.toBeNull()
+	expect(await screen.findByRole('dialog', { name: 'Administración' })).not.toBeNull()
 })
 
-test('names the drawer Navigation whatever the menu button is called', async () => {
+test('names the drawer Admin whatever the menu button is called', async () => {
 	setViewport({ matches: true })
 	renderAdmin(
 		<Frame.Root>
@@ -133,7 +133,22 @@ test('names the drawer Navigation whatever the menu button is called', async () 
 
 	fireEvent.click(screen.getByRole('button', { name: 'Open the menu' }))
 
-	expect(await screen.findByRole('dialog', { name: 'Navigation' })).not.toBeNull()
+	expect(await screen.findByRole('dialog', { name: 'Admin' })).not.toBeNull()
+})
+
+test('names the drawer with the label the app gives the column', async () => {
+	setViewport({ matches: true })
+	renderAdmin(
+		<Frame.Root>
+			<Frame.Sidebar menuLabel="Open the menu" label="Main menu">
+				<nav aria-label="Sections" />
+			</Frame.Sidebar>
+		</Frame.Root>,
+	)
+
+	fireEvent.click(screen.getByRole('button', { name: 'Open the menu' }))
+
+	expect(await screen.findByRole('dialog', { name: 'Main menu' })).not.toBeNull()
 })
 
 test('offers the edge breakpoint from the package entry', () => {
@@ -457,39 +472,42 @@ test('draws no footer when the app gives neither a panel nor a note', () => {
 	expect(document.querySelector('.godmin-sidebar__footer')).toBeNull()
 })
 
-test('wraps the whole column, menu and footer, in one region named Navigation, as the Site Editor does', async () => {
+test('wraps the whole column, menu and footer, in one nav named Admin, as the new admin does', async () => {
 	await renderSidebarApp('/posts')
 
-	const region = screen.getByRole('region', { name: 'Navigation' })
-	expect(region.className).toBe('godmin-layout__sidebar')
-	expect(region.getAttribute('tabindex')).toBe('-1')
-	expect(region.contains(screenWrapper())).toBe(true)
-	expect(within(region).getByRole('button', { name: 'Maria Perez' })).not.toBeNull()
-	expect(within(region).getByText('v1.2.3').className).toBe('godmin-sidebar__footer-note')
-})
-
-test('names the column region in the reader language from the words godmin ships', async () => {
-	setLocaleData(spanish)
-	await renderSidebarApp('/posts')
-
-	expect(screen.getByRole('region', { name: 'Navegación' }).className).toBe('godmin-layout__sidebar')
-})
-
-test('names the column region with the label the app gives', async () => {
-	await renderSidebarApp('/posts', { label: 'Main menu' })
-
-	expect(screen.getByRole('region', { name: 'Main menu' }).className).toBe('godmin-layout__sidebar')
+	const column = screen.getByRole('navigation', { name: 'Admin' })
+	expect(column.tagName).toBe('NAV')
+	expect(column.className).toBe('godmin-layout__sidebar')
+	expect(column.hasAttribute('tabindex')).toBe(false)
+	expect(column.hasAttribute('role')).toBe(false)
+	expect(column.contains(screenWrapper())).toBe(true)
+	expect(within(column).getByRole('button', { name: 'Maria Perez' })).not.toBeNull()
+	expect(within(column).getByText('v1.2.3').className).toBe('godmin-sidebar__footer-note')
 	expect(screen.queryByRole('region', { name: 'Navigation' })).toBeNull()
 })
 
-test('keeps the footer in the column region, outside the screen that slides, and never redraws it', async () => {
+test('names the column nav in the reader language from the words godmin ships', async () => {
+	setLocaleData(spanish)
+	await renderSidebarApp('/posts')
+
+	expect(screen.getByRole('navigation', { name: 'Administración' }).className).toBe('godmin-layout__sidebar')
+})
+
+test('names the column nav with the label the app gives', async () => {
+	await renderSidebarApp('/posts', { label: 'Main menu' })
+
+	expect(screen.getByRole('navigation', { name: 'Main menu' }).className).toBe('godmin-layout__sidebar')
+	expect(screen.queryByRole('navigation', { name: 'Admin' })).toBeNull()
+})
+
+test('keeps the footer in the column nav, outside the screen that slides, and never redraws it', async () => {
 	await renderSidebarApp('/posts')
 	const panel = screen.getByRole('button', { name: 'Maria Perez' })
 
 	await clickLink('Chats')
 
 	expect(screen.getByRole('button', { name: 'Maria Perez' })).toBe(panel)
-	expect(panel.closest('[role="region"]')).toBe(screen.getByRole('region', { name: 'Navigation' }))
+	expect(panel.closest('nav')).toBe(screen.getByRole('navigation', { name: 'Admin' }))
 	expect(panel.closest('.godmin-navigation__screen-wrapper')).toBeNull()
 	expect(panel.closest('.godmin-layout__sidebar > .godmin-sidebar__footer')).not.toBeNull()
 })
@@ -522,10 +540,10 @@ async function openDrawerAt(path: string) {
 	return router
 }
 
-test('draws no region in the drawer, so on a narrow viewport the dialog alone is named Navigation', async () => {
+test('draws no landmark in the drawer, so on a narrow viewport the dialog alone is named Admin', async () => {
 	await openDrawerAt('/posts')
 
-	const drawer = screen.getByRole('dialog', { name: 'Navigation' })
+	const drawer = screen.getByRole('dialog', { name: 'Admin' })
 	expect(within(drawer).getByRole('button', { name: 'Maria Perez' })).not.toBeNull()
 	expect(within(drawer).queryByRole('region')).toBeNull()
 	expect(within(drawer).queryByRole('navigation')).toBeNull()
