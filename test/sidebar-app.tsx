@@ -113,15 +113,14 @@ export function sidebarAppRouter(path: string, options: SidebarAppOptions = {}) 
 	const rootRoute = createRootRoute({
 		component: function Layout() {
 			return (
-				<Frame.Root location={useFrameLocation()}>
+				<Frame.Root location={useFrameLocation()} appName="Acme">
 					<Frame.Sidebar
-						brand={<span>Acme</span>}
 						menuLabel="Open navigation"
 						label={label}
 						footer={<button type="button">Maria Perez</button>}
 						footerNote="v1.2.3"
 					>
-						<Navigation title="Acme" items={ROOT_ROWS} home={<Link to="/posts" />} can={can} />
+						<Navigation items={ROOT_ROWS} home={<Link to="/posts" />} can={can} />
 					</Frame.Sidebar>
 					<Frame.Canvas>
 						<Outlet />

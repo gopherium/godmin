@@ -34,8 +34,6 @@ export const NavigationStateContext = createContext<NavigationState | undefined>
 
 /** What a Navigation hands each screen it draws. */
 export interface ScreenState {
-	/** Whether the screen is the root screen, drawn from the menu items. */
-	isRoot?: boolean
 	/** The app's link to the list its home address lands on, where Back on a sub menu goes. */
 	home?: ReactElement<Record<string, unknown>>
 	/** The app's check of a capability, read by every row inside. */

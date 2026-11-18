@@ -11,11 +11,12 @@ import { act, fireEvent, screen, within } from '@testing-library/react'
 import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
 import { lazy } from 'react'
 import type { ComponentType } from 'react'
-import { afterEach, expect, test, vi } from 'vitest'
+import { afterEach, expect, expectTypeOf, test, vi } from 'vitest'
 
 import { DrilldownItem } from '../src/drilldown-item.js'
 import spanish from '../src/list-chrome/es-ES.js'
 import { Navigation } from '../src/navigation.js'
+import type { NavigationProps } from '../src/navigation.js'
 import { NavigationList } from '../src/navigation-list.js'
 import { NavigationScreen } from '../src/navigation-screen.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
@@ -31,18 +32,22 @@ afterEach(() => {
 /** The class of the keyed wrapper the sidebar screen slides in. */
 const WRAPPER = 'godmin-navigation__screen-wrapper'
 
+/** What screenTitle reads on the root screen, which draws no heading. */
+const ROOT = 'the root screen'
+
 /**
- * Returns the heading the sidebar screen shows.
- * @returns The text of the level 1 heading.
+ * Returns the heading the sidebar screen shows, or ROOT on the root screen, which shows none.
+ * @returns The text of the level 1 heading, or ROOT.
  */
 function screenTitle(): string {
-	return screen.getByRole('heading', { level: 1 }).textContent ?? ''
+	return screen.queryByRole('heading', { level: 1 })?.textContent ?? ROOT
 }
 
-test('draws the root screen from its title and rows when no matched route declares a sidebar', async () => {
+test('draws the root screen from its rows alone, with no heading, when no matched route has a sidebar', async () => {
 	await renderSidebarApp('/posts')
 
-	expect(screenTitle()).toBe('Acme')
+	expect(screenTitle()).toBe(ROOT)
+	expect(screenWrapper().querySelector('.godmin-navigation-screen__title-icon')).toBeNull()
 	const rows = within(screen.getByRole('list')).getAllByRole('link')
 	expect(rows.map((row) => row.textContent)).toEqual(['Posts', 'Pages', 'Users', 'Chats', 'Later'])
 	expect(screen.getByRole('link', { name: 'Chats' }).querySelector('.godmin-navigation-item__drilldown-indicator'))
@@ -82,7 +87,7 @@ test('goes back to the root screen when the address leaves every sub menu', asyn
 
 	await act(() => router.navigate({ to: '/posts' }))
 
-	expect(screenTitle()).toBe('Acme')
+	expect(screenTitle()).toBe(ROOT)
 })
 
 test('slides a sub menu in from the end after a drilldown row opens it', async () => {
@@ -100,7 +105,7 @@ test('slides the root screen back in from the start after Back', async () => {
 
 	await clickLink('Back')
 
-	expect(screenTitle()).toBe('Acme')
+	expect(screenTitle()).toBe(ROOT)
 	expect(screenWrapper().className).toBe(`${WRAPPER} ${WRAPPER}--backward`)
 })
 
@@ -143,7 +148,8 @@ test('plays no slide on first load, after a navigation row, a link elsewhere or 
 	await act(async () => {
 		router.history.back()
 	})
-	expect(await screen.findByRole('heading', { level: 1, name: 'Acme' })).not.toBeNull()
+	expect(await screen.findByRole('link', { name: 'Posts' })).not.toBeNull()
+	expect(screenTitle()).toBe(ROOT)
 	expect(screenWrapper().className).toBe(WRAPPER)
 })
 
@@ -182,7 +188,7 @@ test('focuses the first link of the screen when the row the reader came from is 
 
 	await clickLink('Back')
 
-	expect(screenTitle()).toBe('Acme')
+	expect(screenTitle()).toBe(ROOT)
 	expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Posts' }))
 })
 
@@ -194,7 +200,7 @@ test('focuses the first link of the root screen after Back on a sub menu reached
 
 	await clickLink('Back')
 
-	expect(screenTitle()).toBe('Acme')
+	expect(screenTitle()).toBe(ROOT)
 	expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Posts' }))
 })
 
@@ -375,7 +381,7 @@ test('throws an error naming Frame.Root when no Frame.Root is above it', async (
 	vi.spyOn(console, 'error').mockImplementation(() => undefined)
 	vi.spyOn(console, 'warn').mockImplementation(() => undefined)
 	const rootRoute = createRootRoute({
-		component: () => <Navigation title="Acme" items={[]} home={<Link to="/" />} />,
+		component: () => <Navigation items={[]} home={<Link to="/" />} />,
 		errorComponent: ({ error }) => <p>{(error as Error).message}</p>,
 	})
 	const router = createRouter({ routeTree: rootRoute, history: createMemoryHistory({ initialEntries: ['/'] }) })
@@ -383,4 +389,17 @@ test('throws an error naming Frame.Root when no Frame.Root is above it', async (
 	renderAdmin(<RouterProvider router={router} />)
 
 	expect(await screen.findByText(/Frame\.Root/)).not.toBeNull()
+})
+
+test('takes no title, since the identity block of the frame names the app', () => {
+	expectTypeOf<NavigationProps>().not.toHaveProperty('title')
+})
+
+test('draws the rows of the root screen in a screen of its own, with no title row', async () => {
+	await renderSidebarApp('/posts')
+
+	const root = screenWrapper().firstElementChild as Element
+	expect(root.className).toBe('godmin-navigation__root')
+	expect(root.firstElementChild?.className).toBe('godmin-navigation-screen__content')
+	expect(within(root as HTMLElement).getAllByRole('link')[0]?.textContent).toBe('Posts')
 })

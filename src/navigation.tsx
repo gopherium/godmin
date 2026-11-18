@@ -6,7 +6,6 @@ import type { ComponentType, ReactElement, ReactNode } from 'react'
 
 import type { MenuItem } from './menu-item.js'
 import { NavigationList } from './navigation-list.js'
-import { NavigationScreen } from './navigation-screen.js'
 import { NavigationStateContext, ScreenContext, forgetUnusedMove, takeMove } from './navigation-state.js'
 import type { Can, Direction, Move, NavigationState } from './navigation-state.js'
 import { findMoveTarget, findSidebarMatch, locationAddress } from './path-matching.js'
@@ -34,8 +33,6 @@ const TABBABLE = [
 	.join(', ')
 
 export interface NavigationProps {
-	/** The title of the root screen, the brand. */
-	title: ReactNode
 	/** The rows of the root screen. */
 	items: readonly MenuItem[]
 	/** The app's link to the list its home address lands on. Back on a sub menu goes there. */
@@ -168,24 +165,23 @@ function ScreenWrapper({ state, children }: { state: NavigationState; children: 
 }
 
 /**
- * Renders the sidebar menu, as WordPress's new admin names it: the root screen drawn from its title and rows,
+ * Renders the sidebar menu, as WordPress's new admin names it: the root screen drawn from its rows alone,
  * or the Sidebar screen of the deepest matched route, keyed by that route alone and sliding in on a move.
- * @param props - The root title and rows, the app's home and its check of a capability.
+ * @param props - The root rows, the app's home and its check of a capability.
  * @returns The sidebar menu element.
  */
-export function Navigation({ title, items, home, can }: NavigationProps) {
+export function Navigation({ items, home, can }: NavigationProps) {
 	const router = useRouter()
 	const state = useFrameState()
 	const { key, Sidebar } = useSidebarParent()
 	useForgetUnusedMove(state, key)
 	const screen = useMemo(
 		() => ({
-			isRoot: Sidebar === undefined,
 			home,
 			can,
 			targetOf: (link: ReactElement<Record<string, unknown>>) => findMoveTarget(router, link.props as RowAddress),
 		}),
-		[Sidebar, home, can, router],
+		[home, can, router],
 	)
 	return (
 		<div className="godmin-navigation">
@@ -193,9 +189,11 @@ export function Navigation({ title, items, home, can }: NavigationProps) {
 				<Suspense fallback={null}>
 					<ScreenWrapper key={key} state={state}>
 						{Sidebar === undefined ? (
-							<NavigationScreen title={title}>
-								<NavigationList items={items} />
-							</NavigationScreen>
+							<div className="godmin-navigation__root">
+								<div className="godmin-navigation-screen__content">
+									<NavigationList items={items} />
+								</div>
+							</div>
 						) : (
 							<Sidebar />
 						)}

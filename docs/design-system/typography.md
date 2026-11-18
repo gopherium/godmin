@@ -59,14 +59,15 @@ Some parts give the size of their text on their own page:
 ## The heading outline
 
 The heading outline is the list of headings a screen reader offers to
-jump between, from `h1` down. A `NavigationScreen` draws its title as
-the `h1`, as in the WordPress Site Editor. So the sidebar menu decides
-which title is the `h1`. Below, with a sidebar means the sidebar shows
-a `NavigationScreen`.
+jump between, from `h1` down. A `NavigationScreen`, the screen of a
+sub menu, draws its title as the `h1`, as WordPress's new admin does.
+The root screen of the menu draws no heading, and neither does the
+identity block over it. So the sidebar menu decides which title is the
+`h1`. Below, with a sidebar means the sidebar shows a sub menu.
 
 | Title | Without a sidebar | With a sidebar |
 | --- | --- | --- |
-| Sidebar screen title | None | `h1` |
+| Sub menu title | None | `h1` |
 | Page title | `h1` | `h2` |
 | Section title | `h2` | `h3` |
 | Section title inside a section | `h3` | `h4` |
@@ -76,8 +77,10 @@ With a sidebar, pass `headingLevel={2}` to each `Page`. Every title
 inside it then moves one level down. Only the element changes. Each
 title keeps its size, so a section looks the same on both kinds of
 screen. [Heading levels](../screens.md#heading-levels) shows the code.
+While the menu shows its root screen, the sidebar draws no heading, so
+such a `Page` starts at `h2`.
 
-On a small screen the sidebar sits in the drawer, and its title is
-the `h1` while the drawer is open. The brand in the top bar is not a
-heading. So while the drawer is shut, the screen has no `h1`.
-WordPress's new admin works the same way.
+On a small screen the sidebar sits in the drawer, and a sub menu's
+title is the `h1` while the drawer is open. The top bar holds Menu
+alone and draws no heading. So while the drawer is shut, the screen
+has no `h1`.

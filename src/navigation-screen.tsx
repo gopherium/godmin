@@ -73,12 +73,9 @@ function BackLink({ target, label }: { target: ReactElement<Record<string, unkno
 }
 
 export interface NavigationScreenProps {
-	/** The title, an h1. A node, so the root screen can hold the brand. */
+	/** The title of the sub menu, an h1. */
 	title: ReactNode
-	/**
-	 * The app's router link Back renders through. Inside a Navigation a sub screen
-	 * without one goes home, and the root draws no Back.
-	 */
+	/** The app's router link Back renders through. Inside a Navigation a sub screen without one goes home. */
 	back?: ReactElement<Record<string, unknown>>
 	/** The name of Back, godmin's translated "Back" when absent. */
 	backLabel?: string
@@ -90,7 +87,7 @@ export interface NavigationScreenProps {
 }
 
 /**
- * Renders a sidebar screen as the Site Editor draws it: a title row with Back, the title and the actions,
+ * Renders a sub menu screen as WordPress's new admin draws it: a title row with Back, the title and the actions,
  * then the description and the content, then an optional footer.
  * @param props - The title, Back's link and label, and the regions.
  * @returns The navigation screen element.
@@ -104,12 +101,12 @@ export function NavigationScreen({
 	footer,
 	children,
 }: NavigationScreenProps) {
-	const { isRoot, home } = useContext(ScreenContext)
-	const target = isRoot === true ? undefined : (back ?? home)
+	const { home } = useContext(ScreenContext)
+	const target = back ?? home
 	return (
 		<div className="godmin-navigation-screen">
 			<div className={footer === undefined ? MAIN : `${MAIN} ${MAIN}--has-footer`}>
-				<div className={target === undefined ? `${TITLE_ROW} ${TITLE_ROW}--root` : TITLE_ROW}>
+				<div className={TITLE_ROW}>
 					{target === undefined ? null : <BackLink target={target} label={backLabel} />}
 					<h1 className="godmin-navigation-screen__title">{title}</h1>
 					<Region content={actions} className="godmin-navigation-screen__actions" />

@@ -76,9 +76,9 @@ function ToolsScreen() {
 /** Renders the frame of the sample admin around the page its address shows. */
 function Layout() {
 	return (
-		<Frame.Root shownPath={useShownPath()} location={useFrameLocation()}>
-			<Frame.Sidebar brand={<span>Admin</span>}>
-				<Navigation title="Admin" items={ROWS} home={<Link to="/posts" />} />
+		<Frame.Root shownPath={useShownPath()} location={useFrameLocation()} appName="Admin">
+			<Frame.Sidebar>
+				<Navigation items={ROWS} home={<Link to="/posts" />} />
 			</Frame.Sidebar>
 			<Frame.Canvas>
 				<Outlet />
@@ -247,7 +247,7 @@ export const SubMenuLoading: Story = {
 		await userEvent.click(link(canvasElement, 'Tools'))
 		await waitFor(() => expect(link(canvasElement, 'Posts')).not.toHaveAttribute('aria-current'), { timeout: WAIT })
 		await settles()
-		await expect(within(canvasElement).getByRole('heading', { level: 1, name: 'Admin' })).toBeInTheDocument()
+		await expect(within(canvasElement).queryByRole('heading', { level: 1 }), 'no root heading').toBeNull()
 		await expect(within(canvasElement).getByRole('heading', { level: 2, name: 'Posts' })).toBeInTheDocument()
 		await expect(canvasElement.querySelector('[aria-current]'), 'no row filled').toBeNull()
 	},
