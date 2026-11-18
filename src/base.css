@@ -183,9 +183,7 @@ body {
 		display: flex;
 		flex-shrink: 0;
 		align-items: center;
-		gap: 8px;
 		block-size: 46px;
-		padding-inline-end: 16px;
 	}
 
 	.godmin-layout__menu {
@@ -246,6 +244,30 @@ body {
 
 	.godmin-layout__drawer:dir(rtl) {
 		box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+	}
+
+	.godmin-sidebar__identity {
+		display: flex;
+		flex: none;
+		flex-direction: column;
+		gap: var(--wpds-dimension-gap-xs);
+		padding: var(--wpds-dimension-padding-md) var(--wpds-dimension-padding-lg);
+	}
+
+	.godmin-sidebar__name {
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+		color: var(--wpds-color-foreground-content-neutral);
+	}
+
+	.godmin-sidebar__address {
+		color: var(--wpds-color-foreground-content-neutral-weak);
+	}
+
+	.godmin-sidebar__name,
+	.godmin-sidebar__address {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 
 	.godmin-sidebar__content {
@@ -580,21 +602,19 @@ body {
 		margin-bottom: 0;
 	}
 
+	.godmin-navigation__root {
+		padding-block-start: 20px;
+	}
+
 	.godmin-navigation-screen__title-icon {
 		position: sticky;
 		top: 0;
 		z-index: 1;
 		display: flex;
-		align-items: flex-start;
-		gap: 12px;
-		margin-bottom: 8px;
-		padding-top: 32px;
-		padding-bottom: 8px;
+		align-items: center;
+		gap: 8px;
+		padding: 12px 4px 8px;
 		background: var(--wpds-color-background-surface-neutral-weak);
-	}
-
-	.godmin-navigation-screen__title-icon--root {
-		padding-inline-start: 44px;
 	}
 
 	.godmin-navigation-screen__back {
@@ -602,8 +622,8 @@ body {
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		inline-size: 32px;
-		block-size: 32px;
+		inline-size: 24px;
+		block-size: 24px;
 		border-radius: var(--wpds-border-radius-sm);
 		color: var(--wpds-color-foreground-interactive-neutral);
 	}
@@ -626,7 +646,7 @@ body {
 		min-width: 0;
 		margin: 0;
 		color: var(--wpds-color-foreground-content-neutral);
-		font-size: var(--wpds-typography-font-size-xl);
+		font-size: var(--wpds-typography-font-size-lg);
 		font-weight: var(--wpds-typography-font-weight-emphasis);
 		line-height: var(--wpds-typography-line-height-xl);
 		overflow-wrap: break-word;

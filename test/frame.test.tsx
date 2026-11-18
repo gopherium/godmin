@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
-import { Dialog } from '@wordpress/ui'
+import { Dialog, Text } from '@wordpress/ui'
 import type { ReactNode } from 'react'
-import { afterEach, expect, onTestFinished, test, vi } from 'vitest'
+import { afterEach, expect, expectTypeOf, onTestFinished, test, vi } from 'vitest'
 
 import { Frame } from '../src/frame.js'
-import type { CanvasMode } from '../src/frame.js'
+import type { CanvasMode, FrameSidebarProps } from '../src/frame.js'
 import { EDGE_BREAKPOINT } from '../src/index'
 import spanish from '../src/list-chrome/es-ES.js'
 import { installTestEnvironment, renderAdmin, setViewport } from '../src/testing.js'
@@ -49,7 +49,7 @@ function renderUnnamedMenu() {
 function renderFrame(props: { location?: string; canvas?: 'padded' | 'bleed' } = {}) {
 	return renderAdmin(
 		<Frame.Root location={props.location}>
-			<Frame.Sidebar brand={<span>Acme</span>} menuLabel="Open navigation">
+			<Frame.Sidebar menuLabel="Open navigation">
 				<nav aria-label="Sections">
 					<a href="/reports">Reports</a>
 				</nav>
@@ -189,7 +189,7 @@ test('closes the drawer when the location changes', async () => {
 
 	view.rerender(
 		<Frame.Root location="/reports">
-			<Frame.Sidebar brand={<span>Acme</span>} menuLabel="Open navigation">
+			<Frame.Sidebar menuLabel="Open navigation">
 				<nav aria-label="Sections">
 					<a href="/reports">Reports</a>
 				</nav>
@@ -203,12 +203,94 @@ test('closes the drawer when the location changes', async () => {
 	expect(screen.queryByRole('dialog')).toBeNull()
 })
 
-test('names the brand without making it a heading', () => {
+test('draws Menu alone in the top bar, with no brand beside it', () => {
 	setViewport({ matches: true })
 	renderFrame()
 
-	expect(screen.getByText('Acme')).not.toBeNull()
-	expect(screen.queryByRole('heading')).toBeNull()
+	const bar = document.querySelector('.godmin-layout__topbar') as Element
+	expect([...bar.children]).toEqual([screen.getByRole('button', { name: 'Open navigation' })])
+})
+
+test('takes no brand, since the identity block names the app', () => {
+	expectTypeOf<FrameSidebarProps>().not.toHaveProperty('brand')
+})
+
+/**
+ * Renders a frame named as given, its sidebar holding a menu, on a narrow viewport when asked.
+ * @param appName - The name of the app, none when absent.
+ * @param small - Whether the viewport is narrow.
+ * @returns The testing library render result.
+ */
+function renderNamedFrame(appName?: string, small = false) {
+	setViewport({ matches: small })
+	return renderAdmin(
+		<Frame.Root appName={appName}>
+			<Frame.Sidebar menuLabel="Open navigation">
+				<nav aria-label="Sections" />
+			</Frame.Sidebar>
+		</Frame.Root>,
+	)
+}
+
+/**
+ * Returns the classes WPDS Text gives a variant.
+ * @param variant - The variant to draw.
+ * @returns The class names of the span it draws.
+ */
+function textClasses(variant: 'body-md' | 'body-sm'): string[] {
+	const drawn = render(<Text variant={variant} />)
+	const classes = [...(drawn.container.firstElementChild as Element).classList]
+	drawn.unmount()
+	return classes
+}
+
+test('heads the column nav with the app name over the host it is served at, as the new admin heads its menu', () => {
+	renderNamedFrame('Acme')
+
+	const block = screen.getByRole('navigation', { name: 'Admin' }).firstElementChild as Element
+	expect(block.className).toBe('godmin-sidebar__identity')
+	expect([...block.children].map((line) => line.textContent)).toEqual(['Acme', window.location.host])
+	expect(block.nextElementSibling?.className).toBe('godmin-sidebar__content')
+})
+
+test('draws the name in WPDS body text and the host in WPDS small body text, as the new admin does', () => {
+	const name = textClasses('body-md')
+	const host = textClasses('body-sm')
+	renderNamedFrame('Acme')
+
+	const [nameLine, hostLine] = [...(document.querySelector('.godmin-sidebar__identity') as Element).children]
+	expect(nameLine.tagName).toBe('SPAN')
+	expect([...nameLine.classList]).toEqual([...name, 'godmin-sidebar__name'])
+	expect(hostLine.tagName).toBe('SPAN')
+	expect([...hostLine.classList]).toEqual([...host, 'godmin-sidebar__address'])
+})
+
+test('draws the host alone when the app gives no name', () => {
+	renderNamedFrame()
+
+	const block = document.querySelector('.godmin-sidebar__identity') as Element
+	expect([...block.children].map((line) => line.className.split(' ').pop())).toEqual(['godmin-sidebar__address'])
+	expect(block.textContent).toBe(window.location.host)
+})
+
+test('draws the identity block as plain text, with no heading and no link', () => {
+	renderNamedFrame('Acme')
+
+	const block = document.querySelector('.godmin-sidebar__identity') as HTMLElement
+	expect(within(block).queryByRole('heading')).toBeNull()
+	expect(within(block).queryByRole('link')).toBeNull()
+})
+
+test('heads the drawer with the same identity block, after its hidden title and before the menu', async () => {
+	renderNamedFrame('Acme', true)
+
+	fireEvent.click(screen.getByRole('button', { name: 'Open navigation' }))
+
+	const drawer = await screen.findByRole('dialog', { name: 'Admin' })
+	const block = drawer.querySelector(':scope > .godmin-sidebar__identity') as Element
+	expect(block.previousElementSibling?.textContent).toBe('Admin')
+	expect(block.nextElementSibling?.className).toBe('godmin-sidebar__content')
+	expect(block.textContent).toBe(`Acme${window.location.host}`)
 })
 
 test('marks a full bleed canvas so it can fill its region', () => {
@@ -414,12 +496,13 @@ function renderFooter(props: { footer?: ReactNode; footerNote?: ReactNode }) {
 	)
 }
 
-test('draws the sidebar content and then its footer, the panel the app gives and then the note', () => {
+test('draws the identity block, the content and then the footer, the panel the app gives then the note', () => {
 	renderFooter({ footer: <button type="button">Maria Perez</button>, footerNote: 'v1.2.3' })
 
 	const sidebar = document.querySelector('.godmin-layout__sidebar') as Element
-	const [content, footer] = [...sidebar.children]
-	expect(sidebar.children.length).toBe(2)
+	const [identity, content, footer] = [...sidebar.children]
+	expect(sidebar.children.length).toBe(3)
+	expect(identity.className).toBe('godmin-sidebar__identity')
 	expect(content.className).toBe('godmin-sidebar__content')
 	expect(content.firstElementChild).toBe(screen.getByRole('navigation', { name: 'Sections' }))
 	expect(footer.className).toBe('godmin-sidebar__footer')
@@ -476,6 +559,18 @@ test('names the column nav with the label the app gives', async () => {
 
 	expect(screen.getByRole('navigation', { name: 'Main menu' }).className).toBe('godmin-layout__sidebar')
 	expect(screen.queryByRole('navigation', { name: 'Admin' })).toBeNull()
+})
+
+test('keeps the identity block over the menu, outside the screen that slides, and never redraws it', async () => {
+	await renderSidebarApp('/posts')
+	const block = document.querySelector('.godmin-sidebar__identity') as Element
+
+	await clickLink('Chats')
+
+	expect(document.querySelector('.godmin-sidebar__identity')).toBe(block)
+	expect(block.textContent).toBe(`Acme${window.location.host}`)
+	expect(block.parentElement).toBe(screen.getByRole('navigation', { name: 'Admin' }))
+	expect(block.closest('.godmin-navigation__screen-wrapper')).toBeNull()
 })
 
 test('keeps the footer in the column nav, outside the screen that slides, and never redraws it', async () => {
@@ -542,7 +637,8 @@ test('keeps the drawer open when Back goes home from a sub menu', async () => {
 	await clickLink('Back')
 
 	expect(router.state.location.pathname).toBe('/posts')
-	expect(within(screen.getByRole('dialog')).getByRole('heading', { level: 1, name: 'Acme' })).not.toBeNull()
+	expect(within(screen.getByRole('dialog')).getByRole('link', { name: 'Posts' })).not.toBeNull()
+	expect(within(screen.getByRole('dialog')).queryByRole('heading', { level: 1 })).toBeNull()
 })
 
 test('closes the drawer when a navigation row opens a page', async () => {

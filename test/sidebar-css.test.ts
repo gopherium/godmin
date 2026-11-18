@@ -230,46 +230,78 @@ test('lets the navigation screen fill the wrapper and its main region push the f
 	expect(ruleOf('.godmin-navigation-screen__main--has-footer')).toMatch(/margin-bottom:\s*0;/)
 })
 
-test('pins the title row of a navigation screen to the top on the sidebar fill, 72px tall', () => {
+test('pins the title row of a sub menu to the top on the sidebar fill, 52px tall as boot draws it', () => {
 	const row = ruleOf('.godmin-navigation-screen__title-icon')
 
 	expect(row).toMatch(/position:\s*sticky;/)
 	expect(row).toMatch(/(?:^|\s)top:\s*0;/)
 	expect(row).toMatch(/z-index:\s*1;/)
 	expect(row).toMatch(/background:\s*var\(--wpds-color-background-surface-neutral-weak\);/)
-	expect(row).toMatch(/padding-top:\s*32px;/)
-	expect(row).toMatch(/padding-bottom:\s*8px;/)
-	expect(row).toMatch(/margin-bottom:\s*8px;/)
+	expect(row).toMatch(/(?:^|\s)padding:\s*12px 4px 8px;/)
+	expect(row).not.toMatch(/margin/)
 	expect(row).toMatch(/display:\s*flex;/)
-	expect(row).toMatch(/align-items:\s*flex-start;/)
-	expect(row).toMatch(/(?:^|\s)gap:\s*12px;/)
+	expect(row).toMatch(/align-items:\s*center;/)
+	expect(row).toMatch(/(?:^|\s)gap:\s*8px;/)
 })
 
-test('starts the title of a screen with no Back 44px in, where the title of a sub screen sits', () => {
-	expect(ruleOf('.godmin-navigation-screen__title-icon--root')).toMatch(/padding-inline-start:\s*44px;/)
+test('lays the identity block out as the new admin heads its menu: two lines 4px apart, padded 12px by 16px', () => {
+	const block = ruleOf('.godmin-sidebar__identity')
+
+	expect(block).toMatch(/display:\s*flex;/)
+	expect(block).toMatch(/(?:^|\s)flex:\s*none;/)
+	expect(block).toMatch(/flex-direction:\s*column;/)
+	expect(block).toMatch(/(?:^|\s)gap:\s*var\(--wpds-dimension-gap-xs\);/)
+	expect(block).toMatch(/(?:^|\s)padding:\s*var\(--wpds-dimension-padding-md\) var\(--wpds-dimension-padding-lg\);/)
 })
 
-test('sets the navigation screen title as the Site Editor does: 20px on a 32px line at the emphasis weight', () => {
+test('paints the app name bold in the content colour and the host in the weak content colour', () => {
+	const name = ruleOf('.godmin-sidebar__name')
+
+	expect(name).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\);/)
+	expect(name).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-content-neutral\);/)
+	expect(ruleOf('.godmin-sidebar__address')).toMatch(
+		/(?:^|\s)color:\s*var\(--wpds-color-foreground-content-neutral-weak\);/,
+	)
+})
+
+test('keeps the app name and the host on one line each, cut with an ellipsis', () => {
+	const lines = ruleOf('.godmin-sidebar__name,\n\t.godmin-sidebar__address')
+
+	expect(lines).toMatch(/overflow:\s*hidden;/)
+	expect(lines).toMatch(/white-space:\s*nowrap;/)
+	expect(lines).toMatch(/text-overflow:\s*ellipsis;/)
+})
+
+test('keeps no root variant of the title row, since the root screen draws no title row', () => {
+	expect(base).not.toContain('title-icon--root')
+})
+
+test('starts the root screen rows 20px under the menu head, as padding so a first margin adds to it', () => {
+	expect(ruleOf('.godmin-navigation__root')).toMatch(/padding-block-start:\s*20px;/)
+	expect(ruleOf('.godmin-navigation__root')).not.toMatch(/margin/)
+})
+
+test('sets the title of a sub menu as boot does: 15px on a 32px line at the emphasis weight', () => {
 	const title = ruleOf('.godmin-navigation-screen__title')
 
 	expect(title).toMatch(/flex-grow:\s*1;/)
 	expect(title).toMatch(/(?:^|\s)margin:\s*0;/)
-	expect(title).toMatch(/font-size:\s*var\(--wpds-typography-font-size-xl\);/)
+	expect(title).toMatch(/font-size:\s*var\(--wpds-typography-font-size-lg\);/)
 	expect(title).toMatch(/line-height:\s*var\(--wpds-typography-line-height-xl\);/)
 	expect(title).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\);/)
 	expect(title).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-content-neutral\);/)
 	expect(title).toMatch(/overflow-wrap:\s*break-word;/)
 })
 
-test('draws Back as a 32px box in the interactive colour, brighter under the pointer or focus', () => {
+test('draws Back as a 24px box in the interactive colour, brighter under the pointer or focus', () => {
 	const back = ruleOf('.godmin-navigation-screen__back')
 
 	expect(back).toMatch(/display:\s*inline-flex;/)
 	expect(back).toMatch(/flex-shrink:\s*0;/)
 	expect(back).toMatch(/align-items:\s*center;/)
 	expect(back).toMatch(/justify-content:\s*center;/)
-	expect(back).toMatch(/inline-size:\s*32px;/)
-	expect(back).toMatch(/block-size:\s*32px;/)
+	expect(back).toMatch(/inline-size:\s*24px;/)
+	expect(back).toMatch(/block-size:\s*24px;/)
 	expect(back).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-interactive-neutral\);/)
 	expect(ruleOf('.godmin-navigation-screen__back:is(:hover, :focus)')).toMatch(
 		/(?:^|\s)color:\s*var\(--wpds-color-foreground-interactive-neutral-active\);/,

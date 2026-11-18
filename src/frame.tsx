@@ -2,7 +2,7 @@
    object export standing beside the parts it is built from. */
 import { __ } from '@wordpress/i18n'
 import { ThemeProvider } from '@wordpress/theme'
-import { Drawer, VisuallyHidden } from '@wordpress/ui'
+import { Drawer, Text, VisuallyHidden } from '@wordpress/ui'
 import { Children, createContext, useContext, useEffect, useId, useRef, useState } from 'react'
 import type { ComponentProps, ReactNode } from 'react'
 
@@ -13,6 +13,7 @@ import type { DrawerState } from './frame-state.js'
 import { NavigationStateContext, createNavigationState, takeDrawerStays } from './navigation-state.js'
 import type { NavigationState } from './navigation-state.js'
 import { ScreenTitleContext, TitleWatch, createScreenTitles } from './screen-title.js'
+import { siteAddress } from './site-address.js'
 import { useMediaQuery } from './use-media-query.js'
 
 type ThemeColor = ComponentProps<typeof ThemeProvider>['color']
@@ -32,7 +33,7 @@ export interface FrameRootProps {
 	location?: string
 	/** The path the router has finished showing, whose change speaks the new screen's title, nothing without it. */
 	shownPath?: string
-	/** The name of the app, which the tab title ends with. The tab title is left alone without it. */
+	/** The name of the app, which heads the menu and the drawer and ends the tab title, left alone without it. */
 	appName?: string
 	/** The theme colour of the frame, a #26292b background when absent. */
 	chromeColor?: ThemeColor
@@ -94,7 +95,7 @@ function Root({
 	const classes = small ? 'godmin-layout godmin-layout--small' : 'godmin-layout'
 	return (
 		<ThemeProvider color={chromeColor}>
-			<FrameContext.Provider value={{ small, location, layout, navigation }}>
+			<FrameContext.Provider value={{ small, location, layout, navigation, appName }}>
 				<DrawerContext.Provider value={drawer}>
 					<NavigationStateContext.Provider value={navigation}>
 						<ScreenTitleContext.Provider value={titles}>
@@ -116,7 +117,6 @@ const CanvasColorContext = createContext<ThemeColor>(undefined)
 
 export interface FrameSidebarProps {
 	children: ReactNode
-	brand?: ReactNode
 	/** The name of Menu and its tooltip, godmin's translated "Menu" when absent. */
 	menuLabel?: string
 	/** The name of the column's nav and of the drawer, godmin's translated "Admin" when absent. */
@@ -145,14 +145,33 @@ function SidebarFooter({ footer, footerNote }: Pick<FrameSidebarProps, 'footer' 
 }
 
 /**
+ * Renders the identity block heading the menu: the app name over the host the admin is served at, as plain text.
+ * @returns The identity block element.
+ */
+function SidebarIdentity() {
+	const { appName } = useContext(FrameContext)
+	return (
+		<div className="godmin-sidebar__identity">
+			{appName === undefined ? null : (
+				<Text variant="body-md" className="godmin-sidebar__name">
+					{appName}
+				</Text>
+			)}
+			<Text variant="body-sm" className="godmin-sidebar__address">
+				{siteAddress(window.location.host)}
+			</Text>
+		</div>
+	)
+}
+
+/**
  * Renders the admin nav, as a sidebar when there is room and as a top bar
- * with a drawer when there is not, its content above its footer in both.
- * @param props - The sidebar content, the brand, the menu button label, the nav name, the footer and its note.
+ * with a drawer when there is not, its identity block, content and footer in both.
+ * @param props - The sidebar content, the menu button label, the nav name, the footer and its note.
  * @returns The sidebar element.
  */
 function Sidebar({
 	children,
-	brand,
 	menuLabel = __('Menu'),
 	label = __('Admin'),
 	footer,
@@ -162,6 +181,7 @@ function Sidebar({
 	const drawer = useDrawer()
 	const content = (
 		<>
+			<SidebarIdentity />
 			<div className="godmin-sidebar__content">{children}</div>
 			<SidebarFooter footer={footer} footerNote={footerNote} />
 		</>
@@ -175,7 +195,7 @@ function Sidebar({
 	}
 	return (
 		<>
-			<TopBar brand={brand} menuLabel={menuLabel} />
+			<TopBar menuLabel={menuLabel} />
 			<SidebarDrawer drawer={drawer} label={label}>
 				{content}
 			</SidebarDrawer>
@@ -218,15 +238,14 @@ function SidebarDrawer({ drawer, label, children }: { drawer: DrawerState; label
 }
 
 /**
- * Renders the narrow viewport chrome of a frame with no bar: Menu, then the brand.
- * @param props - The brand and the name of Menu.
+ * Renders the narrow viewport chrome of a frame with no bar, Menu alone.
+ * @param props - The name of Menu.
  * @returns The top bar element.
  */
-function TopBar({ brand, menuLabel }: Required<Pick<FrameSidebarProps, 'menuLabel'>> & { brand?: ReactNode }) {
+function TopBar({ menuLabel }: Required<Pick<FrameSidebarProps, 'menuLabel'>>) {
 	return (
 		<div className="godmin-layout__topbar">
 			<Menu label={menuLabel} />
-			{brand}
 		</div>
 	)
 }

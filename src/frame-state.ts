@@ -14,6 +14,8 @@ export interface FrameState {
 	layout: HTMLElement | null
 	/** The moves the sidebar parts record, read by the drawer. */
 	navigation: NavigationState
+	/** The name of the app, which heads the menu and the drawer. */
+	appName: string | undefined
 }
 
 /** The frame a part sits in, a wide one with nothing recorded outside any Frame.Root. */
@@ -22,6 +24,7 @@ export const FrameContext = createContext<FrameState>({
 	location: undefined,
 	layout: null,
 	navigation: createNavigationState(),
+	appName: undefined,
 })
 
 /** The drawer that holds the sidebar below 782px, which Menu opens. */

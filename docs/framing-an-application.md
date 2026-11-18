@@ -32,7 +32,15 @@ you wrap one in a component of your own.
 `Frame.Sidebar` holds your menu.
 [The sidebar menu](#the-sidebar-menu) below builds one for you.
 [The frame](./design-system/layout.md#the-frame) gives the sidebar's
-width. Two props fill the bottom of the sidebar:
+width.
+
+The sidebar opens with the name of your app, the `appName` you give
+`Frame.Root`, over the host the admin is served at, such as
+example.com, as WordPress's new admin heads its menu. Both lines are
+plain text, never a heading or a link. With no `appName` the host shows
+alone. The menu scrolls under them, and they stay put.
+
+Two props fill the bottom of the sidebar:
 
 - `footer` sits under the menu and never moves, such as the account
   panel.
@@ -83,7 +91,6 @@ function Layout() {
 		<Frame.Root location={useFrameLocation()} shownPath={useShownPath()} appName="MyApp">
 			<Frame.Sidebar footer={<AccountPanel />}>
 				<Navigation
-					title="MyApp"
 					items={menu}
 					home={<Link to="/posts" />}
 					can={(capability) => can(user, capability)}
@@ -97,8 +104,8 @@ function Layout() {
 }
 ```
 
-- `title` is the title of the root screen, such as your app's name.
-- `items` are the rows of the root screen.
+- `items` are the rows of the root screen. The root screen has no
+  title of its own, since the name of your app heads the sidebar.
 - `home` is a link to the page your home address lands on. Back on a
   sub menu goes there.
 - `can` tells whether the reader holds a capability. See
@@ -106,7 +113,8 @@ function Layout() {
 
 `shownPath` and `appName` on `Frame.Root` make the frame speak the
 title of each new screen and set the browser tab title, as
-[routes and the frame](#routes-and-the-frame) says.
+[routes and the frame](#routes-and-the-frame) says. `appName` also
+heads the sidebar, as [the sidebar](#the-sidebar) says.
 
 Each row is a link with its icon, a glyph from `@wordpress/icons`,
 then its label. A row with no icon keeps a blank in its place when
@@ -269,16 +277,10 @@ when the reader opens another page. It stays open when a sub menu
 opens or Back closes one, so the reader can pick a row in it. On a
 phone a sub menu shows at once inside it, with no slide.
 
-Two `Frame.Sidebar` props exist for the top bar:
-
-- `brand` is a small element such as a home link, shown beside the
-  menu button. The top bar only exists on a small screen, so
-  `brand` is not rendered at all on a wide one. Do not make it a
-  heading. [Heading levels](./screens.md#heading-levels) says
-  which part draws each one.
-- `menuLabel` names Menu, the menu button, and its tooltip. It
-  defaults to "Menu", the word of WordPress's new admin and of its
-  admin bar on a phone.
+The top bar holds Menu alone, with no name of your app beside it, since
+the drawer opens with that name. `menuLabel` on `Frame.Sidebar` names
+Menu, the menu button, and its tooltip. It defaults to "Menu", the word
+of WordPress's new admin and of its admin bar on a phone.
 
 The widths are exported, so your own rules can change at the same
 points as the frame and as WordPress.
@@ -387,8 +389,9 @@ Two more props of `Frame.Root` tell the reader where they are:
   title of the new screen, as
   [what a screen reader hears when the screen changes](./design-system/frame.md#what-a-screen-reader-hears-when-the-screen-changes)
   says. Without it the frame speaks nothing.
-- `appName` is the name of your app. The frame sets the browser tab
-  title to the screen title and that name, as
+- `appName` is the name of your app. It heads the sidebar and the
+  drawer, as [the sidebar](#the-sidebar) says. The frame also sets the
+  browser tab title to the screen title and that name, as
   [the tab title](./design-system/frame.md#the-tab-title) says.
   Without it the frame leaves the tab title alone.
 

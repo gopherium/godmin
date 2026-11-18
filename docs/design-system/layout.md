@@ -18,8 +18,12 @@ wide screen it sets two areas side by side, with the names the
 WordPress Site Editor gives them:
 
 - The sidebar holds the menu. It is `--godmin-nav-sidebar-width`
-  (240px) wide and never shrinks. Its menu scrolls on its own, above a
-  footer that stays put.
+  (240px) wide and never shrinks. It opens with the identity block, the
+  name of your app over the host the admin is served at, 64px tall.
+  The block stays put, and the menu scrolls on its own under it, above
+  a footer that stays put. The rows of the root screen start 20px under
+  the block. The title row of a sub menu is 52px tall, with Back 24px
+  wide at 16px from the edge and the title at 48px.
 - The canvas shows the screen and takes the rest of the width.
   [The canvas](#the-canvas) gives its sizes.
 
@@ -32,12 +36,12 @@ Below `EDGE_BREAKPOINT` (782px) the frame turns into a column. A
 top bar takes the place of the sidebar, above the canvas:
 
 - The top bar is 46px tall. Menu, its menu button, fills a slot 52px
-  wide and 46px tall at its start, with square corners. The `brand`
-  you give `Frame.Sidebar` comes 8px after it. The bar keeps 16px free
-  at its end.
+  wide and 46px tall at its start, with square corners, and stands
+  alone in the bar.
 - Menu opens the drawer, a panel that slides in over the
   page from the start edge. [The drawer](./frame.md#the-drawer) gives
-  how it moves. It holds the same menu and footer as the sidebar. It
+  how it moves. It holds the same identity block, menu and footer as
+  the sidebar. It
   runs the full height the browser shows, `--godmin-nav-drawer-width`
   (300px) wide but never more than 85% of the window width. A dark
   backdrop dims the page under it.

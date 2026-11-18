@@ -103,8 +103,14 @@ test('draws the top bar 46px tall, as the WordPress admin bar is on a narrow scr
 	const bar = ruleOf('.godmin-layout__topbar')
 
 	expect(bar).toMatch(/block-size:\s*46px/)
-	expect(bar).toMatch(/padding-inline-end:\s*16px/)
 	expect(bar, 'the menu control fills the bar height').not.toMatch(/(?:^|\s)padding:/)
+})
+
+test('keeps no gap or end room in the top bar, since Menu stands alone in it with no brand', () => {
+	const bar = ruleOf('.godmin-layout__topbar')
+
+	expect(bar).not.toMatch(/(?:^|\s)gap:/)
+	expect(bar).not.toMatch(/padding-inline/)
 })
 
 test('fits Menu to its slot with no padding, no floor and square corners, so the WPDS button fills it', () => {

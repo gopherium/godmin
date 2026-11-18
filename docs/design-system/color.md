@@ -36,6 +36,7 @@ The [frame](./layout.md#the-frame) sets two themes. A theme is the set of token 
 | Canvas | `--wpds-color-background-surface-neutral-strong` |
 | Text | `--wpds-color-foreground-content-neutral` |
 | Muted text, such as the `footerNote` line of the sidebar | `--wpds-color-foreground-content-neutral-weak` |
+| Identity block of the menu | The app name in `--wpds-color-foreground-content-neutral`, the host under it in `--wpds-color-foreground-content-neutral-weak` |
 | Line between parts, such as above the sidebar footer | `--wpds-color-stroke-surface-neutral` |
 | Lighter line, such as under the page tabs or between the rows of a `godmin-table` | `--wpds-color-stroke-surface-neutral-weak` |
 | Sidebar row | `--wpds-color-foreground-interactive-neutral-weak`, and `--wpds-color-foreground-interactive-neutral-weak-active` under the pointer or with focus |
