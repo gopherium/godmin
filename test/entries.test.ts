@@ -223,6 +223,10 @@ test('the state the sidebar parts share reaches React alone, so the main entry m
 	expect([...packagesReachedFrom(join(source, 'navigation-state.ts'))]).toEqual(['react'])
 })
 
+test('the main entry hands out no sidebar breakpoint, since the frame folds at the edge breakpoint', () => {
+	expect(MainEntry).not.toHaveProperty('SIDEBAR_BREAKPOINT')
+})
+
 test('the main entry hands out the store of unsaved text, which reaches React alone', async () => {
 	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
 

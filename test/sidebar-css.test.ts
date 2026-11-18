@@ -5,9 +5,13 @@ import { expect, test } from 'vitest'
 import { blockOf, ruleOf } from './css-rules.js'
 import { DRAWER_BACKDROP, base, drawerModule } from './styles.js'
 
-test('names the sidebar width once, as the Site Editor names it, and sizes the sidebar with it', () => {
-	expect(ruleOf(':root')).toMatch(/--godmin-nav-sidebar-width:\s*300px/)
+test('names the sidebar width once, 240px as the new admin draws its menu, and sizes the sidebar with it', () => {
+	expect(ruleOf(':root')).toMatch(/--godmin-nav-sidebar-width:\s*240px/)
 	expect(ruleOf('.godmin-layout__sidebar')).toMatch(/(?:^|\s)width:\s*var\(--godmin-nav-sidebar-width\)/)
+})
+
+test('names the drawer width apart from the sidebar, 300px as the phone drawer keeps', () => {
+	expect(ruleOf(':root')).toMatch(/--godmin-nav-drawer-width:\s*300px/)
 })
 
 test('sets the canvas against the sidebar, parted by the screen wrapper and its scrollbar gutter', () => {
@@ -34,10 +38,10 @@ test('draws the sidebar and the drawer with no padding and no scroll of their ow
 	}
 })
 
-test('draws the drawer from the top as wide as the column, as the new admin draws its phone sidebar', () => {
+test('draws the drawer from the top at the drawer width, as the new admin draws its phone sidebar', () => {
 	const drawer = ruleOf('.godmin-layout__drawer')
 
-	expect(drawer).toMatch(/(?:^|\s)width:\s*var\(--godmin-nav-sidebar-width\);/)
+	expect(drawer).toMatch(/(?:^|\s)width:\s*var\(--godmin-nav-drawer-width\);/)
 	expect(drawer).toMatch(/max-width:\s*85vw;/)
 	expect(drawer).toMatch(/(?:^|\s)top:\s*0;/)
 })

@@ -125,7 +125,7 @@ test.each([782, 1280])('slides a sub menu in over 140ms at %ipx wide', async (wi
 	await expect.poll(() => wrapper().className).toBe(WRAPPER)
 })
 
-test('starts no slide when the window grows to 782px right after a drill at 781px', async () => {
+test('starts no slide as the sidebar takes over from the drawer at 782px right after a drill at 781px', async () => {
 	await renderAppAt(781)
 	await showSidebar()
 	const ended = slideEnded()
@@ -135,9 +135,10 @@ test('starts no slide when the window grows to 782px right after a drill at 781p
 	await page.viewport(782, 800)
 	await nextFrame()
 
+	expect(screen.queryByRole('dialog')).toBeNull()
+	expect(screen.getByRole('heading', { level: 1, name: 'Chats' })).not.toBeNull()
 	expect(wrapper().getAnimations()).toEqual([])
 	expect(wrapper().className).toBe(WRAPPER)
-	expect(screen.getByRole('dialog')).not.toBeNull()
 })
 
 /** Returns the open drawer. */

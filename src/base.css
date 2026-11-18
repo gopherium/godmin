@@ -148,7 +148,8 @@ body {
 
 @layer godmin {
 	:root {
-		--godmin-nav-sidebar-width: 300px;
+		--godmin-nav-sidebar-width: 240px;
+		--godmin-nav-drawer-width: 300px;
 		--godmin-canvas-margin: 16px;
 		--godmin-navigation-slide-distance: 50px;
 		--godmin-navigation-slide-duration: 140ms;
@@ -213,7 +214,7 @@ body {
 		top: 0;
 		display: flex;
 		flex-direction: column;
-		width: var(--godmin-nav-sidebar-width);
+		width: var(--godmin-nav-drawer-width);
 		max-width: 85vw;
 		padding: 0;
 		box-sizing: border-box;

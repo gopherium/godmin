@@ -38,18 +38,18 @@ const GAP = 24
 const DETAILS = 400
 
 /** The page width the frame leaves at the window the tests open on. */
-const ROOM = 916
+const ROOM = 976
 
 /** The page width the frame leaves on a phone. */
 const PHONE_ROOM = 358
 
 /** The page width the columns fold at, and the window that gives it. */
 const FOLD = 824
-const FOLD_WINDOW = 1188
+const FOLD_WINDOW = 1128
 
 /** The page width the columns fold at on a bleed canvas, and the window that gives it. */
 const BLEED_FOLD = 832
-const BLEED_WINDOW = 1148
+const BLEED_WINDOW = 1088
 
 /** The room a classic scrollbar takes from a line. */
 const BAR = 15
@@ -115,16 +115,14 @@ const HEAD = '.godmin-page__head'
 
 /** Where the columns sit at each window width, from the widest. */
 const FITS: Fit[] = [
-	{ width: 1920, room: 1556, beside: true },
-	{ width: 1280, room: 916, beside: true },
-	{ width: 1188, room: 824, beside: true },
-	{ width: 1187, room: 823, beside: false },
-	{ width: 1024, room: 660, beside: false },
-	{ width: 1023, room: 943, beside: true },
-	{ width: 904, room: 824, beside: true },
-	{ width: 903, room: 823, beside: false },
-	{ width: 783, room: 703, beside: false },
-	{ width: 782, room: 702, beside: false },
+	{ width: 1920, room: 1616, beside: true },
+	{ width: 1280, room: 976, beside: true },
+	{ width: 1128, room: 824, beside: true },
+	{ width: 1127, room: 823, beside: false },
+	{ width: 1024, room: 720, beside: false },
+	{ width: 1023, room: 719, beside: false },
+	{ width: 783, room: 479, beside: false },
+	{ width: 782, room: 478, beside: false },
 	{ width: 781, room: 733, beside: false },
 	{ width: 390, room: 358, beside: false },
 ]

@@ -18,7 +18,7 @@ wide screen it sets two areas side by side, with the names the
 WordPress Site Editor gives them:
 
 - The sidebar holds the menu. It is `--godmin-nav-sidebar-width`
-  (300px) wide and never shrinks. Its menu scrolls on its own, above a
+  (240px) wide and never shrinks. Its menu scrolls on its own, above a
   footer that stays put.
 - The canvas shows the screen and takes the rest of the width.
   [The canvas](#the-canvas) gives its sizes.
@@ -28,7 +28,7 @@ Render `Frame.Sidebar` and then `Frame.Canvas` straight inside
 its areas out in a row from the start edge, which is the left in
 English, so the sidebar sits at the start.
 
-Below `SIDEBAR_BREAKPOINT` (1024px) the frame turns into a column. A
+Below `EDGE_BREAKPOINT` (782px) the frame turns into a column. A
 top bar takes the place of the sidebar, above the canvas:
 
 - The top bar is 46px tall. Its menu button sits at its start, in a box
@@ -89,12 +89,11 @@ as wide. A rule for the screens below it asks for one pixel less, as
 | Export | Value | What changes below it |
 | --- | --- | --- |
 | `HUGE_BREAKPOINT` | `1440` | Nothing in the frame. It is the WordPress huge breakpoint, for rules of your own |
-| `SIDEBAR_BREAKPOINT` | `1024` | The sidebar becomes the top bar and the drawer |
-| `EDGE_BREAKPOINT` | `782` | The canvas meets the screen edges. It is the WordPress medium breakpoint. A wide list table freezes its checkbox and title only above this width, as [a wide table](./lists.md#a-wide-table) shows. A sub menu shows at once, with no slide, as [the sidebar slide](./frame.md#the-sidebar-slide) shows |
+| `EDGE_BREAKPOINT` | `782` | The sidebar becomes the top bar and the drawer, and the canvas meets the screen edges. It is the WordPress medium breakpoint. A wide list table freezes its checkbox and title only above this width, as [a wide table](./lists.md#a-wide-table) shows. A sub menu shows at once, with no slide, as [the sidebar slide](./frame.md#the-sidebar-slide) shows |
 | `DENSE_BREAKPOINT` | `640` | The canvas side gutter narrows to 16px. A list from `useListView` takes its phone layout, as [the view in the address](../lists.md#the-view-in-the-address) shows. A table inside `godmin-table-scroll` scrolls sideways, as [stylesheet helpers](../screens.md#stylesheet-helpers) shows |
 | `SHEET_BREAKPOINT` | `600` | Toasts widen to the screen, as [toasts](./toasts.md#size) show. It is the WordPress small breakpoint |
 | `TITLE_BREAKPOINT` | `404` | Nothing in the frame. The WordPress editor drops the document title from its header here, for an editor header of your own |
-| `SMALL_VIEWPORT` | `(max-width: 1023px)` | The media query the frame folds its sidebar at |
+| `SMALL_VIEWPORT` | `(max-width: 781px)` | The media query every part of the frame folds at |
 
 [What happens on a small screen](../framing-an-application.md#what-happens-on-a-small-screen)
 shows `useMediaQuery`, which checks a media query from your own
