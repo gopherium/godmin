@@ -37,9 +37,9 @@ top bar takes the place of the sidebar, above the canvas:
 - The menu button opens the drawer, a panel that slides in over the
   page from the start edge. [The drawer](./frame.md#the-drawer) gives
   how it moves. It holds the same menu and footer as the sidebar. It
-  runs the full height the browser shows, as wide as the sidebar but
-  never more than 85% of the window width. A dark backdrop dims the
-  page under it.
+  runs the full height the browser shows, `--godmin-nav-drawer-width`
+  (300px) wide but never more than 85% of the window width. A dark
+  backdrop dims the page under it.
   [Raw colors on purpose](./color.md#raw-colors-on-purpose) gives its
   color.
 
@@ -125,9 +125,10 @@ adds or subtracts two of them, such as
 for a 20px gap.
 
 The frame's own sizes are plain pixels, not tokens. They are the
-sidebar width, the canvas margin, the side gutter and the top bar.
-The sidebar menu sets most of its spacing in plain pixels too. The
-first three sizes have custom properties of their own, which
+sidebar width, the drawer width, the canvas margin, the side gutter
+and the top bar. The sidebar menu sets most of its spacing in plain
+pixels too. The first four sizes have custom properties of their own,
+which
 [public custom properties](./custom-properties.md#public-custom-properties)
 lists.
 

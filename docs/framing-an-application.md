@@ -244,8 +244,9 @@ that margin and when the canvas leaves it out.
 
 ## What happens on a small screen
 
-As the screen gets narrower, the frame changes three times, at the
-widths [Breakpoints](./design-system/layout.md#breakpoints) lists:
+As the screen gets narrower, the frame changes at two of the widths
+[Breakpoints](./design-system/layout.md#breakpoints) lists. Below
+`EDGE_BREAKPOINT` two things happen together:
 
 - The sidebar goes away. In its place you get a top bar, like the
   WordPress admin bar on a phone. Its menu button opens the same
@@ -253,7 +254,8 @@ widths [Breakpoints](./design-system/layout.md#breakpoints) lists:
 - The canvas stretches to the screen edges, with no margin, no
   rounded corners and no shadow, the way a WordPress admin page meets
   a small screen.
-- The canvas also uses tighter padding.
+
+Below `DENSE_BREAKPOINT` the canvas also uses tighter padding.
 
 [The frame](./design-system/layout.md#the-frame) gives the sizes of
 the top bar and the drawer, and

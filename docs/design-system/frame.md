@@ -60,7 +60,7 @@ shows how.
 
 ## The drawer
 
-Below `SIDEBAR_BREAKPOINT` (1024px) the sidebar folds into a drawer,
+Below `EDGE_BREAKPOINT` (782px) the sidebar folds into a drawer,
 a panel that the menu button of the top bar opens.
 [The frame](./layout.md#the-frame) gives its size.
 

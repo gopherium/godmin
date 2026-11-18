@@ -15,7 +15,7 @@ to change. The internal ones are not yours to read or change.
 
 The canvas is the panel that shows the current screen.
 [The frame](./layout.md#the-frame) and [the canvas](./layout.md#the-canvas)
-give the four sizes below, and
+give the five sizes below, and
 [the sidebar slide](./frame.md#the-sidebar-slide) gives the two slide
 values. This table says where each one is set and what it changes.
 
@@ -33,7 +33,7 @@ values. This table says where each one is set and what it changes.
 
 A value set on `:root` reaches every element on the page.
 
-To change one of the four on `:root`, write a plain rule in your own
+To change one of the five on `:root`, write a plain rule in your own
 stylesheet. For example, a wider sidebar:
 
 ```css
@@ -42,7 +42,8 @@ stylesheet. For example, a wider sidebar:
 
 Your rule wins over godmin's, as
 [changing the page appearance](../overview.md#changing-the-page-appearance)
-explains. The sidebar and the drawer both follow it.
+explains. The drawer keeps its own width, which
+`--godmin-nav-drawer-width` changes the same way.
 
 The canvas sets its two gutters on itself. So a gutter set on `:root`
 changes nothing inside the canvas. Read them inside the canvas, for
