@@ -71,13 +71,11 @@ test('sets the backdrop opacity @wordpress/ui fades its black backdrop to, so th
 	expect(backdrop).toContain('opacity:calc(var(--backdrop-opacity)*(1 - var(--drawer-swipe-progress)))')
 })
 
-test('keeps the menu button the 52 by 46 box of the top bar, its 24px glyph in the middle', () => {
+test('keeps Menu the 52 by 46 box of the top bar, the slot of the WordPress phone admin bar', () => {
 	const menu = ruleOf('.godmin-layout__menu')
 
-	expect(menu).toMatch(/inline-size:\s*52px;/)
-	expect(menu).toMatch(/block-size:\s*46px;/)
-	expect(menu).toMatch(/align-items:\s*center;/)
-	expect(menu).toMatch(/justify-content:\s*center;/)
+	expect(menu).toMatch(/(?:^|\s)inline-size:\s*52px;/)
+	expect(menu).toMatch(/(?:^|\s)block-size:\s*46px;/)
 })
 
 test('paints the drawer with the sidebar column fill, the fill of the sticky title row and screen footer', () => {

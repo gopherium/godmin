@@ -276,8 +276,9 @@ Two `Frame.Sidebar` props exist for the top bar:
   `brand` is not rendered at all on a wide one. Do not make it a
   heading. [Heading levels](./screens.md#heading-levels) says
   which part draws each one.
-- `menuLabel` is the name of the menu button. It defaults to "Open
-  navigation panel", WordPress's words.
+- `menuLabel` names Menu, the menu button, and its tooltip. It
+  defaults to "Menu", the word of WordPress's new admin and of its
+  admin bar on a phone.
 
 The widths are exported, so your own rules can change at the same
 points as the frame and as WordPress.
@@ -293,7 +294,7 @@ const sheet = useMediaQuery(`(max-width: ${SHEET_BREAKPOINT - 1}px)`)
 ## godmin's own words
 
 The frame and the sidebar draw a few words of their own: "Admin",
-"Back", "Open navigation panel" and "Close navigation panel".
+"Back", "Menu" and "Close navigation panel".
 The last one names a close button at the end of the drawer, which
 only a screen reader meets. `ListNoResults` draws two more: "No
 results found" and the line under it, "Try adjusting your search or
@@ -331,8 +332,10 @@ grey a step lighter.
 
 Dialogs, drawers, menus, popovers and selects you open inside the
 frame do not take these colors. They use the `AdminRoot` color
-instead. Tooltips still follow the frame colors. The navigation
-drawer is an exception and keeps `chromeColor`.
+instead. The navigation drawer is an exception and keeps
+`chromeColor`. So does the tooltip of Menu, which paints in the
+chrome surface and text colors. A tooltip inside the canvas keeps the
+dark color WordPress gives every tooltip.
 
 ## Two canvas modes
 

@@ -161,6 +161,8 @@ body {
 		background: var(--wpds-color-background-surface-neutral-weak);
 		color: var(--wpds-color-foreground-content-neutral);
 		--wp-ui-drawer-z-index: 2;
+		--godmin-bar-tip-background: var(--wpds-color-background-surface-neutral-strong);
+		--godmin-bar-tip-foreground: var(--wpds-color-foreground-content-neutral);
 	}
 
 	.godmin-layout--small {
@@ -187,27 +189,19 @@ body {
 	}
 
 	.godmin-layout__menu {
-		display: flex;
+		--wp-ui-button-padding-inline: 0px;
+		--wp-ui-button-padding-block: 0px;
+		--wp-ui-button-min-width: unset;
 		flex: none;
-		align-items: center;
-		justify-content: center;
 		inline-size: 52px;
 		block-size: 46px;
-		padding: 0;
-		border: 0;
-		background: none;
-		color: var(--wpds-color-foreground-content-neutral);
-		cursor: var(--wpds-cursor-control);
-	}
-
-	.godmin-layout__menu:is(:hover, :focus-visible) {
-		background: var(--wpds-color-background-interactive-neutral-weak-active);
-		color: var(--wpds-color-foreground-interactive-brand);
-	}
-
-	.godmin-layout__menu:focus-visible {
-		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		border-radius: 0;
 		outline-offset: calc(-1 * var(--wpds-border-width-focus));
+	}
+
+	.godmin-bar__tip {
+		background-color: var(--godmin-bar-tip-background);
+		color: var(--godmin-bar-tip-foreground);
 	}
 
 	.godmin-layout__drawer {

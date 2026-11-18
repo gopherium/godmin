@@ -201,12 +201,12 @@ const WORDPRESS_SIDEBAR_WORDS: Record<string, Record<string, string>> = {
 	'es-ES': {
 		Back: 'Volver',
 		'Close navigation panel': 'Cerrar el panel de navegación',
-		'Open navigation panel': 'Abrir el panel de navegación',
+		Menu: 'Menú',
 	},
 	'fr-FR': {
 		Back: 'Retour',
 		'Close navigation panel': 'Fermer le panneau de navigation',
-		'Open navigation panel': 'Ouvrir le panneau de navigation',
+		Menu: 'Menu',
 	},
 }
 
@@ -557,10 +557,8 @@ test('ships the words a WordPress dialog, its buttons and its close icon speak, 
 	}
 })
 
-test('reads Admin, Back and the open and close panel words from the sidebar parts that speak them', () => {
-	expect(new Set(SIDEBAR_MESSAGES.map(keyOf))).toEqual(
-		new Set(['Admin', 'Back', 'Close navigation panel', 'Open navigation panel']),
-	)
+test('reads Admin, Back, Menu and the close panel words from the sidebar parts that speak them', () => {
+	expect(new Set(SIDEBAR_MESSAGES.map(keyOf))).toEqual(new Set(['Admin', 'Back', 'Close navigation panel', 'Menu']))
 })
 
 test('words the sidebar parts as the WordPress Spanish and French catalogues do', () => {

@@ -29,7 +29,10 @@ with Tab, and Enter presses the control that holds it. godmin draws
 its own rings only when the reader uses the keyboard, the state CSS
 calls `:focus-visible`. A mouse click draws none of them. A checkbox
 or a button from `@wordpress/components` draws WordPress's own focus
-style on any focus, a mouse click included.
+style on any focus, a mouse click included. Menu, the menu button of
+the top bar, is a WPDS button and rings the WPDS way, on any focus
+except while it is pressed. So a browser that focuses a button on a
+click leaves Menu ringed after one.
 
 Except on a toast and a list region, every ring godmin draws is the
 same line,
@@ -44,7 +47,7 @@ same line,
 | Part | Where the ring sits |
 | --- | --- |
 | A sidebar row, and Back on a sidebar screen | Outside the part, as far out as the ring is wide. A row's ring paints over the row below it |
-| The menu button of the top bar | Inside the button |
+| Menu, the menu button of the top bar | Inside its slot, as far in as the ring is wide |
 | The title link of a `godmin-table`, a `godmin-table-scroll` box and a row of `RepeatRows` | 2px outside the part |
 | A page tab | Around its label, not around the whole height of the tab |
 | A toast | Its own rings, as [keyboard](./toasts.md#keyboard) on the toasts page shows. A plain toast keeps the browser's ring too |
@@ -68,8 +71,9 @@ sidebar moves focus in these cases only:
 | --- | --- |
 | Opens a sub menu with a drilldown row | Back. On a screen with no Back, the first control the Tab key reaches. On a screen with no control, the screen itself, so focus stays in the sidebar |
 | Presses Back | The drilldown row that opened the sub menu, even after the reader opened pages inside it. When that row is gone, or the sub menu opened another way, the first control of the screen Back lands on |
-| Opens a page with any other link | Nowhere. The sidebar moves no focus |
-| Closes the drawer with Escape or its close button | The menu button |
+| Opens a page with any other link | Nowhere. The sidebar moves no focus, and a drawer it closes gives the focus back to nothing |
+| Closes the drawer with Escape, its close button or a tap on the backdrop | Menu. After a tap, Chrome on Android and Samsung Internet give it back to nothing |
+| Widens the window to `EDGE_BREAKPOINT` or more with the drawer open | Nowhere. The drawer shuts and the sidebar takes its place |
 
 The title of a sidebar screen never takes focus. A move to another
 screen moves no focus either. A screen reader hears the new screen's

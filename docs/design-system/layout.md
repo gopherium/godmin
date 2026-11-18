@@ -31,10 +31,11 @@ English, so the sidebar sits at the start.
 Below `EDGE_BREAKPOINT` (782px) the frame turns into a column. A
 top bar takes the place of the sidebar, above the canvas:
 
-- The top bar is 46px tall. Its menu button sits at its start, in a box
-  52px wide and 46px tall. The `brand` you give `Frame.Sidebar` comes
-  8px after the button. The bar keeps 16px free at its end.
-- The menu button opens the drawer, a panel that slides in over the
+- The top bar is 46px tall. Menu, its menu button, fills a slot 52px
+  wide and 46px tall at its start, with square corners. The `brand`
+  you give `Frame.Sidebar` comes 8px after it. The bar keeps 16px free
+  at its end.
+- Menu opens the drawer, a panel that slides in over the
   page from the start edge. [The drawer](./frame.md#the-drawer) gives
   how it moves. It holds the same menu and footer as the sidebar. It
   runs the full height the browser shows, `--godmin-nav-drawer-width`
@@ -136,8 +137,8 @@ lists.
 
 In a right-to-left language, such as Arabic or Hebrew, text starts at
 the right. The sidebar then sits at the right edge, and the canvas
-drops its margin on that side. In the top bar, the menu button sits
-at the right end.
+drops its margin on that side. In the top bar, Menu sits at the
+right end.
 
 Where a margin, a padding or a position differs between the two sides,
 godmin's stylesheet sets it with a logical property. A logical
@@ -153,7 +154,7 @@ text, turns it. That covers
 [the sidebar slide](./frame.md#the-sidebar-slide), the shadow of the
 drawer, the fade on the page tabs where a tab is cut off, and the
 edge line of a pinned actions column in a `godmin-table`. The drawer
-itself opens at the right edge, under the menu button, as
+itself opens at the right edge, over Menu, as
 [the drawer](./frame.md#the-drawer) says.
 
 Chevrons turn around too. A row that opens a sub menu ends in a

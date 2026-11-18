@@ -107,26 +107,37 @@ test('draws the top bar 46px tall, as the WordPress admin bar is on a narrow scr
 	expect(bar, 'the menu control fills the bar height').not.toMatch(/(?:^|\s)padding:/)
 })
 
-test('draws the menu control bare like the new admin menu toggle, its glyph the full chrome text colour', () => {
+test('fits Menu to its slot with no padding, no floor and square corners, so the WPDS button fills it', () => {
 	const menu = ruleOf('.godmin-layout__menu')
 
-	expect(menu).toMatch(/display:\s*flex/)
-	expect(menu).toMatch(/flex:\s*none/)
-	expect(menu).toMatch(/padding:\s*0/)
-	expect(menu).toMatch(/border:\s*0/)
-	expect(menu).toMatch(/background:\s*none/)
-	expect(menu).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-content-neutral\);/)
-	expect(menu).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
+	expect(menu).toMatch(/(?:^|\s)flex:\s*none;/)
+	expect(menu).toMatch(/--wp-ui-button-padding-inline:\s*0px;/)
+	expect(menu).toMatch(/--wp-ui-button-padding-block:\s*0px;/)
+	expect(menu).toMatch(/--wp-ui-button-min-width:\s*unset;/)
+	expect(menu).toMatch(/border-radius:\s*0;/)
 })
 
-test('lights the menu control under the pointer or the keyboard, as the admin bar does', () => {
-	const lit = ruleOf('.godmin-layout__menu:is(:hover, :focus-visible)')
+test('leaves the colours of Menu to the WPDS minimal neutral button, with no state rule of its own', () => {
+	expect(ruleOf('.godmin-layout__menu')).not.toMatch(/(?:^|\s)(?:color|background|border|cursor|display):/)
+	expect(base).not.toMatch(/\.godmin-layout__menu:/)
+})
 
-	expect(lit).toMatch(/background:\s*var\(--wpds-color-background-interactive-neutral-weak-active\)/)
-	expect(lit).toMatch(/color:\s*var\(--wpds-color-foreground-interactive-brand\)/)
-	expect(ruleOf('.godmin-layout__menu:focus-visible')).toMatch(
-		/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\)/,
-	)
+test('rings Menu inside its slot by the width of the ring, on any focus but a press as WPDS rings it', () => {
+	const menu = ruleOf('.godmin-layout__menu')
+
+	expect(menu).toMatch(/outline-offset:\s*calc\(-1 \* var\(--wpds-border-width-focus\)\);/)
+	expect(menu).not.toMatch(/(?:^|\s)outline:/)
+})
+
+test('maps the tooltips of the frame to the chrome surface and text, which the frame theme resolves', () => {
+	const frame = ruleOf('.godmin-layout')
+	const tip = ruleOf('.godmin-bar__tip')
+
+	expect(frame).toMatch(/--godmin-bar-tip-background:\s*var\(--wpds-color-background-surface-neutral-strong\);/)
+	expect(frame).toMatch(/--godmin-bar-tip-foreground:\s*var\(--wpds-color-foreground-content-neutral\);/)
+	expect(tip).toMatch(/background-color:\s*var\(--godmin-bar-tip-background\);/)
+	expect(tip).toMatch(/(?:^|\s)color:\s*var\(--godmin-bar-tip-foreground\);/)
+	expect(tip).not.toMatch(/--wpds-/)
 })
 
 test('narrows the canvas gutter to 16px below 640px and lets the gutter alone set the padding', () => {

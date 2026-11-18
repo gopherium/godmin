@@ -40,7 +40,8 @@ The [frame](./layout.md#the-frame) sets two themes. A theme is the set of token 
 | Lighter line, such as under the page tabs or between the rows of a `godmin-table` | `--wpds-color-stroke-surface-neutral-weak` |
 | Sidebar row | `--wpds-color-foreground-interactive-neutral-weak`, and `--wpds-color-foreground-interactive-neutral-weak-active` under the pointer or with focus |
 | Current sidebar row | `--wpds-color-foreground-interactive-neutral-weak-active` on `--wpds-color-background-interactive-neutral-weak-active` |
-| Menu button of the top bar | `--wpds-color-foreground-content-neutral`, and `--wpds-color-foreground-interactive-brand` on `--wpds-color-background-interactive-neutral-weak-active` under the pointer or with keyboard focus |
+| Menu, the menu button of the top bar | A WPDS minimal neutral button: `--wpds-color-foreground-interactive-neutral` on `--wpds-color-background-interactive-neutral-weak`, which is clear, and `--wpds-color-foreground-interactive-neutral-active` on `--wpds-color-background-interactive-neutral-weak-active` under the pointer, while pressed and with any focus |
+| Tooltip of Menu | `--wpds-color-foreground-content-neutral` on `--wpds-color-background-surface-neutral-strong`, read in the chrome theme |
 | Focus ring | `--wpds-color-stroke-focus` |
 | Count pill | a `--wpds-color-foreground-interactive-neutral-strong` digit on `--wpds-color-background-thumb-brand` |
 

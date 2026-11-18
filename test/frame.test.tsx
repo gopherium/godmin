@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { userEvent } from '@testing-library/user-event'
 import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
-import { Icon, menu } from '@wordpress/icons'
+import { Dialog } from '@wordpress/ui'
 import type { ReactNode } from 'react'
-import { afterEach, expect, test } from 'vitest'
+import { afterEach, expect, onTestFinished, test, vi } from 'vitest'
 
 import { Frame } from '../src/frame.js'
 import type { CanvasMode } from '../src/frame.js'
@@ -82,32 +82,10 @@ test('replaces the sidebar with a menu button on a narrow viewport', () => {
 	expect(screen.queryByRole('navigation', { name: 'Sections' })).toBeNull()
 })
 
-test('draws the menu button glyph as the new admin draws its toggle, the WordPress menu icon at 24px', () => {
-	const drawn = render(<Icon icon={menu} />)
-	const wordpress = drawn.container.innerHTML
-	drawn.unmount()
-	setViewport({ matches: true })
-	renderFrame()
-
-	const button = screen.getByRole('button', { name: 'Open navigation' })
-	expect(button.classList.contains('godmin-layout__menu')).toBe(true)
-	expect(button.innerHTML).toBe(wordpress)
-	expect(button.querySelector('svg')?.getAttribute('width')).toBe('24')
-})
-
-test('hides the menu glyph from assistive technology, since the button name says it', () => {
-	setViewport({ matches: true })
-	renderFrame()
-
-	const glyph = screen.getByRole('button', { name: 'Open navigation' }).querySelector('svg')
-	expect(glyph?.getAttribute('aria-hidden')).toBe('true')
-	expect(glyph?.getAttribute('focusable')).toBe('false')
-})
-
-test('names the menu button Open navigation panel and the drawer Admin, as the new admin names its menu', async () => {
+test('names the menu button Menu and the drawer Admin, as the new admin names them', async () => {
 	renderUnnamedMenu()
 
-	fireEvent.click(screen.getByRole('button', { name: 'Open navigation panel' }))
+	fireEvent.click(screen.getByRole('button', { name: 'Menu' }))
 
 	expect(await screen.findByRole('dialog', { name: 'Admin' })).not.toBeNull()
 })
@@ -116,7 +94,7 @@ test('names the menu button and the drawer in the reader language from the words
 	setLocaleData(spanish)
 	renderUnnamedMenu()
 
-	fireEvent.click(screen.getByRole('button', { name: 'Abrir el panel de navegación' }))
+	fireEvent.click(screen.getByRole('button', { name: 'Menú' }))
 
 	expect(await screen.findByRole('dialog', { name: 'Administración' })).not.toBeNull()
 })
@@ -654,6 +632,72 @@ test.each([CLOSE_WAYS.escape, CLOSE_WAYS.button])(
 	},
 )
 
+test('gives the focus back to nothing once a page picked in the drawer closes it', async () => {
+	await openDrawerAt('/posts')
+
+	await clickLink('Pages')
+
+	expect(await screen.findByText('Pages page')).not.toBeNull()
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	expect(document.activeElement).toBe(document.body)
+})
+
+test('gives the focus back to the menu button when the reader closes a drawer reopened after a page pick', async () => {
+	await openDrawerAt('/posts')
+	await clickLink('Pages')
+	await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+	fireEvent.click(screen.getByRole('button', { name: 'Open navigation' }))
+	await screen.findByRole('dialog')
+
+	await CLOSE_WAYS.escape[1]()
+
+	await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Open navigation' })))
+})
+
+test('shuts the drawer on a widen past 781px, so it is still shut once the window narrows again', async () => {
+	await openDrawerAt('/posts')
+
+	act(() => setViewport({ matches: false }))
+	act(() => setViewport({ matches: true }))
+
+	expect(screen.getByRole('button', { name: 'Open navigation' }).getAttribute('aria-expanded')).toBe('false')
+	expect(screen.queryByRole('dialog')).toBeNull()
+})
+
+test('leaves no scroll lock and nothing inert after a widen past 781px with the drawer open', async () => {
+	await openDrawerAt('/posts')
+
+	act(() => setViewport({ matches: false }))
+
+	await waitFor(() => expect(document.querySelector('[data-base-ui-inert], [inert]')).toBeNull())
+	expect(document.documentElement.style.overflow).toBe('')
+	expect(document.body.style.overflow).toBe('')
+	expect(screen.getByRole('navigation', { name: 'Admin' })).not.toBeNull()
+})
+
+test.each([
+	['a narrow', true],
+	['a wide', false],
+])('keeps the backdrop of a canvas dialog on %s viewport, outside the root of the drawer', (_width, matches) => {
+	setViewport({ matches })
+	renderAdmin(
+		<Frame.Root>
+			<Frame.Sidebar>
+				<nav aria-label="Sections" />
+			</Frame.Sidebar>
+			<Frame.Canvas>
+				<Dialog.Root defaultOpen>
+					<Dialog.Popup>
+						<Dialog.Title>Rename</Dialog.Title>
+					</Dialog.Popup>
+				</Dialog.Root>
+			</Frame.Canvas>
+		</Frame.Root>,
+	)
+
+	expect(screen.getByTestId('dialog-backdrop')).not.toBeNull()
+})
+
 test('ends the drawer with a close button out of sight and out of the tab order, as the backdrop is', async () => {
 	await openDrawerAt('/posts')
 
@@ -669,7 +713,7 @@ test('names the close button in the reader language from the words godmin ships'
 	setLocaleData(spanish)
 	renderUnnamedMenu()
 
-	fireEvent.click(screen.getByRole('button', { name: 'Abrir el panel de navegación' }))
+	fireEvent.click(screen.getByRole('button', { name: 'Menú' }))
 
 	expect(await screen.findByRole('button', { name: 'Cerrar el panel de navegación' })).not.toBeNull()
 })
@@ -730,6 +774,21 @@ test('reads a page turned right to left after the first render once the menu but
 	expect((await screen.findByRole('dialog')).getAttribute('data-swipe-direction')).toBe('right')
 })
 
+test('tells an app it drew the sidebar outside a Frame.Root rather than failing silently', () => {
+	const quiet = vi.spyOn(console, 'error').mockImplementation(() => {})
+	onTestFinished(() => {
+		quiet.mockRestore()
+	})
+
+	expect(() =>
+		renderAdmin(
+			<Frame.Sidebar>
+				<nav aria-label="Sections" />
+			</Frame.Sidebar>,
+		),
+	).toThrow('Frame.Sidebar must sit inside a Frame.Root, which holds its drawer.')
+})
+
 test('collapses the sidebar region when a screen renders none', () => {
 	renderAdmin(
 		<Frame.Root>
@@ -740,5 +799,5 @@ test('collapses the sidebar region when a screen renders none', () => {
 	)
 
 	expect(screen.getByRole('main')).not.toBeNull()
-	expect(screen.queryByRole('button', { name: /open/i })).toBeNull()
+	expect(screen.queryByRole('button')).toBeNull()
 })

@@ -56,6 +56,9 @@ do not read or set them in your app.
 
 - `--godmin-menu-count-size` sizes the count `MenuCount` draws. It is
   set on the count itself.
+- `--godmin-bar-tip-background` and `--godmin-bar-tip-foreground` hold
+  the chrome surface and text colors the tooltip of Menu paints with.
+  They are set on the frame, so they take the chrome theme's values.
 - `--godmin-page-tabs-start`, `--godmin-page-tabs-end`,
   `--godmin-page-tabs-fade-width`, `--godmin-page-tabs-fade` and
   `--godmin-page-tabs-fade-both` fade an end of a `PageTabs` row where

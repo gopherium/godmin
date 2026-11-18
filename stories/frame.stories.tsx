@@ -202,7 +202,7 @@ const PHONE = onlyAt('phone')
 /** Opens the drawer of the phone frame on the settings sub menu and waits until it rests, then returns it. */
 async function openDrawer({ canvasElement, userEvent }: PlayContext): Promise<HTMLElement> {
 	await shows(canvasElement, 'General settings')
-	await userEvent.click(within(canvasElement).getByRole('button', { name: 'Open navigation panel' }))
+	await userEvent.click(within(canvasElement).getByRole('button', { name: 'Menu' }))
 	const drawer = await within(canvasElement).findByRole('dialog', {}, { timeout: WAIT })
 	await waitFor(() => expect(drawer).not.toHaveAttribute('data-starting-style'), { timeout: WAIT })
 	await settles()

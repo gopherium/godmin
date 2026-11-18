@@ -143,6 +143,10 @@ msgid "May"
 msgstr "Mai"
 
 #, fuzzy
+msgid "Menu"
+msgstr "Menu"
+
+#, fuzzy
 msgid "Mon"
 msgstr "Lun"
 
@@ -175,10 +179,6 @@ msgstr "Oct"
 #, fuzzy
 msgid "October"
 msgstr "octobre"
-
-#, fuzzy
-msgid "Open navigation panel"
-msgstr "Ouvrir le panneau de navigation"
 
 #, fuzzy
 msgid "PM"

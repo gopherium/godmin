@@ -61,7 +61,7 @@ shows how.
 ## The drawer
 
 Below `EDGE_BREAKPOINT` (782px) the sidebar folds into a drawer,
-a panel that the menu button of the top bar opens.
+a panel that Menu, the menu button of the top bar, opens.
 [The frame](./layout.md#the-frame) gives its size.
 
 - It slides in from the start edge over `--wpds-motion-duration-md`
@@ -77,16 +77,21 @@ a panel that the menu button of the top bar opens.
   strength, a number from 0.1 for a fast flick to 1 for a slow drag.
   So a flick ends in about 20ms, and a slow drag in 200ms at most.
 - In a right-to-left language the drawer opens at the right edge,
-  under the menu button, and leaves to the right. Its shadow turns to
+  over Menu, and leaves to the right. Its shadow turns to
   fall on its inner edge, as [elevation](./radius-and-elevation.md#elevation)
   gives. The drawer reads the direction from the `dir="rtl"` your app
   sets on the page, as the stylesheet does.
 - Escape and the close button close it while the focus is inside it,
-  and the focus goes back to the menu button. A tap on the backdrop
-  closes it too.
-- It closes when the reader opens another page. It stays open when a
-  drilldown row or Back changes the sidebar screen, so the reader can
-  pick a row in it.
+  and so does a tap on the backdrop. The focus then goes back to Menu.
+  After a tap, Chrome on Android and Samsung Internet give no focus
+  back, since they cannot move the focus without scrolling the page.
+- It closes when the reader opens another page, and gives the focus
+  back to nothing, so Menu is not left ringed on the new screen. It
+  stays open when a drilldown row or Back changes the sidebar screen,
+  so the reader can pick a row in it.
+- It shuts when the window widens to `EDGE_BREAKPOINT` or more, where
+  the sidebar takes its place, and it stays shut when the window
+  narrows again.
 - Inside the drawer a sub menu slides in on a window from
   `EDGE_BREAKPOINT` up, and shows at once on a narrower one, as
   [the sidebar slide](#the-sidebar-slide) says.
