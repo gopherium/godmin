@@ -227,7 +227,7 @@ godmin stylesheet then gets shorter or stops.
 
 ## Text length and language
 
-godmin draws a few words of its own, such as Back and Navigation, and
+godmin draws a few words of its own, such as Back and Admin, and
 translates them.
 [godmin's own words](../framing-an-application.md#godmins-own-words)
 lists them and the languages they ship in. The props `label`,
