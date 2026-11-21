@@ -116,20 +116,13 @@ export function NavigationItem<
 	const router = useRouter()
 	const address = link as LinkComponentProps
 	const routes = findRowRoutes(router, address)
-	if (suffix === undefined) {
-		return (
-			<Row link={address} routes={routes} icon={icon} className={ROW_CLASS}>
-				{children}
-			</Row>
-		)
-	}
 	return (
 		<Row
 			link={address}
 			routes={routes}
 			icon={icon}
-			className={`${ROW_CLASS} ${ROW_CLASS}--with-suffix`}
-			end={<RowSuffix>{suffix}</RowSuffix>}
+			className={ROW_CLASS}
+			end={suffix === undefined ? undefined : <RowSuffix>{suffix}</RowSuffix>}
 		>
 			{children}
 		</Row>

@@ -14,12 +14,11 @@ test('names the drawer width apart from the sidebar, 300px as the phone drawer k
 	expect(ruleOf(':root')).toMatch(/--godmin-nav-drawer-width:\s*300px/)
 })
 
-test('sets the canvas against the sidebar, parted by the screen wrapper and its scrollbar gutter', () => {
+test('sets the canvas against the sidebar, parted by the 12px the screen wrapper keeps at each side', () => {
 	expect(ruleOf('.godmin-layout:has(> .godmin-layout__sidebar) .godmin-layout__canvas')).toMatch(
 		/margin-inline-start:\s*0;/,
 	)
 	expect(ruleOf('.godmin-navigation__screen-wrapper')).toMatch(/(?:^|\s)padding:\s*0 12px;/)
-	expect(ruleOf('.godmin-navigation__screen-wrapper')).toMatch(/scrollbar-gutter:\s*stable;/)
 })
 
 test('keeps the canvas off the slide layer by stacking the sidebar over it, as the Site Editor does', () => {
@@ -135,41 +134,13 @@ test('lays the screen wrapper out as the Site Editor does: a full height column 
 	expect(wrapper).toMatch(/overflow-x:\s*auto;/)
 })
 
-test('takes the whole WordPress scrollbar look: thin, its thumb hidden at rest on the strong surface line', () => {
+test('scrolls the menu with the browser scrollbar as boot does: no thin bar, no gutter and no hidden thumb', () => {
 	const wrapper = ruleOf('.godmin-navigation__screen-wrapper')
-	const shown = 'var(--wpds-color-stroke-surface-neutral-strong) transparent'
 
-	expect(wrapper).toMatch(/scrollbar-width:\s*thin;/)
-	expect(wrapper).toMatch(/scrollbar-color:\s*transparent transparent;/)
-	expect(ruleOf('.godmin-navigation__screen-wrapper:is(:hover, :focus, :focus-within)')).toContain(
-		`scrollbar-color: ${shown};`,
-	)
-	expect(ruleOf('.godmin-navigation__screen-wrapper', blockOf('@media (hover: none)'))).toContain(
-		`scrollbar-color: ${shown};`,
-	)
-})
-
-test('takes the WebKit half of the WordPress scrollbar look: a 12px bar, its thumb rounded inside a 3px border', () => {
-	const bar = ruleOf('.godmin-navigation__screen-wrapper::-webkit-scrollbar')
-	const thumb = ruleOf('.godmin-navigation__screen-wrapper::-webkit-scrollbar-thumb')
-	const shown = ruleOf(
-		[
-			'.godmin-navigation__screen-wrapper:hover::-webkit-scrollbar-thumb',
-			'\t.godmin-navigation__screen-wrapper:focus::-webkit-scrollbar-thumb',
-			'\t.godmin-navigation__screen-wrapper:focus-within::-webkit-scrollbar-thumb',
-		].join(',\n'),
-	)
-
-	expect(bar).toMatch(/(?:^|\s)width:\s*12px;/)
-	expect(bar).toMatch(/(?:^|\s)height:\s*12px;/)
-	expect(ruleOf('.godmin-navigation__screen-wrapper::-webkit-scrollbar-track')).toMatch(
-		/background-color:\s*transparent;/,
-	)
-	expect(thumb).toMatch(/background-color:\s*transparent;/)
-	expect(thumb).toMatch(/border-radius:\s*8px;/)
-	expect(thumb).toMatch(/(?:^|\s)border:\s*3px solid transparent;/)
-	expect(thumb).toMatch(/background-clip:\s*padding-box;/)
-	expect(shown).toMatch(/background-color:\s*var\(--wpds-color-stroke-surface-neutral-strong\);/)
+	expect(wrapper).not.toMatch(/scrollbar/)
+	expect(base).not.toContain('.godmin-navigation__screen-wrapper::-webkit-scrollbar')
+	expect(base).not.toContain('.godmin-navigation__screen-wrapper:is(:hover, :focus, :focus-within)')
+	expect(base).not.toContain('.godmin-navigation__screen-wrapper:hover::-webkit-scrollbar-thumb')
 })
 
 test('names the slide distance and time once, 50px over 140ms as the Site Editor slides', () => {
@@ -380,13 +351,14 @@ test('draws a section label as the new admin does: bold, weak content colour, 4p
 	expect(label).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\);/)
 })
 
-test('draws a sidebar row as the Site Editor renders it: 12px sides on a 36px control line, 40px tall at least', () => {
+test('draws a sidebar row as boot does: 32px tall at least, 4px at each side, no border, 4px over the next row', () => {
 	const row = ruleOf('.godmin-navigation-item')
 
 	expect(row).toMatch(/box-sizing:\s*border-box;/)
-	expect(row).toMatch(/min-height:\s*40px;/)
-	expect(row).toMatch(/(?:^|\s)padding:\s*calc\(\(36px - 13px \* 1\.4 - 2px\) \/ 2\) 12px;/)
-	expect(row).toMatch(/(?:^|\s)border:\s*1px solid transparent;/)
+	expect(row).toMatch(/min-height:\s*32px;/)
+	expect(row).toMatch(/(?:^|\s)padding:\s*0 4px;/)
+	expect(row).toMatch(/(?:^|\s)border:\s*0;/)
+	expect(row).toMatch(/margin-block-end:\s*4px;/)
 	expect(row).toMatch(/border-radius:\s*var\(--wpds-border-radius-sm\);/)
 })
 
@@ -398,37 +370,37 @@ test('lays a sidebar row out as a centred row with the small gap between its ico
 	expect(row).toMatch(/(?:^|\s)gap:\s*var\(--wpds-dimension-gap-sm\);/)
 })
 
-test('sets a sidebar row in 13px text of the default weight on a normal line, with no underline', () => {
+test('sets a sidebar row in 13px text of the default weight on a 20px line, in the interactive neutral colour', () => {
 	const row = ruleOf('.godmin-navigation-item')
 
 	expect(row).toMatch(/font-size:\s*var\(--wpds-typography-font-size-md\);/)
 	expect(row).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-default\);/)
-	expect(row).toMatch(/line-height:\s*normal;/)
+	expect(row).toMatch(/line-height:\s*var\(--wpds-typography-line-height-sm\);/)
 	expect(row).toMatch(/text-decoration:\s*none;/)
-	expect(row).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-interactive-neutral-weak\);/)
+	expect(row).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-interactive-neutral\);/)
 })
 
-test('pads the end of a sidebar row with a suffix 16px, as the Site Editor pads a row with a count', () => {
-	expect(ruleOf('.godmin-navigation-item--with-suffix')).toMatch(/padding-inline-end:\s*16px;/)
+test('keeps the end of a row with a count 4px in like every row, as boot pads its rows', () => {
+	expect(base).not.toContain('--with-suffix')
 })
 
-test('brightens a sidebar row under the pointer or focus, with no fill and no transition', () => {
+test('turns a sidebar row the brand active colour under the pointer or focus, with no fill and no transition', () => {
 	const lit = ruleOf('.godmin-navigation-item:is(:hover, :focus)')
 
-	expect(lit).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-interactive-neutral-weak-active\);/)
+	expect(lit).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-interactive-brand-active\);/)
 	expect(lit).not.toMatch(/background|transition/)
 	expect(ruleOf('.godmin-navigation-item')).not.toMatch(/transition/)
 })
 
-test('fills the current sidebar row, brightens it and sets it at the emphasis weight', () => {
+test('marks the current sidebar row bold in the brand active colour with no fill, as boot does', () => {
 	const current = ruleOf(".godmin-navigation-item[aria-current='page']")
 
-	expect(current).toMatch(/background:\s*var\(--wpds-color-background-interactive-neutral-weak-active\);/)
-	expect(current).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-interactive-neutral-weak-active\);/)
+	expect(current).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-interactive-brand-active\);/)
 	expect(current).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\);/)
+	expect(current).not.toMatch(/background/)
 })
 
-test('rings a sidebar row with keyboard focus 2px outside it and paints the ring over the next row', () => {
+test('rings a sidebar row with keyboard focus 2px outside it, in the 4px gap to the next row', () => {
 	const focused = ruleOf('.godmin-navigation-item:focus-visible')
 
 	expect(focused).toMatch(/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\);/)
@@ -436,13 +408,25 @@ test('rings a sidebar row with keyboard focus 2px outside it and paints the ring
 	expect(focused).toMatch(/transform:\s*translateZ\(0\);/)
 })
 
-test('draws the row icon, its placeholder and the chevron 24px square, never shrinking, in the row colour', () => {
-	const glyphs = ruleOf('.godmin-navigation-item__icon,\n\t.godmin-navigation-item__drilldown-indicator')
+test('draws the row icon and its placeholder 24px square, never shrinking, in the row colour', () => {
+	const icon = ruleOf('.godmin-navigation-item__icon')
 
-	expect(glyphs).toMatch(/flex:\s*none;/)
-	expect(glyphs).toMatch(/inline-size:\s*24px;/)
-	expect(glyphs).toMatch(/block-size:\s*24px;/)
-	expect(glyphs).not.toMatch(/color|opacity|fill/)
+	expect(icon).toMatch(/flex:\s*none;/)
+	expect(icon).toMatch(/inline-size:\s*24px;/)
+	expect(icon).toMatch(/block-size:\s*24px;/)
+	expect(icon).not.toMatch(/color|opacity|fill|padding/)
+})
+
+test('pads the 24px chevron 4px into a 32px box, 8px from the row end, as boot pads its last glyph', () => {
+	const chevron = ruleOf('.godmin-navigation-item__drilldown-indicator')
+
+	expect(chevron).toMatch(/flex:\s*none;/)
+	expect(chevron).toMatch(/box-sizing:\s*content-box;/)
+	expect(chevron).toMatch(/inline-size:\s*24px;/)
+	expect(chevron).toMatch(/block-size:\s*24px;/)
+	expect(chevron).toMatch(/(?:^|\s)padding:\s*4px;/)
+	expect(chevron).not.toMatch(/color|opacity|fill/)
+	expect(base).not.toContain('.godmin-navigation-item__icon,\n\t.godmin-navigation-item__drilldown-indicator')
 })
 
 test('lets the row label take the free room and shrink, and keeps the suffix at its own width', () => {

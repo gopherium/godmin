@@ -171,7 +171,7 @@ test(
 		)
 
 		const row = screen.getByRole('link', { name: 'Posts 3 posts waiting' })
-		expect(row.className).toBe('godmin-navigation-item godmin-navigation-item--with-suffix')
+		expect(row.className).toBe('godmin-navigation-item')
 		expect(partsOf(row)).toEqual(['godmin-navigation-item__label', 'godmin-navigation-item__suffix'])
 		const badge = row.querySelector('.godmin-navigation-item__suffix .godmin-menu-count__badge') as Element
 		expect(badge.textContent).toBe('3')

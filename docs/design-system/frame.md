@@ -184,9 +184,10 @@ without the word WordPress at the end.
 
 ## The sidebar marks
 
-A sidebar row draws its highlight from `aria-current="page"`, the mark
-of the current page, as
+A sidebar row turns bold in the brand active colour, with no fill,
+from `aria-current="page"`, the mark of the current page, as
 [landmarks and names](./accessibility.md#landmarks-and-names) says.
+WordPress's new admin marks its current row the same way.
 
 - A plain row carries the mark on its own address and on every
   address under it.

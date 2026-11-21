@@ -26,7 +26,11 @@ WordPress Site Editor gives them:
   wide at 16px from the edge and the title at 48px. A menu section
   starts 16px under the row above it, so a menu that opens with one
   shows its first label 36px under the block. The label's text starts
-  16px from the edge, and its first row sits 4px under it.
+  16px from the edge, and its first row sits 4px under it. Each row is
+  at least 32px tall and 4px over the next, 12px in from each side, so
+  216px wide in the sidebar and 276px in the drawer. Its 24px icon
+  sits 16px from the edge and its label at 48px, as in WordPress's new
+  admin. The menu scrolls with the browser's own scrollbar.
 - The canvas shows the screen and takes the rest of the width.
   [The canvas](#the-canvas) gives its sizes.
 

@@ -99,7 +99,7 @@ test('marks the row of the current page and keeps it current on every address un
 	expect(screen.getByRole('link', { name: 'Posts' }).hasAttribute('aria-current')).toBe(false)
 })
 
-test('draws the icon, the label and the suffix in order, the suffix marked on the row', async () => {
+test('draws the icon, the label and the suffix in order, on a row with no mark of its own', async () => {
 	await renderRows(
 		'/profile',
 		<ul>
@@ -110,7 +110,7 @@ test('draws the icon, the label and the suffix in order, the suffix marked on th
 	)
 
 	const link = screen.getByRole('link', { name: 'Posts 3 posts waiting' })
-	expect(link.className).toBe('godmin-navigation-item godmin-navigation-item--with-suffix')
+	expect(link.className).toBe('godmin-navigation-item')
 	expect(partsOf('Posts 3 posts waiting')).toEqual([
 		'godmin-navigation-item__icon',
 		'godmin-navigation-item__label',

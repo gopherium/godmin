@@ -46,7 +46,7 @@ same line,
 
 | Part | Where the ring sits |
 | --- | --- |
-| A sidebar row, and Back on a sidebar screen | Outside the part, as far out as the ring is wide. A row's ring paints over the row below it |
+| A sidebar row, and Back on a sidebar screen | Outside the part, as far out as the ring is wide. A row's ring sits in the 4px gap to the next row |
 | Menu, the menu button of the top bar | Inside its slot, as far in as the ring is wide |
 | The title link of a `godmin-table`, a `godmin-table-scroll` box and a row of `RepeatRows` | 2px outside the part |
 | A page tab | Around its label, not around the whole height of the tab |
@@ -170,9 +170,9 @@ picture such as an icon, is never the name:
 - The initials avatar is hidden, because the name beside it already
   says who it is.
 
-The current page carries `aria-current="page"`. A sidebar row draws
-its highlight from that mark, so what the eye sees and what a screen
-reader hears always match. A drilldown row never carries it, as
+The current page carries `aria-current="page"`. A sidebar row turns
+bold from that mark, so what the eye sees and what a screen reader
+hears always match. A drilldown row never carries it, as
 [the sidebar marks](./frame.md#the-sidebar-marks) says. A page tab
 draws its underline from its
 `current` prop, which sets the same mark. A router link can set the

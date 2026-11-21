@@ -119,9 +119,8 @@ heads the sidebar, as [the sidebar](#the-sidebar) says.
 Each row is a link with its icon, a glyph from `@wordpress/icons`,
 then its label. A row with no icon keeps a blank in its place when
 other rows have one, so the labels line up. The row of the page on
-screen is highlighted, and it stays highlighted on every address
-under it, so Posts stays highlighted on `/posts/new`. A row that
-opens a sub menu never is, as
+screen is bold, and it stays bold on every address under it, so Posts
+stays bold on `/posts/new`. A row that opens a sub menu never is, as
 [the sidebar marks](./design-system/frame.md#the-sidebar-marks) says.
 
 `Navigation` needs a `Frame.Root` above it, which holds what the
