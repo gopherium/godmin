@@ -35,12 +35,12 @@ const WAIT = 3_000
 /** The line of the chevron that points right, the one Back draws in a right to left language. */
 const RIGHT_CHEVRON = 'M10 6.5L15 12L10 17.5'
 
-/** The rows of the root screen of the sample admin. */
+/** The rows of the root screen of the sample admin, in the sections of WordPress's new admin. */
 const ROWS: readonly MenuItem[] = [
-	{ label: 'Posts', to: '/posts', icon: post },
-	{ label: 'Pages', to: '/pages', icon: page },
-	{ label: 'Settings', to: '/settings/general', icon: settings },
-	{ label: 'Tools', to: '/tools', icon: tool },
+	{ label: 'Posts', to: '/posts', icon: post, group: 'content' },
+	{ label: 'Pages', to: '/pages', icon: page, group: 'content' },
+	{ label: 'Settings', to: '/settings/general', icon: settings, group: 'manage' },
+	{ label: 'Tools', to: '/tools', icon: tool, group: 'manage' },
 ]
 
 /** Renders a page beside the sidebar with a title and one line. */
