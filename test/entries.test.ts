@@ -261,6 +261,11 @@ test('the main entry hands out the list view types of the router entry, to type 
 	expectTypeOf<MainEntry.ListDefaults>().toEqualTypeOf<RouterEntry.ListDefaults>()
 })
 
+test('the router entry hands out the three sections a menu row may name, those of the new admin', () => {
+	expectTypeOf<RouterEntry.MenuGroup>().toEqualTypeOf<'content' | 'design' | 'manage'>()
+	expectTypeOf<RouterEntry.MenuItem['group']>().toEqualTypeOf<RouterEntry.MenuGroup | undefined>()
+})
+
 test('the router peer starts at a release whose route matching runs no route context', () => {
 	expect(manifest.peerDependencies['@tanstack/react-router']).toBe('^1.170.44')
 })
