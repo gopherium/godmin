@@ -183,7 +183,10 @@ to keep a router link from setting it.
 
 Some screen readers stop treating a list with no bullets as a list.
 So the sidebar rows, the page tabs and a log list keep
-`role="list"`.
+`role="list"`. Each section of the sidebar menu is a group named by
+its label, Content, Design or Manage, with its rows in a list of its
+own. So a screen reader says the section's name as the focus enters
+it, and its list of headings skips the label.
 
 ## What a screen reader hears
 

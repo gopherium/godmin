@@ -23,7 +23,10 @@ WordPress Site Editor gives them:
   The block stays put, and the menu scrolls on its own under it, above
   a footer that stays put. The rows of the root screen start 20px under
   the block. The title row of a sub menu is 52px tall, with Back 24px
-  wide at 16px from the edge and the title at 48px.
+  wide at 16px from the edge and the title at 48px. A menu section
+  starts 16px under the row above it, so a menu that opens with one
+  shows its first label 36px under the block. The label's text starts
+  16px from the edge, and its first row sits 4px under it.
 - The canvas shows the screen and takes the rest of the width.
   [The canvas](#the-canvas) gives its sizes.
 

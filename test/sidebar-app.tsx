@@ -93,8 +93,10 @@ export const laterModule = { default: laterScreen }
 export interface SidebarAppOptions {
 	/** The check the app hands Navigation, a reader who holds every capability when absent. */
 	can?: Can
-	/** The name the app gives the column region. */
+	/** The name the app gives the column nav. */
 	label?: string
+	/** The rows of the root screen, ROOT_ROWS when absent. */
+	rows?: readonly MenuItem[]
 	/** The sidebar screen of the later section. */
 	later?: ComponentType
 	/** The sidebar screen of a thing, a drilldown row to a chat and a row to another thing when absent. */
@@ -105,11 +107,11 @@ export interface SidebarAppOptions {
  * Returns a router drawing a whole admin: a frame whose sidebar holds a Navigation over the root rows
  * with an account footer and a version note, and a canvas holding the page.
  * @param path - The address to start at.
- * @param options - The check, the region name, the later screen and the thing screen.
+ * @param options - The check, the nav name, the root rows, the later screen and the thing screen.
  * @returns The router, not drawn yet.
  */
 export function sidebarAppRouter(path: string, options: SidebarAppOptions = {}) {
-	const { can = holdsEvery, label, later = laterScreen, thing: thingSidebar = thingScreen } = options
+	const { can = holdsEvery, label, rows = ROOT_ROWS, later = laterScreen, thing: thingSidebar = thingScreen } = options
 	const rootRoute = createRootRoute({
 		component: function Layout() {
 			return (
@@ -120,7 +122,7 @@ export function sidebarAppRouter(path: string, options: SidebarAppOptions = {}) 
 						footer={<button type="button">Maria Perez</button>}
 						footerNote="v1.2.3"
 					>
-						<Navigation items={ROOT_ROWS} home={<Link to="/posts" />} can={can} />
+						<Navigation items={rows} home={<Link to="/posts" />} can={can} />
 					</Frame.Sidebar>
 					<Frame.Canvas>
 						<Outlet />
@@ -160,7 +162,7 @@ export function sidebarAppRouter(path: string, options: SidebarAppOptions = {}) 
 /**
  * Draws the whole admin of sidebarAppRouter and waits for its sidebar.
  * @param path - The address to start at.
- * @param options - The check, the region name, the later screen and the thing screen.
+ * @param options - The check, the nav name, the root rows, the later screen and the thing screen.
  * @returns The router, once the sidebar is drawn.
  */
 export async function renderSidebarApp(path: string, options: SidebarAppOptions = {}) {

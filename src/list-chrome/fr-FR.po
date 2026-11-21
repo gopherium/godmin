@@ -56,6 +56,10 @@ msgid "Close navigation panel"
 msgstr "Fermer le panneau de navigation"
 
 #, fuzzy
+msgid "Content"
+msgstr "Contenu"
+
+#, fuzzy
 msgid "Could not get a valid response from the server."
 msgstr "Impossible d’obtenir du serveur une réponse valide."
 
@@ -67,6 +71,10 @@ msgstr "Déc"
 #, fuzzy
 msgid "December"
 msgstr "décembre"
+
+#, fuzzy
+msgid "Design"
+msgstr "Conception"
 
 #, fuzzy
 msgid "F j, Y g:i a"
@@ -123,6 +131,10 @@ msgstr "Chargement"
 #, fuzzy
 msgid "M j, Y g:i a"
 msgstr "d F Y G\\hi"
+
+#, fuzzy
+msgid "Manage"
+msgstr "Gérer"
 
 #, fuzzy
 msgctxt "March abbreviation"

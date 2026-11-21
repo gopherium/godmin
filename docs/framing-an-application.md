@@ -243,6 +243,38 @@ const updates: MenuItem = {
 }
 ```
 
+### Sections
+
+WordPress's new admin sorts its menu into three sections under small
+grey labels: Content, Design and Manage. Give a `MenuItem` a `group`
+to put its row in one of them. `MenuGroup` names the three:
+`'content'`, `'design'` and `'manage'`.
+
+```ts
+const menu: MenuItem[] = [
+	{ label: 'Updates', to: '/updates' },
+	{ label: 'Posts', to: '/posts', group: 'content' },
+	{ label: 'Themes', to: '/themes', group: 'design' },
+	{ label: 'Users', to: '/users', group: 'manage' },
+]
+```
+
+- Rows keep the order you give. A section shows at the place of its
+  first row and gathers every row that names it.
+- A row with no `group` stays at its own place, outside every section.
+  The rows you draw as children of a `NavigationList` come after
+  everything, outside every section too.
+- A section with no row the reader may open shows nothing, not even
+  its label.
+- A `fallback` row sits in the section of the row it replaces.
+- A row that opens a sub menu can sit in a section.
+- When one row has an icon, rows with none keep a blank in its place
+  in every section, so all the labels line up.
+
+Each section is a group named by its label, so a screen reader says
+the name as the focus enters it. The label is never a heading. A menu
+with no section draws one list, as before.
+
 ## The canvas on a wide screen
 
 On a wide screen the canvas is a panel with a margin around it, the
@@ -296,9 +328,9 @@ const sheet = useMediaQuery(`(max-width: ${SHEET_BREAKPOINT - 1}px)`)
 ## godmin's own words
 
 The frame and the sidebar draw a few words of their own: "Admin",
-"Back", "Menu" and "Close navigation panel".
-The last one names a close button at the end of the drawer, which
-only a screen reader meets. `ListNoResults` draws two more: "No
+"Back", "Menu", the section labels "Content", "Design" and "Manage",
+and "Close navigation panel". The last one names a close button at
+the end of the drawer, which only a screen reader meets. `ListNoResults` draws two more: "No
 results found" and the line under it, "Try adjusting your search or
 filters to find what you're looking for." The tab title puts the
 screen title and the app name together as `%1$s ‹ %2$s`, and the not

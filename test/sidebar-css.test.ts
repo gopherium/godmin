@@ -362,6 +362,24 @@ test('draws the sidebar list with no bullets, pulled 16px wider on each side as 
 	expect(list).toMatch(/list-style:\s*none;/)
 })
 
+test('sets a menu section 16px under the row above, as wide as the rows, its own list not pulled again', () => {
+	const section = ruleOf('.godmin-navigation-group')
+
+	expect(section).toMatch(/margin-block-start:\s*16px;/)
+	expect(section).toMatch(/margin-inline:\s*-16px;/)
+	expect(ruleOf('.godmin-navigation-group > .godmin-navigation-list')).toMatch(/margin-inline:\s*0;/)
+})
+
+test('draws a section label as the new admin does: bold, weak content colour, 4px over its rows, text at 16px', () => {
+	const label = ruleOf('.godmin-navigation-group__label')
+
+	expect(label).toMatch(/display:\s*block;/)
+	expect(label).toMatch(/padding-inline:\s*4px;/)
+	expect(label).toMatch(/margin-block-end:\s*4px;/)
+	expect(label).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-content-neutral-weak\);/)
+	expect(label).toMatch(/font-weight:\s*var\(--wpds-typography-font-weight-emphasis\);/)
+})
+
 test('draws a sidebar row as the Site Editor renders it: 12px sides on a 36px control line, 40px tall at least', () => {
 	const row = ruleOf('.godmin-navigation-item')
 

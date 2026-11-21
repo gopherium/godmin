@@ -201,11 +201,15 @@ const WORDPRESS_SIDEBAR_WORDS: Record<string, Record<string, string>> = {
 	'es-ES': {
 		Back: 'Volver',
 		'Close navigation panel': 'Cerrar el panel de navegación',
+		Content: 'Contenido',
+		Design: 'Diseño',
 		Menu: 'Menú',
 	},
 	'fr-FR': {
 		Back: 'Retour',
 		'Close navigation panel': 'Fermer le panneau de navigation',
+		Content: 'Contenu',
+		Design: 'Conception',
 		Menu: 'Menu',
 	},
 }
@@ -255,7 +259,7 @@ const SPANISH = shipped('es-ES', spanish)
 const CATALOGUES = [SPANISH, shipped('fr-FR', french)]
 const LIST_DATE_MESSAGES = SOURCE_MESSAGES.get('list-dates.ts') ?? []
 const NO_RESULTS_MESSAGES = SOURCE_MESSAGES.get('list-empty.tsx') ?? []
-const SIDEBAR_MESSAGES = ['frame.tsx', 'navigation.tsx', 'navigation-screen.tsx'].flatMap(
+const SIDEBAR_MESSAGES = ['frame.tsx', 'navigation.tsx', 'navigation-screen.tsx', 'navigation-list.tsx'].flatMap(
 	(path) => SOURCE_MESSAGES.get(path) ?? [],
 )
 const FRAME_MESSAGES = ['screen-title.ts', 'route-not-found.tsx'].flatMap((path) => SOURCE_MESSAGES.get(path) ?? [])
@@ -557,8 +561,10 @@ test('ships the words a WordPress dialog, its buttons and its close icon speak, 
 	}
 })
 
-test('reads Admin, Back, Menu and the close panel words from the sidebar parts that speak them', () => {
-	expect(new Set(SIDEBAR_MESSAGES.map(keyOf))).toEqual(new Set(['Admin', 'Back', 'Close navigation panel', 'Menu']))
+test('reads Admin, Back, Menu, the close panel words and the section names from the sidebar parts', () => {
+	expect(new Set(SIDEBAR_MESSAGES.map(keyOf))).toEqual(
+		new Set(['Admin', 'Back', 'Close navigation panel', 'Content', 'Design', 'Manage', 'Menu']),
+	)
 })
 
 test('words the sidebar parts as the WordPress Spanish and French catalogues do', () => {

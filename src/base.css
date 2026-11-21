@@ -683,6 +683,23 @@ body {
 		list-style: none;
 	}
 
+	.godmin-navigation-group {
+		margin-block-start: 16px;
+		margin-inline: -16px;
+	}
+
+	.godmin-navigation-group > .godmin-navigation-list {
+		margin-inline: 0;
+	}
+
+	.godmin-navigation-group__label {
+		display: block;
+		padding-inline: 4px;
+		margin-block-end: 4px;
+		color: var(--wpds-color-foreground-content-neutral-weak);
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+	}
+
 	.godmin-navigation-item {
 		display: flex;
 		align-items: center;

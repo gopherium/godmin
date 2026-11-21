@@ -2,13 +2,15 @@
 
 import { useRouter, useRouterState } from '@tanstack/react-router'
 import type { AnyRouter } from '@tanstack/react-router'
-import { Children, isValidElement, useContext } from 'react'
+import { __ } from '@wordpress/i18n'
+import { Text } from '@wordpress/ui'
+import { Children, isValidElement, useContext, useId } from 'react'
 import type { ReactElement, ReactNode } from 'react'
 
 import { DrilldownItem } from './drilldown-item.js'
 import { MenuCount } from './menu-count.js'
 import { canOpenRoutes, useCanAccess } from './menu-item.js'
-import type { MenuItem } from './menu-item.js'
+import type { MenuGroup, MenuItem } from './menu-item.js'
 import { NavigationItem } from './navigation-item.js'
 import { IconPlaceholderContext, ScreenContext } from './navigation-state.js'
 import type { Can } from './navigation-state.js'
@@ -81,26 +83,133 @@ function DataRow({ item, shown }: { item: MenuItem; shown: string | undefined })
 	)
 }
 
+/** A row of data the reader sees, in the section of the item it stands for. */
+interface ShownRow {
+	/** The row drawn, the item or one of its fallbacks. */
+	row: MenuItem
+	/** The section of the item, whatever section a fallback names. */
+	group: MenuGroup | undefined
+}
+
+/** One part of a list: a section and its rows, or rows outside every section. */
+interface ListPart {
+	/** The section, undefined for rows outside every section. */
+	group: MenuGroup | undefined
+	/** The rows of the part, in the order given. */
+	rows: MenuItem[]
+}
+
 /**
- * Renders the rows of a sidebar screen as a list: the rows of items the reader may access, then the rows the app draws.
- * @param props - The rows as data and the rows the app draws itself.
+ * Returns the part a row joins: its section, the list of rows with no section just before it, or a new part.
+ * @param parts - The parts so far, in order, which a new part joins at the end.
+ * @param sections - The part of each section shown so far, which a new section joins.
+ * @param group - The section of the row, undefined outside every section.
+ * @returns The part.
+ */
+function partFor(parts: ListPart[], sections: Map<MenuGroup, ListPart>, group: MenuGroup | undefined): ListPart {
+	const last = parts.at(-1)
+	const found = group === undefined ? last : sections.get(group)
+	if (found !== undefined && found.group === group) {
+		return found
+	}
+	const part: ListPart = { group, rows: [] }
+	parts.push(part)
+	if (group !== undefined) {
+		sections.set(group, part)
+	}
+	return part
+}
+
+/**
+ * Splits the shown rows into the sections and lists of a screen, each section at the place of its first row.
+ * @param rows - The rows the reader sees, in the order given.
+ * @param drawsRows - Whether the app draws rows of its own after them.
+ * @returns The parts, in order.
+ */
+function partsOf(rows: readonly ShownRow[], drawsRows: boolean): ListPart[] {
+	const parts: ListPart[] = []
+	const sections = new Map<MenuGroup, ListPart>()
+	for (const { row, group } of rows) {
+		partFor(parts, sections, group).rows.push(row)
+	}
+	if (drawsRows || parts.length === 0) {
+		partFor(parts, sections, undefined)
+	}
+	return parts
+}
+
+/**
+ * Returns the name of a section in the reader language, the words of WordPress's new admin.
+ * @param group - The section.
+ * @returns Its name.
+ */
+function sectionName(group: MenuGroup): string {
+	const names: Record<MenuGroup, string> = { content: __('Content'), design: __('Design'), manage: __('Manage') }
+	return names[group]
+}
+
+/**
+ * Renders rows as a list: the rows of data, then any rows the app draws.
+ * @param props - The rows as data, the id of the sub menu route shown now, and the rows the app draws.
  * @returns The list element.
+ */
+function RowList({ rows, shown, children }: { rows: MenuItem[]; shown: string | undefined; children?: ReactNode }) {
+	return (
+		<ul role="list" className="godmin-navigation-list">
+			{rows.map((row) => (
+				<DataRow key={row.to} item={row} shown={shown} />
+			))}
+			{children}
+		</ul>
+	)
+}
+
+/**
+ * Renders a menu section as WordPress's new admin does: a group named by its small label, over a list of its rows.
+ * @param props - The section, its rows and the id of the sub menu route shown now.
+ * @returns The section element.
+ */
+function MenuSection({ group, rows, shown }: { group: MenuGroup; rows: MenuItem[]; shown: string | undefined }) {
+	const id = useId()
+	return (
+		<div role="group" aria-labelledby={id} className="godmin-navigation-group">
+			<Text id={id} variant="body-sm" className="godmin-navigation-group__label">
+				{sectionName(group)}
+			</Text>
+			<RowList rows={rows} shown={shown} />
+		</div>
+	)
+}
+
+/**
+ * Renders the rows of a sidebar screen the reader may access in their sections, then the rows the app draws.
+ * @param props - The rows as data and the rows the app draws itself.
+ * @returns The lists and sections of the screen.
  */
 export function NavigationList({ items = [], children }: NavigationListProps) {
 	const router = useRouter()
 	const { can } = useContext(ScreenContext)
 	const canAccess = useCanAccess(can)
 	const shown = useRouterState({ select: (state): string | undefined => findSidebarMatch(state.matches)?.routeId })
-	const rows = items.map((item) => shownRow(item, canAccess))
+	const rows = items.flatMap((item): ShownRow[] => {
+		const row = shownRow(item, canAccess)
+		return row === undefined ? [] : [{ row, group: item.group }]
+	})
+	const drawn = Children.toArray(children)
 	const placeholder =
-		rows.some((row) => row?.icon !== undefined) ||
-		Children.toArray(children).some((child) => showsIcon(child, router, can))
+		rows.some(({ row }) => row.icon !== undefined) || drawn.some((child) => showsIcon(child, router, can))
+	const parts = partsOf(rows, drawn.length > 0)
 	return (
 		<IconPlaceholderContext.Provider value={placeholder}>
-			<ul role="list" className="godmin-navigation-list">
-				{rows.map((row) => (row === undefined ? null : <DataRow key={row.to} item={row} shown={shown} />))}
-				{children}
-			</ul>
+			{parts.map((part, index) =>
+				part.group === undefined ? (
+					<RowList key={`rows-${index}`} rows={part.rows} shown={shown}>
+						{index === parts.length - 1 ? children : null}
+					</RowList>
+				) : (
+					<MenuSection key={part.group} group={part.group} rows={part.rows} shown={shown} />
+				),
+			)}
 		</IconPlaceholderContext.Provider>
 	)
 }

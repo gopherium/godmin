@@ -64,8 +64,9 @@ those two lines do for you.
 ## Translations
 
 GodMin speaks a few words of its own: Back on a sidebar screen, the name of
-the sidebar column and its phone drawer, the phone menu button and the
-drawer's close button, which only a screen reader meets, and "No results
+the sidebar column and its phone drawer, the labels of the menu sections, the
+phone menu button and the drawer's close button, which only a screen reader
+meets, and "No results
 found" with the line under it, which `ListNoResults` shows. It also gives
 the words of the tab title, the screen title then the app name as
 `%1$s ‹ %2$s`, and of the not found screen `routerDefaults` gives, "Route

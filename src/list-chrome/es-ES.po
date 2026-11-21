@@ -243,6 +243,10 @@ msgid "Contains"
 msgstr "Contiene"
 
 #, fuzzy
+msgid "Content"
+msgstr "Contenido"
+
+#, fuzzy
 msgid "Coordinated Universal Time"
 msgstr "Hora universal coordinada"
 
@@ -282,6 +286,10 @@ msgstr "Densidad"
 #, fuzzy
 msgid "Deselect all"
 msgstr "Anular selección de todo"
+
+#, fuzzy
+msgid "Design"
+msgstr "Diseño"
 
 #, fuzzy
 msgid "Doesn't contain"
@@ -427,6 +435,10 @@ msgstr "Cargando"
 #, fuzzy
 msgid "M j, Y g:i a"
 msgstr "j M Y H:i"
+
+#, fuzzy
+msgid "Manage"
+msgstr "Gestionar"
 
 #, fuzzy
 msgctxt "March abbreviation"
