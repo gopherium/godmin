@@ -109,9 +109,10 @@ design system versions each release supports.
 The stories in `stories/` show the components in Storybook, opened
 with `pnpm run storybook:dev`. `pnpm run storybook:test` runs every
 story in headless Chromium with its accessibility check, and
-`pnpm run test:browser` runs the browser tests in `test/browser/`.
-Both need Chromium once:
-`pnpm exec playwright install --only-shell chromium`.
+`pnpm run test:browser` runs the browser tests in `test/browser/`, the
+frame's in Chromium, Firefox and WebKit. Both need Chromium once:
+`pnpm exec playwright install --only-shell chromium`. The browser tests
+need Firefox and WebKit too: `pnpm exec playwright install firefox webkit`.
 
 ## Status
 

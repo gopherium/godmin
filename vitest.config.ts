@@ -85,6 +85,14 @@ const SHOT_STYLE = [
 	'* { pointer-events: none !important; }',
 ].join(' ')
 
+/** The browser tests of the frame, which run in Chromium, Firefox and WebKit. */
+const ENGINE_TESTS = [
+	'test/browser/frame-menu.test.tsx',
+	'test/browser/menu-head.test.tsx',
+	'test/browser/menu-rows.test.tsx',
+	'test/browser/menu-sections.test.tsx',
+]
+
 /** Returns a fresh headless Chromium setup with grayscale text and no font hinting, its default arguments less any left out. */
 function chromium(leftOut: string[] = []) {
 	return {
@@ -127,12 +135,28 @@ export default defineConfig({
 				test: {
 					name: 'browser',
 					include: ['test/browser/**/*.test.{ts,tsx}'],
-					exclude: [...configDefaults.exclude, 'test/browser/scrollbars/**'],
+					exclude: [...configDefaults.exclude, 'test/browser/scrollbars/**', ...ENGINE_TESTS],
 					setupFiles: ['test/browser/setup.ts'],
 					browser: {
 						...chromium(),
 						viewport: { width: 1280, height: 800 },
 						commands: { reduceMotion, doubleClickAt, drag, holdKey, goOfflineFor },
+					},
+				},
+			},
+			{
+				extends: true,
+				test: {
+					name: 'engines',
+					include: ENGINE_TESTS,
+					setupFiles: ['test/browser/setup.ts'],
+					browser: {
+						enabled: true,
+						headless: true,
+						provider: playwright(),
+						instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
+						viewport: { width: 1280, height: 800 },
+						commands: { reduceMotion },
 					},
 				},
 			},
