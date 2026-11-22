@@ -70,7 +70,7 @@ test('heads the 300px drawer with the same 64px identity block at its top', asyn
 
 	await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }))
 	const drawer = await screen.findByRole('dialog')
-	await expect.poll(() => document.getAnimations().length).toBe(0)
+	const block = find(':scope > .godmin-sidebar__identity', drawer)
 
-	expect(boxOf(find(':scope > .godmin-sidebar__identity', drawer))).toEqual([0, 0, 300, 64])
+	await expect.poll(() => boxOf(block)).toEqual([0, 0, 300, 64])
 })

@@ -102,8 +102,12 @@ test('draws the rows of the 300px phone drawer 276 by 32', async () => {
 
 	await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }))
 	const drawer = await screen.findByRole('dialog')
-	await expect.poll(() => document.getAnimations().length).toBe(0)
-
 	const posts = drawer.querySelector('.godmin-navigation-item') as Element
-	expect(boxOf(posts).slice(0, 1).concat(boxOf(posts).slice(2))).toEqual([12, 276, 32])
+
+	await expect
+		.poll(() => {
+			const [x, , width, height] = boxOf(posts)
+			return [x, width, height]
+		})
+		.toEqual([12, 276, 32])
 })

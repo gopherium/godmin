@@ -30,11 +30,11 @@ function menu(): HTMLElement {
 	return screen.getByRole('button', { name: MENU, hidden: true })
 }
 
-/** Opens the drawer with a press on Menu and waits for it to rest. */
+/** Opens the drawer with a press on Menu and waits for it to rest at the start edge. */
 async function openDrawer() {
 	await userEvent.click(menu())
-	await screen.findByRole('dialog')
-	await expect.poll(() => document.getAnimations().length).toBe(0)
+	const drawer = await screen.findByRole('dialog')
+	await expect.poll(() => drawer.getBoundingClientRect().x).toBe(0)
 }
 
 /** Returns the colour a token resolves to inside the frame, where the tooltips are drawn. */
@@ -108,7 +108,6 @@ test('gives the focus back to nothing once a page picked in the drawer closes it
 
 	expect(await screen.findByText('Pages page')).not.toBeNull()
 	await expect.poll(() => screen.queryByRole('dialog')).toBeNull()
-	await expect.poll(() => document.getAnimations().length).toBe(0)
 	expect(document.activeElement).toBe(document.body)
 })
 
@@ -119,11 +118,14 @@ test('shuts the drawer on a widen past 781px, leaving no scroll lock or inert pa
 	await page.viewport(1280, 800)
 
 	await expect.poll(() => screen.queryByRole('dialog')).toBeNull()
-	await expect.poll(() => document.getAnimations().length).toBe(0)
+	await expect
+		.poll(() => [
+			document.querySelector('[inert], [data-base-ui-inert]'),
+			getComputedStyle(document.documentElement).overflow,
+			getComputedStyle(document.body).overflow,
+		])
+		.toEqual([null, 'visible', 'visible'])
 	expect(document.activeElement).toBe(document.body)
-	expect(document.querySelector('[inert], [data-base-ui-inert]')).toBeNull()
-	expect(getComputedStyle(document.documentElement).overflow).toBe('visible')
-	expect(getComputedStyle(document.body).overflow).toBe('visible')
 	await page.viewport(781, 800)
 	await expect.poll(() => menu().getAttribute('aria-expanded')).toBe('false')
 	expect(screen.queryByRole('dialog')).toBeNull()
