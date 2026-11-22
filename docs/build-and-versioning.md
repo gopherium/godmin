@@ -111,6 +111,46 @@ ranges.
 follows the filter rules of that DataViews release. A list built on
 another release gets a peer warning when it installs godmin.
 
+## Upgrading from godmin 0.33.0
+
+godmin 0.35.0 draws the menu as WordPress's new admin does: it folds
+into the drawer at 782px, opens with your app's name and gives its
+rows WordPress's look and sections. Change your code in these places:
+
+- `SIDEBAR_BREAKPOINT` is gone. A rule that changed at 1024px now
+  changes at `EDGE_BREAKPOINT`, where the menu folds into the drawer,
+  and `SMALL_VIEWPORT` reads `(max-width: 781px)`.
+- `--godmin-nav-sidebar-width` is 240px and sizes the sidebar only. A
+  stylesheet that widened the drawer through it sets
+  `--godmin-nav-drawer-width`, 300px by default.
+- Drop `brand` from `Frame.Sidebar` and `title` from `Navigation`.
+  Pass `appName` to `Frame.Root`, which heads the menu and the drawer
+  with your app's name over the host the admin is served at. Keep
+  `Frame.Sidebar` inside a `Frame.Root`, since it throws outside one.
+- Give a menu row `group: 'content'`, `'design'` or `'manage'` to set
+  it under that section's label, as
+  [sections](./framing-an-application.md#sections) says. A menu with
+  no section draws one list, as before.
+- A test finds the menu as the navigation "Admin", the drawer as the
+  dialog "Admin" and the menu button as "Menu", the default of
+  `menuLabel`, in place of the "Navigation" region and dialog and the
+  "Open navigation panel" button. The menu button carries
+  `aria-expanded` and no `aria-haspopup`.
+- The root screen of the menu draws no heading. A test that found your
+  app's name as the `h1` reads the identity block over the menu, and a
+  `Page` passed `headingLevel={2}` starts at `h2` while the menu shows
+  its root screen.
+- Menu rows lose about 7.9px above and below and sit 4px apart. The
+  `godmin-navigation-item--with-suffix` class is gone. The current row
+  has no fill, so a test reads its weight and `aria-current`.
+- A page picked in the phone drawer gives the focus back to nothing,
+  so a test that waited for the focus on the menu button after a page
+  pick finds it on the page body. Escape, the close button and a tap
+  on the dimmed page still give it back to the menu button.
+
+TypeScript points at `SIDEBAR_BREAKPOINT`, `brand` and `Navigation`'s
+`title`. The rest changes what the reader sees and what a test meets.
+
 ## Upgrading from godmin 0.32.0
 
 godmin 0.33.0 gives the write a busy dialog waits on a time limit, and
