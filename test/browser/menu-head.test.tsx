@@ -3,7 +3,7 @@
 import { RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { page, userEvent } from 'vitest/browser'
+import { commands, page, userEvent } from 'vitest/browser'
 
 import { AdminRoot } from '../../src/admin-root.js'
 import { sidebarAppRouter } from '../sidebar-app.js'
@@ -67,6 +67,7 @@ test('draws the title row of a sub menu 52px tall, Back 24px at x 16 and the 15p
 
 test('heads the 300px drawer with the same 64px identity block at its top', async () => {
 	await renderAppAt('/posts', 390)
+	await commands.reduceMotion(true)
 
 	await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }))
 	const drawer = await screen.findByRole('dialog')

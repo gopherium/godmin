@@ -3,7 +3,7 @@
 import { RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { page, userEvent } from 'vitest/browser'
+import { commands, page, userEvent } from 'vitest/browser'
 
 import { AdminRoot } from '../../src/admin-root.js'
 import { sidebarAppRouter } from '../sidebar-app.js'
@@ -99,6 +99,7 @@ test('ends a row that opens a sub menu with its chevron in a 32px box, the glyph
 
 test('draws the rows of the 300px phone drawer 276 by 32', async () => {
 	await renderAppAt(390)
+	await commands.reduceMotion(true)
 
 	await userEvent.click(screen.getByRole('button', { name: 'Open navigation' }))
 	const drawer = await screen.findByRole('dialog')

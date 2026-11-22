@@ -3,7 +3,7 @@
 import { RouterProvider } from '@tanstack/react-router'
 import { render, screen } from '@testing-library/react'
 import { expect, test } from 'vitest'
-import { page, userEvent } from 'vitest/browser'
+import { commands, page, userEvent } from 'vitest/browser'
 
 import { AdminRoot } from '../../src/admin-root.js'
 import { sidebarAppRouter } from '../sidebar-app.js'
@@ -30,8 +30,9 @@ function menu(): HTMLElement {
 	return screen.getByRole('button', { name: MENU, hidden: true })
 }
 
-/** Opens the drawer with a press on Menu and waits for it to rest at the start edge. */
+/** Opens the drawer with a press on Menu, with no motion, and waits for it to rest at the start edge. */
 async function openDrawer() {
+	await commands.reduceMotion(true)
 	await userEvent.click(menu())
 	const drawer = await screen.findByRole('dialog')
 	await expect.poll(() => drawer.getBoundingClientRect().x).toBe(0)
