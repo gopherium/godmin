@@ -139,13 +139,14 @@ function partsOf(rows: readonly ShownRow[], drawsRows: boolean): ListPart[] {
 }
 
 /**
- * Returns the key of a list of rows with no section, one the last list keeps whatever sections come before it.
- * @param part - The list.
- * @param last - Whether it is the last part, which holds the rows the app draws.
+ * Returns the key of a list of rows with no section, from the section after it, or one the last list always keeps.
+ * @param parts - The parts of the screen, in order.
+ * @param index - The place of the list among them.
  * @returns The key.
  */
-function listKey(part: ListPart, last: boolean): string {
-	return last ? 'rows-last' : `rows-${part.rows[0].to}`
+function listKey(parts: readonly ListPart[], index: number): string {
+	const next = parts.at(index + 1)
+	return next === undefined ? 'rows-last' : `rows-before-${next.group}`
 }
 
 /**
@@ -213,7 +214,7 @@ export function NavigationList({ items = [], children }: NavigationListProps) {
 		<IconPlaceholderContext.Provider value={placeholder}>
 			{parts.map((part, index) =>
 				part.group === undefined ? (
-					<RowList key={listKey(part, index === parts.length - 1)} rows={part.rows} shown={shown}>
+					<RowList key={listKey(parts, index)} rows={part.rows} shown={shown}>
 						{index === parts.length - 1 ? children : null}
 					</RowList>
 				) : (

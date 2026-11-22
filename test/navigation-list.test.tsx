@@ -393,6 +393,36 @@ function DroppingSection() {
 	)
 }
 
+/**
+ * Draws two rows with no section over a section, and a button that drops the first row.
+ * @returns The button that drops the row, and the list.
+ */
+function DroppingRow() {
+	const [items, setItems] = useState<MenuItem[]>([
+		{ label: 'Posts', to: '/posts' },
+		{ label: 'Profile', to: '/profile' },
+		{ label: 'Users', to: '/users', group: 'manage' },
+	])
+	return (
+		<>
+			<button type="button" onClick={() => setItems(items.slice(1))}>
+				Drop the first row
+			</button>
+			<NavigationList items={items} />
+		</>
+	)
+}
+
+test('keeps a row its own link when the row above it goes from a list before a section', async () => {
+	await renderRows('/posts', <DroppingRow />, holdsEvery)
+	const profile = screen.getByRole('link', { name: 'Profile' })
+
+	fireEvent.click(screen.getByRole('button', { name: 'Drop the first row' }))
+
+	expect(screen.queryByRole('link', { name: 'Posts' })).toBeNull()
+	expect(screen.getByRole('link', { name: 'Profile' })).toBe(profile)
+})
+
 test('keeps a row the app draws its own link when the section above it goes, so focus on it stays on it', async () => {
 	await renderRows('/posts', <DroppingSection />)
 	const profile = screen.getByRole('link', { name: 'Profile' })
