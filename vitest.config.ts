@@ -75,8 +75,10 @@ const PULSING = [
 	'.dataviews-view-table__bulk-actions-overlay.is-refreshing > .dataviews-bulk-actions',
 ].join(', ')
 
-/** The style Argos adds to a shot: no motion, spinners at rest, the list pulse dim, no pointer. */
+/** The style Argos adds to a shot: no motion, spinners at rest, the list pulse dim, no pointer, example.com as the host. */
 const SHOT_STYLE = [
+	'.godmin-sidebar__address { font-size: 0 !important; line-height: 0 !important; }',
+	'.godmin-sidebar__address::after { content: "example.com"; display: block; font-size: 12px; line-height: 16px; }',
 	'.godmin-toasts__item, .godmin-toast { animation: none; }',
 	'.godmin-loading-screen path, .components-spinner path { animation: none; }',
 	`${PULSING} { animation: none !important; opacity: 0.5 !important; }`,
