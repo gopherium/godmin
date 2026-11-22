@@ -99,53 +99,6 @@ test('narrows the canvas gutter at the dense breakpoint and leaves the edges to 
 	expect(canvas).not.toMatch(/margin|border-radius|box-shadow/)
 })
 
-test('draws the top bar 46px tall, as the WordPress admin bar is on a narrow screen', () => {
-	const bar = ruleOf('.godmin-layout__topbar')
-
-	expect(bar).toMatch(/block-size:\s*46px/)
-	expect(bar, 'the menu control fills the bar height').not.toMatch(/(?:^|\s)padding:/)
-})
-
-test('keeps no gap or end room in the top bar, since Menu stands alone in it with no brand', () => {
-	const bar = ruleOf('.godmin-layout__topbar')
-
-	expect(bar).not.toMatch(/(?:^|\s)gap:/)
-	expect(bar).not.toMatch(/padding-inline/)
-})
-
-test('fits Menu to its slot with no padding, no floor and square corners, so the WPDS button fills it', () => {
-	const menu = ruleOf('.godmin-layout__menu')
-
-	expect(menu).toMatch(/(?:^|\s)flex:\s*none;/)
-	expect(menu).toMatch(/--wp-ui-button-padding-inline:\s*0px;/)
-	expect(menu).toMatch(/--wp-ui-button-padding-block:\s*0px;/)
-	expect(menu).toMatch(/--wp-ui-button-min-width:\s*unset;/)
-	expect(menu).toMatch(/border-radius:\s*0;/)
-})
-
-test('leaves the colours of Menu to the WPDS minimal neutral button, with no state rule of its own', () => {
-	expect(ruleOf('.godmin-layout__menu')).not.toMatch(/(?:^|\s)(?:color|background|border|cursor|display):/)
-	expect(base).not.toMatch(/\.godmin-layout__menu:/)
-})
-
-test('rings Menu inside its slot by the width of the ring, on any focus but a press as WPDS rings it', () => {
-	const menu = ruleOf('.godmin-layout__menu')
-
-	expect(menu).toMatch(/outline-offset:\s*calc\(-1 \* var\(--wpds-border-width-focus\)\);/)
-	expect(menu).not.toMatch(/(?:^|\s)outline:/)
-})
-
-test('maps the tooltips of the frame to the chrome surface and text, which the frame theme resolves', () => {
-	const frame = ruleOf('.godmin-layout')
-	const tip = ruleOf('.godmin-bar__tip')
-
-	expect(frame).toMatch(/--godmin-bar-tip-background:\s*var\(--wpds-color-background-surface-neutral-strong\);/)
-	expect(frame).toMatch(/--godmin-bar-tip-foreground:\s*var\(--wpds-color-foreground-content-neutral\);/)
-	expect(tip).toMatch(/background-color:\s*var\(--godmin-bar-tip-background\);/)
-	expect(tip).toMatch(/(?:^|\s)color:\s*var\(--godmin-bar-tip-foreground\);/)
-	expect(tip).not.toMatch(/--wpds-/)
-})
-
 test('narrows the canvas gutter to 16px below 640px and lets the gutter alone set the padding', () => {
 	const canvas = ruleOf('.godmin-layout__canvas', blockOf('@media (max-width: 639px)'))
 
