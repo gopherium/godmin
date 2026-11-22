@@ -375,6 +375,34 @@ test('keeps a row its own link when a row arrives above it, so a pointer or focu
 	expect(screen.getByRole('link', { name: 'Profile' })).toBe(profile)
 })
 
+/**
+ * Draws a section over a row the app draws, and a button that drops the section.
+ * @returns The button that drops the section, and the list.
+ */
+function DroppingSection() {
+	const [items, setItems] = useState<MenuItem[]>([{ label: 'Posts', to: '/posts', group: 'content' }])
+	return (
+		<>
+			<button type="button" onClick={() => setItems([])}>
+				Drop the section
+			</button>
+			<NavigationList items={items}>
+				<NavigationItem to="/profile">Profile</NavigationItem>
+			</NavigationList>
+		</>
+	)
+}
+
+test('keeps a row the app draws its own link when the section above it goes, so focus on it stays on it', async () => {
+	await renderRows('/posts', <DroppingSection />)
+	const profile = screen.getByRole('link', { name: 'Profile' })
+
+	fireEvent.click(screen.getByRole('button', { name: 'Drop the section' }))
+
+	expect(screen.queryByRole('group')).toBeNull()
+	expect(screen.getByRole('link', { name: 'Profile' })).toBe(profile)
+})
+
 /** The rows the access check is asked about, each named by what it asks for. */
 const askedRows: Record<string, Pick<MenuItem, 'to' | 'capability'>> = {
 	own: { to: '/posts', capability: 'edit_posts' },

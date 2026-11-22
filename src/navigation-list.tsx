@@ -139,6 +139,16 @@ function partsOf(rows: readonly ShownRow[], drawsRows: boolean): ListPart[] {
 }
 
 /**
+ * Returns the key of a list of rows with no section, one the last list keeps whatever sections come before it.
+ * @param part - The list.
+ * @param last - Whether it is the last part, which holds the rows the app draws.
+ * @returns The key.
+ */
+function listKey(part: ListPart, last: boolean): string {
+	return last ? 'rows-last' : `rows-${part.rows[0].to}`
+}
+
+/**
  * Returns the name of a section in the reader language, the words of WordPress's new admin.
  * @param group - The section.
  * @returns Its name.
@@ -203,7 +213,7 @@ export function NavigationList({ items = [], children }: NavigationListProps) {
 		<IconPlaceholderContext.Provider value={placeholder}>
 			{parts.map((part, index) =>
 				part.group === undefined ? (
-					<RowList key={`rows-${index}`} rows={part.rows} shown={shown}>
+					<RowList key={listKey(part, index === parts.length - 1)} rows={part.rows} shown={shown}>
 						{index === parts.length - 1 ? children : null}
 					</RowList>
 				) : (
