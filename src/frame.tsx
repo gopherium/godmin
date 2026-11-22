@@ -1,16 +1,19 @@
 /* oxlint-disable react/only-export-components -- a compound component is an
    object export standing beside the parts it is built from. */
 import { __ } from '@wordpress/i18n'
-import { Icon, menu } from '@wordpress/icons'
 import { ThemeProvider } from '@wordpress/theme'
-import { Drawer, VisuallyHidden } from '@wordpress/ui'
-import { Children, createContext, useContext, useEffect, useState } from 'react'
+import { Drawer, Text, VisuallyHidden } from '@wordpress/ui'
+import { Children, createContext, useContext, useEffect, useId, useRef, useState } from 'react'
 import type { ComponentProps, ReactNode } from 'react'
 
 import { SMALL_VIEWPORT } from './breakpoints.js'
+import { Menu } from './frame-bar.js'
+import { DrawerContext, FrameContext, useDrawer } from './frame-state.js'
+import type { DrawerState } from './frame-state.js'
 import { NavigationStateContext, createNavigationState, takeDrawerStays } from './navigation-state.js'
 import type { NavigationState } from './navigation-state.js'
 import { ScreenTitleContext, TitleWatch, createScreenTitles } from './screen-title.js'
+import { siteAddress } from './site-address.js'
 import { useMediaQuery } from './use-media-query.js'
 
 type ThemeColor = ComponentProps<typeof ThemeProvider>['color']
@@ -25,27 +28,12 @@ const CHROME_COLOR = { background: '#26292b' }
  */
 const CANVAS_COLOR = { background: '#fcfcfc' }
 
-interface FrameState {
-	small: boolean
-	location: string | undefined
-	layout: HTMLElement | null
-	/** The moves the sidebar parts record, read by the drawer. */
-	navigation: NavigationState
-}
-
-const FrameContext = createContext<FrameState>({
-	small: false,
-	location: undefined,
-	layout: null,
-	navigation: createNavigationState(),
-})
-
 export interface FrameRootProps {
 	children: ReactNode
 	location?: string
 	/** The path the router has finished showing, whose change speaks the new screen's title, nothing without it. */
 	shownPath?: string
-	/** The name of the app, which the tab title ends with. The tab title is left alone without it. */
+	/** The name of the app, which heads the menu and the drawer and ends the tab title, left alone without it. */
 	appName?: string
 	/** The theme colour of the frame, a #26292b background when absent. */
 	chromeColor?: ThemeColor
@@ -54,8 +42,40 @@ export interface FrameRootProps {
 }
 
 /**
+ * Holds the drawer of a frame, which the frame shuts on a page change no drilldown row or Back made, and on a widen.
+ * @param small - Whether the window is narrower than 782px.
+ * @param location - The location the frame shows.
+ * @param navigation - The moves the sidebar parts record.
+ * @returns The drawer state.
+ */
+function useFrameDrawer(small: boolean, location: string | undefined, navigation: NavigationState): DrawerState {
+	const [open, setDrawerOpen] = useState(false)
+	const id = useId()
+	const menu = useRef<HTMLButtonElement>(null)
+	const closedByFrame = useRef(false)
+	useEffect(() => {
+		if (!takeDrawerStays(navigation, location)) {
+			closedByFrame.current = true
+			setDrawerOpen(false)
+		}
+	}, [location, navigation])
+	useEffect(() => {
+		if (!small) {
+			closedByFrame.current = true
+			setDrawerOpen(false)
+		}
+	}, [small])
+	const setOpen = (next: boolean) => {
+		closedByFrame.current = false
+		setDrawerOpen(next)
+	}
+	const finalFocus = () => (closedByFrame.current ? false : menu.current)
+	return { open, id, menu, setOpen, finalFocus }
+}
+
+/**
  * Frames an admin application, folding its sidebar away on a narrow viewport, holds the moves its sidebar
- * parts share, and speaks the title of each new screen and sets the tab title from it.
+ * parts share and its drawer, and speaks the title of each new screen and sets the tab title from it.
  * @param props - The regions, the current location, the shown path, the app name, and the region colors.
  * @returns The frame element.
  */
@@ -71,20 +91,23 @@ function Root({
 	const [layout, setLayout] = useState<HTMLElement | null>(null)
 	const [navigation] = useState(createNavigationState)
 	const [titles] = useState(createScreenTitles)
+	const drawer = useFrameDrawer(small, location, navigation)
 	const classes = small ? 'godmin-layout godmin-layout--small' : 'godmin-layout'
 	return (
 		<ThemeProvider color={chromeColor}>
-			<FrameContext.Provider value={{ small, location, layout, navigation }}>
-				<NavigationStateContext.Provider value={navigation}>
-					<ScreenTitleContext.Provider value={titles}>
-						<TitleWatch titles={titles} shownPath={shownPath} location={location} appName={appName} />
-						<div ref={setLayout} className={classes}>
-							<CanvasColorContext.Provider value={canvasColor}>
-								{children}
-							</CanvasColorContext.Provider>
-						</div>
-					</ScreenTitleContext.Provider>
-				</NavigationStateContext.Provider>
+			<FrameContext.Provider value={{ small, location, layout, navigation, appName }}>
+				<DrawerContext.Provider value={drawer}>
+					<NavigationStateContext.Provider value={navigation}>
+						<ScreenTitleContext.Provider value={titles}>
+							<TitleWatch titles={titles} shownPath={shownPath} location={location} appName={appName} />
+							<div ref={setLayout} className={classes}>
+								<CanvasColorContext.Provider value={canvasColor}>
+									{children}
+								</CanvasColorContext.Provider>
+							</div>
+						</ScreenTitleContext.Provider>
+					</NavigationStateContext.Provider>
+				</DrawerContext.Provider>
 			</FrameContext.Provider>
 		</ThemeProvider>
 	)
@@ -94,10 +117,9 @@ const CanvasColorContext = createContext<ThemeColor>(undefined)
 
 export interface FrameSidebarProps {
 	children: ReactNode
-	brand?: ReactNode
-	/** The name of the menu button, godmin's translated "Open navigation panel" when absent. */
+	/** The name of Menu and its tooltip, godmin's translated "Menu" when absent. */
 	menuLabel?: string
-	/** The name of the region the column is, godmin's translated "Navigation" when absent. */
+	/** The name of the column's nav and of the drawer, godmin's translated "Admin" when absent. */
 	label?: string
 	/** What sits under the menu and never moves, such as the account panel. */
 	footer?: ReactNode
@@ -123,37 +145,61 @@ function SidebarFooter({ footer, footerNote }: Pick<FrameSidebarProps, 'footer' 
 }
 
 /**
- * Renders the navigation region, as a sidebar when there is room and as a top bar
- * with a drawer when there is not, its content above its footer in both.
- * @param props - The sidebar content, the brand, the menu button label, the region name, the footer and its note.
+ * Renders the identity block heading the menu: the app name over the host the admin is served at, as plain text.
+ * @returns The identity block element.
+ */
+function SidebarIdentity() {
+	const { appName } = useContext(FrameContext)
+	return (
+		<div className="godmin-sidebar__identity">
+			{appName === undefined ? null : (
+				<Text variant="body-md" className="godmin-sidebar__name">
+					{appName}
+				</Text>
+			)}
+			<Text variant="body-sm" className="godmin-sidebar__address">
+				{siteAddress(window.location.host)}
+			</Text>
+		</div>
+	)
+}
+
+/**
+ * Renders the admin nav, as a sidebar when there is room and as a top bar
+ * with a drawer when there is not, its identity block, content and footer in both.
+ * @param props - The sidebar content, the menu button label, the nav name, the footer and its note.
  * @returns The sidebar element.
  */
 function Sidebar({
 	children,
-	brand,
-	menuLabel = __('Open navigation panel'),
-	label = __('Navigation'),
+	menuLabel = __('Menu'),
+	label = __('Admin'),
 	footer,
 	footerNote,
 }: FrameSidebarProps) {
 	const { small } = useContext(FrameContext)
+	const drawer = useDrawer()
 	const content = (
 		<>
+			<SidebarIdentity />
 			<div className="godmin-sidebar__content">{children}</div>
 			<SidebarFooter footer={footer} footerNote={footerNote} />
 		</>
 	)
 	if (!small) {
 		return (
-			<div className="godmin-layout__sidebar" role="region" aria-label={label} tabIndex={-1}>
+			<nav className="godmin-layout__sidebar" aria-label={label}>
 				{content}
-			</div>
+			</nav>
 		)
 	}
 	return (
-		<TopBar brand={brand} menuLabel={menuLabel}>
-			{content}
-		</TopBar>
+		<>
+			<TopBar menuLabel={menuLabel} />
+			<SidebarDrawer drawer={drawer} label={label}>
+				{content}
+			</SidebarDrawer>
+		</>
 	)
 }
 
@@ -167,39 +213,39 @@ function drawerSide(layout: HTMLElement | null): 'left' | 'right' {
 }
 
 /**
- * Renders the narrow viewport chrome: a menu button opening the sidebar content in
- * a drawer, beside the brand. The drawer closes on a page change, unless a drilldown row or Back made it,
- * and ends in a close button only assistive technology meets, the name of WordPress's phone backdrop.
- * @param props - The sidebar content, the brand, and the menu button label.
+ * Renders the drawer, titled by the nav name and ending in a close button only assistive technology meets.
+ * @param props - The drawer, the nav name and the sidebar content.
+ * @returns The drawer root around its popup, which portals into the frame.
+ */
+function SidebarDrawer({ drawer, label, children }: { drawer: DrawerState; label: string; children: ReactNode }) {
+	const { layout } = useContext(FrameContext)
+	return (
+		<Drawer.Root open={drawer.open} onOpenChange={drawer.setOpen} swipeDirection={drawerSide(layout)}>
+			<Drawer.Popup
+				id={drawer.id}
+				className="godmin-layout__drawer"
+				portal={<Drawer.Portal container={layout} />}
+				finalFocus={drawer.finalFocus}
+			>
+				<VisuallyHidden render={<Drawer.Title />}>{label}</VisuallyHidden>
+				{children}
+				<VisuallyHidden render={<Drawer.Action variant="unstyled" tabIndex={-1} />}>
+					{__('Close navigation panel')}
+				</VisuallyHidden>
+			</Drawer.Popup>
+		</Drawer.Root>
+	)
+}
+
+/**
+ * Renders the narrow viewport chrome of a frame with no bar, Menu alone.
+ * @param props - The name of Menu.
  * @returns The top bar element.
  */
-function TopBar({
-	children,
-	brand,
-	menuLabel,
-}: Required<Pick<FrameSidebarProps, 'children' | 'menuLabel'>> & { brand?: ReactNode }) {
-	const { location, layout, navigation } = useContext(FrameContext)
-	const [open, setOpen] = useState(false)
-	useEffect(() => {
-		if (!takeDrawerStays(navigation, location)) {
-			setOpen(false)
-		}
-	}, [location, navigation])
+function TopBar({ menuLabel }: Required<Pick<FrameSidebarProps, 'menuLabel'>>) {
 	return (
 		<div className="godmin-layout__topbar">
-			<Drawer.Root open={open} onOpenChange={setOpen} swipeDirection={drawerSide(layout)}>
-				<Drawer.Trigger render={<button type="button" className="godmin-layout__menu" aria-label={menuLabel} />}>
-					<Icon icon={menu} />
-				</Drawer.Trigger>
-				<Drawer.Popup className="godmin-layout__drawer" portal={<Drawer.Portal container={layout} />}>
-					<VisuallyHidden render={<Drawer.Title />}>{__('Navigation')}</VisuallyHidden>
-					{children}
-					<VisuallyHidden render={<Drawer.Action variant="unstyled" tabIndex={-1} />}>
-						{__('Close navigation panel')}
-					</VisuallyHidden>
-				</Drawer.Popup>
-			</Drawer.Root>
-			{brand}
+			<Menu label={menuLabel} />
 		</div>
 	)
 }

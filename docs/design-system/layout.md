@@ -18,8 +18,19 @@ wide screen it sets two areas side by side, with the names the
 WordPress Site Editor gives them:
 
 - The sidebar holds the menu. It is `--godmin-nav-sidebar-width`
-  (300px) wide and never shrinks. Its menu scrolls on its own, above a
-  footer that stays put.
+  (240px) wide and never shrinks. It opens with the identity block, the
+  name of your app over the host the admin is served at, 64px tall.
+  The block stays put, and the menu scrolls on its own under it, above
+  a footer that stays put. The rows of the root screen start 20px under
+  the block. The title row of a sub menu is 52px tall, with Back 24px
+  wide at 16px from the edge and the title at 48px. A menu section
+  starts 16px under the row above it, so a menu that opens with one
+  shows its first label 36px under the block. The label's text starts
+  16px from the edge, and its first row sits 4px under it. Each row is
+  at least 32px tall and 4px over the next, 12px in from each side, so
+  216px wide in the sidebar and 276px in the drawer. Its 24px icon
+  sits 16px from the edge and its label at 48px, as in WordPress's new
+  admin. The menu scrolls with the browser's own scrollbar.
 - The canvas shows the screen and takes the rest of the width.
   [The canvas](#the-canvas) gives its sizes.
 
@@ -28,18 +39,19 @@ Render `Frame.Sidebar` and then `Frame.Canvas` straight inside
 its areas out in a row from the start edge, which is the left in
 English, so the sidebar sits at the start.
 
-Below `SIDEBAR_BREAKPOINT` (1024px) the frame turns into a column. A
+Below `EDGE_BREAKPOINT` (782px) the frame turns into a column. A
 top bar takes the place of the sidebar, above the canvas:
 
-- The top bar is 46px tall. Its menu button sits at its start, in a box
-  52px wide and 46px tall. The `brand` you give `Frame.Sidebar` comes
-  8px after the button. The bar keeps 16px free at its end.
-- The menu button opens the drawer, a panel that slides in over the
+- The top bar is 46px tall. Menu, its menu button, fills a slot 52px
+  wide and 46px tall at its start, with square corners, and stands
+  alone in the bar.
+- Menu opens the drawer, a panel that slides in over the
   page from the start edge. [The drawer](./frame.md#the-drawer) gives
-  how it moves. It holds the same menu and footer as the sidebar. It
-  runs the full height the browser shows, as wide as the sidebar but
-  never more than 85% of the window width. A dark backdrop dims the
-  page under it.
+  how it moves. It holds the same identity block, menu and footer as
+  the sidebar. It
+  runs the full height the browser shows, `--godmin-nav-drawer-width`
+  (300px) wide but never more than 85% of the window width. A dark
+  backdrop dims the page under it.
   [Raw colors on purpose](./color.md#raw-colors-on-purpose) gives its
   color.
 
@@ -89,12 +101,11 @@ as wide. A rule for the screens below it asks for one pixel less, as
 | Export | Value | What changes below it |
 | --- | --- | --- |
 | `HUGE_BREAKPOINT` | `1440` | Nothing in the frame. It is the WordPress huge breakpoint, for rules of your own |
-| `SIDEBAR_BREAKPOINT` | `1024` | The sidebar becomes the top bar and the drawer |
-| `EDGE_BREAKPOINT` | `782` | The canvas meets the screen edges. It is the WordPress medium breakpoint. A wide list table freezes its checkbox and title only above this width, as [a wide table](./lists.md#a-wide-table) shows. A sub menu shows at once, with no slide, as [the sidebar slide](./frame.md#the-sidebar-slide) shows |
+| `EDGE_BREAKPOINT` | `782` | The sidebar becomes the top bar and the drawer, and the canvas meets the screen edges. It is the WordPress medium breakpoint. A wide list table freezes its checkbox and title only above this width, as [a wide table](./lists.md#a-wide-table) shows. A sub menu shows at once, with no slide, as [the sidebar slide](./frame.md#the-sidebar-slide) shows |
 | `DENSE_BREAKPOINT` | `640` | The canvas side gutter narrows to 16px. A list from `useListView` takes its phone layout, as [the view in the address](../lists.md#the-view-in-the-address) shows. A table inside `godmin-table-scroll` scrolls sideways, as [stylesheet helpers](../screens.md#stylesheet-helpers) shows |
 | `SHEET_BREAKPOINT` | `600` | Toasts widen to the screen, as [toasts](./toasts.md#size) show. It is the WordPress small breakpoint |
 | `TITLE_BREAKPOINT` | `404` | Nothing in the frame. The WordPress editor drops the document title from its header here, for an editor header of your own |
-| `SMALL_VIEWPORT` | `(max-width: 1023px)` | The media query the frame folds its sidebar at |
+| `SMALL_VIEWPORT` | `(max-width: 781px)` | The media query every part of the frame folds at |
 
 [What happens on a small screen](../framing-an-application.md#what-happens-on-a-small-screen)
 shows `useMediaQuery`, which checks a media query from your own
@@ -126,9 +137,10 @@ adds or subtracts two of them, such as
 for a 20px gap.
 
 The frame's own sizes are plain pixels, not tokens. They are the
-sidebar width, the canvas margin, the side gutter and the top bar.
-The sidebar menu sets most of its spacing in plain pixels too. The
-first three sizes have custom properties of their own, which
+sidebar width, the drawer width, the canvas margin, the side gutter
+and the top bar. The sidebar menu sets most of its spacing in plain
+pixels too. The first four sizes have custom properties of their own,
+which
 [public custom properties](./custom-properties.md#public-custom-properties)
 lists.
 
@@ -136,8 +148,8 @@ lists.
 
 In a right-to-left language, such as Arabic or Hebrew, text starts at
 the right. The sidebar then sits at the right edge, and the canvas
-drops its margin on that side. In the top bar, the menu button sits
-at the right end.
+drops its margin on that side. In the top bar, Menu sits at the
+right end.
 
 Where a margin, a padding or a position differs between the two sides,
 godmin's stylesheet sets it with a logical property. A logical
@@ -153,7 +165,7 @@ text, turns it. That covers
 [the sidebar slide](./frame.md#the-sidebar-slide), the shadow of the
 drawer, the fade on the page tabs where a tab is cut off, and the
 edge line of a pinned actions column in a `godmin-table`. The drawer
-itself opens at the right edge, under the menu button, as
+itself opens at the right edge, over Menu, as
 [the drawer](./frame.md#the-drawer) says.
 
 Chevrons turn around too. A row that opens a sub menu ends in a

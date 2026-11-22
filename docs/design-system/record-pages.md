@@ -87,11 +87,10 @@ every value of how it looks.
 - A bleed canvas has no gutter for the room at each side of a column
   to sit in, so that room stays inside the page. The columns fold at
   832px there, and their content sits 4px in from the title.
-- The page does not narrow steadily as the window does, since the
-  sidebar folds at `SIDEBAR_BREAKPOINT` and the canvas drops its
-  margin at `EDGE_BREAKPOINT`. So a window just below
-  `SIDEBAR_BREAKPOINT` can show two columns where a wider one shows
-  one.
+- The page does not narrow steadily as the window does. At
+  `EDGE_BREAKPOINT` the sidebar folds and the canvas drops its margin
+  together, so a 781px window leaves a 733px page where a 782px window
+  leaves 478px. Both show one column.
 - An `aside` that renders nothing takes no room, and the main work
   fills the page.
 - On a narrow page the details come after everything in the main

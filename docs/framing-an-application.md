@@ -32,17 +32,25 @@ you wrap one in a component of your own.
 `Frame.Sidebar` holds your menu.
 [The sidebar menu](#the-sidebar-menu) below builds one for you.
 [The frame](./design-system/layout.md#the-frame) gives the sidebar's
-width. Two props fill the bottom of the sidebar:
+width.
+
+The sidebar opens with the name of your app, the `appName` you give
+`Frame.Root`, over the host the admin is served at, such as
+example.com, as WordPress's new admin heads its menu. Both lines are
+plain text, never a heading or a link. With no `appName` the host shows
+alone. The menu scrolls under them, and they stay put.
+
+Two props fill the bottom of the sidebar:
 
 - `footer` sits under the menu and never moves, such as the account
   panel.
 - `footerNote` is one short line of small grey text under the footer,
   such as the version.
 
-On a wide screen the sidebar is one region named "Navigation", as in
-the WordPress Site Editor, so a screen reader can jump to it. Pass
-`label` to give it another name. On a small screen the drawer is
-named "Navigation" whatever `label` says.
+On a wide screen the sidebar is one `nav` named "Admin", as WordPress's
+new admin names its menu, so a screen reader can jump to it. On a small
+screen the drawer carries the same name. Pass `label` to give both
+another name.
 
 ## The sidebar menu
 
@@ -83,7 +91,6 @@ function Layout() {
 		<Frame.Root location={useFrameLocation()} shownPath={useShownPath()} appName="MyApp">
 			<Frame.Sidebar footer={<AccountPanel />}>
 				<Navigation
-					title="MyApp"
 					items={menu}
 					home={<Link to="/posts" />}
 					can={(capability) => can(user, capability)}
@@ -97,8 +104,8 @@ function Layout() {
 }
 ```
 
-- `title` is the title of the root screen, such as your app's name.
-- `items` are the rows of the root screen.
+- `items` are the rows of the root screen. The root screen has no
+  title of its own, since the name of your app heads the sidebar.
 - `home` is a link to the page your home address lands on. Back on a
   sub menu goes there.
 - `can` tells whether the reader holds a capability. See
@@ -106,14 +113,14 @@ function Layout() {
 
 `shownPath` and `appName` on `Frame.Root` make the frame speak the
 title of each new screen and set the browser tab title, as
-[routes and the frame](#routes-and-the-frame) says.
+[routes and the frame](#routes-and-the-frame) says. `appName` also
+heads the sidebar, as [the sidebar](#the-sidebar) says.
 
 Each row is a link with its icon, a glyph from `@wordpress/icons`,
 then its label. A row with no icon keeps a blank in its place when
 other rows have one, so the labels line up. The row of the page on
-screen is highlighted, and it stays highlighted on every address
-under it, so Posts stays highlighted on `/posts/new`. A row that
-opens a sub menu never is, as
+screen is bold, and it stays bold on every address under it, so Posts
+stays bold on `/posts/new`. A row that opens a sub menu never is, as
 [the sidebar marks](./design-system/frame.md#the-sidebar-marks) says.
 
 `Navigation` needs a `Frame.Root` above it, which holds what the
@@ -235,6 +242,38 @@ const updates: MenuItem = {
 }
 ```
 
+### Sections
+
+WordPress's new admin sorts its menu into three sections under small
+grey labels: Content, Design and Manage. Give a `MenuItem` a `group`
+to put its row in one of them. `MenuGroup` names the three:
+`'content'`, `'design'` and `'manage'`.
+
+```ts
+const menu: MenuItem[] = [
+	{ label: 'Updates', to: '/updates' },
+	{ label: 'Posts', to: '/posts', group: 'content' },
+	{ label: 'Themes', to: '/themes', group: 'design' },
+	{ label: 'Users', to: '/users', group: 'manage' },
+]
+```
+
+- Rows keep the order you give. A section shows at the place of its
+  first row and gathers every row that names it.
+- A row with no `group` stays at its own place, outside every section.
+  The rows you draw as children of a `NavigationList` come after
+  everything, outside every section too.
+- A section with no row the reader may open shows nothing, not even
+  its label.
+- A `fallback` row sits in the section of the row it replaces.
+- A row that opens a sub menu can sit in a section.
+- When one row has an icon, rows with none keep a blank in its place
+  in every section, so all the labels line up.
+
+Each section is a group named by its label, so a screen reader says
+the name as the focus enters it. The label is never a heading. A menu
+with no section draws one list, as before.
+
 ## The canvas on a wide screen
 
 On a wide screen the canvas is a panel with a margin around it, the
@@ -244,8 +283,9 @@ that margin and when the canvas leaves it out.
 
 ## What happens on a small screen
 
-As the screen gets narrower, the frame changes three times, at the
-widths [Breakpoints](./design-system/layout.md#breakpoints) lists:
+As the screen gets narrower, the frame changes at two of the widths
+[Breakpoints](./design-system/layout.md#breakpoints) lists. Below
+`EDGE_BREAKPOINT` two things happen together:
 
 - The sidebar goes away. In its place you get a top bar, like the
   WordPress admin bar on a phone. Its menu button opens the same
@@ -253,7 +293,8 @@ widths [Breakpoints](./design-system/layout.md#breakpoints) lists:
 - The canvas stretches to the screen edges, with no margin, no
   rounded corners and no shadow, the way a WordPress admin page meets
   a small screen.
-- The canvas also uses tighter padding.
+
+Below `DENSE_BREAKPOINT` the canvas also uses tighter padding.
 
 [The frame](./design-system/layout.md#the-frame) gives the sizes of
 the top bar and the drawer, and
@@ -267,15 +308,10 @@ when the reader opens another page. It stays open when a sub menu
 opens or Back closes one, so the reader can pick a row in it. On a
 phone a sub menu shows at once inside it, with no slide.
 
-Two `Frame.Sidebar` props exist for the top bar:
-
-- `brand` is a small element such as a home link, shown beside the
-  menu button. The top bar only exists on a small screen, so
-  `brand` is not rendered at all on a wide one. Do not make it a
-  heading. [Heading levels](./screens.md#heading-levels) says
-  which part draws each one.
-- `menuLabel` is the name of the menu button. It defaults to "Open
-  navigation panel", WordPress's words.
+The top bar holds Menu alone, with no name of your app beside it, since
+the drawer opens with that name. `menuLabel` on `Frame.Sidebar` names
+Menu, the menu button, and its tooltip. It defaults to "Menu", the word
+of WordPress's new admin and of its admin bar on a phone.
 
 The widths are exported, so your own rules can change at the same
 points as the frame and as WordPress.
@@ -290,10 +326,10 @@ const sheet = useMediaQuery(`(max-width: ${SHEET_BREAKPOINT - 1}px)`)
 
 ## godmin's own words
 
-The frame and the sidebar draw a few words of their own: "Back",
-"Navigation", "Open navigation panel" and "Close navigation panel".
-The last one names a close button at the end of the drawer, which
-only a screen reader meets. `ListNoResults` draws two more: "No
+The frame and the sidebar draw a few words of their own: "Admin",
+"Back", "Menu", the section labels "Content", "Design" and "Manage",
+and "Close navigation panel". The last one names a close button at
+the end of the drawer, which only a screen reader meets. `ListNoResults` draws two more: "No
 results found" and the line under it, "Try adjusting your search or
 filters to find what you're looking for." The tab title puts the
 screen title and the app name together as `%1$s ‹ %2$s`, and the not
@@ -329,8 +365,10 @@ grey a step lighter.
 
 Dialogs, drawers, menus, popovers and selects you open inside the
 frame do not take these colors. They use the `AdminRoot` color
-instead. Tooltips still follow the frame colors. The navigation
-drawer is an exception and keeps `chromeColor`.
+instead. The navigation drawer is an exception and keeps
+`chromeColor`. So does the tooltip of Menu, which paints in the
+chrome surface and text colors. A tooltip inside the canvas keeps the
+dark color WordPress gives every tooltip.
 
 ## Two canvas modes
 
@@ -382,8 +420,9 @@ Two more props of `Frame.Root` tell the reader where they are:
   title of the new screen, as
   [what a screen reader hears when the screen changes](./design-system/frame.md#what-a-screen-reader-hears-when-the-screen-changes)
   says. Without it the frame speaks nothing.
-- `appName` is the name of your app. The frame sets the browser tab
-  title to the screen title and that name, as
+- `appName` is the name of your app. It heads the sidebar and the
+  drawer, as [the sidebar](#the-sidebar) says. The frame also sets the
+  browser tab title to the screen title and that name, as
   [the tab title](./design-system/frame.md#the-tab-title) says.
   Without it the frame leaves the tab title alone.
 

@@ -99,36 +99,6 @@ test('narrows the canvas gutter at the dense breakpoint and leaves the edges to 
 	expect(canvas).not.toMatch(/margin|border-radius|box-shadow/)
 })
 
-test('draws the top bar 46px tall, as the WordPress admin bar is on a narrow screen', () => {
-	const bar = ruleOf('.godmin-layout__topbar')
-
-	expect(bar).toMatch(/block-size:\s*46px/)
-	expect(bar).toMatch(/padding-inline-end:\s*16px/)
-	expect(bar, 'the menu control fills the bar height').not.toMatch(/(?:^|\s)padding:/)
-})
-
-test('draws the menu control bare like the new admin menu toggle, its glyph the full chrome text colour', () => {
-	const menu = ruleOf('.godmin-layout__menu')
-
-	expect(menu).toMatch(/display:\s*flex/)
-	expect(menu).toMatch(/flex:\s*none/)
-	expect(menu).toMatch(/padding:\s*0/)
-	expect(menu).toMatch(/border:\s*0/)
-	expect(menu).toMatch(/background:\s*none/)
-	expect(menu).toMatch(/(?:^|\s)color:\s*var\(--wpds-color-foreground-content-neutral\);/)
-	expect(menu).toMatch(/cursor:\s*var\(--wpds-cursor-control\)/)
-})
-
-test('lights the menu control under the pointer or the keyboard, as the admin bar does', () => {
-	const lit = ruleOf('.godmin-layout__menu:is(:hover, :focus-visible)')
-
-	expect(lit).toMatch(/background:\s*var\(--wpds-color-background-interactive-neutral-weak-active\)/)
-	expect(lit).toMatch(/color:\s*var\(--wpds-color-foreground-interactive-brand\)/)
-	expect(ruleOf('.godmin-layout__menu:focus-visible')).toMatch(
-		/outline:\s*var\(--wpds-border-width-focus\) solid var\(--wpds-color-stroke-focus\)/,
-	)
-})
-
 test('narrows the canvas gutter to 16px below 640px and lets the gutter alone set the padding', () => {
 	const canvas = ruleOf('.godmin-layout__canvas', blockOf('@media (max-width: 639px)'))
 

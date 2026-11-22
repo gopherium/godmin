@@ -212,8 +212,8 @@ it.
 ## Heading levels
 
 With [the sidebar menu](./framing-an-application.md#the-sidebar-menu),
-the title of the sidebar screen is the `h1`. Then pass
-`headingLevel={2}` to every `Page` beside it:
+the title of a sub menu is the `h1`, and the root screen of the menu
+draws no heading. Pass `headingLevel={2}` to every `Page` beside it:
 
 ```tsx
 <Page title="Posts" headingLevel={2} list>
@@ -229,10 +229,10 @@ gives the level each title takes, with and without the sidebar.
 
 ## NavigationScreen
 
-`NavigationScreen` draws one screen of
+`NavigationScreen` draws one sub menu of
 [the sidebar menu](./framing-an-application.md#the-sidebar-menu),
-the way the WordPress Site Editor draws it: a title row with Back,
-then the content.
+the way WordPress's new admin draws it: a title row with Back, then
+the content.
 
 ```tsx
 <NavigationScreen title="Chats" description="Conversations waiting for a reply.">
@@ -240,8 +240,7 @@ then the content.
 </NavigationScreen>
 ```
 
-- `title` is the `h1` of the page, in 20px text. It takes any
-  element, so the root screen can hold your brand.
+- `title` is the `h1` of the sub menu, in 15px text on a 32px line.
 - Back is a chevron link at the start of the title row. Inside
   `Navigation` it goes to the app's `home`. Pass `back`, a link
   element from your router, to send it somewhere else. The root

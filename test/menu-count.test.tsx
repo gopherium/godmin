@@ -199,7 +199,6 @@ test.each(['sidebar', 'canvas'] as const)(
 test.each([
 	['sidebar', '.godmin-layout', 'sidebar'],
 	['phone drawer', '.godmin-layout__drawer', 'sidebar'],
-	['current row', ".godmin-navigation-item[aria-current='page']", 'sidebar'],
 	['canvas', '.godmin-layout__canvas', 'canvas'],
 ] as const)('keeps the pill at 3 to 1 or more on the %s of the default frame', (_, selector, region) => {
 	const badge = framedBadges()[region]

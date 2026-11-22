@@ -3,7 +3,7 @@
 import { createEvent, fireEvent, screen } from '@testing-library/react'
 import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
 import type { MouseEvent, ReactElement, ReactNode } from 'react'
-import { afterEach, expect, test, vi } from 'vitest'
+import { afterEach, expect, expectTypeOf, test, vi } from 'vitest'
 
 import spanish from '../src/list-chrome/es-ES.js'
 import { NavigationScreen } from '../src/navigation-screen.js'
@@ -28,7 +28,7 @@ const TITLE_ROW = 'godmin-navigation-screen__title-icon'
 
 /**
  * Renders a screen inside what a Navigation hands each screen it draws.
- * @param screenState - Whether the screen is the root, the app's home and its can.
+ * @param screenState - The app's home and its can.
  * @param ui - The screen to render.
  * @returns The testing library render result.
  */
@@ -64,17 +64,6 @@ test('renders the title as the level 1 heading, then Back, description, actions,
 	expect(screen.getByRole('button', { name: 'New' })).not.toBeNull()
 	expect(screen.getByText('screen content')).not.toBeNull()
 	expect(screen.getByText('footer text')).not.toBeNull()
-})
-
-test('takes any node as its title, so the root screen can hold the brand', () => {
-	renderAdmin(
-		<NavigationScreen title={<span data-testid="brand">Acme</span>}>
-			<p>root content</p>
-		</NavigationScreen>,
-	)
-
-	const heading = screen.getByRole('heading', { level: 1, name: 'Acme' })
-	expect(heading.contains(screen.getByTestId('brand'))).toBe(true)
 })
 
 test('names the screen and each of its regions with the names the Site Editor gives them', () => {
@@ -125,14 +114,16 @@ test('omits Back and the optional regions on a screen that gives none', () => {
 	expect(container.querySelector('.godmin-navigation-screen__main')?.className).toBe('godmin-navigation-screen__main')
 })
 
-test('keeps the Back slot of a screen with no Back, so its title lines up with the title of a sub screen', () => {
+test('starts the title row of a screen with no Back at its title, with no slot kept for Back', () => {
 	const { container } = renderAdmin(
 		<NavigationScreen title="Home">
-			<p>root content</p>
+			<p>screen content</p>
 		</NavigationScreen>,
 	)
 
-	expect(container.querySelector(`.${TITLE_ROW}`)?.className).toBe(`${TITLE_ROW} ${TITLE_ROW}--root`)
+	const row = container.querySelector(`.${TITLE_ROW}`) as Element
+	expect(row.className).toBe(TITLE_ROW)
+	expect(row.firstElementChild).toBe(screen.getByRole('heading', { level: 1, name: 'Home' }))
 })
 
 test('leaves the title row of a screen with Back unmarked', () => {
@@ -236,7 +227,7 @@ test('keeps the style and the data attributes of the link the screen supplied', 
 
 test('goes to the home of the Navigation around it when a sub screen names no back', () => {
 	renderInside(
-		{ isRoot: false, home: <a href="#home" /> },
+		{ home: <a href="#home" /> },
 		<NavigationScreen title="Conversations">
 			<p>screen content</p>
 		</NavigationScreen>,
@@ -247,7 +238,7 @@ test('goes to the home of the Navigation around it when a sub screen names no ba
 
 test('goes to its own back before the home of the Navigation around it', () => {
 	renderInside(
-		{ isRoot: false, home: <a href="#home" /> },
+		{ home: <a href="#home" /> },
 		<NavigationScreen title="Conversations" back={<a href="#parent" />}>
 			<p>screen content</p>
 		</NavigationScreen>,
@@ -256,16 +247,8 @@ test('goes to its own back before the home of the Navigation around it', () => {
 	expect(screen.getByRole('link', { name: 'Back' }).getAttribute('href')).toBe('#parent')
 })
 
-test('draws no Back on the root screen of a Navigation, whatever back it names', () => {
-	const { container } = renderInside(
-		{ isRoot: true, home: <a href="#home" /> },
-		<NavigationScreen title="Acme" back={<a href="#parent" />}>
-			<p>root content</p>
-		</NavigationScreen>,
-	)
-
-	expect(screen.queryByRole('link', { name: 'Back' })).toBeNull()
-	expect(container.querySelector(`.${TITLE_ROW}`)?.className).toBe(`${TITLE_ROW} ${TITLE_ROW}--root`)
+test('marks no screen of a Navigation as its root, since the root screen draws no title row', () => {
+	expectTypeOf<ScreenState>().not.toHaveProperty('isRoot')
 })
 
 /**
@@ -282,7 +265,7 @@ function renderInNavigation(
 ): NavigationState {
 	renderAdmin(
 		<NavigationStateContext.Provider value={state}>
-			<ScreenContext.Provider value={{ isRoot: false, targetOf }}>
+			<ScreenContext.Provider value={{ targetOf }}>
 				<NavigationScreen title="Conversations" back={back}>
 					<p>screen content</p>
 				</NavigationScreen>

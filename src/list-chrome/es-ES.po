@@ -158,6 +158,10 @@ msgid "Add filter"
 msgstr "Añadir filtro"
 
 #, fuzzy
+msgid "Admin"
+msgstr "Administración"
+
+#, fuzzy
 msgid "After"
 msgstr "Después"
 
@@ -239,6 +243,10 @@ msgid "Contains"
 msgstr "Contiene"
 
 #, fuzzy
+msgid "Content"
+msgstr "Contenido"
+
+#, fuzzy
 msgid "Coordinated Universal Time"
 msgstr "Hora universal coordinada"
 
@@ -278,6 +286,10 @@ msgstr "Densidad"
 #, fuzzy
 msgid "Deselect all"
 msgstr "Anular selección de todo"
+
+#, fuzzy
+msgid "Design"
+msgstr "Diseño"
 
 #, fuzzy
 msgid "Doesn't contain"
@@ -425,6 +437,10 @@ msgid "M j, Y g:i a"
 msgstr "j M Y H:i"
 
 #, fuzzy
+msgid "Manage"
+msgstr "Gestionar"
+
+#, fuzzy
 msgctxt "March abbreviation"
 msgid "Mar"
 msgstr "Mar"
@@ -441,6 +457,10 @@ msgstr "mayo"
 msgctxt "May abbreviation"
 msgid "May"
 msgstr "May"
+
+#, fuzzy
+msgid "Menu"
+msgstr "Menú"
 
 #, fuzzy
 msgid "Mon"
@@ -461,10 +481,6 @@ msgstr "Mover a la derecha"
 #, fuzzy
 msgid "Navigate to item"
 msgstr "Navegar hasta el elemento"
-
-#, fuzzy
-msgid "Navigation"
-msgstr "Navegación"
 
 #, fuzzy
 msgid "Navigation bar"
@@ -519,10 +535,6 @@ msgstr "octubre"
 #, fuzzy
 msgid "On"
 msgstr "El"
-
-#, fuzzy
-msgid "Open navigation panel"
-msgstr "Abrir el panel de navegación"
 
 #, fuzzy
 msgid "Optional"

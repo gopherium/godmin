@@ -20,8 +20,8 @@ const FOLD = 824
 /** How far a walk goes each side of the fold. */
 const REACH = 24
 
-/** The windows that give the fold, the sidebar on screen and folded away. */
-const FOLDS = [{ window: 1188 }, { window: 904 }]
+/** The window that gives the fold, with the sidebar on screen. */
+const FOLDS = [{ window: 1128 }]
 
 /** Returns how far a box holds content past its height. */
 function overflowOf(selector: string): number {

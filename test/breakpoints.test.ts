@@ -2,18 +2,15 @@
 
 import { expect, test } from 'vitest'
 
-import { HUGE_BREAKPOINT, SHEET_BREAKPOINT, SIDEBAR_BREAKPOINT, SMALL_VIEWPORT, TITLE_BREAKPOINT } from '../src/index'
+import { EDGE_BREAKPOINT, HUGE_BREAKPOINT, SHEET_BREAKPOINT, SMALL_VIEWPORT, TITLE_BREAKPOINT } from '../src/index'
 
 test('offers the huge breakpoint from the package entry, the WordPress huge breakpoint', () => {
 	expect(HUGE_BREAKPOINT).toBe(1440)
 })
 
-test('offers the sidebar breakpoint from the package entry, where the sidebar becomes a drawer', () => {
-	expect(SIDEBAR_BREAKPOINT).toBe(1024)
-})
-
-test('folds the frame one pixel under the sidebar breakpoint', () => {
-	expect(SMALL_VIEWPORT).toBe('(max-width: 1023px)')
+test('folds the frame one pixel under the edge breakpoint, the WordPress medium breakpoint', () => {
+	expect(EDGE_BREAKPOINT).toBe(782)
+	expect(SMALL_VIEWPORT).toBe('(max-width: 781px)')
 })
 
 test('offers the sheet breakpoint from the package entry, the WordPress small breakpoint', () => {

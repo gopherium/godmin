@@ -15,13 +15,14 @@ to change. The internal ones are not yours to read or change.
 
 The canvas is the panel that shows the current screen.
 [The frame](./layout.md#the-frame) and [the canvas](./layout.md#the-canvas)
-give the four sizes below, and
+give the five sizes below, and
 [the sidebar slide](./frame.md#the-sidebar-slide) gives the two slide
 values. This table says where each one is set and what it changes.
 
 | Name | Set on | What it changes |
 | --- | --- | --- |
-| `--godmin-nav-sidebar-width` | `:root` | The width of the sidebar, and of the drawer that takes its place on a small screen |
+| `--godmin-nav-sidebar-width` | `:root` | The width of the sidebar, 240px |
+| `--godmin-nav-drawer-width` | `:root` | The width of the drawer that takes the sidebar's place on a small screen, 300px |
 | `--godmin-canvas-margin` | `:root` | The space around the canvas |
 | `--godmin-canvas-gutter` | the canvas | The canvas padding left and right. A `Page` with `list` and no `aside` reaches out by it to the canvas edges. A record page's columns reach out by it too |
 | `--godmin-canvas-gutter-block` | the canvas | The canvas padding above and below. The band of notices above the screen keeps this space under it. A `Page` with `list` and no `aside` reaches down by it to the canvas bottom. A record page's columns reach down by it too |
@@ -32,7 +33,7 @@ values. This table says where each one is set and what it changes.
 
 A value set on `:root` reaches every element on the page.
 
-To change one of the four on `:root`, write a plain rule in your own
+To change one of the five on `:root`, write a plain rule in your own
 stylesheet. For example, a wider sidebar:
 
 ```css
@@ -41,7 +42,8 @@ stylesheet. For example, a wider sidebar:
 
 Your rule wins over godmin's, as
 [changing the page appearance](../overview.md#changing-the-page-appearance)
-explains. The sidebar and the drawer both follow it.
+explains. The drawer keeps its own width, which
+`--godmin-nav-drawer-width` changes the same way.
 
 The canvas sets its two gutters on itself. So a gutter set on `:root`
 changes nothing inside the canvas. Read them inside the canvas, for
@@ -54,6 +56,9 @@ do not read or set them in your app.
 
 - `--godmin-menu-count-size` sizes the count `MenuCount` draws. It is
   set on the count itself.
+- `--godmin-bar-tip-background` and `--godmin-bar-tip-foreground` hold
+  the chrome surface and text colors the tooltip of Menu paints with.
+  They are set on the frame, so they take the chrome theme's values.
 - `--godmin-page-tabs-start`, `--godmin-page-tabs-end`,
   `--godmin-page-tabs-fade-width`, `--godmin-page-tabs-fade` and
   `--godmin-page-tabs-fade-both` fade an end of a `PageTabs` row where

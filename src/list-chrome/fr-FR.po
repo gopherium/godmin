@@ -22,6 +22,10 @@ msgid "AM"
 msgstr "AM"
 
 #, fuzzy
+msgid "Admin"
+msgstr "Administration"
+
+#, fuzzy
 msgctxt "April abbreviation"
 msgid "Apr"
 msgstr "Avr"
@@ -52,6 +56,10 @@ msgid "Close navigation panel"
 msgstr "Fermer le panneau de navigation"
 
 #, fuzzy
+msgid "Content"
+msgstr "Contenu"
+
+#, fuzzy
 msgid "Could not get a valid response from the server."
 msgstr "Impossible d’obtenir du serveur une réponse valide."
 
@@ -63,6 +71,10 @@ msgstr "Déc"
 #, fuzzy
 msgid "December"
 msgstr "décembre"
+
+#, fuzzy
+msgid "Design"
+msgstr "Conception"
 
 #, fuzzy
 msgid "F j, Y g:i a"
@@ -121,6 +133,10 @@ msgid "M j, Y g:i a"
 msgstr "d F Y G\\hi"
 
 #, fuzzy
+msgid "Manage"
+msgstr "Gérer"
+
+#, fuzzy
 msgctxt "March abbreviation"
 msgid "Mar"
 msgstr "Mar"
@@ -139,16 +155,16 @@ msgid "May"
 msgstr "Mai"
 
 #, fuzzy
+msgid "Menu"
+msgstr "Menu"
+
+#, fuzzy
 msgid "Mon"
 msgstr "Lun"
 
 #, fuzzy
 msgid "Monday"
 msgstr "lundi"
-
-#, fuzzy
-msgid "Navigation"
-msgstr "Navigation"
 
 #, fuzzy
 msgid "No results found"
@@ -175,10 +191,6 @@ msgstr "Oct"
 #, fuzzy
 msgid "October"
 msgstr "octobre"
-
-#, fuzzy
-msgid "Open navigation panel"
-msgstr "Ouvrir le panneau de navigation"
 
 #, fuzzy
 msgid "PM"

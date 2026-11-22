@@ -29,7 +29,10 @@ with Tab, and Enter presses the control that holds it. godmin draws
 its own rings only when the reader uses the keyboard, the state CSS
 calls `:focus-visible`. A mouse click draws none of them. A checkbox
 or a button from `@wordpress/components` draws WordPress's own focus
-style on any focus, a mouse click included.
+style on any focus, a mouse click included. Menu, the menu button of
+the top bar, is a WPDS button and rings the WPDS way, on any focus
+except while it is pressed. So a browser that focuses a button on a
+click leaves Menu ringed after one.
 
 Except on a toast and a list region, every ring godmin draws is the
 same line,
@@ -43,8 +46,8 @@ same line,
 
 | Part | Where the ring sits |
 | --- | --- |
-| A sidebar row, and Back on a sidebar screen | Outside the part, as far out as the ring is wide. A row's ring paints over the row below it |
-| The menu button of the top bar | Inside the button |
+| A sidebar row, and Back on a sidebar screen | Outside the part, as far out as the ring is wide. A row's ring sits in the 4px gap to the next row |
+| Menu, the menu button of the top bar | Inside its slot, as far in as the ring is wide |
 | The title link of a `godmin-table`, a `godmin-table-scroll` box and a row of `RepeatRows` | 2px outside the part |
 | A page tab | Around its label, not around the whole height of the tab |
 | A toast | Its own rings, as [keyboard](./toasts.md#keyboard) on the toasts page shows. A plain toast keeps the browser's ring too |
@@ -68,8 +71,9 @@ sidebar moves focus in these cases only:
 | --- | --- |
 | Opens a sub menu with a drilldown row | Back. On a screen with no Back, the first control the Tab key reaches. On a screen with no control, the screen itself, so focus stays in the sidebar |
 | Presses Back | The drilldown row that opened the sub menu, even after the reader opened pages inside it. When that row is gone, or the sub menu opened another way, the first control of the screen Back lands on |
-| Opens a page with any other link | Nowhere. The sidebar moves no focus |
-| Closes the drawer with Escape or its close button | The menu button |
+| Opens a page with any other link | Nowhere. The sidebar moves no focus, and a drawer it closes gives the focus back to nothing |
+| Closes the drawer with Escape, its close button or a tap on the backdrop | Menu. After a tap, Chrome on Android and Samsung Internet give it back to nothing |
+| Widens the window to `EDGE_BREAKPOINT` or more with the drawer open | Nowhere. The drawer shuts and the sidebar takes its place |
 
 The title of a sidebar screen never takes focus. A move to another
 screen moves no focus either. A screen reader hears the new screen's
@@ -145,8 +149,8 @@ jump straight to one.
 | Part | Role | Name |
 | --- | --- | --- |
 | The canvas | `main` | None |
-| The sidebar on a wide screen, menu and footer together | `region` | "Navigation", or the `label` of `Frame.Sidebar` |
-| The drawer on a small screen | `dialog` | "Navigation", whatever `label` says |
+| The sidebar on a wide screen, menu and footer together | `navigation` | "Admin", or the `label` of `Frame.Sidebar` |
+| The drawer on a small screen | `dialog` | "Admin", or the `label` of `Frame.Sidebar` |
 | The tabs of a page | `navigation` | The `label` of [`PageTabs`](../screens.md#pagetabs) |
 | The list of a list page | `region` | The `listLabel` of [`Page`](../screens.md#page), when given |
 | The details of a record page | `region` | The `asideLabel` of [`Page`](../screens.md#page), when given |
@@ -166,9 +170,9 @@ picture such as an icon, is never the name:
 - The initials avatar is hidden, because the name beside it already
   says who it is.
 
-The current page carries `aria-current="page"`. A sidebar row draws
-its highlight from that mark, so what the eye sees and what a screen
-reader hears always match. A drilldown row never carries it, as
+The current page carries `aria-current="page"`. A sidebar row turns
+bold from that mark, so what the eye sees and what a screen reader
+hears always match. A drilldown row never carries it, as
 [the sidebar marks](./frame.md#the-sidebar-marks) says. A page tab
 draws its underline from its
 `current` prop, which sets the same mark. A router link can set the
@@ -179,7 +183,10 @@ to keep a router link from setting it.
 
 Some screen readers stop treating a list with no bullets as a list.
 So the sidebar rows, the page tabs and a log list keep
-`role="list"`.
+`role="list"`. Each section of the sidebar menu is a group named by
+its label, Content, Design or Manage, with its rows in a list of its
+own. So a screen reader says the section's name as the focus enters
+it, and its list of headings skips the label.
 
 ## What a screen reader hears
 
@@ -227,7 +234,7 @@ godmin stylesheet then gets shorter or stops.
 
 ## Text length and language
 
-godmin draws a few words of its own, such as Back and Navigation, and
+godmin draws a few words of its own, such as Back and Admin, and
 translates them.
 [godmin's own words](../framing-an-application.md#godmins-own-words)
 lists them and the languages they ship in. The props `label`,

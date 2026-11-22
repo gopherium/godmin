@@ -35,12 +35,12 @@ const WAIT = 3_000
 /** The line of the chevron that points right, the one Back draws in a right to left language. */
 const RIGHT_CHEVRON = 'M10 6.5L15 12L10 17.5'
 
-/** The rows of the root screen of the sample admin. */
+/** The rows of the root screen of the sample admin, in the sections of WordPress's new admin. */
 const ROWS: readonly MenuItem[] = [
-	{ label: 'Posts', to: '/posts', icon: post },
-	{ label: 'Pages', to: '/pages', icon: page },
-	{ label: 'Settings', to: '/settings/general', icon: settings },
-	{ label: 'Tools', to: '/tools', icon: tool },
+	{ label: 'Posts', to: '/posts', icon: post, group: 'content' },
+	{ label: 'Pages', to: '/pages', icon: page, group: 'content' },
+	{ label: 'Settings', to: '/settings/general', icon: settings, group: 'manage' },
+	{ label: 'Tools', to: '/tools', icon: tool, group: 'manage' },
 ]
 
 /** Renders a page beside the sidebar with a title and one line. */
@@ -76,9 +76,9 @@ function ToolsScreen() {
 /** Renders the frame of the sample admin around the page its address shows. */
 function Layout() {
 	return (
-		<Frame.Root shownPath={useShownPath()} location={useFrameLocation()}>
-			<Frame.Sidebar brand={<span>Admin</span>}>
-				<Navigation title="Admin" items={ROWS} home={<Link to="/posts" />} />
+		<Frame.Root shownPath={useShownPath()} location={useFrameLocation()} appName="Admin">
+			<Frame.Sidebar>
+				<Navigation items={ROWS} home={<Link to="/posts" />} />
 			</Frame.Sidebar>
 			<Frame.Canvas>
 				<Outlet />
@@ -202,7 +202,7 @@ const PHONE = onlyAt('phone')
 /** Opens the drawer of the phone frame on the settings sub menu and waits until it rests, then returns it. */
 async function openDrawer({ canvasElement, userEvent }: PlayContext): Promise<HTMLElement> {
 	await shows(canvasElement, 'General settings')
-	await userEvent.click(within(canvasElement).getByRole('button', { name: 'Open navigation panel' }))
+	await userEvent.click(within(canvasElement).getByRole('button', { name: 'Menu' }))
 	const drawer = await within(canvasElement).findByRole('dialog', {}, { timeout: WAIT })
 	await waitFor(() => expect(drawer).not.toHaveAttribute('data-starting-style'), { timeout: WAIT })
 	await settles()
@@ -247,7 +247,7 @@ export const SubMenuLoading: Story = {
 		await userEvent.click(link(canvasElement, 'Tools'))
 		await waitFor(() => expect(link(canvasElement, 'Posts')).not.toHaveAttribute('aria-current'), { timeout: WAIT })
 		await settles()
-		await expect(within(canvasElement).getByRole('heading', { level: 1, name: 'Admin' })).toBeInTheDocument()
+		await expect(within(canvasElement).queryByRole('heading', { level: 1 }), 'no root heading').toBeNull()
 		await expect(within(canvasElement).getByRole('heading', { level: 2, name: 'Posts' })).toBeInTheDocument()
 		await expect(canvasElement.querySelector('[aria-current]'), 'no row filled').toBeNull()
 	},

@@ -148,7 +148,8 @@ body {
 
 @layer godmin {
 	:root {
-		--godmin-nav-sidebar-width: 300px;
+		--godmin-nav-sidebar-width: 240px;
+		--godmin-nav-drawer-width: 300px;
 		--godmin-canvas-margin: 16px;
 		--godmin-navigation-slide-distance: 50px;
 		--godmin-navigation-slide-duration: 140ms;
@@ -160,6 +161,8 @@ body {
 		background: var(--wpds-color-background-surface-neutral-weak);
 		color: var(--wpds-color-foreground-content-neutral);
 		--wp-ui-drawer-z-index: 2;
+		--godmin-bar-tip-background: var(--wpds-color-background-surface-neutral-strong);
+		--godmin-bar-tip-foreground: var(--wpds-color-foreground-content-neutral);
 	}
 
 	.godmin-layout--small {
@@ -180,40 +183,30 @@ body {
 		display: flex;
 		flex-shrink: 0;
 		align-items: center;
-		gap: 8px;
 		block-size: 46px;
-		padding-inline-end: 16px;
 	}
 
 	.godmin-layout__menu {
-		display: flex;
+		--wp-ui-button-padding-inline: 0px;
+		--wp-ui-button-padding-block: 0px;
+		--wp-ui-button-min-width: unset;
 		flex: none;
-		align-items: center;
-		justify-content: center;
 		inline-size: 52px;
 		block-size: 46px;
-		padding: 0;
-		border: 0;
-		background: none;
-		color: var(--wpds-color-foreground-content-neutral);
-		cursor: var(--wpds-cursor-control);
-	}
-
-	.godmin-layout__menu:is(:hover, :focus-visible) {
-		background: var(--wpds-color-background-interactive-neutral-weak-active);
-		color: var(--wpds-color-foreground-interactive-brand);
-	}
-
-	.godmin-layout__menu:focus-visible {
-		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		border-radius: 0;
 		outline-offset: calc(-1 * var(--wpds-border-width-focus));
+	}
+
+	.godmin-bar__tip {
+		background-color: var(--godmin-bar-tip-background);
+		color: var(--godmin-bar-tip-foreground);
 	}
 
 	.godmin-layout__drawer {
 		top: 0;
 		display: flex;
 		flex-direction: column;
-		width: var(--godmin-nav-sidebar-width);
+		width: var(--godmin-nav-drawer-width);
 		max-width: 85vw;
 		padding: 0;
 		box-sizing: border-box;
@@ -251,6 +244,30 @@ body {
 
 	.godmin-layout__drawer:dir(rtl) {
 		box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+	}
+
+	.godmin-sidebar__identity {
+		display: flex;
+		flex: none;
+		flex-direction: column;
+		gap: var(--wpds-dimension-gap-xs);
+		padding: var(--wpds-dimension-padding-md) var(--wpds-dimension-padding-lg);
+	}
+
+	.godmin-sidebar__name {
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+		color: var(--wpds-color-foreground-content-neutral);
+	}
+
+	.godmin-sidebar__address {
+		color: var(--wpds-color-foreground-content-neutral-weak);
+	}
+
+	.godmin-sidebar__name,
+	.godmin-sidebar__address {
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 
 	.godmin-sidebar__content {
@@ -490,44 +507,9 @@ body {
 		max-height: 100%;
 		padding: 0 12px;
 		overflow-x: auto;
-		scrollbar-width: thin;
-		scrollbar-gutter: stable;
-		scrollbar-color: transparent transparent;
 		animation-duration: var(--godmin-navigation-slide-duration);
 		animation-timing-function: ease-in-out;
 		will-change: transform, opacity;
-	}
-
-	.godmin-navigation__screen-wrapper:is(:hover, :focus, :focus-within) {
-		scrollbar-color: var(--wpds-color-stroke-surface-neutral-strong) transparent;
-	}
-
-	.godmin-navigation__screen-wrapper::-webkit-scrollbar {
-		width: 12px;
-		height: 12px;
-	}
-
-	.godmin-navigation__screen-wrapper::-webkit-scrollbar-track {
-		background-color: transparent;
-	}
-
-	.godmin-navigation__screen-wrapper::-webkit-scrollbar-thumb {
-		border: 3px solid transparent;
-		border-radius: 8px;
-		background-color: transparent;
-		background-clip: padding-box;
-	}
-
-	.godmin-navigation__screen-wrapper:hover::-webkit-scrollbar-thumb,
-	.godmin-navigation__screen-wrapper:focus::-webkit-scrollbar-thumb,
-	.godmin-navigation__screen-wrapper:focus-within::-webkit-scrollbar-thumb {
-		background-color: var(--wpds-color-stroke-surface-neutral-strong);
-	}
-
-	@media (hover: none) {
-		.godmin-navigation__screen-wrapper {
-			scrollbar-color: var(--wpds-color-stroke-surface-neutral-strong) transparent;
-		}
 	}
 
 	.godmin-navigation__screen-wrapper--forward {
@@ -585,21 +567,19 @@ body {
 		margin-bottom: 0;
 	}
 
+	.godmin-navigation__root {
+		padding-block-start: 20px;
+	}
+
 	.godmin-navigation-screen__title-icon {
 		position: sticky;
 		top: 0;
 		z-index: 1;
 		display: flex;
-		align-items: flex-start;
-		gap: 12px;
-		margin-bottom: 8px;
-		padding-top: 32px;
-		padding-bottom: 8px;
+		align-items: center;
+		gap: 8px;
+		padding: 12px 4px 8px;
 		background: var(--wpds-color-background-surface-neutral-weak);
-	}
-
-	.godmin-navigation-screen__title-icon--root {
-		padding-inline-start: 44px;
 	}
 
 	.godmin-navigation-screen__back {
@@ -607,8 +587,8 @@ body {
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		inline-size: 32px;
-		block-size: 32px;
+		inline-size: 24px;
+		block-size: 24px;
 		border-radius: var(--wpds-border-radius-sm);
 		color: var(--wpds-color-foreground-interactive-neutral);
 	}
@@ -631,7 +611,7 @@ body {
 		min-width: 0;
 		margin: 0;
 		color: var(--wpds-color-foreground-content-neutral);
-		font-size: var(--wpds-typography-font-size-xl);
+		font-size: var(--wpds-typography-font-size-lg);
 		font-weight: var(--wpds-typography-font-weight-emphasis);
 		line-height: var(--wpds-typography-line-height-xl);
 		overflow-wrap: break-word;
@@ -668,33 +648,46 @@ body {
 		list-style: none;
 	}
 
+	.godmin-navigation-group {
+		margin-block-start: 16px;
+		margin-inline: -16px;
+	}
+
+	.godmin-navigation-group > .godmin-navigation-list {
+		margin-inline: 0;
+	}
+
+	.godmin-navigation-group__label {
+		display: block;
+		padding-inline: 4px;
+		margin-block-end: 4px;
+		color: var(--wpds-color-foreground-content-neutral-weak);
+		font-weight: var(--wpds-typography-font-weight-emphasis);
+	}
+
 	.godmin-navigation-item {
 		display: flex;
 		align-items: center;
 		gap: var(--wpds-dimension-gap-sm);
 		box-sizing: border-box;
-		min-height: 40px;
-		padding: calc((36px - 13px * 1.4 - 2px) / 2) 12px;
-		border: 1px solid transparent;
+		min-height: 32px;
+		margin-block-end: 4px;
+		padding: 0 4px;
+		border: 0;
 		border-radius: var(--wpds-border-radius-sm);
-		color: var(--wpds-color-foreground-interactive-neutral-weak);
+		color: var(--wpds-color-foreground-interactive-neutral);
 		font-size: var(--wpds-typography-font-size-md);
 		font-weight: var(--wpds-typography-font-weight-default);
-		line-height: normal;
+		line-height: var(--wpds-typography-line-height-sm);
 		text-decoration: none;
 	}
 
-	.godmin-navigation-item--with-suffix {
-		padding-inline-end: 16px;
-	}
-
 	.godmin-navigation-item:is(:hover, :focus) {
-		color: var(--wpds-color-foreground-interactive-neutral-weak-active);
+		color: var(--wpds-color-foreground-interactive-brand-active);
 	}
 
 	.godmin-navigation-item[aria-current='page'] {
-		background: var(--wpds-color-background-interactive-neutral-weak-active);
-		color: var(--wpds-color-foreground-interactive-neutral-weak-active);
+		color: var(--wpds-color-foreground-interactive-brand-active);
 		font-weight: var(--wpds-typography-font-weight-emphasis);
 	}
 
@@ -704,11 +697,18 @@ body {
 		transform: translateZ(0);
 	}
 
-	.godmin-navigation-item__icon,
-	.godmin-navigation-item__drilldown-indicator {
+	.godmin-navigation-item__icon {
 		flex: none;
 		inline-size: 24px;
 		block-size: 24px;
+	}
+
+	.godmin-navigation-item__drilldown-indicator {
+		flex: none;
+		box-sizing: content-box;
+		inline-size: 24px;
+		block-size: 24px;
+		padding: 4px;
 	}
 
 	.godmin-navigation-item__label {

@@ -7,6 +7,9 @@ import type { ReactElement } from 'react'
 import type { Can } from './navigation-state.js'
 import { findRouteCapabilities } from './path-matching.js'
 
+/** One of the three menu sections GodMin holds, named with the words of WordPress's new admin. */
+export type MenuGroup = 'content' | 'design' | 'manage'
+
 /** One row of a sidebar menu, as data. WordPress's new admin names it MenuItem too. */
 export interface MenuItem {
 	/** The words the row shows. */
@@ -26,6 +29,8 @@ export interface MenuItem {
 		/** The sentence a screen reader reads in place of the number, such as "1 update available". */
 		label: string
 	}
+	/** The section the row sits in. A row with none sits outside every section. */
+	group?: MenuGroup
 }
 
 /**

@@ -36,11 +36,14 @@ The [frame](./layout.md#the-frame) sets two themes. A theme is the set of token 
 | Canvas | `--wpds-color-background-surface-neutral-strong` |
 | Text | `--wpds-color-foreground-content-neutral` |
 | Muted text, such as the `footerNote` line of the sidebar | `--wpds-color-foreground-content-neutral-weak` |
+| Identity block of the menu | The app name in `--wpds-color-foreground-content-neutral`, the host under it in `--wpds-color-foreground-content-neutral-weak` |
+| Label of a menu section | `--wpds-color-foreground-content-neutral-weak`, bold |
 | Line between parts, such as above the sidebar footer | `--wpds-color-stroke-surface-neutral` |
 | Lighter line, such as under the page tabs or between the rows of a `godmin-table` | `--wpds-color-stroke-surface-neutral-weak` |
-| Sidebar row | `--wpds-color-foreground-interactive-neutral-weak`, and `--wpds-color-foreground-interactive-neutral-weak-active` under the pointer or with focus |
-| Current sidebar row | `--wpds-color-foreground-interactive-neutral-weak-active` on `--wpds-color-background-interactive-neutral-weak-active` |
-| Menu button of the top bar | `--wpds-color-foreground-content-neutral`, and `--wpds-color-foreground-interactive-brand` on `--wpds-color-background-interactive-neutral-weak-active` under the pointer or with keyboard focus |
+| Sidebar row | `--wpds-color-foreground-interactive-neutral`, and `--wpds-color-foreground-interactive-brand-active` under the pointer or with focus, with no fill |
+| Current sidebar row | `--wpds-color-foreground-interactive-brand-active`, bold, with no fill |
+| Menu, the menu button of the top bar | A WPDS minimal neutral button: `--wpds-color-foreground-interactive-neutral` on `--wpds-color-background-interactive-neutral-weak`, which is clear, and `--wpds-color-foreground-interactive-neutral-active` on `--wpds-color-background-interactive-neutral-weak-active` under the pointer, while pressed and with any focus |
+| Tooltip of Menu | `--wpds-color-foreground-content-neutral` on `--wpds-color-background-surface-neutral-strong`, read in the chrome theme |
 | Focus ring | `--wpds-color-stroke-focus` |
 | Count pill | a `--wpds-color-foreground-interactive-neutral-strong` digit on `--wpds-color-background-thumb-brand` |
 
@@ -53,7 +56,7 @@ The canvas also hands its surface to DataViews, the WordPress list component. `A
 A contrast ratio says how far apart two colors are in lightness. The lowest is 1 to 1, a color on itself. The highest is 21 to 1, black on white. godmin's tests measure it the way WCAG does. WCAG is the Web Content Accessibility Guidelines, the common standard for accessible web pages. The tests hold two minimums:
 
 - Text reaches 4.5 to 1 against what is behind it. The tests check the digit of the count pill in the sidebar and on the canvas, on the default seeds.
-- A shape a reader must see reaches 3 to 1 against the surface around it. The tests check the count pill on the sidebar, the drawer, the current sidebar row and the canvas, on the default seeds.
+- A shape a reader must see reaches 3 to 1 against the surface around it. The tests check the count pill on the sidebar, the drawer and the canvas, on the default seeds.
 
 The theme provider also checks contrast when it works out colors from a seed. It may make a seed lighter or darker to reach its targets.
 

@@ -223,6 +223,10 @@ test('the state the sidebar parts share reaches React alone, so the main entry m
 	expect([...packagesReachedFrom(join(source, 'navigation-state.ts'))]).toEqual(['react'])
 })
 
+test('the main entry hands out no sidebar breakpoint, since the frame folds at the edge breakpoint', () => {
+	expect(MainEntry).not.toHaveProperty('SIDEBAR_BREAKPOINT')
+})
+
 test('the main entry hands out the store of unsaved text, which reaches React alone', async () => {
 	const main = (await import(join(source, 'index.ts'))) as Record<string, unknown>
 
@@ -255,6 +259,11 @@ test('the main entry hands out the list view types of the router entry, to type 
 	expectTypeOf<MainEntry.ListViewShape>().toEqualTypeOf<Shape>()
 	expectTypeOf<MainEntry.ListView<Shape>>().toEqualTypeOf<RouterEntry.ListView<Shape>>()
 	expectTypeOf<MainEntry.ListDefaults>().toEqualTypeOf<RouterEntry.ListDefaults>()
+})
+
+test('the router entry hands out the three sections a menu row may name, those of the new admin', () => {
+	expectTypeOf<RouterEntry.MenuGroup>().toEqualTypeOf<'content' | 'design' | 'manage'>()
+	expectTypeOf<RouterEntry.MenuItem['group']>().toEqualTypeOf<RouterEntry.MenuGroup | undefined>()
 })
 
 test('the router peer starts at a release whose route matching runs no route context', () => {

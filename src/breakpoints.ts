@@ -4,12 +4,7 @@
 export const HUGE_BREAKPOINT = 1440
 
 /**
- * The viewport width below which the sidebar becomes a drawer.
- */
-export const SIDEBAR_BREAKPOINT = 1024
-
-/**
- * The viewport width below which the canvas meets the screen edges, the WordPress medium breakpoint.
+ * The width below which the sidebar becomes a drawer and the canvas meets the edges, the WordPress medium breakpoint.
  */
 export const EDGE_BREAKPOINT = 782
 
@@ -29,6 +24,6 @@ export const SHEET_BREAKPOINT = 600
 export const TITLE_BREAKPOINT = 404
 
 /**
- * The media query the frame folds its sidebar at.
+ * The media query every part of the frame folds at.
  */
-export const SMALL_VIEWPORT = `(max-width: ${SIDEBAR_BREAKPOINT - 1}px)`
+export const SMALL_VIEWPORT = `(max-width: ${EDGE_BREAKPOINT - 1}px)`

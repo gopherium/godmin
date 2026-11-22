@@ -75,8 +75,10 @@ const PULSING = [
 	'.dataviews-view-table__bulk-actions-overlay.is-refreshing > .dataviews-bulk-actions',
 ].join(', ')
 
-/** The style Argos adds to a shot: no motion, spinners at rest, the list pulse dim, no pointer. */
+/** The style Argos adds to a shot: no motion, spinners at rest, the list pulse dim, no pointer, example.com as the host. */
 const SHOT_STYLE = [
+	'.godmin-sidebar__address { font-size: 0 !important; line-height: 0 !important; }',
+	'.godmin-sidebar__address::after { content: "example.com"; display: block; font-size: 12px; line-height: 16px; }',
 	'.godmin-toasts__item, .godmin-toast { animation: none; }',
 	'.godmin-loading-screen path, .components-spinner path { animation: none; }',
 	`${PULSING} { animation: none !important; opacity: 0.5 !important; }`,
@@ -84,6 +86,14 @@ const SHOT_STYLE = [
 	'[role="alertdialog"] button svg path, [role="dialog"] button svg path { animation: none }',
 	'* { pointer-events: none !important; }',
 ].join(' ')
+
+/** The browser tests of the frame, which run in Chromium, Firefox and WebKit. */
+const ENGINE_TESTS = [
+	'test/browser/frame-menu.test.tsx',
+	'test/browser/menu-head.test.tsx',
+	'test/browser/menu-rows.test.tsx',
+	'test/browser/menu-sections.test.tsx',
+]
 
 /** Returns a fresh headless Chromium setup with grayscale text and no font hinting, its default arguments less any left out. */
 function chromium(leftOut: string[] = []) {
@@ -127,12 +137,28 @@ export default defineConfig({
 				test: {
 					name: 'browser',
 					include: ['test/browser/**/*.test.{ts,tsx}'],
-					exclude: [...configDefaults.exclude, 'test/browser/scrollbars/**'],
+					exclude: [...configDefaults.exclude, 'test/browser/scrollbars/**', ...ENGINE_TESTS],
 					setupFiles: ['test/browser/setup.ts'],
 					browser: {
 						...chromium(),
 						viewport: { width: 1280, height: 800 },
 						commands: { reduceMotion, doubleClickAt, drag, holdKey, goOfflineFor },
+					},
+				},
+			},
+			{
+				extends: true,
+				test: {
+					name: 'engines',
+					include: ENGINE_TESTS,
+					setupFiles: ['test/browser/setup.ts'],
+					browser: {
+						enabled: true,
+						headless: true,
+						provider: playwright(),
+						instances: [{ browser: 'chromium' }, { browser: 'firefox' }, { browser: 'webkit' }],
+						viewport: { width: 1280, height: 800 },
+						commands: { reduceMotion },
 					},
 				},
 			},

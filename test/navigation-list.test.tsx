@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
-import { fireEvent, screen, within } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
+import { resetLocaleData, setLocaleData } from '@wordpress/i18n'
 import { people, post } from '@wordpress/icons'
+import { Text } from '@wordpress/ui'
 import { useState } from 'react'
-import { expect, test } from 'vitest'
+import { afterEach, expect, test } from 'vitest'
 
+import spanish from '../src/list-chrome/es-ES.js'
 import { useCanAccess } from '../src/menu-item.js'
 import type { MenuItem } from '../src/menu-item.js'
 import { NavigationItem } from '../src/navigation-item.js'
@@ -15,6 +18,10 @@ import { holdsEvery, renderRows } from './sidebar-routes.js'
 import { declaredValue } from './styles.js'
 
 installTestEnvironment()
+
+afterEach(() => {
+	resetLocaleData()
+})
 
 /**
  * Returns the label of every row the list draws, in order.
@@ -164,7 +171,7 @@ test(
 		)
 
 		const row = screen.getByRole('link', { name: 'Posts 3 posts waiting' })
-		expect(row.className).toBe('godmin-navigation-item godmin-navigation-item--with-suffix')
+		expect(row.className).toBe('godmin-navigation-item')
 		expect(partsOf(row)).toEqual(['godmin-navigation-item__label', 'godmin-navigation-item__suffix'])
 		const badge = row.querySelector('.godmin-navigation-item__suffix .godmin-menu-count__badge') as Element
 		expect(badge.textContent).toBe('3')
@@ -368,6 +375,64 @@ test('keeps a row its own link when a row arrives above it, so a pointer or focu
 	expect(screen.getByRole('link', { name: 'Profile' })).toBe(profile)
 })
 
+/**
+ * Draws a section over a row the app draws, and a button that drops the section.
+ * @returns The button that drops the section, and the list.
+ */
+function DroppingSection() {
+	const [items, setItems] = useState<MenuItem[]>([{ label: 'Posts', to: '/posts', group: 'content' }])
+	return (
+		<>
+			<button type="button" onClick={() => setItems([])}>
+				Drop the section
+			</button>
+			<NavigationList items={items}>
+				<NavigationItem to="/profile">Profile</NavigationItem>
+			</NavigationList>
+		</>
+	)
+}
+
+/**
+ * Draws two rows with no section over a section, and a button that drops the first row.
+ * @returns The button that drops the row, and the list.
+ */
+function DroppingRow() {
+	const [items, setItems] = useState<MenuItem[]>([
+		{ label: 'Posts', to: '/posts' },
+		{ label: 'Profile', to: '/profile' },
+		{ label: 'Users', to: '/users', group: 'manage' },
+	])
+	return (
+		<>
+			<button type="button" onClick={() => setItems(items.slice(1))}>
+				Drop the first row
+			</button>
+			<NavigationList items={items} />
+		</>
+	)
+}
+
+test('keeps a row its own link when the row above it goes from a list before a section', async () => {
+	await renderRows('/posts', <DroppingRow />, holdsEvery)
+	const profile = screen.getByRole('link', { name: 'Profile' })
+
+	fireEvent.click(screen.getByRole('button', { name: 'Drop the first row' }))
+
+	expect(screen.queryByRole('link', { name: 'Posts' })).toBeNull()
+	expect(screen.getByRole('link', { name: 'Profile' })).toBe(profile)
+})
+
+test('keeps a row the app draws its own link when the section above it goes, so focus on it stays on it', async () => {
+	await renderRows('/posts', <DroppingSection />)
+	const profile = screen.getByRole('link', { name: 'Profile' })
+
+	fireEvent.click(screen.getByRole('button', { name: 'Drop the section' }))
+
+	expect(screen.queryByRole('group')).toBeNull()
+	expect(screen.getByRole('link', { name: 'Profile' })).toBe(profile)
+})
+
 /** The rows the access check is asked about, each named by what it asks for. */
 const askedRows: Record<string, Pick<MenuItem, 'to' | 'capability'>> = {
 	own: { to: '/posts', capability: 'edit_posts' },
@@ -411,4 +476,190 @@ test('useCanAccess fails closed when no can is given, allowing only a row that n
 	await renderRows('/posts', <AccessProbe />)
 
 	expect(screen.getByTestId('answers').textContent).toBe('own no, route no, parent no, none yes')
+})
+
+/**
+ * Returns each part the list draws, in order: a section as its label and rows, a list with no section as its rows.
+ * @returns One line per part.
+ */
+function drawnParts(): string[] {
+	return [...screen.getByTestId('rows').children].map((part) => {
+		const rows = within(part as HTMLElement)
+			.queryAllByRole('listitem')
+			.map((row) => row.textContent)
+			.join(', ')
+		const label = part.getAttribute('aria-labelledby')
+		return label === null ? rows : `${document.getElementById(label)?.textContent}: ${rows}`
+	})
+}
+
+/**
+ * Draws the given rows on the posts page and returns each part the list draws.
+ * @param items - The rows as data.
+ * @param can - The check the screen around the list hands down, every capability when absent.
+ * @returns One line per part, as drawnParts gives them.
+ */
+async function sectionsOf(items: MenuItem[], can: Can = holdsEvery): Promise<string[]> {
+	await renderRows('/posts', <NavigationList items={items} />, can)
+	return drawnParts()
+}
+
+test('draws the rows that name a section under its label, as a group named by it with a list of its own', async () => {
+	await renderRows('/posts', <NavigationList items={[{ label: 'Posts', to: '/posts', group: 'content' }]} />)
+
+	const section = screen.getByRole('group', { name: 'Content' })
+	const [label, list] = [...section.children]
+	expect(section.tagName).toBe('DIV')
+	expect(section.className).toBe('godmin-navigation-group')
+	expect(label.id).toBe(section.getAttribute('aria-labelledby'))
+	expect(label.tagName).toBe('SPAN')
+	expect(label.className.split(' ').pop()).toBe('godmin-navigation-group__label')
+	expect(list.tagName).toBe('UL')
+	expect(list.getAttribute('role')).toBe('list')
+	expect(within(list as HTMLElement).getByRole('link', { name: 'Posts' })).not.toBeNull()
+	expect(screen.queryByRole('heading')).toBeNull()
+})
+
+test('draws the label of a section in WPDS small body text, as the new admin draws it', async () => {
+	const drawn = render(<Text variant="body-sm" />)
+	const wpds = [...(drawn.container.firstElementChild as Element).classList]
+	drawn.unmount()
+	await renderRows('/posts', <NavigationList items={[{ label: 'Posts', to: '/posts', group: 'content' }]} />)
+
+	const label = screen.getByText('Content')
+	expect([...label.classList]).toEqual([...wpds, 'godmin-navigation-group__label'])
+})
+
+test('names the three sections with the words of the new admin', async () => {
+	const rows: MenuItem[] = [
+		{ label: 'Posts', to: '/posts', group: 'content' },
+		{ label: 'Profile', to: '/profile', group: 'design' },
+		{ label: 'Users', to: '/users', group: 'manage' },
+	]
+
+	expect(await sectionsOf(rows)).toEqual(['Content: Posts', 'Design: Profile', 'Manage: Users'])
+})
+
+test('names the sections in the reader language from the words godmin ships', async () => {
+	setLocaleData(spanish)
+	const rows: MenuItem[] = [
+		{ label: 'Posts', to: '/posts', group: 'content' },
+		{ label: 'Profile', to: '/profile', group: 'design' },
+		{ label: 'Users', to: '/users', group: 'manage' },
+	]
+
+	expect(await sectionsOf(rows)).toEqual(['Contenido: Posts', 'Diseño: Profile', 'Gestionar: Users'])
+})
+
+test('shows a section at the place of its first row and gathers there every row that names it', async () => {
+	const rows: MenuItem[] = [
+		{ label: 'Posts', to: '/posts', group: 'content' },
+		{ label: 'Users', to: '/users', group: 'manage' },
+		{ label: 'Profile', to: '/profile', group: 'content' },
+	]
+
+	expect(await sectionsOf(rows)).toEqual(['Content: Posts, Profile', 'Manage: Users'])
+})
+
+test('keeps a row with no section at its own place, in a list of its own and never inside a section', async () => {
+	const rows: MenuItem[] = [
+		{ label: 'Profile', to: '/profile' },
+		{ label: 'Posts', to: '/posts', group: 'content' },
+		{ label: 'Users', to: '/users' },
+	]
+
+	expect(await sectionsOf(rows)).toEqual(['Profile', 'Content: Posts', 'Users'])
+	const [first, , last] = [...screen.getByTestId('rows').children]
+	expect([first.tagName, first.className, last.tagName, last.className]).toEqual([
+		'UL',
+		'godmin-navigation-list',
+		'UL',
+		'godmin-navigation-list',
+	])
+	expect(screen.getByRole('group', { name: 'Content' }).closest('ul')).toBeNull()
+})
+
+test('draws one list and no section when no row names one, as before', async () => {
+	const rows: MenuItem[] = [
+		{ label: 'Posts', to: '/posts' },
+		{ label: 'Profile', to: '/profile' },
+	]
+
+	expect(await sectionsOf(rows)).toEqual(['Posts, Profile'])
+	expect(screen.queryByRole('group')).toBeNull()
+})
+
+test('draws the rows the app draws after every section, outside any section', async () => {
+	await renderRows(
+		'/posts',
+		<NavigationList items={[{ label: 'Posts', to: '/posts', group: 'content' }]}>
+			<NavigationItem to="/profile">Profile</NavigationItem>
+		</NavigationList>,
+		holdsEvery,
+	)
+
+	expect(drawnParts()).toEqual(['Content: Posts', 'Profile'])
+})
+
+test('draws the rows the app draws in the list of the rows with no section, when that list comes last', async () => {
+	await renderRows(
+		'/posts',
+		<NavigationList
+			items={[
+				{ label: 'Posts', to: '/posts', group: 'content' },
+				{ label: 'Users', to: '/users' },
+			]}
+		>
+			<NavigationItem to="/profile">Profile</NavigationItem>
+		</NavigationList>,
+		holdsEvery,
+	)
+
+	expect(drawnParts()).toEqual(['Content: Posts', 'Users, Profile'])
+})
+
+test('draws no section, not even its label, when the reader may open none of its rows', async () => {
+	const rows: MenuItem[] = [
+		{ label: 'Posts', to: '/posts', group: 'content' },
+		{ label: 'Users', to: '/users', group: 'manage' },
+	]
+
+	expect(await sectionsOf(rows, (capability) => capability !== 'list_users')).toEqual(['Content: Posts'])
+	expect(screen.queryByText('Manage')).toBeNull()
+})
+
+test('keeps a fallback row in the section of the row it replaces, whatever section the fallback names', async () => {
+	const rows: MenuItem[] = [
+		{ label: 'Posts', to: '/posts', group: 'content' },
+		{
+			label: 'Users',
+			to: '/users',
+			group: 'manage',
+			fallback: { label: 'Profile', to: '/profile', group: 'content' },
+		},
+	]
+
+	expect(await sectionsOf(rows, (capability) => capability !== 'list_users')).toEqual([
+		'Content: Posts',
+		'Manage: Profile',
+	])
+})
+
+test('draws a row that opens a sub menu as a drilldown row inside its section', async () => {
+	const things: MenuItem = { label: 'Things', to: '/things', group: 'content' }
+	await renderRows('/posts', <NavigationList items={[things]} />, holdsEvery)
+
+	const row = within(screen.getByRole('group', { name: 'Content' })).getByRole('link', { name: 'Things' })
+	expect(row.querySelector('.godmin-navigation-item__drilldown-indicator')).not.toBeNull()
+})
+
+test('keeps one icon placeholder for the whole screen, across every section', async () => {
+	const rows: MenuItem[] = [
+		{ label: 'Posts', to: '/posts', icon: post, group: 'content' },
+		{ label: 'Profile', to: '/profile', group: 'manage' },
+	]
+	await renderRows('/posts', <NavigationList items={rows} />, holdsEvery)
+
+	const row = within(screen.getByRole('group', { name: 'Manage' })).getByRole('link', { name: 'Profile' })
+	expect(row.firstElementChild?.className).toBe('godmin-navigation-item__icon')
 })

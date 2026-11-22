@@ -48,7 +48,6 @@ preset.
 | The DataViews media box around an avatar | A circle, `50%` |
 | A `MenuCount` | Half its height. That makes the count a pill, a box with fully round ends |
 | The navigation drawer | Square, `0` |
-| The thumb of the sidebar scrollbar, the part you drag | 8px |
 
 The drawer is the panel that holds the sidebar on a small screen.
 DataViews is the WordPress list component.

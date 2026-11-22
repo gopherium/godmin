@@ -18,7 +18,7 @@ export type {
 	ListViewShape,
 } from './list-view.js'
 export { useCanAccess } from './menu-item.js'
-export type { MenuItem } from './menu-item.js'
+export type { MenuGroup, MenuItem } from './menu-item.js'
 export { Navigation } from './navigation.js'
 export type { NavigationProps } from './navigation.js'
 export { NavigationItem } from './navigation-item.js'
