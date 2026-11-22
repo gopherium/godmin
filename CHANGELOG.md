@@ -4,6 +4,36 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- The menu and the phone drawer open with the app name over the host the admin is served at, as WordPress's new admin heads its menu.
+- `MenuItem` takes `group`, typed `MenuGroup`, which sets a row under the Content, Design or Manage label.
+- `--godmin-nav-drawer-width` sizes the phone drawer, 300px.
+- The phone menu button shows its name in a tooltip painted in the frame's chrome colours.
+- The Spanish and French catalogues translate "Admin", "Menu" and the three section labels.
+- `docs/build-and-versioning.md` lists every change an app upgrading from 0.33.0 makes.
+
+### Changed
+
+- The phone menu button paints with the minimal neutral roles of `@wordpress/ui`, and rings inside its slot on any focus except while pressed.
+- The phone menu button tells a screen reader whether the drawer is open, and no longer says it opens a dialog.
+- The phone drawer closes when the window widens past 781px.
+- A sub menu's title row has a 24px Back and a 15px title, as WordPress's new admin draws it.
+- The menu keeps no space for a scrollbar.
+- **Breaking.** `SIDEBAR_BREAKPOINT` is gone and `SMALL_VIEWPORT` reads `(max-width: 781px)`, so the menu folds into the drawer below 782px.
+- **Breaking.** `--godmin-nav-sidebar-width` is 240px and no longer sizes the drawer.
+- **Breaking.** `Frame.Sidebar` no longer takes `brand`, and throws outside a `Frame.Root`.
+- **Breaking.** `Navigation` no longer takes `title`, and the main menu screen draws no title row.
+- **Breaking.** `Frame.Sidebar` draws the menu as a navigation named "Admin" and the drawer as a dialog of that name, in place of "Navigation".
+- **Breaking.** `menuLabel` names the menu button "Menu" by default, in place of "Open navigation panel".
+- **Breaking.** Menu rows are 32px tall and 4px apart in the neutral text role, the current row is bold with no fill, and `godmin-navigation-item--with-suffix` is gone.
+
+### Fixed
+
+- A page picked in the phone drawer moves no focus, as the focus table already says.
+
 ## [0.33.0] - 2026-11-17
 
 ### Added
