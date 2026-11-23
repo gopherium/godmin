@@ -28,12 +28,26 @@ export interface RowControlsProps {
 	at: number
 	/** How many rows the list holds. */
 	count: number
+	/** Whether the row shows the arrows that move it, true by default. */
+	movable?: true
 	/** Whether the row may be taken away, true by default. */
 	removable?: boolean
 	/** The words the controls show. */
 	labels: Pick<RowLabels, 'moveUp' | 'moveDown' | 'remove'>
 	/** What to call with the offset a move asks for. */
 	onMove: (offset: number) => void
+	/** What to call when the row is taken away. */
+	onRemove: () => void
+}
+
+/** What the controls of one row need in a list whose order means nothing: the trash alone. */
+export interface RowControlsWithoutMoveProps {
+	/** Draws no arrows. */
+	movable: false
+	/** Whether the row may be taken away, true by default. A row that may not go shows its trash held back. */
+	removable?: boolean
+	/** The word the trash shows. */
+	labels: Pick<RowLabels, 'remove'>
 	/** What to call when the row is taken away. */
 	onRemove: () => void
 }
@@ -123,13 +137,13 @@ interface RowGroupProps<T> {
 }
 
 /**
- * Renders the buttons that move a row among its siblings and take it away.
- * @param props - The row's place, the list's length, the words and what to call on a change.
- * @returns The controls element.
+ * Renders the buttons that move a row up and down among its siblings.
+ * @param props - The row's place, the list's length, the words and what to call with a move.
+ * @returns The two arrow buttons.
  */
-export function RowControls({ at, count, removable = true, labels, onMove, onRemove }: RowControlsProps) {
+function MoveButtons({ at, count, labels, onMove }: Pick<RowControlsProps, 'at' | 'count' | 'labels' | 'onMove'>) {
 	return (
-		<Stack direction="row" gap="xs" align="center" className="godmin-rows__controls">
+		<>
 			<IconButton
 				icon={chevronUp}
 				label={labels.moveUp}
@@ -148,6 +162,20 @@ export function RowControls({ at, count, removable = true, labels, onMove, onRem
 				disabled={at === count - 1}
 				onClick={() => onMove(1)}
 			/>
+		</>
+	)
+}
+
+/**
+ * Renders the buttons that move a row among its siblings and take it away, or the trash alone when it does not move.
+ * @param props - The row's place, the list's length, whether it moves, the words and what to call on a change.
+ * @returns The controls element.
+ */
+export function RowControls(props: RowControlsProps | RowControlsWithoutMoveProps) {
+	const { removable = true, labels, onRemove } = props
+	return (
+		<Stack direction="row" gap="xs" align="center" className="godmin-rows__controls">
+			{props.movable === false ? null : <MoveButtons {...props} />}
 			<IconButton
 				icon={trash}
 				label={labels.remove}

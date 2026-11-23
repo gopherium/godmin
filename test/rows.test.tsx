@@ -5,10 +5,10 @@ import { chevronDown, chevronUp, trash } from '@wordpress/icons'
 import { Icon } from '@wordpress/ui'
 import { startTransition, useLayoutEffect, useState } from 'react'
 import type { ComponentProps } from 'react'
-import { expect, test, vi } from 'vitest'
+import { expect, expectTypeOf, test, vi } from 'vitest'
 
 import { RepeatRows, RowControls } from '../src/rows.js'
-import type { RowLabels } from '../src/rows.js'
+import type { RowControlsProps, RowControlsWithoutMoveProps, RowLabels } from '../src/rows.js'
 import { installTestEnvironment, renderAdmin } from '../src/testing.js'
 
 installTestEnvironment()
@@ -429,6 +429,62 @@ test('row controls draw the design system chevrons and trash', () => {
 	expect(outlines(screen.getByRole('button', { name: 'Move entry up' }))).toEqual(iconOutlines(chevronUp))
 	expect(outlines(screen.getByRole('button', { name: 'Move entry down' }))).toEqual(iconOutlines(chevronDown))
 	expect(outlines(screen.getByRole('button', { name: 'Remove entry' }))).toEqual(iconOutlines(trash))
+})
+
+test.each([
+	{
+		when: 'movable is left out',
+		controls: <RowControls at={1} count={3} labels={labels} onMove={vi.fn()} onRemove={vi.fn()} />,
+		names: ['Move entry up', 'Move entry down', 'Remove entry'],
+	},
+	{
+		when: 'movable is false',
+		controls: <RowControls movable={false} labels={{ remove: 'Remove entry' }} onRemove={vi.fn()} />,
+		names: ['Remove entry'],
+	},
+])('row controls draw only the buttons they need when $when', ({ controls, names }) => {
+	renderAdmin(controls)
+
+	expect(screen.getAllByRole('button')).toEqual(names.map((name) => screen.getByRole('button', { name })))
+})
+
+test('row controls without arrows let the row go from the trash, held back only when the row may not go', () => {
+	const removed = vi.fn()
+	renderAdmin(
+		<>
+			<RowControls movable={false} labels={{ remove: 'Remove rule 1' }} onRemove={() => removed(1)} />
+			<RowControls movable={false} removable={false} labels={{ remove: 'Remove rule 2' }} onRemove={() => removed(2)} />
+		</>,
+	)
+
+	const trashes = ['Remove rule 1', 'Remove rule 2'].map((name) => screen.getByRole('button', { name }))
+	trashes.forEach((button) => fireEvent.click(button))
+
+	expect(trashes.map((button) => isDisabled(button))).toEqual([false, true])
+	expect(removed.mock.calls).toEqual([[1]])
+})
+
+test('row controls set the trash first in their controls only when they draw no arrows', () => {
+	renderAdmin(
+		<>
+			<RowControls movable={false} labels={{ remove: 'Remove rule 2' }} onRemove={vi.fn()} />
+			<RowControls at={0} count={1} labels={labels} onMove={vi.fn()} onRemove={vi.fn()} />
+		</>,
+	)
+
+	const alone = screen.getByRole('button', { name: 'Remove rule 2' })
+	const after = screen.getByRole('button', { name: 'Remove entry' })
+	expect(alone.matches('.godmin-rows__controls > .godmin-rows__remove:first-child')).toBe(true)
+	expect(after.matches('.godmin-rows__controls > .godmin-rows__remove:first-child')).toBe(false)
+})
+
+test('row controls without arrows take the remove word alone and no move handler', () => {
+	expectTypeOf(RowControls).toBeCallableWith({ movable: false, labels: { remove: 'Remove entry' }, onRemove: vi.fn() })
+	expectTypeOf<Extract<ComponentProps<typeof RowControls>, { movable: false }>>()
+		.toEqualTypeOf<RowControlsWithoutMoveProps>()
+	expectTypeOf<RowControlsWithoutMoveProps>().not.toHaveProperty('onMove')
+	expectTypeOf<RowControlsWithoutMoveProps['labels']>().toEqualTypeOf<Pick<RowLabels, 'remove'>>()
+	expectTypeOf<RowControlsProps['movable']>().toEqualTypeOf<true | undefined>()
 })
 
 test('sets the inputs and the controls of a row on one line', () => {
