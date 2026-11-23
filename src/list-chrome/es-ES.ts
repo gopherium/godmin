@@ -2,7 +2,7 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The Spanish list chrome, list dates, sidebar, frame, no results, time-out and live region words, from es-ES.po. */
+/** The Spanish words of the list chrome, list dates, godmin parts, live region and links, from es-ES.po. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'es-ES', 'plural-forms': 'nplurals=2; plural=(n != 1);' },
 	'%1$s of %2$s item': ['%1$s de %2$s elemento', '%1$s de %2$s elementos'],
@@ -14,6 +14,7 @@ const catalog: ListChromeCatalog = {
 	'%s, selected': ['%s, seleccionado'],
 	'%s: <groupName />': ['%s: <groupName />'],
 	'(no title)': ['(sin título)'],
+	'(opens in a new tab)': ['(abre en una nueva pestaña)'],
 	'<Name>%1$s between (inc): </Name><Value>%2$s and %3$s</Value>': [
 		'<Name>%1$s entre (incl.): </Name><Value>%2$s y %3$s</Value>',
 	],

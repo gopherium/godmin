@@ -13,6 +13,10 @@ msgid "%1$s ‹ %2$s"
 msgstr "%1$s ‹ %2$s"
 
 #, fuzzy
+msgid "(opens in a new tab)"
+msgstr "(ouvre un nouvel onglet)"
+
+#, fuzzy
 msgctxt "start of week"
 msgid "1"
 msgstr "1"

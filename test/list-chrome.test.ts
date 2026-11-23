@@ -248,6 +248,12 @@ const WORDPRESS_ANNOUNCER_WORDS: Record<string, Record<string, string>> = {
 	'fr-FR': { Notifications: 'Notifications' },
 }
 
+/** The note a WordPress link speaks when it opens a new tab, as the WordPress Spanish and French catalogues give it. */
+const WORDPRESS_LINK_WORDS: Record<string, Record<string, string>> = {
+	'es-ES': { '(opens in a new tab)': '(abre en una nueva pestaña)' },
+	'fr-FR': { '(opens in a new tab)': '(ouvre un nouvel onglet)' },
+}
+
 /** The messages each godmin source file asks gettext for, by its path inside the source folder. */
 const SOURCE_MESSAGES = new Map(
 	readdirSync(resolve('src'), { recursive: true, encoding: 'utf8' })
@@ -487,6 +493,15 @@ function drawsButton(path: string): boolean {
 }
 
 /**
+ * Reports whether a WordPress UI module draws a link that can open a new tab.
+ * @param path - The module path inside the build.
+ * @returns Whether the module is the link or the link item of a menu.
+ */
+function drawsLink(path: string): boolean {
+	return path === 'link/link.mjs' || path === 'menu/link-item.mjs'
+}
+
+/**
  * Returns the placeholders and tags a message carries, sorted.
  * @param text - The message or one of its translations.
  * @returns The marks.
@@ -525,13 +540,14 @@ test('compiles each catalogue from the PO source beside it', () => {
 	}
 })
 
-test('ships only messages DataViews, the components it renders with, the announcer or the godmin parts ask for', () => {
+test('ships only messages DataViews, the components it renders with, a link, the announcer or godmin asks for', () => {
 	const asked = new Set(
 		[
 			...messagesIn(dataviewsBuild, () => true),
 			...messagesIn(componentsBuild, rendersInList),
 			...messagesIn(uiBuild, drawsCalendar),
 			...messagesIn(uiBuild, drawsButton),
+			...messagesIn(uiBuild, drawsLink),
 			...messagesIn(a11yBuild, () => true),
 			...OWN_MESSAGES,
 		].map(signatureOf),
@@ -614,6 +630,26 @@ test('ships every word the announcer speaks, the heading of its live region amon
 test('words the heading of the live region as the WordPress Spanish and French catalogues do', () => {
 	for (const catalogue of CATALOGUES) {
 		for (const [key, words] of Object.entries(WORDPRESS_ANNOUNCER_WORDS[catalogue.locale])) {
+			expect(catalogue.module[key], `${catalogue.locale} ${key}`).toEqual([words])
+		}
+	}
+})
+
+test('ships every word a WordPress link speaks when it opens a new tab, in each language', () => {
+	const spoken = messagesIn(uiBuild, drawsLink)
+
+	expect(spoken.length, 'the reader found no message in the link').toBeGreaterThan(0)
+	for (const catalogue of CATALOGUES) {
+		const ships = new Set(catalogue.messages.map(signatureOf))
+		for (const message of spoken) {
+			expect(ships.has(signatureOf(message)), `${catalogue.locale} ships no ${keyOf(message)}`).toBe(true)
+		}
+	}
+})
+
+test('words the new tab note of a link as the WordPress Spanish and French catalogues do', () => {
+	for (const catalogue of CATALOGUES) {
+		for (const [key, words] of Object.entries(WORDPRESS_LINK_WORDS[catalogue.locale])) {
 			expect(catalogue.module[key], `${catalogue.locale} ${key}`).toEqual([words])
 		}
 	}
