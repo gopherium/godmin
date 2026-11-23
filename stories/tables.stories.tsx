@@ -76,7 +76,7 @@ const FIELDS: Field[] = [
 		key: 'phone',
 		label: 'Phone',
 		kind: 'Text',
-		name: 'billing_phone_number',
+		name: 'billing_contact_phone_number_for_invoices',
 		help: 'The number Maria Perez answers on, such as 184467235.',
 	},
 	{
