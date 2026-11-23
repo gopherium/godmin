@@ -1529,6 +1529,12 @@ Inside a `list` page the table reaches the canvas edges too, and its
 first and last cells pad as DataViews pads its own. A custom list
 and a DataViews list then line up with each other and with the title.
 
+A row of such a table can open its details in a second row under it,
+such as the settings of one field, and any number of rows can stay
+open.
+[Rows that open under a row](./screens.md#rows-that-open-under-a-row)
+shows how to build one on the WPDS `Collapsible`.
+
 While its first rows load, show `LoadingScreen` in place of the
 table, as
 [a list that loads](./loading-and-feedback.md#a-list-that-loads) says.

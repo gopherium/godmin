@@ -46,6 +46,18 @@ const pages = new Map(
 		.map((name) => [name, pageAt(resolve(root, name))]),
 )
 
+/** What the screens page says of a list built on `RowControls` with no arrows, each by its section and its words. */
+const ROWS_WITHOUT_ARROWS: [string, string][] = [
+	['RepeatRows', '`RowControls` with `movable={false}` draws the trash alone'],
+	['RepeatRows', '`RowControlsWithoutMoveProps`'],
+	['RepeatRows', '`onRemove`'],
+	['RepeatRows', '`godmin-rows__line`'],
+	['RepeatRows', '`godmin-rows__inputs`'],
+	['RepeatRows', 'the trash keeps no extra gap'],
+	['Stylesheet helpers', '| `godmin-rows__line` |'],
+	['Stylesheet helpers', '| `godmin-rows__inputs` |'],
+]
+
 /**
  * Returns a node followed by every node under it.
  * @param node - The node to walk.
@@ -236,6 +248,15 @@ test('the upgrade notes open with the last release and name what each Breaking l
 	)
 	expect(missing).toEqual([])
 })
+
+test.each(ROWS_WITHOUT_ARROWS)(
+	'the %s section of the screens page says %s for a list whose order means nothing',
+	(heading, words) => {
+		const section = sectionOf(pages.get('screens.md')?.text ?? '', `## ${heading}`)
+
+		expect(section.replace(/\s+/g, ' ')).toContain(words)
+	},
+)
 
 test.each([...pages, ['README.md', readme] as const])(
 	'%s says the signal stops the request, never the write a server may still finish',
