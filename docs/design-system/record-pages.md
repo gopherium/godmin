@@ -72,6 +72,10 @@ every value of how it looks.
   whole.
 - A column clips what runs past its sides, so a wide table goes in a
   `godmin-table-scroll`, which scrolls there at every width.
+- A row of such a table that opens under its row keeps its open part
+  inside the column while the table scrolls, since the open part is
+  `sticky`, as
+  [tables that stay custom](./lists.md#tables-that-stay-custom) gives.
 - A `godmin-list` in a column stays inside it, so a row and its focus
   ring stay whole. DataViews keeps its own padding, as a list region
   in the main work does.

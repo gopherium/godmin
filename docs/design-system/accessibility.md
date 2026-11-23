@@ -48,7 +48,7 @@ same line,
 | --- | --- |
 | A sidebar row, and Back on a sidebar screen | Outside the part, as far out as the ring is wide. A row's ring sits in the 4px gap to the next row |
 | Menu, the menu button of the top bar | Inside its slot, as far in as the ring is wide |
-| The title link of a `godmin-table`, a `godmin-table-scroll` box and a row of `RepeatRows` | 2px outside the part |
+| The title link of a `godmin-table`, the label that opens one of its rows, a `godmin-table-scroll` box and a row of `RepeatRows` | 2px outside the part |
 | A page tab | Around its label, not around the whole height of the tab |
 | A toast | Its own rings, as [keyboard](./toasts.md#keyboard) on the toasts page shows. A plain toast keeps the browser's ring too |
 | A list region a run focuses | Inside its edge, twice as wide, the ring WordPress draws on a region it focuses, as [after a write of your own](./lists.md#after-a-write-of-your-own) shows. The browser's ring is off, as in wp-admin |
@@ -139,6 +139,21 @@ drew the row a dialog opened from anew while the dialog was open,
 the row left it, as
 [putting the focus back on a row](../lists.md#putting-the-focus-back-on-a-row)
 explains.
+
+A row of a `godmin-table` that opens under its row keeps the focus on
+its toggle, the label button that opens it, as it opens and closes.
+The WAI-ARIA disclosure pattern moves no focus, and WPDS `Collapsible`
+moves none either, so the focus stays on the button the reader
+pressed. When the row closes while the focus sits inside its open
+part, such as from a close button there, put the focus on the row's
+toggle first, or it falls to the page.
+[Rows that open under a row](../screens.md#rows-that-open-under-a-row)
+shows the code.
+
+When the control that opens a part leaves the screen as the part
+opens, such as an Edit button whose row turns into a form, move the
+focus to the first control of that part, the first field, select or
+button the Tab key reaches.
 
 ## Landmarks and names
 

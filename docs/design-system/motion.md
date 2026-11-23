@@ -1,16 +1,18 @@
 ---
 title: Motion
-description: The sidebar slide, the phone drawer, the toast motion and the fade of a loading screen in a godmin admin, the design tokens that time them, and what changes when a reader asks for less motion.
+description: The sidebar slide, the phone drawer, the toast motion, the fade of a loading screen and a table row that opens in a godmin admin, the design tokens that time them, and what changes when a reader asks for less motion.
 ---
 
 godmin's own motion is short and small. The sidebar slides a new
 menu screen in, and the drawer on a small screen slides in and out.
 Toasts grow in and fade, and the toasts around them slide along. A
 loading screen that fills the canvas or stands outside the frame
-waits a moment, then fades in. godmin's stylesheet animates nothing
-else. Besides the drawer, only the shade and the focus ring of a page
-tab fade, over 0.1s. Every other hover and focus look changes at
-once.
+waits a moment, then fades in. A row that opens under a table row
+grows and fades, and the chevron of its label turns, as
+[rows that open](#rows-that-open) gives. godmin's stylesheet animates
+nothing else. Besides the drawer and that row, only the shade and the
+focus ring of a page tab fade, over 0.1s. Every other hover and focus
+look changes at once.
 
 godmin times the drawer itself, as
 [the drawer](./frame.md#the-drawer) on the frame page gives. Other
@@ -35,8 +37,8 @@ design tokens:
 | `--wpds-motion-duration-xs` | 50ms | Toast motion, see [Motion](./toasts.md#motion) |
 
 Some values have no token: the sidebar slide, the curve of the
-drawer, the wait and the fade of a loading screen, and the rest of
-the toast motion. The sections
+drawer, the wait and the fade of a loading screen, the motion of a
+row that opens, and the rest of the toast motion. The sections
 below cover them.
 
 ## The sidebar slide
@@ -77,11 +79,38 @@ packages. A loading screen that fills the canvas or stands outside
 the frame waits, then fades in. [Loading](./loading.md) gives how
 long each one waits and how it moves.
 
+## Rows that open
+
+A row of a `godmin-table` can open its details in a second row under
+it, as
+[rows that open under a row](../screens.md#rows-that-open-under-a-row)
+shows. Its open part grows and its chevron turns as in the WPDS
+`CollapsibleCard`, the WordPress card that opens, and the row fades
+too:
+
+- The chevron of its label turns over 0.15s on `ease-out` as the row
+  opens, and turns back the same way as it closes.
+- The open part grows from no height to its full height over 150ms on
+  `ease-out`, and the row fades in over the same 150ms. As the row
+  closes, the part shrinks and fades out the same way, and the row
+  hides once the fade ends.
+- A table row cannot be shorter than its cells, so the open part grows
+  inside two wrappers in the cell, `godmin-table__detail-motion` and a
+  plain `div` inside it. The row itself only fades, and `Collapsible`
+  waits for that fade before it hides the row.
+- While a row fades out it is still drawn. A link to a place inside it,
+  followed in those 150ms, scrolls to the row, and then the row hides.
+  Only a link followed in that short time does this, so it is rare.
+
+Under reduced motion the chevron turns at once, and the row opens and
+closes at once, with no growth and no fade, so that short time is
+gone.
+
 ## Reduced motion
 
 A reader can ask their system for less motion. The browser then
 reports `prefers-reduced-motion: reduce` to CSS, and godmin changes
-five things:
+six things:
 
 - A loading screen that fills the canvas or stands outside the frame
   shows at once when its wait ends, with no fade. Its wait stays, so
@@ -95,6 +124,9 @@ five things:
   screen shows at once in its place.
 - The phone drawer and its backdrop open and close at once.
 - The shade and the focus ring of a page tab show at once.
+- A row that opens under a table row opens and closes at once, and the
+  chevron of its label turns at once, as
+  [rows that open](#rows-that-open) says.
 
 [Reduced motion](./frame.md#reduced-motion) on the frame page says
 what the frame does. Loading keeps its spinners turning, and a list
