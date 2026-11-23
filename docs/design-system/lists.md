@@ -1,6 +1,6 @@
 ---
 title: Lists
-description: How a list meets the canvas edges, which columns it shows at each width, how a wide table scrolls, how its rows look, what an empty list shows, and what a list does after a write of your own.
+description: How a list meets the canvas edges, which columns it shows at each width, how a wide table scrolls, how its rows look, what an empty list shows, what a list does after a write of your own, and how a row of a custom table opens under it.
 ---
 
 A list page holds a DataViews list, as WordPress's new admin holds
@@ -240,3 +240,67 @@ godmin's own:
   weaker color, and only while a column hides under the actions, as
   [a wide table](#a-wide-table) shows. The table merges the borders of
   its cells, and a merged border paints badly on a pinned cell.
+
+A row can open its details in a second row under it, such as the
+settings of one field.
+[Rows that open under a row](../screens.md#rows-that-open-under-a-row)
+shows how to build one on the WPDS `Collapsible`. godmin draws its
+label as the title link and its open part as the WPDS `Card`:
+
+- The label that opens a row is a button drawn as the title link, in
+  `--wpds-color-foreground-interactive-neutral`, and in
+  `--wpds-color-foreground-interactive-brand` under the pointer, as
+  DataViews draws a title a reader can click. The pointer over it is
+  `--wpds-cursor-control`, and it draws the focus ring of the title
+  link. It sits in the middle of its cell, level with the other cells
+  of its row.
+- A chevron sits before the label, `--wpds-dimension-gap-sm` (8px)
+  from it, so the chevrons of a table line up down its column. It
+  points down while the row is closed and turns `180deg` while it is
+  open, as in the WPDS `CollapsibleCard`.
+  [Rows that open](./motion.md#rows-that-open) gives how it turns.
+- The open row draws no line between itself and its row and takes no
+  tint, so the two read as one, as the WordPress plugin update row
+  does under its plugin. The line above the next row closes the pair.
+- A closed row draws nothing and takes no Tab stop. With
+  `hiddenUntilFound` it stays in the page as a block of no height, so
+  a link into it still opens it.
+- Its one cell spans every column and frames the open part by
+  `--wpds-dimension-padding-md` (12px) at each side and below. With
+  the two motion wrappers inside the cell, that frame is the margin of
+  the open part, so it shrinks with the rest.
+- The open part is drawn as the WPDS `Card`:
+  `--wpds-dimension-padding-2xl` (24px) inside a
+  `--wpds-border-width-xs` (1px) line in
+  `--wpds-color-stroke-surface-neutral`, with
+  `--wpds-border-radius-lg` (8px) corners, on
+  `--wpds-color-background-surface-neutral-strong`, its text in
+  `--wpds-color-foreground-content-neutral`.
+- Like the card it clips what runs past its padding, with
+  `overflow: clip`. It breaks a long word with
+  `overflow-wrap: anywhere`, as WordPress notice details do. Its text
+  sets from the `start` edge, the left in English and the right in a
+  right-to-left language.
+- In a region under `DENSE_BREAKPOINT` (640px) the open part pads by
+  `--wpds-dimension-padding-lg` (16px), the step WordPress screens
+  take for a card in a narrow column. The width is that of the
+  `godmin-table-scroll` region, not the window, since the same table
+  can sit in a main column, a record column or on a phone.
+- In a table that scrolls sideways the open part stays inside the
+  width its region shows, at both ends of the scroll and in a
+  right-to-left page too. It is `sticky` at
+  `--wpds-dimension-padding-md` (12px) from the start edge, and never
+  wider than the region less that frame at each side. A region that
+  holds a row that opens is a size container of `inline-size`, so the
+  open parts measure against its width. The row above keeps its
+  columns and its pinned actions.
+- A table nested in an open part draws its header row with no line
+  above it and no tint, so it reads as a table of its own. Each level
+  steps in by the frame of the card around it, 37px, or 29px in a
+  region under `DENSE_BREAKPOINT`. godmin sets no limit to the depth,
+  and draws no color per level, since WPDS has none.
+- Below `DENSE_BREAKPOINT` a nested table scrolls inside its own
+  region, and its pinned actions column covers the columns before it
+  until the reader scrolls that region. Its pinned actions header cell
+  keeps `--wpds-color-background-surface-neutral-strong` under the
+  pointer too, so the columns under it stay hidden.

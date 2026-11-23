@@ -38,6 +38,7 @@ The [frame](./layout.md#the-frame) sets two themes. A theme is the set of token 
 | Muted text, such as the `footerNote` line of the sidebar | `--wpds-color-foreground-content-neutral-weak` |
 | Line between parts, such as above the sidebar footer | `--wpds-color-stroke-surface-neutral` |
 | Lighter line, such as under the page tabs or between the rows of a `godmin-table` | `--wpds-color-stroke-surface-neutral-weak` |
+| The open part of a row that opens under a `godmin-table` row, `godmin-table__detail-body` | `--wpds-color-background-surface-neutral-strong`, inside a `--wpds-color-stroke-surface-neutral` line, its text in `--wpds-color-foreground-content-neutral` |
 | Sidebar row | `--wpds-color-foreground-interactive-neutral-weak`, and `--wpds-color-foreground-interactive-neutral-weak-active` under the pointer or with focus |
 | Current sidebar row | `--wpds-color-foreground-interactive-neutral-weak-active` on `--wpds-color-background-interactive-neutral-weak-active` |
 | Menu button of the top bar | `--wpds-color-foreground-content-neutral`, and `--wpds-color-foreground-interactive-brand` on `--wpds-color-background-interactive-neutral-weak-active` under the pointer or with keyboard focus |
