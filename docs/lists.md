@@ -1574,7 +1574,10 @@ catalogues also cover Notifications, the hidden text `@wordpress/a11y`
 puts before the live regions that godmin's announcements fill. That
 text is written before your app loads any catalogue, so `AdminRoot`
 writes it again in the loaded language, and again each time the
-language changes.
+language changes. Both also cover "(opens in a new tab)", what a
+screen reader says for the arrow a `Link` from `@wordpress/ui` draws
+with `openInNewTab`, so the links your app draws speak it in the
+loaded language.
 
 The translations are machine made. They stay marked fuzzy in the
 sources, `src/list-chrome/es-ES.po` and `src/list-chrome/fr-FR.po`
