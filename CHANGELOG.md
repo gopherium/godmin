@@ -34,6 +34,18 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 - A page picked in the phone drawer moves no focus, as the focus table already says.
 
+## [Unreleased]
+
+### Added
+
+- A `godmin-table` row can open its details in a second row under it, on WPDS `Collapsible`, with `godmin-table__toggle`, `godmin-table__detail` and `godmin-table__detail-body`.
+- An open row stays inside the visible width of a table that scrolls sideways, and its padding drops a step in a narrow region.
+- `RowControls` takes `movable={false}` and then draws the trash alone, for a list whose order means nothing.
+
+### Fixed
+
+- `useListRun` puts the focus back on the pressed control when a reload ends before the list shows busy, and a later reload no longer moves it.
+
 ## [0.33.0] - 2026-11-17
 
 ### Added
