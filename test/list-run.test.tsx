@@ -1352,6 +1352,41 @@ test('puts the focus back once per run, and leaves it on the list region after a
 	expect([first, document.activeElement]).toEqual([restore, listRegion()])
 })
 
+/**
+ * Runs a write whose reload ends before React draws the list busy, marked, settled and ended in one update.
+ * @param seen - What the rows screen recorded.
+ * @param pressed - The control the reader presses.
+ */
+function writeInOneUpdate(seen: RowsSeen, pressed: HTMLElement): void {
+	press(pressed)
+	const settleRun = seen.settles.at(-1) as RunSettled
+	act(() => {
+		const end = seen.runs[0].onRefresh()
+		settleRun(true)
+		end()
+	})
+}
+
+test('puts the focus back on the pressed bulk action when its reload ended before the list showed busy', () => {
+	const { seen } = renderRows()
+	const trash = screen.getByRole('button', { name: 'Trash' })
+
+	writeInOneUpdate(seen, trash)
+
+	expect(document.activeElement).toBe(trash)
+})
+
+test('leaves the focus on the list region after a later reload once a reload that ended unseen put it back', () => {
+	const { seen } = renderRows()
+	writeInOneUpdate(seen, rowButton('Maria Perez', 'Restore'))
+	act(() => listRegion().focus())
+	const later = reload(seen.runs[0])
+
+	endReload(later)
+
+	expect(document.activeElement).toBe(listRegion())
+})
+
 test('puts the focus back on the pressed control when a row above it left', () => {
 	const { seen, leave } = renderRows()
 	const restore = rowButton('Maria Perez', 'Restore')

@@ -67,11 +67,12 @@ interface Reloads {
 }
 
 /**
- * Counts the reloads a list has open, each ended once, and drops them all when the list changes.
- * @returns Whether a reload is open, and how to start one or drop them all.
+ * Counts the reloads a list has open and those that ended, each ended once, and drops them all on a list change.
+ * @returns Whether a reload is open, how many ended, and how to start one or drop them all.
  */
-function useReloads(): [boolean, Reloads] {
+function useReloads(): [boolean, number, Reloads] {
 	const [open, setOpen] = useState(0)
+	const [finished, setFinished] = useState(0)
 	const [reloads] = useState<Reloads>(() => {
 		let generation = 0
 		return {
@@ -85,6 +86,7 @@ function useReloads(): [boolean, Reloads] {
 					}
 					ended = true
 					setOpen((count) => count - 1)
+					setFinished((count) => count + 1)
 				}
 			},
 			drop: () => {
@@ -93,7 +95,7 @@ function useReloads(): [boolean, Reloads] {
 			},
 		}
 	})
-	return [open !== 0, reloads]
+	return [open !== 0, finished, reloads]
 }
 
 /**
@@ -231,7 +233,7 @@ export function useListRun(scope: string, onChangeSelection: (selection: string[
 	const place = useRef<Place | null>(null)
 	const opener = useRef<Place | null>(null)
 	const [openedBy] = useState<OpenedBy>(() => new WeakMap())
-	const [refreshing, reloads] = useReloads()
+	const [refreshing, finished, reloads] = useReloads()
 	useLayoutEffect(() => noteOpener(region, opener, openedBy), [openedBy])
 	useLayoutEffect(() => {
 		latest.current += 1
@@ -251,7 +253,7 @@ export function useListRun(scope: string, onChangeSelection: (selection: string[
 		}
 		putBack(region.current, place.current)
 		place.current = null
-	}, [refreshing])
+	}, [refreshing, finished])
 	const [run] = useState<ListRun>(() => ({
 		onStart: () => {
 			latest.current += 1
