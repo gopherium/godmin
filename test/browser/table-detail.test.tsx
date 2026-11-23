@@ -77,7 +77,7 @@ function opensOfThirty(at: number): boolean {
 
 /** The fields of the tests, the second one holding a table two levels deep. */
 const FIELDS: Field[] = [
-	{ key: 'phone', label: 'Phone', kind: 'Text', name: 'billing_phone_number' },
+	{ key: 'phone', label: 'Phone', kind: 'Text', name: 'billing_contact_phone_number_for_invoices' },
 	{
 		key: 'team',
 		label: 'Team',
