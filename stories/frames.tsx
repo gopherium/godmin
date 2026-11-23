@@ -45,26 +45,44 @@ export function ListPage({ aside, children }: { aside?: ReactNode; children: Rea
 	)
 }
 
-/** The title, the canvas, the details and the main work of a record page. */
+/** The link of the crumb above a record page. */
+interface Crumb {
+	label: string
+	href: string
+}
+
+/** The title, the canvas, the crumb, the details and their name, and the main work of a record page. */
 interface RecordPageProps {
 	title?: string
 	canvas?: CanvasMode
+	crumb?: Crumb
+	asideLabel?: string
 	aside: ReactNode
 	children: ReactNode
 }
 
+/** The crumb of a record page that names none, the invoices it belongs to. */
+const INVOICES: Crumb = { label: 'Invoices', href: '#invoices' }
+
 /** Renders a record page beside the sidebar, nothing changed so Save is off, its details in the aside. */
-export function RecordPage({ title = 'Invoice 1042', canvas, aside, children }: RecordPageProps) {
+export function RecordPage({
+	title = 'Invoice 1042',
+	canvas,
+	crumb = INVOICES,
+	asideLabel = 'Invoice details',
+	aside,
+	children,
+}: RecordPageProps) {
 	return (
 		<Admin canvas={canvas}>
 			<Page
 				title={title}
 				headingLevel={2}
 				aside={aside}
-				asideLabel="Invoice details"
+				asideLabel={asideLabel}
 				breadcrumbs={
 					<PageBreadcrumbs label="Breadcrumbs">
-						<PageBreadcrumb href="#invoices">Invoices</PageBreadcrumb>
+						<PageBreadcrumb href={crumb.href}>{crumb.label}</PageBreadcrumb>
 					</PageBreadcrumbs>
 				}
 				actions={
