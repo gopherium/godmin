@@ -111,6 +111,24 @@ ranges.
 follows the filter rules of that DataViews release. A list built on
 another release gets a peer warning when it installs godmin.
 
+## Upgrading from godmin 0.33.0
+
+godmin 0.34.0 sets the body cells of a table at the top of their row,
+as the classic WordPress list table and the DataViews table do.
+Change your code in this place:
+
+- A body cell of a `godmin-table` sits at the top of its row, and a
+  header cell stays in the middle. Wrap the first line of each body
+  cell in a `div` marked `godmin-table__cell`, such as
+  `<td><div className="godmin-table__cell">{field.name}</div></td>`.
+  The box is as tall as a compact button and centres its line down
+  it, so a row of one line whose buttons are compact looks as it did
+  in 0.33.0. Draw a default button of a row with `size="compact"`, or
+  the text beside it sits 4px higher. A cell you leave without the
+  box sits at the top, its text above a button in the next cell.
+  [Lists that stay custom](./lists.md#lists-that-stay-custom) says
+  what goes in the box.
+
 ## Upgrading from godmin 0.32.0
 
 godmin 0.33.0 gives the write a busy dialog waits on a time limit, and
