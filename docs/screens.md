@@ -508,6 +508,7 @@ runs into:
 | `godmin-form__grow` | The field of a row that takes most of the free room |
 | `godmin-empty` | A centered empty state with breathing room |
 | `godmin-table` | A full width table with collapsed borders, drawn like the DataViews table |
+| `godmin-table__cell` | The box around the first line of a body cell, as tall as a compact button, its line centred down it |
 | `godmin-table__actions` | The narrow trailing cell holding row actions |
 | `godmin-table__title` | The cell naming the record, bold, its link with no underline |
 | `godmin-table__toggle` | The label button that opens a row under its row, drawn as the title link |
@@ -570,7 +571,9 @@ reaches it, so you can mark up every table this way.
 Every `godmin-table` row takes a light tint under the pointer and
 while keyboard focus is inside it, so a reader can tell which row a
 button belongs to. `RowControls` in the actions cell sit at its right
-edge, so they stay put when the column widens.
+edge, so they stay put when the column widens. A body cell sits at the
+top of its row, and its first line goes in a `godmin-table__cell` box,
+as [lists that stay custom](./lists.md#lists-that-stay-custom) shows.
 
 Two details in that snippet matter:
 
@@ -638,25 +641,33 @@ function FieldRows({ field, at, count, open, onOpen, onMove, onRemove }: FieldRo
 		<Collapsible.Root render={<tbody />} open={open} onOpenChange={change}>
 			<tr>
 				<td className="godmin-table__title">
-					<Collapsible.Trigger ref={toggle} className="godmin-table__toggle">
-						<Icon icon={chevronDown} className="godmin-table__toggle-icon" />
-						{field.label}
-					</Collapsible.Trigger>
+					<div className="godmin-table__cell">
+						<Collapsible.Trigger ref={toggle} className="godmin-table__toggle">
+							<Icon icon={chevronDown} className="godmin-table__toggle-icon" />
+							{field.label}
+						</Collapsible.Trigger>
+					</div>
 				</td>
 				<td>
-					<Badge intent="stable">{field.kind}</Badge>
+					<div className="godmin-table__cell">
+						<Badge intent="stable">{field.kind}</Badge>
+					</div>
 				</td>
 				<td>
-					<code>{field.name}</code>
+					<div className="godmin-table__cell">
+						<code>{field.name}</code>
+					</div>
 				</td>
 				<td className="godmin-table__actions">
-					<RowControls
-						at={at}
-						count={count}
-						labels={labels}
-						onMove={(offset) => onMove(at, offset)}
-						onRemove={() => onRemove(at)}
-					/>
+					<div className="godmin-table__cell">
+						<RowControls
+							at={at}
+							count={count}
+							labels={labels}
+							onMove={(offset) => onMove(at, offset)}
+							onRemove={() => onRemove(at)}
+						/>
+					</div>
 				</td>
 			</tr>
 			<Collapsible.Panel render={<tr />} className="godmin-table__detail" hiddenUntilFound>
@@ -689,6 +700,9 @@ How the parts fit:
 - Each field is a `tbody` of its own, `Collapsible.Root` drawn as one
   through `render`. A table may hold many. Its first row is the
   field's own row.
+- Each cell of the field's row holds its first line in
+  `godmin-table__cell`, so the row lines up as a DataViews row does.
+  The one cell of the row that opens takes no box.
 - The label is `Collapsible.Trigger`, a button that tells a screen
   reader whether its row is open, with `aria-expanded`.
   `godmin-table__toggle` draws it as the title link. Keep that state
