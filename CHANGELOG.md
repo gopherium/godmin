@@ -41,6 +41,12 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - A `godmin-table` row can open its details in a second row under it, on WPDS `Collapsible`, with `godmin-table__toggle`, `godmin-table__detail` and `godmin-table__detail-body`.
 - An open row stays inside the visible width of a table that scrolls sideways, and its padding drops a step in a narrow region.
 - `RowControls` takes `movable={false}` and then draws the trash alone, for a list whose order means nothing.
+- `godmin-table__cell` holds the first line of a body cell in a box as tall as a compact button, its line centred down it, as DataViews draws its cells.
+- `docs/build-and-versioning.md` lists the change an app upgrading from 0.33.0 makes.
+
+### Changed
+
+- **Breaking.** A body cell of a `godmin-table` sits at the top of its row, as in WordPress, and a header cell stays in the middle. Wrap the first line of each body cell in `godmin-table__cell`, and draw the buttons of a row compact, to keep a row of one line as it was.
 
 ### Fixed
 
