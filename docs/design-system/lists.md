@@ -224,6 +224,17 @@ godmin's own:
   `--wpds-typography-font-weight-emphasis`.
 - A body cell is at least `--wpds-dimension-size-md` (32px) tall
   inside its padding.
+- A body cell sits at the `top` of its row and a header cell in the
+  `middle` of its own, as in the classic WordPress list table and the
+  DataViews table.
+- The first line of a body cell goes in a `godmin-table__cell` box at
+  least `--wpds-dimension-size-md` (32px) tall with
+  `align-content: center`, as DataViews wraps its own cells. A line of
+  text then sits level with a compact button in the next cell, and a
+  tall row keeps the first line of each cell at its top. A default
+  button is 40px tall, so its middle sits 4px lower, as in DataViews.
+  A value that wraps inside the box starts at its top, a little
+  higher.
 - A line `--wpds-border-width-xs` (1px) wide in
   `--wpds-color-stroke-surface-neutral-weak` runs above each row.
 - On a list page the first and last cells pad by
@@ -252,8 +263,8 @@ label as the title link and its open part as the WPDS `Card`:
   `--wpds-color-foreground-interactive-brand` under the pointer, as
   DataViews draws a title a reader can click. The pointer over it is
   `--wpds-cursor-control`, and it draws the focus ring of the title
-  link. It sits in the middle of its cell, level with the other cells
-  of its row.
+  link. It sits in the middle of the box of its cell, level with the
+  other cells of its row.
 - A chevron sits before the label, `--wpds-dimension-gap-sm` (8px)
   from it, so the chevrons of a table line up down its column. It
   points down while the row is closed and turns `180deg` while it is

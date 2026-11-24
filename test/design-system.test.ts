@@ -288,7 +288,16 @@ const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
 	['.godmin-table thead th', 'padding-block', 'Tables that stay custom', 'A header cell'],
 	['.godmin-table thead th', 'font-size', 'Tables that stay custom', 'A header cell'],
 	['.godmin-table thead th', 'font-weight', 'Tables that stay custom', 'A header cell'],
-	['.godmin-table tbody td', 'height', 'Tables that stay custom', 'A body cell'],
+	['.godmin-table tbody td', 'height', 'Tables that stay custom', 'A body cell is'],
+	[
+		'.godmin-table > tbody > tr > th,\n\t.godmin-table > tbody > tr > td',
+		'vertical-align',
+		'Tables that stay custom',
+		'A body cell sits',
+	],
+	['.godmin-table th,\n\t.godmin-table td', 'vertical-align', 'Tables that stay custom', 'A body cell sits'],
+	['.godmin-table__cell', 'min-block-size', 'Tables that stay custom', 'godmin-table__cell'],
+	['.godmin-table__cell', 'align-content', 'Tables that stay custom', 'godmin-table__cell'],
 	['.godmin-table tbody tr', 'border-block-start', 'Tables that stay custom', 'runs above'],
 	['.godmin-table tbody tr:is(:hover, :has(:focus-visible)) > *', 'background', 'Tables that stay custom', 'under the'],
 	[
