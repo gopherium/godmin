@@ -1514,6 +1514,19 @@ does not do.
 [Tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
 gives every value.
 
+A body cell sits at the top of its row, as in the classic WordPress
+list table and the DataViews table. Wrap the first line of each body
+cell in a `div` marked `godmin-table__cell`, as DataViews wraps its
+own cells. The box is as tall as a compact button and centres its
+line down it. A line of text then stays level with a compact button
+in the next cell, and in a tall row every cell keeps its first line
+at the top. Draw the buttons of a row with `size="compact"`, as
+DataViews draws its row actions, since a default button is taller
+than the box. The box holds inline content, such as text, a link, a
+`code` or a `Badge`, and not a paragraph. A line under it, such as a
+note, goes after the box. The one cell of a row that opens under a
+row takes no box, since it holds the open part.
+
 Mark the cell that names the record `godmin-table__title`. It draws
 the name bold, as DataViews draws its titles. A link inside it has no
 underline and turns the accent colour under the pointer, like a
@@ -1521,7 +1534,9 @@ DataViews title field:
 
 ```tsx
 <td className="godmin-table__title">
-	<Link to="/fields/$id" params={{ id: field.id }}>{field.label}</Link>
+	<div className="godmin-table__cell">
+		<Link to="/fields/$id" params={{ id: field.id }}>{field.label}</Link>
+	</div>
 </td>
 ```
 
