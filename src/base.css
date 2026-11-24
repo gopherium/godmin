@@ -1139,6 +1139,16 @@ body {
 		height: var(--wpds-dimension-size-md);
 	}
 
+	.godmin-table > tbody > tr > th,
+	.godmin-table > tbody > tr > td {
+		vertical-align: top;
+	}
+
+	.godmin-table__cell {
+		min-block-size: var(--wpds-dimension-size-md);
+		align-content: center;
+	}
+
 	.godmin-page > .godmin-page__list .godmin-table tr > :first-child {
 		padding-inline-start: var(--wpds-dimension-padding-2xl);
 	}

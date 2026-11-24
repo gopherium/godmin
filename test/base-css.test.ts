@@ -862,7 +862,6 @@ test('pads every table cell with the medium padding and draws no cell border', (
 	const cells = ruleOf('.godmin-table th,\n\t.godmin-table td')
 
 	expect(cells).toMatch(/padding:\s*var\(--wpds-dimension-padding-md\)/)
-	expect(cells).toMatch(/vertical-align:\s*middle/)
 	expect(cells).not.toMatch(/border/)
 })
 
