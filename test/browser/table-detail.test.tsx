@@ -203,19 +203,27 @@ function FieldRows({ field, at, count, rows }: { field: Field; at: number; count
 		<Collapsible.Root render={<tbody />} open={rows.opened.has(field.key)} onOpenChange={change}>
 			<tr>
 				<td className="godmin-table__title">
-					<Collapsible.Trigger ref={toggle} className="godmin-table__toggle">
-						<Icon icon={chevronDown} className="godmin-table__toggle-icon" />
-						{field.label}
-					</Collapsible.Trigger>
+					<div className="godmin-table__cell">
+						<Collapsible.Trigger ref={toggle} className="godmin-table__toggle">
+							<Icon icon={chevronDown} className="godmin-table__toggle-icon" />
+							{field.label}
+						</Collapsible.Trigger>
+					</div>
 				</td>
 				<td>
-					<Badge intent="stable">{field.kind}</Badge>
+					<div className="godmin-table__cell">
+						<Badge intent="stable">{field.kind}</Badge>
+					</div>
 				</td>
 				<td>
-					<code>{field.name}</code>
+					<div className="godmin-table__cell">
+						<code>{field.name}</code>
+					</div>
 				</td>
 				<td className="godmin-table__actions">
-					<RowControls at={at} count={count} labels={wordsOf(field)} onMove={() => {}} onRemove={() => {}} />
+					<div className="godmin-table__cell">
+						<RowControls at={at} count={count} labels={wordsOf(field)} onMove={() => {}} onRemove={() => {}} />
+					</div>
 				</td>
 			</tr>
 			<Collapsible.Panel render={<tr />} className="godmin-table__detail" {...KEPT[rows.keep]}>
@@ -741,11 +749,11 @@ test.each(PRESSES)(
 	},
 )
 
-test('centres the label that opens a row with the middle of its cell', async () => {
+test('centres the label that opens a row down the box its cell holds it in', async () => {
 	await draw(onPage(<Fields />))
-	const cell = PHONE.toggle.closest('td') as HTMLTableCellElement
+	const box = PHONE.toggle.closest('.godmin-table__cell') as HTMLElement
 
-	near(middleDown(PHONE.toggle.getBoundingClientRect()), middleDown(cell.getBoundingClientRect()), 'the middle')
+	near(middleDown(PHONE.toggle.getBoundingClientRect()), middleDown(box.getBoundingClientRect()), 'the middle')
 })
 
 test.each(KEEPS)(
