@@ -112,15 +112,11 @@ A bleed canvas keeps the canvas shadow. The sidebar has no shadow.
 Dialogs, menus and popovers keep the shadow their design system
 package draws, because godmin sets none for them.
 
-Two more shadows draw a line, not depth:
-
-- The pinned actions column of a `godmin-table` inside
-  `godmin-table-scroll` draws its edge as an inset shadow, as
-  [Tables that stay custom](./lists.md#tables-that-stay-custom) gives.
-- A focused toast with no action draws its focus ring as a shadow, as
-  [keyboard](./toasts.md#keyboard) on the toasts page shows.
-  [The focus ring](./accessibility.md#the-focus-ring) covers the
-  other focus rings.
+One more shadow draws a line, not depth. A focused toast with no
+action draws its focus ring as a shadow, as
+[keyboard](./toasts.md#keyboard) on the toasts page shows.
+[The focus ring](./accessibility.md#the-focus-ring) covers the other
+focus rings.
 
 godmin also takes one shadow away. It drops the dark ring DataViews
 draws around its media box when the box holds an avatar.

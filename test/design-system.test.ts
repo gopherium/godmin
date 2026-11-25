@@ -239,10 +239,17 @@ const DETAIL_CELL = '.godmin-table tbody tr.godmin-table__detail > td'
 const DETAIL_BODY = '.godmin-table__detail-body'
 
 /** The rule that pads the open part in a narrow region, from the container query that opens it. */
-const NARROW_DETAIL = `@container (max-width: ${breakpoints.DENSE_BREAKPOINT - 1}px) {\n\t\t${DETAIL_BODY}`
+const NARROW_DETAIL = `@container godmin-table (max-width: ${breakpoints.DENSE_BREAKPOINT - 1}px) {\n\t\t${DETAIL_BODY}`
 
-/** The pinned actions cell of the header row of a table nested in an open part. */
-const NESTED_ACTIONS = '.godmin-table__detail .godmin-table-scroll .godmin-table thead .godmin-table__actions'
+/** A row of a table in a region under 640px wide, drawn as an item of the DataViews list, and that item held. */
+const LIST_ITEM = '.godmin-table > tbody > tr:not(.godmin-table__detail)'
+const LIST_HELD = `${LIST_ITEM}:is(:hover, :has(:focus-visible))`
+
+/** The box of a value of a list item, a cell neither the first nor the actions. */
+const VALUE_BOX = `${LIST_ITEM}\n\t\t\t> :not(:first-child, .godmin-table__actions)\n\t\t\t> .godmin-table__cell`
+
+/** The passage of the lists page that gives the values of a list item. */
+const VALUES = 'Every other cell of a list item'
 
 /** Each list value the lists page gives. */
 const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
@@ -306,7 +313,17 @@ const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
 		'Tables that stay custom',
 		'first and last',
 	],
-	['.godmin-table-scroll .godmin-table__actions', 'box-shadow', 'Tables that stay custom', 'inset shadow'],
+	[LIST_ITEM, 'padding', 'Tables that stay custom', 'item of the DataViews list'],
+	[`${LIST_ITEM} > :first-child`, 'line-height', 'Tables that stay custom', 'item of the DataViews list'],
+	[LIST_ITEM, 'column-gap', 'Tables that stay custom', VALUES],
+	[`${LIST_ITEM} > *`, 'margin-block-start', 'Tables that stay custom', VALUES],
+	[VALUE_BOX, 'min-block-size', 'Tables that stay custom', VALUES],
+	[`${LIST_ITEM} > *`, 'font-size', 'Tables that stay custom', VALUES],
+	[`${LIST_ITEM} > *`, 'line-height', 'Tables that stay custom', VALUES],
+	[`${LIST_ITEM} > *`, 'color', 'Tables that stay custom', VALUES],
+	[LIST_HELD, 'background', 'Tables that stay custom', VALUES],
+	[`${LIST_HELD} > *`, 'color', 'Tables that stay custom', VALUES],
+	[TOGGLE, 'line-height', 'Tables that stay custom', 'The label that opens a row'],
 	[TOGGLE, 'color', 'Tables that stay custom', 'The label that opens a row'],
 	[`${TOGGLE}:hover`, 'color', 'Tables that stay custom', 'The label that opens a row'],
 	[TOGGLE, 'cursor', 'Tables that stay custom', 'The label that opens a row'],
@@ -326,8 +343,6 @@ const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
 	[DETAIL_BODY, 'position', 'Tables that stay custom', 'stays inside the width'],
 	[DETAIL_BODY, 'inset-inline-start', 'Tables that stay custom', 'stays inside the width'],
 	[DETAIL_BODY, 'max-inline-size', 'Tables that stay custom', 'stays inside the width'],
-	['.godmin-table-scroll:has(.godmin-table__detail)', 'container-type', 'Tables that stay custom', 'stays inside'],
-	[NESTED_ACTIONS, 'background', 'Tables that stay custom', 'pinned actions header cell'],
 ]) }
 
 /** The selector of the rule both columns of a record page share. */
@@ -893,7 +908,7 @@ test('the lists page names the breakpoint the frozen columns start above, as the
 })
 
 test('the pages name the breakpoint an open part pads less below, as the stylesheet opens its container query', () => {
-	const below = Number(groupOf(/@container \(max-width: (\d+)px\)/.exec(stylesheet)))
+	const below = Number(groupOf(/@container godmin-table \(max-width: (\d+)px\)/.exec(stylesheet)))
 	const edge = Object.entries(breakpoints).find(([, value]) => value === below + 1)?.[0]
 	const custom = (sections.get('lists.md')?.get('Tables that stay custom') ?? '').replace(/\s+/g, ' ')
 	const row = (pages.get('layout.md') ?? '').split('\n').find((line) => line.startsWith(`| \`${edge}\` |`))
@@ -950,17 +965,6 @@ test.each(DETAIL_TOKENS)(
 		expect(tokens.filter((name) => !row.includes(`\`${name}\``))).toEqual([])
 	},
 )
-
-test('the radius page leaves the custom table line to the lists page', () => {
-	const line = [...namesIn(ruleValue('.godmin-table-scroll .godmin-table__actions', 'box-shadow') ?? '', '--wpds-')]
-	const passages = passagesOf(pages.get('radius-and-elevation.md')).filter((passage) =>
-		passage.includes('`godmin-table`'),
-	)
-
-	expect(line.length, 'the stylesheet draws the line with design tokens').toBeGreaterThan(0)
-	expect(passages.map((passage) => passage.includes('(./lists.md#tables-that-stay-custom)'))).toEqual([true])
-	expect(passages.flatMap((passage) => line.filter((token) => passage.includes(`\`${token}\``)))).toEqual([])
-})
 
 test('the lists page leaves the reload timing to the loading page', () => {
 	const section = sections.get('lists.md')?.get('After a write of your own') ?? ''
