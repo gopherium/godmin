@@ -1527,6 +1527,13 @@ than the box. The box holds inline content, such as text, a link, a
 note, goes after the box. The one cell of a row that opens under a
 row takes no box, since it holds the open part.
 
+In a `godmin-table-scroll` box narrower than `DENSE_BREAKPOINT`, such
+as on a phone or in a column of a record page, each row draws as an
+item of the DataViews list instead, the layout WordPress picks for a
+narrow place. Keep the name of the record in the first cell and mark the
+cell of the row's buttons `godmin-table__actions`, so both sit on the
+first line, with the other values in small text under them.
+
 Mark the cell that names the record `godmin-table__title`. It draws
 the name bold, as DataViews draws its titles. A link inside it has no
 underline and turns the accent colour under the pointer, like a
