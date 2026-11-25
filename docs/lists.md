@@ -1524,7 +1524,11 @@ at the top. Draw the buttons of a row with `size="compact"`, as
 DataViews draws its row actions, since a default button is taller
 than the box. The box holds inline content, such as text, a link, a
 `code` or a `Badge`, and not a paragraph. A line under it, such as a
-note, goes after the box. The one cell of a row that opens under a
+note, goes after the box in its own element, such as a `Text`. A
+narrow table leaves out a cell under the first line whose box is
+empty and that holds no other element, so bare text after an empty
+box would go with it.
+The one cell of a row that opens under a
 row takes no box, since it holds the open part.
 
 In a `godmin-table-scroll` box narrower than `DENSE_BREAKPOINT`, such
