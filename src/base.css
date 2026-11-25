@@ -1449,7 +1449,14 @@ body {
 		}
 
 		.godmin-table > tbody > tr:not(.godmin-table__detail)
-			> :not(:first-child, .godmin-table__actions):is(:empty, :has(> .godmin-table__cell:empty)) {
+			> :not(:first-child, .godmin-table__actions):is(:empty, :has(> .godmin-table__cell:only-child:empty)) {
+			display: none;
+		}
+
+		.godmin-table[hidden]:not([hidden='until-found']),
+		.godmin-table > tbody[hidden]:not([hidden='until-found']),
+		.godmin-table > tbody > tr[hidden]:not([hidden='until-found']),
+		.godmin-table > tbody > tr > [hidden]:not([hidden='until-found']) {
 			display: none;
 		}
 
