@@ -817,12 +817,6 @@ body {
 		flex-shrink: 0;
 	}
 
-	.godmin-page__main .godmin-table-scroll,
-	.godmin-page__aside .godmin-table-scroll {
-		position: relative;
-		overflow-x: auto;
-	}
-
 	.godmin-page__aside:empty {
 		display: none;
 	}
@@ -1218,9 +1212,11 @@ body {
 		outline-offset: 2px;
 	}
 
-	/* Makes every table region the width its rows and open parts measure against. */
+	/* Scrolls a wider table sideways inside its region, the width its rows and open parts measure against. */
 	.godmin-table-scroll {
 		container: godmin-table / inline-size;
+		position: relative;
+		overflow-x: auto;
 	}
 
 	/* Draws the label that opens a row as the title link of a godmin-table. */
@@ -1635,13 +1631,6 @@ body {
 
 		.godmin-layout__canvas--bleed {
 			--godmin-canvas-gutter: 0px;
-		}
-
-		/* The region needs a containing block, or absolutely positioned content
-		   inside it escapes the clip and widens the document. */
-		.godmin-table-scroll {
-			position: relative;
-			overflow-x: auto;
 		}
 	}
 

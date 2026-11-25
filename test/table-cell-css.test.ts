@@ -54,7 +54,7 @@ test('lines up the cells of a table the same at every width but the first line o
 })
 
 test('turns every table region into a size container named for the table, so only its rows measure its width', () => {
-	expect(base).toMatch(/\n\t\.godmin-table-scroll \{\s*container:\s*godmin-table \/ inline-size;\s*\}/)
+	expect(ruleOf('\n\t.godmin-table-scroll')).toMatch(/container:\s*godmin-table \/ inline-size;/)
 	expect(base, 'a query of a table names its container').not.toMatch(/@container \(/)
 })
 
