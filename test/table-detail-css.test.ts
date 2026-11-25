@@ -19,19 +19,18 @@ const BODY = '.godmin-table__detail-body'
 const MOTION = '.godmin-table__detail-motion'
 const MOVING = ':is([data-starting-style], [data-ending-style])'
 
-/** The header row of a table nested in an open part, and the pinned actions cell of that header on a phone. */
+/** The header row of a table nested in an open part. */
 const NESTED_HEAD = '.godmin-table__detail .godmin-table thead tr'
-const PINNED_HEAD = '.godmin-table__detail .godmin-table-scroll .godmin-table thead .godmin-table__actions'
 
 /** The last rule of the table and the first block of the small viewport overrides. */
 const TABLE_END = '.godmin-table-scroll:focus-visible {'
 const SMALL_START = '@media (max-width: 781px) {'
 
-/** The parts of the sheet a rule sits in: every width, a narrow region, motion allowed, or a phone. */
-type Part = 'every width' | 'narrow region' | 'motion allowed' | 'phone'
+/** The parts of the sheet a rule sits in: every width, a narrow region, or motion allowed. */
+type Part = 'every width' | 'narrow region' | 'motion allowed'
 
-/** The widest region and window the narrow rules hold at. */
-const NARROW = `(max-width: ${DENSE_BREAKPOINT - 1}px)`
+/** The container the narrow rules query, and the widest region they hold at. */
+const NARROW = `godmin-table (max-width: ${DENSE_BREAKPOINT - 1}px)`
 
 /** Returns the one block of rules that moves a detail row while the reader allows motion. */
 function motionBlock(): string {
@@ -51,7 +50,6 @@ function partOf(part: Part): string {
 		'every width': () => everyWidth,
 		'narrow region': () => blockOf(`@container ${NARROW}`),
 		'motion allowed': motionBlock,
-		phone: () => blockOf(`@media ${NARROW}`),
 	}
 	return parts[part]()
 }
@@ -83,13 +81,14 @@ const SURFACE = token('color-background-surface-neutral-strong')
 const DECLARATIONS: [Part, string, string, string][] = [
 	['every width', TOGGLE, 'display', 'inline-flex'],
 	['every width', TOGGLE, 'vertical-align', 'middle'],
-	['every width', TOGGLE, 'align-items', 'center'],
+	['every width', TOGGLE, 'align-items', 'flex-start'],
 	['every width', TOGGLE, 'gap', token('dimension-gap-sm')],
 	['every width', TOGGLE, 'margin', '0'],
 	['every width', TOGGLE, 'padding', '0'],
 	['every width', TOGGLE, 'border', '0'],
 	['every width', TOGGLE, 'background', 'none'],
 	['every width', TOGGLE, 'font', 'inherit'],
+	['every width', TOGGLE, 'line-height', token('typography-line-height-md')],
 	['every width', TOGGLE, 'color', token('color-foreground-interactive-neutral')],
 	['every width', TOGGLE, 'text-align', 'start'],
 	['every width', TOGGLE, 'cursor', token('cursor-control')],
@@ -117,7 +116,6 @@ const DECLARATIONS: [Part, string, string, string][] = [
 	['every width', BODY, 'color', token('color-foreground-content-neutral')],
 	['every width', BODY, 'text-align', 'start'],
 	['every width', BODY, 'overflow-wrap', 'anywhere'],
-	['every width', '.godmin-table-scroll:has(.godmin-table__detail)', 'container-type', 'inline-size'],
 	['narrow region', BODY, 'padding', token('dimension-padding-lg')],
 	['every width', NESTED_HEAD, 'border-block-start', '0'],
 	['every width', `${NESTED_HEAD}:is(:hover, :has(:focus-visible)) > *`, 'background', 'none'],
@@ -134,7 +132,6 @@ const DECLARATIONS: [Part, string, string, string][] = [
 	['motion allowed', ICON, 'transition', 'rotate 0.15s ease-out'],
 	['motion allowed', DETAIL, 'transition', 'opacity 150ms ease-out'],
 	['motion allowed', MOTION, 'transition', 'grid-template-rows 150ms ease-out'],
-	['phone', PINNED_HEAD, 'background', SURFACE],
 ]
 
 /** Each rule of the detail row once, with the properties it sets in the order the table lists them. */
@@ -163,26 +160,17 @@ test.each(RULES)('in the rules for $part, $selector sets nothing else', ({ part,
 	expect(declarationsOf(part, selector).map(([property]) => property)).toEqual(properties)
 })
 
-test('sets how a detail row displays in its two hidden rules alone, so an open row stays a table row', () => {
-	expect(selectorsSetting('display', /\.godmin-table__detail(?![\w-])/)).toEqual([
+test('sets how a detail row displays at every width in its two hidden rules alone, so it stays a table row', () => {
+	expect(selectorsSetting('display', /\.godmin-table__detail(?![\w-])/, everyWidth)).toEqual([
 		`${DETAIL}[hidden]:not([hidden='until-found'])`,
 		`${DETAIL}[hidden='until-found']`,
 	])
-})
-
-test('turns only a region that holds a detail row into a size container, so every other table keeps its width', () => {
-	expect(selectorsSetting('container-type', /godmin-table/)).toEqual(['.godmin-table-scroll:has(.godmin-table__detail)'])
 })
 
 test('turns the chevron and moves a detail row only while the reader allows motion', () => {
 	const still = base.replace(motionBlock(), '')
 
 	expect(selectorsSetting('transition', /godmin-table__(?:toggle|detail)/, still)).toEqual([])
-})
-
-test('keeps the pinned header cell of a nested table on its surface on a phone alone', () => {
-	expect(everyWidth).not.toContain(PINNED_HEAD)
-	expect(blocksOf(`@container ${NARROW}`).join('\n')).not.toContain(PINNED_HEAD)
 })
 
 test('sits in the godmin layer after the table rules and before the small viewport overrides', () => {

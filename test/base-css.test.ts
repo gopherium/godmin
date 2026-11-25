@@ -936,40 +936,8 @@ test('keeps the row controls of a table at the end edge of their cell', () => {
 	expect(ruleOf('.godmin-table__actions .godmin-rows__controls')).toMatch(/justify-content:\s*flex-end/)
 })
 
-test('pins the actions column of a scrolling table to the end edge on a small screen', () => {
-	const actions = ruleOf('.godmin-table-scroll .godmin-table__actions', blockOf('@media (max-width: 639px)'))
-
-	expect(actions).toMatch(/position:\s*sticky/)
-	expect(actions).toMatch(/inset-inline-end:\s*0/)
-	expect(actions, 'the pinned column hides the cells under it with the canvas colour').toMatch(
-		/background:\s*var\(--wpds-color-background-surface-neutral-strong\)/,
-	)
-})
-
-test('draws the start edge of the pinned actions column with an inset shadow rather than a border', () => {
-	const actions = ruleOf('.godmin-table-scroll .godmin-table__actions', blockOf('@media (max-width: 639px)'))
-
-	expect(actions).toMatch(
-		/box-shadow:\s*inset var\(--wpds-border-width-xs\) 0 0 var\(--wpds-color-stroke-surface-neutral\)/,
-	)
-	expect(actions, 'a collapsed border paints badly on a sticky cell').not.toMatch(/^\s*border[\w-]*:/m)
-})
-
-test('draws the edge of the pinned actions column beside the scrolling cells in a right to left page', () => {
-	const actions = ruleOf(
-		'.godmin-table-scroll .godmin-table__actions:dir(rtl)',
-		blockOf('@media (max-width: 639px)'),
-	)
-
-	expect(actions).toMatch(
-		/box-shadow:\s*inset calc\(-1 \* var\(--wpds-border-width-xs\)\) 0 0 var\(--wpds-color-stroke-surface-neutral\)/,
-	)
-})
-
-test('keeps the actions column in the flow of a table at 640px and wider', () => {
-	const wide = base.replace(blockOf('@media (max-width: 639px)'), '')
-
-	expect(wide).not.toMatch(/\.godmin-table__actions[^{]*\{[^}]*position:\s*sticky/)
+test('pins the actions column of a table at no width, since a narrow region draws its rows as a list', () => {
+	expect(base).not.toMatch(/\.godmin-table__actions[^{]*\{[^}]*position:\s*sticky/)
 })
 
 test('spans the toast region across the window, so each toast sizes to its own message', () => {
