@@ -266,7 +266,8 @@ godmin's own:
   `--wpds-typography-font-size-sm` (12px) text on
   `--wpds-typography-line-height-sm` (20px) lines of
   `--wpds-color-foreground-content-neutral-weak` that breaks a long
-  word. A cell that holds nothing, or only an empty box, is left out,
+  word. A cell that holds nothing, or an empty box and no other
+  element, is left out,
   and a hidden row or cell stays hidden. Under the pointer and
   while keyboard focus is inside it, the whole item takes
   `--wpds-color-background-interactive-neutral-weak-active` and its
