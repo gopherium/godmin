@@ -1536,7 +1536,9 @@ as on a phone or in a column of a record page, each row draws as an
 item of the DataViews list instead, the layout WordPress picks for a
 narrow place. Keep the name of the record in the first cell and mark the
 cell of the row's buttons `godmin-table__actions`, so both sit on the
-first line, with the other values in small text under them.
+first line, with the other values in small text under them. In a
+wider box a table that does not fit scrolls sideways inside the box,
+as a DataViews table does, and the page stays put.
 
 Mark the cell that names the record `godmin-table__title`. It draws
 the name bold, as DataViews draws its titles. A link inside it has no
