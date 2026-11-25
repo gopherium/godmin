@@ -13,7 +13,7 @@ import { ConfirmDialog } from '../../src/confirm-dialog.js'
 import { Page } from '../../src/page.js'
 import { RowControls } from '../../src/rows.js'
 import { Admin, RecordPage } from '../../stories/frames.js'
-import { backgroundOf, columnsOf, find, middleAcross, middleDown, onTop } from '../../stories/measure.js'
+import { backgroundOf, columnsOf, middleAcross, middleDown, onTop } from '../../stories/measure.js'
 
 /** A write time limit in milliseconds no test here runs into. */
 const PATIENT_LIMIT = 60_000
@@ -453,37 +453,18 @@ function expectInside(element: Element, region: HTMLElement, what: string) {
 	expect(box.right, `${what} ends inside`).toBeLessThanOrEqual(shown + region.clientWidth + 0.5)
 }
 
-/** Scrolls a region sideways to its start or its end, in either text direction. */
-async function scrollTo(region: HTMLElement, end: boolean) {
-	const reach = region.scrollWidth - region.clientWidth
-	region.scrollLeft = end ? reach * (getComputedStyle(region).direction === 'rtl' ? -1 : 1) : 0
-	await frames(1)
-}
-
-/** Checks the table in a region is wider than the region, so the region scrolls sideways. */
-function expectScrolls(region: HTMLElement) {
-	expect(region.scrollWidth, `the table in ${region.getAttribute('aria-label')} scrolls sideways`).toBeGreaterThan(
+/** Checks a region scrolls nothing sideways, as its rows draw as a list under 640px wide. */
+function expectUnscrolled(region: HTMLElement) {
+	expect(region.scrollWidth, `${region.getAttribute('aria-label')} scrolls nothing sideways`).toBeLessThanOrEqual(
 		region.clientWidth,
 	)
 }
 
-/** Returns the name of the end of a scroll: its start or its end. */
-function endName(end: boolean): string {
-	return end ? 'end' : 'start'
-}
-
-/** Each pair of scroll ends of an outer region and of the region nested in it. */
-const SCROLL_MIXES = [false, true].flatMap((outer) => [false, true].map((inner) => ({ outer, inner })))
-
-/** Checks the card and the Close field button of an open row sit inside the region at both ends of its scroll. */
-async function insideAtBothEnds(row: FieldRow, region: HTMLElement) {
-	expectScrolls(region)
-	for (const end of [false, true]) {
-		await scrollTo(region, end)
-		const at = end ? 'at the scroll end' : 'at the scroll start'
-		expectInside(row.card, region, `the card ${at}`)
-		expectInside(row.close, region, `Close field ${at}`)
-	}
+/** Checks the card and the Close field button of an open row sit inside a region that scrolls nothing sideways. */
+function insideUnscrolled(row: FieldRow, region: HTMLElement) {
+	expectUnscrolled(region)
+	expectInside(row.card, region, 'the card')
+	expectInside(row.close, region, 'Close field')
 }
 
 /** Returns the box round the words of an element, every line of them. */
@@ -528,16 +509,6 @@ function columnWidths(): number[] {
 /** Checks the header cells of the outer table keep the widths they had, within half a pixel. */
 function expectWidths(before: number[], what: string) {
 	expect(columnWidths().map((width, at) => Math.abs(width - before[at]) < 0.5), what).toEqual(before.map(() => true))
-}
-
-/** Returns the colour a token paints a background with inside the admin root. */
-function colourOf(token: string): string {
-	const probe = document.createElement('span')
-	probe.style.backgroundColor = `var(${token})`
-	find('.godmin-page').append(probe)
-	const colour = getComputedStyle(probe).backgroundColor
-	probe.remove()
-	return colour
 }
 
 /** Adds a rule of the app to the page for the length of the test. */
@@ -652,7 +623,7 @@ test.each([1280, 390])('keeps the column widths at %i as rows open and close', a
 })
 
 test.each<Direction>(['ltr', 'rtl'])(
-	'keeps the open part inside the region at both scroll ends on a phone with its gutter, %s',
+	'keeps the open part inside the region on a phone with its gutter, the region scrolling nothing sideways, %s',
 	async (dir) => {
 		await page.viewport(390, 844)
 		await draw(onPage(<Fields open={['phone']} />, dir), [PHONE])
@@ -660,34 +631,29 @@ test.each<Direction>(['ltr', 'rtl'])(
 
 		near(region.getBoundingClientRect().left, GUTTER, 'the region starts at the gutter')
 		near(region.getBoundingClientRect().width, PHONE_ROOM, 'the region fills the page')
-		await insideAtBothEnds(PHONE, region)
+		insideUnscrolled(PHONE, region)
 	},
 )
 
 test.each<Direction>(['ltr', 'rtl'])(
-	'keeps a nested open part inside both regions at every scroll end on a phone, %s',
+	'keeps a nested open part inside both regions on a phone, neither region scrolling sideways, %s',
 	async (dir) => {
 		await page.viewport(390, 844)
 		await draw(onPage(<Fields open={['team', 'team.members']} />, dir), [TEAM, MEMBERS])
 		const [outer, inner] = [regionOf('Fields'), regionOf('Sub fields of Team')]
-		expectScrolls(outer)
-		expectScrolls(inner)
 
-		for (const ends of SCROLL_MIXES) {
-			await scrollTo(outer, ends.outer)
-			await scrollTo(inner, ends.inner)
-			const at = `with Fields at its ${endName(ends.outer)} and Sub fields of Team at its ${endName(ends.inner)}`
-			expectInside(TEAM.card, outer, `the Team card in Fields ${at}`)
-			expectInside(MEMBERS.card, outer, `the Members card in Fields ${at}`)
-			expectInside(MEMBERS.card, inner, `the Members card in Sub fields of Team ${at}`)
-		}
+		expectUnscrolled(outer)
+		expectUnscrolled(inner)
+		expectInside(TEAM.card, outer, 'the Team card in Fields')
+		expectInside(MEMBERS.card, outer, 'the Members card in Fields')
+		expectInside(MEMBERS.card, inner, 'the Members card in Sub fields of Team')
 	},
 )
 
-test('keeps the open part inside the region at both scroll ends in a record page column', async () => {
+test('keeps the open part inside the region in a record page column, nothing scrolling sideways', async () => {
 	await draw(onRecord(<Fields open={['phone']} />), [PHONE])
 
-	await insideAtBothEnds(PHONE, regionOf('Fields'))
+	insideUnscrolled(PHONE, regionOf('Fields'))
 })
 
 test.each([
@@ -785,7 +751,6 @@ test('keeps a closed row for find in page as a box with its contents skipped, an
 test('draws a select popup and a confirm dialog of an open part above its card, then puts the focus back', async () => {
 	await page.viewport(390, 844)
 	await draw(onPage(<Fields open={['phone']} />), [PHONE])
-	await scrollTo(regionOf('Fields'), true)
 	const card = PHONE.card
 	const select = within(card).getByRole('combobox', { name: 'Shown as' })
 	const remove = within(card).getByRole('button', { name: 'Delete field' })
@@ -818,11 +783,8 @@ test('draws thirty rows with five open, the Tab key passing every closed one', a
 	}
 })
 
-test.each([
-	{ width: 1280, pinned: () => TRANSPARENT },
-	{ width: 390, pinned: () => colourOf('--wpds-color-background-surface-neutral-strong') },
-])('draws the header rows of tables two deep with no line and no tint at $width', async ({ width, pinned }) => {
-	await page.viewport(width, 844)
+test('draws the header rows of tables two deep with no line and no tint', async () => {
+	await page.viewport(1280, 844)
 	await draw(onPage(<Fields open={['team', 'team.members']} />), [TEAM, MEMBERS])
 
 	for (const name of ['Sub fields of Team', 'Sub fields of Members']) {
@@ -830,7 +792,7 @@ test.each([
 			line: '0px',
 			rowLine: '1px',
 			cells: [TRANSPARENT, TRANSPARENT, TRANSPARENT],
-			actions: pinned(),
+			actions: TRANSPARENT,
 		})
 	}
 })
@@ -889,8 +851,7 @@ test.each<Direction>(['ltr', 'rtl'])(
 		await page.viewport(390, 844)
 		await draw(onPage(<Fields />, dir))
 		const region = regionOf('Fields')
-		await scrollTo(region, true)
-		expect(region.scrollLeft, 'the region at its scroll end').not.toBe(0)
+		expectUnscrolled(region)
 
 		for (const rest of ['open', 'closed'] as const) {
 			const motion = await motionOf(PHONE)

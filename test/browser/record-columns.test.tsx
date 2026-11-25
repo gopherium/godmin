@@ -194,6 +194,15 @@ function WideCustomTable() {
 						))}
 					</tr>
 				</thead>
+				<tbody>
+					<tr>
+						{WIDE_COLUMNS.map((heading) => (
+							<td key={heading}>
+								<div className="godmin-table__cell">{`${heading} of the first line`}</div>
+							</td>
+						))}
+					</tr>
+				</tbody>
 			</table>
 		</div>
 	)
@@ -353,13 +362,14 @@ test('holds the columns around a wide table', async () => {
 test.each([
 	{ width: 1280, room: ROOM },
 	{ width: 390, room: PHONE_ROOM },
-])('scrolls a wide table in its own box inside a column at $width', async ({ width, room }) => {
+])('draws a wide table as a list inside a column at $width, nothing running past its box', async ({ width, room }) => {
 	await page.viewport(width, 800)
 	renderRecord(<div>Invoice details</div>, <WideCustomTable />)
 	await settled(room)
 	const box = find('.godmin-table-scroll')
 
-	expect(box.scrollWidth, 'the table runs past its box').toBeGreaterThan(box.clientWidth)
+	expect(box.clientWidth, 'the box is narrower than a table').toBeLessThan(640)
+	expect(box.scrollWidth, 'the list runs nothing past its box').toBeLessThanOrEqual(box.clientWidth)
 	expect(find(MAIN).scrollWidth, 'the column clips nothing').toBeLessThanOrEqual(find(MAIN).clientWidth)
 })
 
