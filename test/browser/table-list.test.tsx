@@ -10,7 +10,7 @@ import { page, userEvent } from 'vitest/browser'
 import { AdminRoot } from '../../src/admin-root.js'
 import { Page } from '../../src/page.js'
 import { RowControls } from '../../src/rows.js'
-import { RecordPage } from '../../stories/frames.js'
+import { ListPage, RecordPage } from '../../stories/frames.js'
 import { find, middleDown } from '../../stories/measure.js'
 
 /** A write time limit in milliseconds no test here runs into. */
@@ -42,6 +42,9 @@ const TRANSPARENT = 'rgba(0, 0, 0, 0)'
 
 /** The window and the record page column of a desktop wide enough for a table, at least 640px. */
 const WIDE_WINDOW = 1600
+
+/** The window of a laptop, wide enough for a table but not for every button of a crowded row. */
+const LAPTOP = 1024
 
 /** The frame of the card of an open row inside its cell. */
 const CARD_FRAME = 12
@@ -307,6 +310,33 @@ test.each(['ltr', 'rtl'])(
 			expect(box.left, `the card starts inside ${at}`).toBeGreaterThanOrEqual(shown - SLACK)
 			expect(box.right, `the card ends inside ${at}`).toBeLessThanOrEqual(shown + region.clientWidth + SLACK)
 		}
+	},
+)
+
+test.each(['ltr', 'rtl'])(
+	'scrolls a table too wide for its region on a list page 640px or wider, so its last button can be reached, %s',
+	async (dir) => {
+		await page.viewport(LAPTOP, 768)
+		await draw(
+			<div dir={dir}>
+				<ListPage>
+					<FieldTable name="Fields" fields={[{ label: 'Phone', name: LONG_NAME, many: true }]} />
+				</ListPage>
+			</div>,
+		)
+		const region = regionOf('Fields')
+		const last = [...region.querySelectorAll('.godmin-table__actions button')].at(-1) as HTMLElement
+
+		expect(region.clientWidth, 'the region holds a table').toBeGreaterThanOrEqual(640)
+		expect(region.scrollWidth, 'the row needs more room than the region').toBeGreaterThan(region.clientWidth)
+		await scrollTo(region, true)
+		const shown = region.getBoundingClientRect().left + region.clientLeft
+		const box = last.getBoundingClientRect()
+		expect(box.left, 'the last button starts inside at the scroll end').toBeGreaterThanOrEqual(shown - SLACK)
+		expect(box.right, 'the last button ends inside at the scroll end').toBeLessThanOrEqual(
+			shown + region.clientWidth + SLACK,
+		)
+		expect(document.documentElement.scrollWidth, 'the page scrolls nothing sideways').toBeLessThanOrEqual(LAPTOP)
 	},
 )
 

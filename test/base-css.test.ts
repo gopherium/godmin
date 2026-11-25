@@ -816,11 +816,17 @@ test('drops the empty state padding inside a DataViews list and keeps 48px every
 	expect(unlayered(inside), 'the inner rule sits in the godmin layer').toBe(false)
 })
 
-test('gives the table region a containing block as well as its overflow', () => {
-	const region = base.slice(base.indexOf('.godmin-table-scroll'))
+test('scrolls a table wider than its region sideways inside it at every width, as the DataViews table scrolls', () => {
+	const region = ruleOf('\n\t.godmin-table-scroll')
+	const bare = base.replace(/\/\*[\s\S]*?\*\//g, '')
+	const setting = [...bare.matchAll(/([^{}]*godmin-table-scroll[^{}]*)\{[^}]*\boverflow(?:-x|-y|-inline|-block)?\s*:/g)]
 
-	expect(region).toMatch(/position:\s*relative/)
+	expect(region, 'the region holds what it positions').toMatch(/position:\s*relative/)
 	expect(region).toMatch(/overflow-x:\s*auto/)
+	expect(
+		setting.map((found) => found[1].trim()),
+		'no rule but the region rule sets its overflow',
+	).toEqual(['.godmin-table-scroll'])
 })
 
 test('rings a focused table region with the design system focus ring', () => {
