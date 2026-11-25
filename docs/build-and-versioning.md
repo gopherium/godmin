@@ -154,8 +154,8 @@ TypeScript points at `SIDEBAR_BREAKPOINT`, `brand` and `Navigation`'s
 ## Upgrading from godmin 0.33.0
 
 godmin 0.34.0 sets the body cells of a table at the top of their row,
-as the classic WordPress list table and the DataViews table do.
-Change your code in this place:
+as the classic WordPress list table and the DataViews table do, and
+draws a narrow table as a list. Change your code in these places:
 
 - A body cell of a `godmin-table` sits at the top of its row, and a
   header cell stays in the middle. Wrap the first line of each body
@@ -168,6 +168,17 @@ Change your code in this place:
   box sits at the top, its text above a button in the next cell.
   [Lists that stay custom](./lists.md#lists-that-stay-custom) says
   what goes in the box.
+- In a `godmin-table-scroll` box narrower than 640px, such as on a
+  phone or in a column of a record page, a `godmin-table` no longer
+  scrolls sideways with its actions pinned. Each row draws as an item
+  of the DataViews list: the first cell and the cell marked
+  `godmin-table__actions` on the first line, the other cells under
+  them. Keep the name of the record in the first cell, and mark the
+  cell of the row's buttons `godmin-table__actions`, or its buttons
+  sit with the small text under the first line. The box now measures
+  its own width, so set it in a block or a parent that stretches it,
+  as [rows that open under a row](./screens.md#rows-that-open-under-a-row)
+  says.
 
 ## Upgrading from godmin 0.32.0
 
