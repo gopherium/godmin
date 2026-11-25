@@ -240,17 +240,37 @@ godmin's own:
 - On a list page the first and last cells pad by
   `--wpds-dimension-padding-2xl` at their outer side, as DataViews
   does.
-- godmin's own: a row takes
+- godmin's own: a row of the table takes
   `--wpds-color-background-surface-neutral-weak` under the pointer
-  and while keyboard focus is inside it. DataViews tints no row.
-- godmin's own: below `DENSE_BREAKPOINT` a table inside
-  `godmin-table-scroll` scrolls sideways inside it. Its actions column
-  stays pinned to the end edge, and an inset shadow
-  `--wpds-border-width-xs` wide of `--wpds-color-stroke-surface-neutral`
-  marks its other side at rest too. DataViews draws its own line in a
-  weaker color, and only while a column hides under the actions, as
-  [a wide table](#a-wide-table) shows. The table merges the borders of
-  its cells, and a merged border paints badly on a pinned cell.
+  and while keyboard focus is inside it. DataViews tints no row of its
+  table.
+- godmin's own: in a `godmin-table-scroll` region under
+  `DENSE_BREAKPOINT` (640px) wide, each row draws as an item of the
+  DataViews list, since DataViews asks for its list in a narrow place
+  but leaves the switch to each screen. The region measures its own
+  width, so a phone, a record page column and a table nested in an
+  open part all count, and a table outside such a region stays a
+  table. The item pads by `--wpds-dimension-padding-lg` (16px) above
+  and below and `--wpds-dimension-padding-2xl` (24px) at its sides,
+  and each part sets from the `start` edge. Its first cell, at least
+  8em wide on `--wpds-typography-line-height-md` (24px) lines, and its
+  `godmin-table__actions` cell share the first line, the first line
+  of the cell level with the buttons. The actions take a line of their
+  own when they do not fit beside it, and their buttons wrap. The
+  column headers hide from sight and stay in the table, for screen
+  readers. Nothing scrolls sideways and nothing is pinned.
+- Every other cell of a list item follows under its first line,
+  `--wpds-dimension-gap-md` (12px) apart across and
+  `--wpds-dimension-gap-xs` (4px) down, each in a box at least
+  `--wpds-dimension-size-sm` (24px) tall, in
+  `--wpds-typography-font-size-sm` (12px) text on
+  `--wpds-typography-line-height-sm` (20px) lines of
+  `--wpds-color-foreground-content-neutral-weak` that breaks a long
+  word. A cell with nothing in it is left out. Under the pointer and
+  while keyboard focus is inside it, the whole item takes
+  `--wpds-color-background-interactive-neutral-weak-active` and its
+  text `--wpds-color-foreground-interactive-neutral`, as the DataViews
+  list does.
 
 A row can open its details in a second row under it, such as the
 settings of one field.
@@ -263,12 +283,14 @@ label as the title link and its open part as the WPDS `Card`:
   `--wpds-color-foreground-interactive-brand` under the pointer, as
   DataViews draws a title a reader can click. The pointer over it is
   `--wpds-cursor-control`, and it draws the focus ring of the title
-  link. It sits in the middle of the box of its cell, level with the
-  other cells of its row.
+  link. Its words sit on `--wpds-typography-line-height-md` (24px)
+  lines. In a table it sits in the middle of the box of its cell,
+  level with the other cells of its row.
 - A chevron sits before the label, `--wpds-dimension-gap-sm` (8px)
   from it, so the chevrons of a table line up down its column. It
   points down while the row is closed and turns `180deg` while it is
-  open, as in the WPDS `CollapsibleCard`.
+  open, as in the WPDS `CollapsibleCard`. When the label wraps, the
+  chevron stays beside its first line.
   [Rows that open](./motion.md#rows-that-open) gives how it turns.
 - The open row draws no line between itself and its row and takes no
   tint, so the two read as one, as the WordPress plugin update row
@@ -297,21 +319,19 @@ label as the title link and its open part as the WPDS `Card`:
   take for a card in a narrow column. The width is that of the
   `godmin-table-scroll` region, not the window, since the same table
   can sit in a main column, a record column or on a phone.
-- In a table that scrolls sideways the open part stays inside the
-  width its region shows, at both ends of the scroll and in a
-  right-to-left page too. It is `sticky` at
-  `--wpds-dimension-padding-md` (12px) from the start edge, and never
-  wider than the region less that frame at each side. A region that
-  holds a row that opens is a size container of `inline-size`, so the
-  open parts measure against its width. The row above keeps its
-  columns and its pinned actions.
+- In a table that scrolls sideways, such as a wide one in a record
+  page column 640px or wider, the open part stays inside the width its
+  region shows, at both ends of the scroll and in a right-to-left page
+  too. It is `sticky` at `--wpds-dimension-padding-md` (12px) from the
+  start edge, and never wider than the region less that frame at each
+  side. Every `godmin-table-scroll` region is a size container of
+  `inline-size`, so its rows and open parts measure against its width.
+  The row above keeps its columns.
 - A table nested in an open part draws its header row with no line
   above it and no tint, so it reads as a table of its own. Each level
   steps in by the frame of the card around it, 37px, or 29px in a
   region under `DENSE_BREAKPOINT`. godmin sets no limit to the depth,
   and draws no color per level, since WPDS has none.
-- Below `DENSE_BREAKPOINT` a nested table scrolls inside its own
-  region, and its pinned actions column covers the columns before it
-  until the reader scrolls that region. Its pinned actions header cell
-  keeps `--wpds-color-background-surface-neutral-strong` under the
-  pointer too, so the columns under it stay hidden.
+- A nested table draws as a list by the width of its own region, so it
+  turns into a list under 640px while the table around it can keep
+  its columns.

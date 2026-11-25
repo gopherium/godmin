@@ -69,9 +69,12 @@ every value of how it looks.
   apart.
 - Both columns break a long word, with `overflow-wrap: anywhere`, so
   it cannot push the page wider. A `godmin-table` keeps its words
-  whole.
-- A column clips what runs past its sides, so a wide table goes in a
-  `godmin-table-scroll`, which scrolls there at every width.
+  whole, but in its list look a value breaks a long word too.
+- A column clips what runs past its sides, so a table goes in a
+  `godmin-table-scroll`. In a column under 640px wide its rows draw as
+  a list, as
+  [tables that stay custom](./lists.md#tables-that-stay-custom) gives.
+  In a wider column the table scrolls sideways when it does not fit.
 - A row of such a table that opens under its row keeps its open part
   inside the column while the table scrolls, since the open part is
   `sticky`, as
