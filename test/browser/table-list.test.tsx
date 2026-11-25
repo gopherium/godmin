@@ -63,6 +63,7 @@ interface Field {
 	label: string
 	name: string
 	kind?: string | null
+	note?: string
 	many?: boolean
 	nested?: ReactNode
 }
@@ -100,6 +101,7 @@ function FieldRows({ field }: { field: Field }) {
 					<div className="godmin-table__cell">
 						{field.kind === null ? null : <Badge intent="stable">{field.kind ?? 'Text'}</Badge>}
 					</div>
+					{field.note === undefined ? null : <div data-note="">{field.note}</div>}
 				</td>
 				<td>
 					<div className="godmin-table__cell">{field.name === '' ? null : <code>{field.name}</code>}</div>
@@ -226,6 +228,33 @@ test('ends a list item with no values at its padding under the first line, its e
 
 	expect(values.map((cell) => getComputedStyle(cell).display)).toEqual(['none', 'none'])
 	near(row.getBoundingClientRect().height, ROW_LINE + ITEM_BLOCK + FIRST_LINE + ITEM_BLOCK, 'the item')
+})
+
+test('keeps a value cell whose box is empty but holds a note after the box, as the docs allow', async () => {
+	const noted = [{ label: 'Phone', name: 'billing_phone', kind: null, note: 'Sub fields: Role, Name' }]
+	await draw(<FieldTable name="Fields" width={NARROW} fields={noted} />)
+	const note = find('[data-note]')
+
+	expect(getComputedStyle(note.closest('td') as HTMLElement).display, 'the cell').not.toBe('none')
+	expect(note.getBoundingClientRect().height, 'the note shows').toBeGreaterThan(0)
+})
+
+test('keeps a hidden body, row and cell hidden in a narrow region', async () => {
+	const fields = [
+		{ label: 'Phone', name: 'billing_phone' },
+		{ label: 'Email', name: 'invoice_email' },
+		{ label: 'Team', name: 'team_members' },
+	]
+	await draw(<FieldTable name="Fields" width={NARROW} fields={fields} />)
+	const body = find('tr[data-field="Phone"]').closest('tbody') as HTMLElement
+	const row = find('tr[data-field="Email"]')
+	const cell = find('tr[data-field="Team"] > td:nth-child(3)')
+
+	for (const part of [body, row, cell]) {
+		part.hidden = true
+	}
+
+	expect([body, row, cell].map((part) => getComputedStyle(part).display)).toEqual(['none', 'none', 'none'])
 })
 
 test('starts a list item at the start edge in a right to left page', async () => {
