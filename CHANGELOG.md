@@ -53,6 +53,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 - The Spanish and French catalogues translate "(opens in a new tab)", what a screen reader says for the arrow of a `@wordpress/ui` `Link` with `openInNewTab`.
 - `useListRun` puts the focus back on the pressed control when a reload ends before the list shows busy, and a later reload no longer moves it.
+- A `godmin-table` wider than a `godmin-table-scroll` box 640px or wider scrolls sideways inside it, so the end of a row on a list page is no longer cut off.
 
 ## [0.33.0] - 2026-11-17
 
