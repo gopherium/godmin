@@ -279,12 +279,9 @@ async function rowsRead(canvasElement: HTMLElement, open: boolean, labels: strin
 	}
 }
 
-/** Scrolls a region to the end of its sideways scroll and checks a card sits inside the width the region shows. */
-async function insideAtTheEnd(region: HTMLElement, card: HTMLElement) {
-	const reach = region.scrollWidth - region.clientWidth
-	await expect(reach, 'the table scrolls sideways').toBeGreaterThan(0)
-	region.scrollLeft = reach
-	await new Promise((done) => requestAnimationFrame(done))
+/** Checks a region draws its rows as a list that runs nothing past it, and a card sits inside the width it shows. */
+async function insideTheList(region: HTMLElement, card: HTMLElement) {
+	await expect(region.scrollWidth, 'the list scrolls nothing sideways').toBeLessThanOrEqual(region.clientWidth)
 	const shown = region.getBoundingClientRect().left + region.clientLeft
 	const box = card.getBoundingClientRect()
 	await expect(box.left, 'the card starts inside').toBeGreaterThanOrEqual(shown - 0.5)
@@ -366,7 +363,7 @@ export const OnARecordPage: Story = {
 		const card = cardOf(toggleOf(canvasElement, 'Phone'))
 		await meets(region.getBoundingClientRect().width, columnsOf().main.width, 'the region fills the column')
 		await expect(getComputedStyle(card).paddingTop, 'the padding of a narrow region').toBe(NARROW_PADDING)
-		await insideAtTheEnd(region, card)
+		await insideTheList(region, card)
 	},
 }
 
@@ -376,7 +373,7 @@ export const OnAPhone: Story = {
 	args: { open: ['phone'] },
 	play: async ({ canvasElement }) => {
 		await settles()
-		await insideAtTheEnd(regionOf(canvasElement, 'Fields'), cardOf(toggleOf(canvasElement, 'Phone')))
+		await insideTheList(regionOf(canvasElement, 'Fields'), cardOf(toggleOf(canvasElement, 'Phone')))
 	},
 }
 
