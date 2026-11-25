@@ -244,6 +244,11 @@ godmin's own:
   `--wpds-color-background-surface-neutral-weak` under the pointer
   and while keyboard focus is inside it. DataViews tints no row of its
   table.
+- A table wider than a `godmin-table-scroll` region
+  `DENSE_BREAKPOINT` (640px) wide or wider scrolls sideways inside it
+  with `overflow-x: auto`, as the DataViews table scrolls inside its
+  layout box. The page itself never scrolls sideways, so the end of a
+  crowded row stays in reach.
 - godmin's own: in a `godmin-table-scroll` region under
   `DENSE_BREAKPOINT` (640px) wide, each row draws as an item of the
   DataViews list, since DataViews asks for its list in a narrow place
@@ -321,8 +326,8 @@ label as the title link and its open part as the WPDS `Card`:
   take for a card in a narrow column. The width is that of the
   `godmin-table-scroll` region, not the window, since the same table
   can sit in a main column, a record column or on a phone.
-- In a table that scrolls sideways, such as a wide one in a record
-  page column 640px or wider, the open part stays inside the width its
+- In a table that scrolls sideways, such as a wide one in a region
+  640px or wider, the open part stays inside the width its
   region shows, at both ends of the scroll and in a right-to-left page
   too. It is `sticky` at `--wpds-dimension-padding-md` (12px) from the
   start edge, and never wider than the region less that frame at each
