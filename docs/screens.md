@@ -515,7 +515,7 @@ runs into:
 | `godmin-table__detail` | The row that opens under a row |
 | `godmin-table__detail-body` | The open part inside that row's one cell, drawn as the WPDS card |
 | `godmin-table__detail-motion` | The box around the open part, with a plain `div` inside it, that grows and shrinks it as the row opens and closes |
-| `godmin-table-scroll` | The box a table sits in, which draws its rows as a list when it is narrower than `DENSE_BREAKPOINT` |
+| `godmin-table-scroll` | The box a table sits in, which scrolls a wider table sideways and draws its rows as a list when it is narrower than `DENSE_BREAKPOINT` |
 | `godmin-list` | The box around a DataViews list inside a page section, lining its search and cells up with the text around it |
 | `godmin-list-overlay` | An element laid over a list region, such as a drop zone, set after the list |
 | `godmin-rows__line` | A repeated row's inputs and its `RowControls` on one line, the controls at the end, dropping under the inputs on a narrow row |
@@ -547,9 +547,10 @@ width instead of stretching across the form.
 [Forms on a page](./design-system/record-pages.md#forms-on-a-page)
 gives the values.
 
-`godmin-table` and `godmin-table-scroll` are a pair, and they solve
-a phone problem: a table wider than the screen drags the whole page
-sideways. Wrapped like this, the table fits its own box instead:
+`godmin-table` and `godmin-table-scroll` are a pair. On its own, a
+table wider than its place drags the whole page sideways or loses the
+end of its rows. Wrapped like this, the table stays in its own box
+instead:
 
 ```tsx
 <div className="godmin-table-scroll" role="region" aria-label="Reports" tabIndex={0}>
@@ -565,8 +566,9 @@ The first cell and the cell marked `godmin-table__actions` share the
 first line, and the other cells sit under them as small text, so keep
 the name of the record in the first cell.
 [Tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
-gives the values. In a wider box the table keeps its columns, and in
-a column of a record page it scrolls sideways when it does not fit.
+gives the values. In a wider box the table keeps its columns, and it
+scrolls sideways inside the box when it does not fit, as a DataViews
+table does.
 The box measures its own width, so set it in a block or a parent that
 stretches it, as [where the region sits](#rows-that-open-under-a-row)
 says.
