@@ -82,6 +82,7 @@ const SHOT_STYLE = [
 	`${PULSING} { animation: none !important; opacity: 0.5 !important; }`,
 	'[data-wp-compat-overlay-slot] * { transition: none }',
 	'[role="alertdialog"] button svg path, [role="dialog"] button svg path { animation: none }',
+	'.godmin-table__toggle-icon, .godmin-table__detail, .godmin-table__detail-motion { transition: none; }',
 	'* { pointer-events: none !important; }',
 ].join(' ')
 

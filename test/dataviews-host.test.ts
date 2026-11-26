@@ -133,3 +133,22 @@ test('pads and divides the table rows like the DataViews rows', () => {
 	)
 	expect(ruleIn(base, '.godmin-table tbody td')).toMatch(/height:\s*var\(--wpds-dimension-size-md\)/)
 })
+
+test('sets the body cells at the top and the header cells in the middle like the DataViews table', () => {
+	expect(ruleIn(dataviews, '.dataviews-view-table tbody td')).toMatch(/vertical-align:\s*top/)
+	expect(ruleIn(base, '.godmin-table > tbody > tr > th,\n\t.godmin-table > tbody > tr > td')).toMatch(
+		/vertical-align:\s*top/,
+	)
+	expect(ruleIn(dataviews, '.dataviews-view-table thead th')).toMatch(/vertical-align:\s*middle/)
+	expect(ruleIn(base, '.godmin-table th,\n\t.godmin-table td')).toMatch(/vertical-align:\s*middle/)
+})
+
+test('centres what a body cell holds down a box a medium control tall like the DataViews cell', () => {
+	const wrapper = ruleIn(dataviews, '.dataviews-view-table tbody .dataviews-view-table__cell-content-wrapper')
+	const cell = ruleIn(base, '.godmin-table__cell')
+
+	expect(wrapper).toMatch(/min-height:\s*var\(--wpds-dimension-size-md,/)
+	expect(wrapper).toMatch(/align-items:\s*center/)
+	expect(cell).toMatch(/min-block-size:\s*var\(--wpds-dimension-size-md\)/)
+	expect(cell).toMatch(/align-content:\s*center/)
+})

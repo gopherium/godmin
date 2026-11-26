@@ -79,8 +79,10 @@ since `@wordpress/ui` depends on it.
 
 `listChromeCatalogFor` returns the catalogue GodMin ships for a language,
 Spanish and French today. Both hold these words and the list dates, and the
-Spanish one also holds the list chrome. Load it into `LIST_CHROME_DOMAIN`, the
-`default` domain:
+Spanish one also holds the list chrome. Both also hold "(opens in a new tab)",
+what a screen reader says for the arrow a `Link` from `@wordpress/ui` draws
+with `openInNewTab`, so your own links speak it in the loaded language. Load
+the catalogue into `LIST_CHROME_DOMAIN`, the `default` domain:
 
 ```ts
 import { setLocaleData } from '@wordpress/i18n'

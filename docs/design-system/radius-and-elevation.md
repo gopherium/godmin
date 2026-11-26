@@ -22,7 +22,7 @@ presets.
 | Token | Meant for | What godmin rounds with it |
 | --- | --- | --- |
 | `--wpds-border-radius-xl` (12px) | Page and app shell surfaces | The canvas, the panel that shows the active screen |
-| `--wpds-border-radius-lg` (8px) | Cards, dialogs, notices and other larger containers | A `LogList`, the box of items shown one under the other |
+| `--wpds-border-radius-lg` (8px) | Cards, dialogs, notices and other larger containers | A `LogList`, the box of items shown one under the other, and the open part of a row that opens under a table row, `godmin-table__detail-body` |
 | `--wpds-border-radius-md` (4px) | Menus, popovers and other small overlays | A toast, which keeps its corners at every preset, as [toasts](./toasts.md#colors-corners-and-shadow) shows |
 | `--wpds-border-radius-sm` (2px) | Buttons, inputs and compact controls | A sidebar row, the Back button of a sidebar screen, the focus ring of a page tab, and the focus ring of a toast action, which keeps its corners at every preset |
 | `--wpds-border-radius-xs` (1px) | Elements nested inside controls | Nothing of godmin's own |
@@ -113,15 +113,11 @@ A bleed canvas keeps the canvas shadow. The sidebar has no shadow.
 Dialogs, menus and popovers keep the shadow their design system
 package draws, because godmin sets none for them.
 
-Two more shadows draw a line, not depth:
-
-- The pinned actions column of a `godmin-table` inside
-  `godmin-table-scroll` draws its edge as an inset shadow, as
-  [Tables that stay custom](./lists.md#tables-that-stay-custom) gives.
-- A focused toast with no action draws its focus ring as a shadow, as
-  [keyboard](./toasts.md#keyboard) on the toasts page shows.
-  [The focus ring](./accessibility.md#the-focus-ring) covers the
-  other focus rings.
+One more shadow draws a line, not depth. A focused toast with no
+action draws its focus ring as a shadow, as
+[keyboard](./toasts.md#keyboard) on the toasts page shows.
+[The focus ring](./accessibility.md#the-focus-ring) covers the other
+focus rings.
 
 godmin also takes one shadow away. It drops the dark ring DataViews
 draws around its media box when the box holds an avatar.

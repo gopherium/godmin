@@ -846,11 +846,17 @@ test('drops the empty state padding inside a DataViews list and keeps 48px every
 	expect(unlayered(inside), 'the inner rule sits in the godmin layer').toBe(false)
 })
 
-test('gives the table region a containing block as well as its overflow', () => {
-	const region = base.slice(base.indexOf('.godmin-table-scroll'))
+test('scrolls a table wider than its region sideways inside it at every width, as the DataViews table scrolls', () => {
+	const region = ruleOf('\n\t.godmin-table-scroll')
+	const bare = base.replace(/\/\*[\s\S]*?\*\//g, '')
+	const setting = [...bare.matchAll(/([^{}]*godmin-table-scroll[^{}]*)\{[^}]*\boverflow(?:-x|-y|-inline|-block)?\s*:/g)]
 
-	expect(region).toMatch(/position:\s*relative/)
+	expect(region, 'the region holds what it positions').toMatch(/position:\s*relative/)
 	expect(region).toMatch(/overflow-x:\s*auto/)
+	expect(
+		setting.map((found) => found[1].trim()),
+		'no rule but the region rule sets its overflow',
+	).toEqual(['.godmin-table-scroll'])
 })
 
 test('rings a focused table region with the design system focus ring', () => {
@@ -892,7 +898,6 @@ test('pads every table cell with the medium padding and draws no cell border', (
 	const cells = ruleOf('.godmin-table th,\n\t.godmin-table td')
 
 	expect(cells).toMatch(/padding:\s*var\(--wpds-dimension-padding-md\)/)
-	expect(cells).toMatch(/vertical-align:\s*middle/)
 	expect(cells).not.toMatch(/border/)
 })
 
@@ -967,40 +972,8 @@ test('keeps the row controls of a table at the end edge of their cell', () => {
 	expect(ruleOf('.godmin-table__actions .godmin-rows__controls')).toMatch(/justify-content:\s*flex-end/)
 })
 
-test('pins the actions column of a scrolling table to the end edge on a small screen', () => {
-	const actions = ruleOf('.godmin-table-scroll .godmin-table__actions', blockOf('@media (max-width: 639px)'))
-
-	expect(actions).toMatch(/position:\s*sticky/)
-	expect(actions).toMatch(/inset-inline-end:\s*0/)
-	expect(actions, 'the pinned column hides the cells under it with the canvas colour').toMatch(
-		/background:\s*var\(--wpds-color-background-surface-neutral-strong\)/,
-	)
-})
-
-test('draws the start edge of the pinned actions column with an inset shadow rather than a border', () => {
-	const actions = ruleOf('.godmin-table-scroll .godmin-table__actions', blockOf('@media (max-width: 639px)'))
-
-	expect(actions).toMatch(
-		/box-shadow:\s*inset var\(--wpds-border-width-xs\) 0 0 var\(--wpds-color-stroke-surface-neutral\)/,
-	)
-	expect(actions, 'a collapsed border paints badly on a sticky cell').not.toMatch(/^\s*border[\w-]*:/m)
-})
-
-test('draws the edge of the pinned actions column beside the scrolling cells in a right to left page', () => {
-	const actions = ruleOf(
-		'.godmin-table-scroll .godmin-table__actions:dir(rtl)',
-		blockOf('@media (max-width: 639px)'),
-	)
-
-	expect(actions).toMatch(
-		/box-shadow:\s*inset calc\(-1 \* var\(--wpds-border-width-xs\)\) 0 0 var\(--wpds-color-stroke-surface-neutral\)/,
-	)
-})
-
-test('keeps the actions column in the flow of a table at 640px and wider', () => {
-	const wide = base.replace(blockOf('@media (max-width: 639px)'), '')
-
-	expect(wide).not.toMatch(/\.godmin-table__actions[^{]*\{[^}]*position:\s*sticky/)
+test('pins the actions column of a table at no width, since a narrow region draws its rows as a list', () => {
+	expect(base).not.toMatch(/\.godmin-table__actions[^{]*\{[^}]*position:\s*sticky/)
 })
 
 test('spans the toast region across the window, so each toast sizes to its own message', () => {

@@ -4,6 +4,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 versioning follows [Semantic Versioning](https://semver.org/). While at 0.x,
 minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
+## [Unreleased]
+
+### Added
+
+- A `godmin-table` row can open its details in a second row under it, on WPDS `Collapsible`, with `godmin-table__toggle`, `godmin-table__detail` and `godmin-table__detail-body`.
+- An open row stays inside the visible width of a table that scrolls sideways, and its padding drops a step in a narrow region.
+- `RowControls` takes `movable={false}` and then draws the trash alone, for a list whose order means nothing.
+- `godmin-table__cell` holds the first line of a body cell in a box as tall as a compact button, its line centred down it, as DataViews draws its cells.
+- `docs/build-and-versioning.md` lists the change an app upgrading from 0.33.0 makes.
+
+### Changed
+
+- **Breaking.** A body cell of a `godmin-table` sits at the top of its row, as in WordPress, and a header cell stays in the middle. Wrap the first line of each body cell in `godmin-table__cell`, and draw the buttons of a row compact, to keep a row of one line as it was.
+- **Breaking.** In a `godmin-table-scroll` box under 640px wide, a `godmin-table` draws each row as an item of the DataViews list, its first cell and `godmin-table__actions` on the first line, and no longer scrolls sideways. Every such box measures its own width, so it needs a parent that stretches it.
+
+### Fixed
+
+- The Spanish and French catalogues translate "(opens in a new tab)", what a screen reader says for the arrow of a `@wordpress/ui` `Link` with `openInNewTab`.
+- `useListRun` puts the focus back on the pressed control when a reload ends before the list shows busy, and a later reload no longer moves it.
+- A `godmin-table` wider than a `godmin-table-scroll` box 640px or wider scrolls sideways inside it, so the end of a row on a list page is no longer cut off.
+
 ## [0.33.0] - 2026-11-17
 
 ### Added

@@ -817,12 +817,6 @@ body {
 		flex-shrink: 0;
 	}
 
-	.godmin-page__main .godmin-table-scroll,
-	.godmin-page__aside .godmin-table-scroll {
-		position: relative;
-		overflow-x: auto;
-	}
-
 	.godmin-page__aside:empty {
 		display: none;
 	}
@@ -1139,6 +1133,16 @@ body {
 		height: var(--wpds-dimension-size-md);
 	}
 
+	.godmin-table > tbody > tr > th,
+	.godmin-table > tbody > tr > td {
+		vertical-align: top;
+	}
+
+	.godmin-table__cell {
+		min-block-size: var(--wpds-dimension-size-md);
+		align-content: center;
+	}
+
 	.godmin-page > .godmin-page__list .godmin-table tr > :first-child {
 		padding-inline-start: var(--wpds-dimension-padding-2xl);
 	}
@@ -1206,6 +1210,255 @@ body {
 	.godmin-table-scroll:focus-visible {
 		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
 		outline-offset: 2px;
+	}
+
+	/* Scrolls a wider table sideways inside its region, the width its rows and open parts measure against. */
+	.godmin-table-scroll {
+		container: godmin-table / inline-size;
+		position: relative;
+		overflow-x: auto;
+	}
+
+	/* Draws the label that opens a row as the title link of a godmin-table. */
+	.godmin-table__toggle {
+		display: inline-flex;
+		vertical-align: middle;
+		align-items: flex-start;
+		gap: var(--wpds-dimension-gap-sm);
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: none;
+		font: inherit;
+		line-height: var(--wpds-typography-line-height-md);
+		color: var(--wpds-color-foreground-interactive-neutral);
+		text-align: start;
+		cursor: var(--wpds-cursor-control);
+		appearance: none;
+	}
+
+	.godmin-table__toggle:hover {
+		color: var(--wpds-color-foreground-interactive-brand);
+	}
+
+	.godmin-table__toggle:focus-visible {
+		outline: var(--wpds-border-width-focus) solid var(--wpds-color-stroke-focus);
+		outline-offset: 2px;
+	}
+
+	/* Turns the chevron of the label upside down while its row is open. */
+	.godmin-table__toggle-icon {
+		flex: none;
+	}
+
+	.godmin-table__toggle[data-panel-open] .godmin-table__toggle-icon {
+		rotate: 180deg;
+	}
+
+	/* Draws the row that opens under a row with no line between the two and no tint. */
+	.godmin-table tbody tr.godmin-table__detail {
+		border-block-start: 0;
+	}
+
+	.godmin-table tbody tr.godmin-table__detail:is(:hover, :has(:focus-visible)) > * {
+		background: none;
+	}
+
+	/* Hides a closed detail row, as a block of no height when it stays in the page for find in page. */
+	.godmin-table tbody tr.godmin-table__detail[hidden]:not([hidden='until-found']) {
+		display: none;
+	}
+
+	.godmin-table tbody tr.godmin-table__detail[hidden='until-found'] {
+		display: block;
+	}
+
+	/* Frames the one cell of a detail row with the medium padding, as tall as the open part. */
+	.godmin-table tbody tr.godmin-table__detail > td {
+		height: auto;
+		padding: 0 var(--wpds-dimension-padding-md) var(--wpds-dimension-padding-md);
+	}
+
+	/* Draws the open part as the WPDS card, held inside the width its region shows. */
+	.godmin-table__detail-body {
+		box-sizing: border-box;
+		position: sticky;
+		inset-inline-start: var(--wpds-dimension-padding-md);
+		max-inline-size: calc(100cqi - 2 * var(--wpds-dimension-padding-md));
+		padding: var(--wpds-dimension-padding-2xl);
+		border: var(--wpds-border-width-xs) solid var(--wpds-color-stroke-surface-neutral);
+		border-radius: var(--wpds-border-radius-lg);
+		overflow: clip;
+		background-color: var(--wpds-color-background-surface-neutral-strong);
+		color: var(--wpds-color-foreground-content-neutral);
+		text-align: start;
+		overflow-wrap: anywhere;
+	}
+
+	/* Pads the open part with the large padding in a region under 640px wide. */
+	@container godmin-table (max-width: 639px) {
+		.godmin-table__detail-body {
+			padding: var(--wpds-dimension-padding-lg);
+		}
+	}
+
+	/* Draws the header row of a table inside an open part with no row line and no tint. */
+	.godmin-table__detail .godmin-table thead tr {
+		border-block-start: 0;
+	}
+
+	.godmin-table__detail .godmin-table thead tr:is(:hover, :has(:focus-visible)) > * {
+		background: none;
+	}
+
+	/* Grows and fades the open part as its row opens and closes, the cell frame moved to the card margin. */
+	.godmin-table tbody tr.godmin-table__detail > td:has(> .godmin-table__detail-motion) {
+		padding: 0;
+	}
+
+	.godmin-table__detail-motion {
+		display: grid;
+		grid-template-rows: 1fr;
+		overflow: clip;
+	}
+
+	.godmin-table__detail-motion > * {
+		align-self: start;
+		min-block-size: 0;
+		overflow: clip;
+	}
+
+	.godmin-table__detail-motion > * > .godmin-table__detail-body {
+		margin: 0 var(--wpds-dimension-padding-md) var(--wpds-dimension-padding-md);
+	}
+
+	.godmin-table tbody tr.godmin-table__detail:is([data-starting-style], [data-ending-style]) {
+		opacity: 0;
+	}
+
+	.godmin-table__detail:is([data-starting-style], [data-ending-style]) > td > .godmin-table__detail-motion {
+		grid-template-rows: 0fr;
+	}
+
+	/* Turns the chevron and moves the open part over 150ms while the reader allows motion. */
+	@media not (prefers-reduced-motion) {
+		.godmin-table__toggle-icon {
+			transition: rotate 0.15s ease-out;
+		}
+
+		.godmin-table tbody tr.godmin-table__detail {
+			transition: opacity 150ms ease-out;
+		}
+
+		.godmin-table__detail-motion {
+			transition: grid-template-rows 150ms ease-out;
+		}
+	}
+
+	/* Draws each row of a table in a region under 640px wide as an item of the DataViews list. */
+	@container godmin-table (max-width: 639px) {
+		.godmin-table,
+		.godmin-table > tbody,
+		.godmin-table > tbody > tr.godmin-table__detail,
+		.godmin-table > tbody > tr.godmin-table__detail > td {
+			display: block;
+		}
+
+		.godmin-table > thead {
+			position: absolute;
+			inline-size: 1px;
+			block-size: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail) {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: flex-start;
+			column-gap: var(--wpds-dimension-gap-md);
+			padding: var(--wpds-dimension-padding-lg) var(--wpds-dimension-padding-2xl);
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail)::after {
+			content: '';
+			flex-basis: 100%;
+			order: 1;
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail):is(:hover, :has(:focus-visible)) {
+			background: var(--wpds-color-background-interactive-neutral-weak-active);
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail):is(:hover, :has(:focus-visible)) > * {
+			background: none;
+			color: var(--wpds-color-foreground-interactive-neutral);
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail) > * {
+			display: block;
+			order: 2;
+			max-inline-size: 100%;
+			height: auto;
+			margin-block-start: var(--wpds-dimension-gap-xs);
+			padding: 0;
+			font-size: var(--wpds-typography-font-size-sm);
+			line-height: var(--wpds-typography-line-height-sm);
+			color: var(--wpds-color-foreground-content-neutral-weak);
+			text-align: start;
+			overflow-wrap: anywhere;
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail) > :first-child {
+			flex: 1 1 8em;
+			order: 0;
+			min-inline-size: 0;
+			margin-block-start: 0;
+			font-size: var(--wpds-typography-font-size-md);
+			line-height: var(--wpds-typography-line-height-md);
+			color: var(--wpds-color-foreground-content-neutral);
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail) > .godmin-table__actions {
+			flex: 0 1 auto;
+			order: 1;
+			width: auto;
+			margin-block-start: 0;
+			font-size: var(--wpds-typography-font-size-md);
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail) > .godmin-table__actions > .godmin-table__cell > * {
+			flex-wrap: wrap;
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail) > :first-child > .godmin-table__cell {
+			box-sizing: border-box;
+			align-content: start;
+			padding-block-start: calc((var(--wpds-dimension-size-md) - var(--wpds-typography-line-height-md)) / 2);
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail)
+			> :not(:first-child, .godmin-table__actions)
+			> .godmin-table__cell {
+			min-block-size: var(--wpds-dimension-size-sm);
+		}
+
+		.godmin-table > tbody > tr:not(.godmin-table__detail)
+			> :not(:first-child, .godmin-table__actions):is(:empty, :has(> .godmin-table__cell:only-child:empty)) {
+			display: none;
+		}
+
+		.godmin-table[hidden]:not([hidden='until-found']),
+		.godmin-table > tbody[hidden]:not([hidden='until-found']),
+		.godmin-table > tbody > tr[hidden]:not([hidden='until-found']),
+		.godmin-table > tbody > tr > [hidden]:not([hidden='until-found']) {
+			display: none;
+		}
+
+		.godmin-page > .godmin-page__list .godmin-table > tbody > tr:not(.godmin-table__detail) > * {
+			padding-inline: 0;
+		}
 	}
 
 	.godmin-loading-screen {
@@ -1293,6 +1546,11 @@ body {
 		margin-inline-start: calc(var(--wpds-dimension-gap-md) - var(--wpds-dimension-gap-xs));
 	}
 
+	/* Drops the start gap of a repeated row's trash when no arrows come before it. */
+	.godmin-rows__remove:first-child {
+		margin-inline-start: 0;
+	}
+
 	.godmin-table__actions .godmin-rows__controls {
 		justify-content: flex-end;
 	}
@@ -1373,24 +1631,6 @@ body {
 
 		.godmin-layout__canvas--bleed {
 			--godmin-canvas-gutter: 0px;
-		}
-
-		/* The region needs a containing block, or absolutely positioned content
-		   inside it escapes the clip and widens the document. */
-		.godmin-table-scroll {
-			position: relative;
-			overflow-x: auto;
-		}
-
-		.godmin-table-scroll .godmin-table__actions {
-			position: sticky;
-			inset-inline-end: 0;
-			background: var(--wpds-color-background-surface-neutral-strong);
-			box-shadow: inset var(--wpds-border-width-xs) 0 0 var(--wpds-color-stroke-surface-neutral);
-		}
-
-		.godmin-table-scroll .godmin-table__actions:dir(rtl) {
-			box-shadow: inset calc(-1 * var(--wpds-border-width-xs)) 0 0 var(--wpds-color-stroke-surface-neutral);
 		}
 	}
 

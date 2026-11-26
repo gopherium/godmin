@@ -401,6 +401,16 @@ is the hook underneath, for a list that needs its own add step. The
 trash sits a little apart from the arrows, so a press that lands
 slightly off does not remove a row.
 
+`RowControls` with `movable={false}` draws the trash alone, for a
+list whose order means nothing, such as the rules of a condition. It
+then needs only the `remove` word in `labels` and `onRemove`, and its
+props are `RowControlsWithoutMoveProps`. Name each trash after its
+row, such as Remove rule 2. Wrap the row in `godmin-rows__line` and
+its inputs in `godmin-rows__inputs`, so the trash drops under the
+inputs on a narrow row, and move the focus after a remove as
+`RepeatRows` does. When the arrows are off, the trash keeps no extra
+gap.
+
 ## keyFromLabel
 
 `keyFromLabel` turns a label someone typed into a key for code.
@@ -498,11 +508,19 @@ runs into:
 | `godmin-form__grow` | The field of a row that takes most of the free room |
 | `godmin-empty` | A centered empty state with breathing room |
 | `godmin-table` | A full width table with collapsed borders, drawn like the DataViews table |
+| `godmin-table__cell` | The box around the first line of a body cell, as tall as a compact button, its line centred down it |
 | `godmin-table__actions` | The narrow trailing cell holding row actions |
 | `godmin-table__title` | The cell naming the record, bold, its link with no underline |
-| `godmin-table-scroll` | The box a wide table scrolls inside |
+| `godmin-table__toggle` | The label button that opens a row under its row, drawn as the title link |
+| `godmin-table__toggle-icon` | The chevron inside that label, turned while the row is open |
+| `godmin-table__detail` | The row that opens under a row |
+| `godmin-table__detail-body` | The open part inside that row's one cell, drawn as the WPDS card |
+| `godmin-table__detail-motion` | The box around the open part, with a plain `div` inside it, that grows and shrinks it as the row opens and closes |
+| `godmin-table-scroll` | The box a table sits in, which scrolls a wider table sideways and draws its rows as a list when it is narrower than `DENSE_BREAKPOINT` |
 | `godmin-list` | The box around a DataViews list inside a page section, lining its search and cells up with the text around it |
 | `godmin-list-overlay` | An element laid over a list region, such as a drop zone, set after the list |
+| `godmin-rows__line` | A repeated row's inputs and its `RowControls` on one line, the controls at the end, dropping under the inputs on a narrow row |
+| `godmin-rows__inputs` | The inputs of that line, taking the room the controls leave |
 
 `base.css` also sets a few custom properties, named values such as
 the canvas gutter and the sidebar width.
@@ -530,9 +548,9 @@ width instead of stretching across the form.
 [Forms on a page](./design-system/record-pages.md#forms-on-a-page)
 gives the values.
 
-`godmin-table` and `godmin-table-scroll` are a pair, and they solve
-a phone problem: a table wider than the screen drags the whole page
-sideways. Wrapped like this, the table scrolls inside its own box
+`godmin-table` and `godmin-table-scroll` are a pair. On its own, a
+table wider than its place drags the whole page sideways or loses the
+end of its rows. Wrapped like this, the table stays in its own box
 instead:
 
 ```tsx
@@ -541,19 +559,29 @@ instead:
 </div>
 ```
 
-The scroll rule only activates on a phone, as
-[tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
-gives, and in a column of a record page at every width. On a phone
-the actions column, the cell marked
-`godmin-table__actions`, stays pinned to the right edge, so a row's
-buttons are in view before any scroll. On a
-desktop the wrapper only draws a focus ring when a keyboard user
+When the box is narrower than `DENSE_BREAKPOINT`, on a phone, in a
+column of a record page or nested in a row that opens, each row draws
+as an item of the DataViews list, the layout WordPress picks for a
+narrow place.
+The first cell and the cell marked `godmin-table__actions` share the
+first line, and the other cells sit under them as small text, so keep
+the name of the record in the first cell.
+[Tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
+gives the values. In a wider box the table keeps its columns, and it
+scrolls sideways inside the box when it does not fit, as a DataViews
+table does.
+The box measures its own width, so set it in a block or a parent that
+stretches it, as [where the region sits](#rows-that-open-under-a-row)
+says.
+Otherwise the wrapper only draws a focus ring when a keyboard user
 reaches it, so you can mark up every table this way.
 
 Every `godmin-table` row takes a light tint under the pointer and
 while keyboard focus is inside it, so a reader can tell which row a
 button belongs to. `RowControls` in the actions cell sit at its right
-edge, so they stay put when the column widens.
+edge, so they stay put when the column widens. A body cell sits at the
+top of its row, and its first line goes in a `godmin-table__cell` box,
+as [lists that stay custom](./lists.md#lists-that-stay-custom) shows.
 
 Two details in that snippet matter:
 
@@ -563,3 +591,226 @@ Two details in that snippet matter:
 - The rule gives the box `position: relative`. Without that,
   absolutely positioned content inside the table escapes the box
   and widens the page, which is the exact bug the wrapper prevents.
+
+### Rows that open under a row
+
+A row of a `godmin-table` can open its details in a second row under
+it, such as the settings of one field in a list of fields. godmin
+ships no component for it. Build each row on the WPDS `Collapsible`,
+as below, and godmin's classes draw it.
+[Tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
+gives every value.
+
+```tsx
+import { RowControls } from '@gopherium/godmin'
+import { chevronDown } from '@wordpress/icons'
+import { Badge, Button, Collapsible, Icon, InputControl, Stack, VisuallyHidden } from '@wordpress/ui'
+import { useRef, useState } from 'react'
+
+interface Field {
+	key: string
+	label: string
+	kind: string
+	name: string
+	help: string
+}
+
+interface FieldRowsProps {
+	field: Field
+	at: number
+	count: number
+	open: boolean
+	onOpen: (key: string, open: boolean) => void
+	onMove: (at: number, offset: number) => void
+	onRemove: (at: number) => void
+}
+
+function focusToggleFrom(part: HTMLDivElement | null, toggle: HTMLButtonElement | null) {
+	if (part?.contains(document.activeElement)) {
+		toggle?.focus()
+	}
+}
+
+function FieldRows({ field, at, count, open, onOpen, onMove, onRemove }: FieldRowsProps) {
+	const toggle = useRef<HTMLButtonElement>(null)
+	const part = useRef<HTMLDivElement>(null)
+	const change = (next: boolean) => {
+		if (!next) {
+			focusToggleFrom(part.current, toggle.current)
+		}
+		onOpen(field.key, next)
+	}
+	const labels = {
+		moveUp: `Move ${field.label} up`,
+		moveDown: `Move ${field.label} down`,
+		remove: `Remove ${field.label}`,
+	}
+	return (
+		<Collapsible.Root render={<tbody />} open={open} onOpenChange={change}>
+			<tr>
+				<td className="godmin-table__title">
+					<div className="godmin-table__cell">
+						<Collapsible.Trigger ref={toggle} className="godmin-table__toggle">
+							<Icon icon={chevronDown} className="godmin-table__toggle-icon" />
+							{field.label}
+						</Collapsible.Trigger>
+					</div>
+				</td>
+				<td>
+					<div className="godmin-table__cell">
+						<Badge intent="stable">{field.kind}</Badge>
+					</div>
+				</td>
+				<td>
+					<div className="godmin-table__cell">
+						<code>{field.name}</code>
+					</div>
+				</td>
+				<td className="godmin-table__actions">
+					<div className="godmin-table__cell">
+						<RowControls
+							at={at}
+							count={count}
+							labels={labels}
+							onMove={(offset) => onMove(at, offset)}
+							onRemove={() => onRemove(at)}
+						/>
+					</div>
+				</td>
+			</tr>
+			<Collapsible.Panel render={<tr />} className="godmin-table__detail" hiddenUntilFound>
+				<td colSpan={4}>
+					<div className="godmin-table__detail-motion">
+						<div>
+							<div ref={part} className="godmin-table__detail-body">
+								<Stack direction="column" gap="md">
+									<form className="godmin-form" onSubmit={(event) => event.preventDefault()}>
+										<InputControl label="Help text" defaultValue={field.help} />
+									</form>
+									<div>
+										<Button variant="outline" size="compact" onClick={() => change(false)}>
+											Close field
+										</Button>
+									</div>
+								</Stack>
+							</div>
+						</div>
+					</div>
+				</td>
+			</Collapsible.Panel>
+		</Collapsible.Root>
+	)
+}
+```
+
+How the parts fit:
+
+- Each field is a `tbody` of its own, `Collapsible.Root` drawn as one
+  through `render`. A table may hold many. Its first row is the
+  field's own row.
+- Each cell of the field's row holds its first line in
+  `godmin-table__cell`, so the row lines up as a DataViews row does.
+  The one cell of the row that opens takes no box.
+- The label is `Collapsible.Trigger`, a button that tells a screen
+  reader whether its row is open, with `aria-expanded`.
+  `godmin-table__toggle` draws it as the title link. Keep that state
+  on the button, since WAI-ARIA does not allow `aria-expanded` on a
+  table row.
+- The chevron, `godmin-table__toggle-icon`, is hidden from screen
+  readers, so the label alone names the button. Add no verb such as
+  Open to it.
+- The row that opens is `Collapsible.Panel` drawn as a `tr` with
+  `godmin-table__detail`. Its one cell spans every column. CSS cannot
+  span columns, so give `colSpan` the count of your own columns.
+- The open part is the `godmin-table__detail-body` card. The two `div`
+  around it, `godmin-table__detail-motion` and the plain one inside
+  it, grow and shrink the part as the row opens and closes, as
+  [rows that open](./design-system/motion.md#rows-that-open) gives.
+- `hiddenUntilFound` keeps a closed part in the page, hidden. So what
+  the reader typed survives a close, and a link to a place inside a
+  closed row opens it. Without the prop a closed part leaves the page,
+  so keep every draft in your own state then.
+- The `ref` goes on the `godmin-table__detail-body` div, which holds
+  every control of the open part. When the part closes while the focus
+  sits inside it, such as from Close field, `focusToggleFrom` puts the
+  focus on the toggle first, as
+  [where focus goes](./design-system/accessibility.md#where-focus-goes)
+  says.
+- A form with one field sends itself when the reader presses Enter in
+  it, so its `onSubmit` keeps the page where it is.
+
+The table keeps the open rows in page state, as a set of keys, so any
+number of them stay open:
+
+```tsx
+interface FieldTableProps extends Pick<FieldRowsProps, 'onMove' | 'onRemove'> {
+	fields: Field[]
+}
+
+function FieldTable({ fields, onMove, onRemove }: FieldTableProps) {
+	const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set())
+	const onOpen = (key: string, open: boolean) =>
+		setOpened((before) => {
+			const after = new Set(before)
+			if (open) {
+				after.add(key)
+			} else {
+				after.delete(key)
+			}
+			return after
+		})
+	return (
+		<div className="godmin-table-scroll" role="region" aria-label="Fields" tabIndex={0}>
+			<table className="godmin-table">
+				<thead>
+					<tr>
+						<th scope="col">Label</th>
+						<th scope="col">Kind</th>
+						<th scope="col">API name</th>
+						<th scope="col" className="godmin-table__actions">
+							<VisuallyHidden>Actions</VisuallyHidden>
+						</th>
+					</tr>
+				</thead>
+				{fields.map((field, at) => (
+					<FieldRows
+						key={field.key}
+						field={field}
+						at={at}
+						count={fields.length}
+						open={opened.has(field.key)}
+						onOpen={onOpen}
+						onMove={onMove}
+						onRemove={onRemove}
+					/>
+				))}
+			</table>
+		</div>
+	)
+}
+```
+
+Where the region sits, and what it holds:
+
+- A table nested in an open part goes in its own `godmin-table-scroll`
+  region with its own name, such as "Sub fields of Team", so a
+  keyboard reader can scroll it. Each level steps in by the frame of
+  the card around it and needs no class of its own.
+- Put a table whose rows open in its `godmin-table-scroll` region.
+  Without one the open part measures against a wider box, such as the
+  window, and runs past the page on a phone.
+- A region measures its rows and its open parts against its own
+  width. Set it in a block or a parent that stretches it, such as a
+  page section, a record page column or a WPDS column `Stack` with no
+  `align`. In a
+  parent that sizes it to its content, such as an inline block, a
+  `max-content` box, a WPDS row `Stack` or a WPDS `Dialog` of size
+  `auto`, the region shrinks to almost nothing.
+- godmin hides a closed row with a plain rule in its layer, as
+  WordPress does. A rule of your own that sets how the rows of a
+  `godmin-table` display wins over it when it sits outside a layer, or
+  in a layer after `godmin`, such as `my-app` in the order
+  `@layer wp-ui, godmin, my-app`. A closed row then shows again. Put
+  such a rule in a layer before godmin's, as in the order
+  `@layer wp-ui, my-rows, godmin, my-app`, or keep it off a closed
+  row with `tr:not([hidden])`.
