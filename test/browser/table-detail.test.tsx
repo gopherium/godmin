@@ -19,7 +19,7 @@ import { backgroundOf, columnsOf, middleAcross, middleDown, onTop } from '../../
 const PATIENT_LIMIT = 60_000
 
 /** The page width the frame leaves at the window the tests open on, and on a phone inside its gutter. */
-const ROOM = 916
+const ROOM = 976
 const PHONE_ROOM = 358
 const GUTTER = 16
 
