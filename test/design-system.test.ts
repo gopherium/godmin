@@ -8,7 +8,7 @@ import { expect, test } from 'vitest'
 
 import * as breakpoints from '../src/breakpoints'
 import { TITLE_WAIT } from '../src/screen-title'
-import { ruleOf } from './css-rules.js'
+import { blocksOf, ruleOf } from './css-rules.js'
 import { dataviews, installedFile, ruleValue } from './styles.js'
 
 /** The folder of Design System pages. */
@@ -229,6 +229,28 @@ const LOADING: ValueTable = { page: 'loading.md', values: valuesOf([
 	['.godmin-loading-screen', 'min-block-size', 'A screen', 'Outside the frame'],
 ]) }
 
+/** The label that opens a row of a custom table. */
+const TOGGLE = '.godmin-table__toggle'
+
+/** The one cell of the row that opens under a row of a custom table. */
+const DETAIL_CELL = '.godmin-table tbody tr.godmin-table__detail > td'
+
+/** The open part inside that cell, drawn as a card. */
+const DETAIL_BODY = '.godmin-table__detail-body'
+
+/** The rule that pads the open part in a narrow region, from the container query that opens it. */
+const NARROW_DETAIL = `@container godmin-table (max-width: ${breakpoints.DENSE_BREAKPOINT - 1}px) {\n\t\t${DETAIL_BODY}`
+
+/** A row of a table in a region under 640px wide, drawn as an item of the DataViews list, and that item held. */
+const LIST_ITEM = '.godmin-table > tbody > tr:not(.godmin-table__detail)'
+const LIST_HELD = `${LIST_ITEM}:is(:hover, :has(:focus-visible))`
+
+/** The box of a value of a list item, a cell neither the first nor the actions. */
+const VALUE_BOX = `${LIST_ITEM}\n\t\t\t> :not(:first-child, .godmin-table__actions)\n\t\t\t> .godmin-table__cell`
+
+/** The passage of the lists page that gives the values of a list item. */
+const VALUES = 'Every other cell of a list item'
+
 /** Each list value the lists page gives. */
 const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
 	['.godmin-page:has(> .godmin-page__list) > .godmin-page__header', 'padding-inline', 'A list page', 'title row'],
@@ -273,7 +295,16 @@ const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
 	['.godmin-table thead th', 'padding-block', 'Tables that stay custom', 'A header cell'],
 	['.godmin-table thead th', 'font-size', 'Tables that stay custom', 'A header cell'],
 	['.godmin-table thead th', 'font-weight', 'Tables that stay custom', 'A header cell'],
-	['.godmin-table tbody td', 'height', 'Tables that stay custom', 'A body cell'],
+	['.godmin-table tbody td', 'height', 'Tables that stay custom', 'A body cell is'],
+	[
+		'.godmin-table > tbody > tr > th,\n\t.godmin-table > tbody > tr > td',
+		'vertical-align',
+		'Tables that stay custom',
+		'A body cell sits',
+	],
+	['.godmin-table th,\n\t.godmin-table td', 'vertical-align', 'Tables that stay custom', 'A body cell sits'],
+	['.godmin-table__cell', 'min-block-size', 'Tables that stay custom', 'godmin-table__cell'],
+	['.godmin-table__cell', 'align-content', 'Tables that stay custom', 'godmin-table__cell'],
 	['.godmin-table tbody tr', 'border-block-start', 'Tables that stay custom', 'runs above'],
 	['.godmin-table tbody tr:is(:hover, :has(:focus-visible)) > *', 'background', 'Tables that stay custom', 'under the'],
 	[
@@ -282,7 +313,36 @@ const LISTS: ValueTable = { page: 'lists.md', values: valuesOf([
 		'Tables that stay custom',
 		'first and last',
 	],
-	['.godmin-table-scroll .godmin-table__actions', 'box-shadow', 'Tables that stay custom', 'inset shadow'],
+	[LIST_ITEM, 'padding', 'Tables that stay custom', 'item of the DataViews list'],
+	[`${LIST_ITEM} > :first-child`, 'line-height', 'Tables that stay custom', 'item of the DataViews list'],
+	[LIST_ITEM, 'column-gap', 'Tables that stay custom', VALUES],
+	[`${LIST_ITEM} > *`, 'margin-block-start', 'Tables that stay custom', VALUES],
+	[VALUE_BOX, 'min-block-size', 'Tables that stay custom', VALUES],
+	[`${LIST_ITEM} > *`, 'font-size', 'Tables that stay custom', VALUES],
+	[`${LIST_ITEM} > *`, 'line-height', 'Tables that stay custom', VALUES],
+	[`${LIST_ITEM} > *`, 'color', 'Tables that stay custom', VALUES],
+	[LIST_HELD, 'background', 'Tables that stay custom', VALUES],
+	[`${LIST_HELD} > *`, 'color', 'Tables that stay custom', VALUES],
+	[TOGGLE, 'line-height', 'Tables that stay custom', 'The label that opens a row'],
+	[TOGGLE, 'color', 'Tables that stay custom', 'The label that opens a row'],
+	[`${TOGGLE}:hover`, 'color', 'Tables that stay custom', 'The label that opens a row'],
+	[TOGGLE, 'cursor', 'Tables that stay custom', 'The label that opens a row'],
+	[TOGGLE, 'gap', 'Tables that stay custom', 'A chevron sits before the label'],
+	[`${TOGGLE}[data-panel-open] .godmin-table__toggle-icon`, 'rotate', 'Tables that stay custom', 'A chevron sits'],
+	[DETAIL_CELL, 'padding', 'Tables that stay custom', 'Its one cell spans'],
+	[`.godmin-table__detail-motion > * > ${DETAIL_BODY}`, 'margin', 'Tables that stay custom', 'Its one cell spans'],
+	[DETAIL_BODY, 'padding', 'Tables that stay custom', 'drawn as the WPDS `Card`'],
+	[DETAIL_BODY, 'border', 'Tables that stay custom', 'drawn as the WPDS `Card`'],
+	[DETAIL_BODY, 'border-radius', 'Tables that stay custom', 'drawn as the WPDS `Card`'],
+	[DETAIL_BODY, 'background-color', 'Tables that stay custom', 'drawn as the WPDS `Card`'],
+	[DETAIL_BODY, 'color', 'Tables that stay custom', 'drawn as the WPDS `Card`'],
+	[DETAIL_BODY, 'overflow', 'Tables that stay custom', 'Like the card it clips'],
+	[DETAIL_BODY, 'overflow-wrap', 'Tables that stay custom', 'Like the card it clips'],
+	[DETAIL_BODY, 'text-align', 'Tables that stay custom', 'Like the card it clips'],
+	[NARROW_DETAIL, 'padding', 'Tables that stay custom', 'In a region under'],
+	[DETAIL_BODY, 'position', 'Tables that stay custom', 'stays inside the width'],
+	[DETAIL_BODY, 'inset-inline-start', 'Tables that stay custom', 'stays inside the width'],
+	[DETAIL_BODY, 'max-inline-size', 'Tables that stay custom', 'stays inside the width'],
 ]) }
 
 /** The selector of the rule both columns of a record page share. */
@@ -299,6 +359,7 @@ const RECORDS: ValueTable = { page: 'record-pages.md', values: valuesOf([
 	['.godmin-page__heading > :last-child', 'flex', 'The page header', 'The title keeps'],
 	['.godmin-page__breadcrumbs', 'overflow-wrap', 'The page header', 'long word'],
 	['.godmin-page__aside', 'flex', 'The two columns', 'details are'],
+	[DETAIL_BODY, 'position', 'The two columns', 'opens under its row'],
 	['.godmin-page__split', 'column-gap', 'The two columns', 'The columns sit'],
 	[RECORD_COLUMNS, 'padding-inline', 'The two columns', 'Each column keeps'],
 	[RECORD_COLUMNS, 'overflow-wrap', 'The two columns', 'long word'],
@@ -846,16 +907,64 @@ test('the lists page names the breakpoint the frozen columns start above, as the
 	expect(section).toContain(`Wider than \`${edge}\``)
 })
 
-test('the radius page leaves the custom table line to the lists page', () => {
-	const line = [...namesIn(ruleValue('.godmin-table-scroll .godmin-table__actions', 'box-shadow') ?? '', '--wpds-')]
-	const passages = passagesOf(pages.get('radius-and-elevation.md')).filter((passage) =>
-		passage.includes('`godmin-table`'),
+test('the pages name the breakpoint an open part pads less below, as the stylesheet opens its container query', () => {
+	const below = Number(groupOf(/@container godmin-table \(max-width: (\d+)px\)/.exec(stylesheet)))
+	const edge = Object.entries(breakpoints).find(([, value]) => value === below + 1)?.[0]
+	const custom = (sections.get('lists.md')?.get('Tables that stay custom') ?? '').replace(/\s+/g, ' ')
+	const row = (pages.get('layout.md') ?? '').split('\n').find((line) => line.startsWith(`| \`${edge}\` |`))
+
+	expect(edge, `no breakpoint is ${below + 1}, the narrowest region an open part pads in full`).toBeDefined()
+	expect(custom).toContain(`In a region under \`${edge}\``)
+	expect(row).toContain('(./lists.md#tables-that-stay-custom)')
+})
+
+/** One property of the rule a selector opens in the stylesheet. */
+interface RuleProperty {
+	selector: string
+	property: string
+}
+
+/**
+ * Returns the pixels of the first design token a rule gives a property, as the installed theme sets it.
+ * @param declared - The selector the rule starts with, and the property, such as padding.
+ * @returns The token in pixels.
+ */
+function tokenPixels(declared: RuleProperty): number {
+	const token = groupOf(/var\((--wpds-[\w-]+)\)/.exec(ruleValue(declared.selector, declared.property) ?? ''))
+	return Number(groupOf(new RegExp(`${token}:\\s*(\\d+)px;`).exec(tokenSheet)))
+}
+
+test('the lists page gives the step of each nested table as the frame of the card around it adds up', () => {
+	const frame = [
+		{ selector: DETAIL_CELL, property: 'padding' },
+		{ selector: DETAIL_BODY, property: 'border' },
+	].reduce((sum, declared) => sum + tokenPixels(declared), 0)
+	const steps = [DETAIL_BODY, NARROW_DETAIL].map((selector) => frame + tokenPixels({ selector, property: 'padding' }))
+	const nested = passagesOf(sections.get('lists.md')?.get('Tables that stay custom')).find((text) =>
+		text.includes('steps in'),
 	)
 
-	expect(line.length, 'the stylesheet draws the line with design tokens').toBeGreaterThan(0)
-	expect(passages.map((passage) => passage.includes('(./lists.md#tables-that-stay-custom)'))).toEqual([true])
-	expect(passages.flatMap((passage) => line.filter((token) => passage.includes(`\`${token}\``)))).toEqual([])
+	expect(nested, 'the Tables that stay custom section says how far a nested table steps in').toBeDefined()
+	expect(steps.filter((step) => !nested?.includes(`${step}px`))).toEqual([])
 })
+
+/** The table rows of other pages that name the open part of a table row: the page, how the row starts, the tokens. */
+const DETAIL_TOKENS: [string, string, string][] = [
+	['color.md', '| The open part of a row', '--wpds-color-'],
+	['radius-and-elevation.md', '| `--wpds-border-radius-lg`', '--wpds-border-radius-'],
+]
+
+test.each(DETAIL_TOKENS)(
+	'the %s row "%s" names the open part of a table row and its %s tokens',
+	(page, start, kind) => {
+		const row = (pages.get(page) ?? '').split('\n').find((line) => line.startsWith(start)) ?? ''
+		const tokens = [...namesIn(ruleOf(DETAIL_BODY, stylesheet), kind)]
+
+		expect(tokens.length, 'the stylesheet paints the open part with such tokens').toBeGreaterThan(0)
+		expect(row).toContain('`godmin-table__detail-body`')
+		expect(tokens.filter((name) => !row.includes(`\`${name}\``))).toEqual([])
+	},
+)
 
 test('the lists page leaves the reload timing to the loading page', () => {
 	const section = sections.get('lists.md')?.get('After a write of your own') ?? ''
@@ -1191,4 +1300,34 @@ test('the motion page points the tokens of the drawer motion to the frame page',
 
 	expect(rows.length, 'the motion page names the tokens of the drawer motion').toBeGreaterThan(0)
 	expect(rows.filter((row) => !row.endsWith(pointed))).toEqual([])
+})
+
+test('the motion page gives the turn, the fade and the growth of a row that opens as the stylesheet times them', () => {
+	const moves = blocksOf('@media not (prefers-reduced-motion)').filter((body) => body.includes('.godmin-table__detail'))
+	const timings = moves.flatMap((body) => [...body.matchAll(/transition: \S+ ([^;]+);/g)]).flatMap(([, timing]) =>
+		timing.split(' '),
+	)
+	const section = sections.get('motion.md')?.get('Rows that open') ?? ''
+
+	expect(timings, 'the chevron, the fade and the growth each take a duration and a curve').toHaveLength(6)
+	expect(timings.filter((timing) => !standsIn(timing, section))).toEqual([])
+})
+
+test('the motion page names a row that opens among what the stylesheet animates and what reduced motion stills', () => {
+	const page = pages.get('motion.md') ?? ''
+	const opening = page.slice(0, page.indexOf('\n## '))
+	const still = sections.get('motion.md')?.get('Reduced motion') ?? ''
+
+	expect([opening, still].filter((text) => !text.includes('](#rows-that-open)'))).toEqual([])
+})
+
+/** A sentence that has the APG or the disclosure pattern ask for something, in either order. */
+const FOCUS_ASKED = /\b(?:APG|disclosure)\b[^.]*\basks?\b|\basks?\b[^.]*\b(?:APG|disclosure)\b/i
+
+test('the pages say the disclosure pattern moves no focus, never that it asks for one', () => {
+	const passages = [...pages.values(), listsPage, screensPage].flatMap(passagesOf)
+	const focus = passagesOf(sections.get('accessibility.md')?.get('Where focus goes'))
+
+	expect(focus.filter((text) => text.includes('The WAI-ARIA disclosure pattern moves no focus'))).toHaveLength(1)
+	expect(passages.filter((text) => FOCUS_ASKED.test(text))).toEqual([])
 })

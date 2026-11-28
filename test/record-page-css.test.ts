@@ -48,13 +48,6 @@ test('keeps the words of a table whole, so a wide table scrolls and a word never
 	expect(ruleOf('.godmin-table')).toMatch(/overflow-wrap:\s*normal/)
 })
 
-test('scrolls a wide table inside a column at every width, since the column clips what runs past it', () => {
-	const rule = ruleOf('.godmin-page__main .godmin-table-scroll,\n\t.godmin-page__aside .godmin-table-scroll')
-
-	expect(rule).toMatch(/position:\s*relative/)
-	expect(rule).toMatch(/overflow-x:\s*auto/)
-})
-
 test('holds a list inside a column, since the column clips what reaches past it', () => {
 	expect(ruleOf('.godmin-page__main .godmin-list,\n\t.godmin-page__aside .godmin-list')).toMatch(
 		/margin-inline:\s*0;/,

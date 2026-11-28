@@ -1514,6 +1514,32 @@ does not do.
 [Tables that stay custom](./design-system/lists.md#tables-that-stay-custom)
 gives every value.
 
+A body cell sits at the top of its row, as in the classic WordPress
+list table and the DataViews table. Wrap the first line of each body
+cell in a `div` marked `godmin-table__cell`, as DataViews wraps its
+own cells. The box is as tall as a compact button and centres its
+line down it. A line of text then stays level with a compact button
+in the next cell, and in a tall row every cell keeps its first line
+at the top. Draw the buttons of a row with `size="compact"`, as
+DataViews draws its row actions, since a default button is taller
+than the box. The box holds inline content, such as text, a link, a
+`code` or a `Badge`, and not a paragraph. A line under it, such as a
+note, goes after the box in its own element, such as a `Text`. A
+narrow table leaves out a cell under the first line whose box is
+empty and that holds no other element, so bare text after an empty
+box would go with it.
+The one cell of a row that opens under a
+row takes no box, since it holds the open part.
+
+In a `godmin-table-scroll` box narrower than `DENSE_BREAKPOINT`, such
+as on a phone or in a column of a record page, each row draws as an
+item of the DataViews list instead, the layout WordPress picks for a
+narrow place. Keep the name of the record in the first cell and mark the
+cell of the row's buttons `godmin-table__actions`, so both sit on the
+first line, with the other values in small text under them. In a
+wider box a table that does not fit scrolls sideways inside the box,
+as a DataViews table does, and the page stays put.
+
 Mark the cell that names the record `godmin-table__title`. It draws
 the name bold, as DataViews draws its titles. A link inside it has no
 underline and turns the accent colour under the pointer, like a
@@ -1521,13 +1547,21 @@ DataViews title field:
 
 ```tsx
 <td className="godmin-table__title">
-	<Link to="/fields/$id" params={{ id: field.id }}>{field.label}</Link>
+	<div className="godmin-table__cell">
+		<Link to="/fields/$id" params={{ id: field.id }}>{field.label}</Link>
+	</div>
 </td>
 ```
 
 Inside a `list` page the table reaches the canvas edges too, and its
 first and last cells pad as DataViews pads its own. A custom list
 and a DataViews list then line up with each other and with the title.
+
+A row of such a table can open its details in a second row under it,
+such as the settings of one field, and any number of rows can stay
+open.
+[Rows that open under a row](./screens.md#rows-that-open-under-a-row)
+shows how to build one on the WPDS `Collapsible`.
 
 While its first rows load, show `LoadingScreen` in place of the
 table, as
@@ -1568,7 +1602,10 @@ catalogues also cover Notifications, the hidden text `@wordpress/a11y`
 puts before the live regions that godmin's announcements fill. That
 text is written before your app loads any catalogue, so `AdminRoot`
 writes it again in the loaded language, and again each time the
-language changes.
+language changes. Both also cover "(opens in a new tab)", what a
+screen reader says for the arrow a `Link` from `@wordpress/ui` draws
+with `openInNewTab`, so the links your app draws speak it in the
+loaded language.
 
 The translations are machine made. They stay marked fuzzy in the
 sources, `src/list-chrome/es-ES.po` and `src/list-chrome/fr-FR.po`

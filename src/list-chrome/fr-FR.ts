@@ -2,10 +2,11 @@
 
 import type { ListChromeCatalog } from '../list-chrome.js'
 
-/** The French list dates, dialog, sidebar, frame, no results, time-out and live region words, from fr-FR.po. */
+/** The French words of the list dates, dialogs, godmin parts, live region and links, from fr-FR.po. */
 const catalog: ListChromeCatalog = {
 	'': { lang: 'fr-FR', 'plural-forms': 'nplurals=2; plural=(n > 1);' },
 	'%1$s ‹ %2$s': ['%1$s ‹ %2$s'],
+	'(opens in a new tab)': ['(ouvre un nouvel onglet)'],
 	AM: ['AM'],
 	Admin: ['Administration'],
 	April: ['avril'],
