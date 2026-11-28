@@ -111,7 +111,7 @@ ranges.
 follows the filter rules of that DataViews release. A list built on
 another release gets a peer warning when it installs godmin.
 
-## Upgrading from godmin 0.33.0
+## Upgrading from godmin 0.34.0
 
 godmin 0.35.0 draws the menu as WordPress's new admin does: it folds
 into the drawer at 782px, opens with your app's name and gives its

@@ -13,7 +13,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 - `--godmin-nav-drawer-width` sizes the phone drawer, 300px.
 - The phone menu button shows its name in a tooltip painted in the frame's chrome colours.
 - The Spanish and French catalogues translate "Admin", "Menu" and the three section labels.
-- `docs/build-and-versioning.md` lists every change an app upgrading from 0.33.0 makes.
+- `docs/build-and-versioning.md` lists every change an app upgrading from 0.34.0 makes.
 
 ### Changed
 
@@ -34,7 +34,7 @@ minor releases may break. Releases are tagged `vX.Y.Z` and publish from CI.
 
 - A page picked in the phone drawer moves no focus, as the focus table already says.
 
-## [Unreleased]
+## [0.34.0] - 2026-11-26
 
 ### Added
 
